@@ -1,0 +1,43 @@
+server:
+  port: 8666
+  #  address: 127.0.0.100
+  address: 0.0.0.0
+
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+
+  ssl:
+    enabled: true
+    key-store: /Users/kees/Code/rds/rds-platform.p12
+    key-store-password: rdsrds
+    key-store-type: PKCS12
+    key-alias: rds-platform
+
+  jetty:
+    threads:
+      min: 10
+      max: 200
+      idle-timeout: 60000
+
+    accesslog:
+      enabled: true
+      directory: /opt/integratie/log/fluent-controller
+      filename: access.log
+      file-date-format: .yyyy-MM-dd
+      retention-period: 30
+      append: true
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rdsdb
+    username: rds
+    password: rds
+    driverClassName: org.postgresql.Driver
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-drop
+  sql:
+    init:
+      platform: postgres
+      mode: always
