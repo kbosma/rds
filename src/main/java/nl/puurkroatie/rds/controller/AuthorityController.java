@@ -4,6 +4,7 @@ import nl.puurkroatie.rds.dto.AuthorityDto;
 import nl.puurkroatie.rds.service.AuthorityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,11 +28,13 @@ public class AuthorityController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('AUTHORITY_READ')")
     public List<AuthorityDto> findAll() {
         return authorityService.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('AUTHORITY_READ')")
     public ResponseEntity<AuthorityDto> findById(@PathVariable UUID id) {
         return authorityService.findById(id)
                 .map(ResponseEntity::ok)
@@ -39,18 +42,21 @@ public class AuthorityController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('AUTHORITY_WRITE')")
     public ResponseEntity<AuthorityDto> create(@RequestBody AuthorityDto dto) {
         AuthorityDto created = authorityService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('AUTHORITY_WRITE')")
     public ResponseEntity<AuthorityDto> update(@PathVariable UUID id, @RequestBody AuthorityDto dto) {
         AuthorityDto updated = authorityService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('AUTHORITY_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         authorityService.delete(id);
         return ResponseEntity.noContent().build();

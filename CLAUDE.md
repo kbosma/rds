@@ -100,20 +100,136 @@ De ROLEs, die aanwezig zijn:
 ./mvnw test -Dtest=ClassName#methodName  # Run a single test method
 ```
 
+> **Let op**: Java 21 is vereist. Als de default Java-versie anders is, gebruik:
+> `JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home ./mvnw clean install`
+
 ## Architecture
 
 - **Entry point**: `src/main/java/nl/puurkroatie/rds/Application.java`
 - **Config**: `src/main/resources/application.yaml`
 - **Servlet container**: Jetty (Tomcat is excluded)
-- **Dependencies**: Spring Data JPA, Spring Security + OAuth2 Client, Spring MVC, Jetty, PostgreSQL driver
+- **Dependencies**: Spring Data JPA, Spring Security + OAuth2 Client, Spring MVC, Jetty, PostgreSQL driver, JJWT 0.12.6
 
 ## Package Structure
 
 - `nl.puurkroatie.rds.entity` — JPA entity classes met Jakarta Persistence annotations
-- `nl.puurkroatie.rds.dto` — DTO records (Java records, immutable)
+- `nl.puurkroatie.rds.dto` — DTO records (DTO classes)
 - `nl.puurkroatie.rds.repository` — Spring Data JPA repositories
 - `nl.puurkroatie.rds.service` — Service classes met CRUD-operaties
 - `nl.puurkroatie.rds.controller` — REST controllers (`/api/...`)
+- `nl.puurkroatie.rds.security` — JWT-authenticatie, TenantContext en UserDetailsService
+- `nl.puurkroatie.rds.config` — Spring configuratie (SecurityConfig)
+
+## Authenticatie- en Autorisatie-implementatie
+
+### Login-flow
+
+1. Client stuurt `POST /api/auth/login` met `{"userName":"...","password":"..."}` naar `AuthController`
+2. `AuthController` roept `AuthenticationManager.authenticate()` aan
+3. Spring Security delegeert naar `CustomUserDetailsService.loadUserByUsername()`:
+   - Haalt `Account` op via `AccountRepository.findByUserName()`
+   - Haalt rollen op via `AccountRoleRepository.findByAccount()`
+   - Haalt per rol de authorities op via `RoleAuthorityRepository.findByRole()`
+   - Retourneert `UserDetails` met bcrypt-hash en granted authorities
+4. Spring Security verifieert het wachtwoord via `BCryptPasswordEncoder`
+5. Na succesvolle authenticatie genereert `AuthController` een JWT via `JwtTokenProvider.generateToken()` met claims: `sub=accountId`, `org=organizationId`, `authorities=[...]`
+6. Client ontvangt `LoginResponse` met `token`, `accountId` en `organizationId`
+
+### Vervolgrequests (JWT-validatie)
+
+1. `JwtAuthenticationFilter` (OncePerRequestFilter) leest de `Authorization: Bearer <token>` header
+2. Valideert het token via `JwtTokenProvider.validateToken()`
+3. Extraheert `accountId`, `organizationId` en `authorities` uit de JWT claims
+4. Zet een `UsernamePasswordAuthenticationToken` in de Spring `SecurityContext`
+5. Vult `TenantContext` (ThreadLocal) met `organizationId` en `accountId`
+6. Na het request wordt `TenantContext.clear()` aangeroepen in een `finally`-blok
+
+### Security-configuratie (`SecurityConfig.java`)
+
+- CSRF uitgeschakeld (stateless REST API)
+- Sessies: `SessionCreationPolicy.STATELESS`
+- `JwtAuthenticationFilter` wordt toegevoegd vóór `UsernamePasswordAuthenticationFilter`
+- `/api/auth/login` is `permitAll`
+- Alle overige `/api/**` endpoints vereisen authenticatie
+- `@EnableMethodSecurity` activeert `@PreAuthorize` op controller-methoden
+
+### JWT-configuratie (`application.yaml`)
+
+```yaml
+app:
+  jwt:
+    secret: <base64-encoded 256-bit key>
+    expiration-ms: 86400000  # 24 uur
+```
+
+### Granulaire Authorities
+
+Pattern: `{ENTITEIT}_{OPERATIE}` — 21 authorities totaal:
+
+`ORGANIZATION_READ`, `ORGANIZATION_WRITE`, `ORGANIZATION_DELETE`,
+`PERSON_READ`, `PERSON_WRITE`, `PERSON_DELETE`,
+`ACCOUNT_READ`, `ACCOUNT_WRITE`, `ACCOUNT_DELETE`,
+`ROLE_READ`, `ROLE_WRITE`, `ROLE_DELETE`,
+`AUTHORITY_READ`, `AUTHORITY_WRITE`, `AUTHORITY_DELETE`,
+`ACCOUNTROLE_READ`, `ACCOUNTROLE_WRITE`, `ACCOUNTROLE_DELETE`,
+`ROLEAUTHORITY_READ`, `ROLEAUTHORITY_WRITE`, `ROLEAUTHORITY_DELETE`
+
+### Role-Authority mappings
+
+| Rol | Authorities |
+|---|---|
+| ADMIN | Alle 21 authorities |
+| MANAGER | PERSON_READ/WRITE/DELETE, ACCOUNT_READ/WRITE/DELETE, ACCOUNTROLE_READ/WRITE/DELETE |
+| EMPLOYEE | PERSON_READ/WRITE, ACCOUNT_READ/WRITE |
+
+### `@PreAuthorize` op controllers
+
+Elke controller-methode is beveiligd met `@PreAuthorize("hasAuthority('...')")`:
+
+| Controller | GET | POST | PUT | DELETE |
+|---|---|---|---|---|
+| OrganizationController | ORGANIZATION_READ | ORGANIZATION_WRITE | ORGANIZATION_WRITE | ORGANIZATION_DELETE |
+| PersonController | PERSON_READ | PERSON_WRITE | PERSON_WRITE | PERSON_DELETE |
+| AccountController | ACCOUNT_READ | ACCOUNT_WRITE | ACCOUNT_WRITE | ACCOUNT_DELETE |
+| RoleController | ROLE_READ | ROLE_WRITE | ROLE_WRITE | ROLE_DELETE |
+| AuthorityController | AUTHORITY_READ | AUTHORITY_WRITE | AUTHORITY_WRITE | AUTHORITY_DELETE |
+| AccountRoleController | ACCOUNTROLE_READ | ACCOUNTROLE_WRITE | — | ACCOUNTROLE_DELETE |
+| RoleAuthorityController | ROLEAUTHORITY_READ | ROLEAUTHORITY_WRITE | — | ROLEAUTHORITY_DELETE |
+
+### TenantContext
+
+`TenantContext` is een ThreadLocal holder die per request gevuld wordt vanuit het JWT:
+- `TenantContext.getOrganizationId()` — UUID van de organisatie van de ingelogde gebruiker
+- `TenantContext.getAccountId()` — UUID van het ingelogde account
+- Wordt automatisch opgeruimd na elk request door `JwtAuthenticationFilter`
+
+> **Nog niet geimplementeerd**: service-level filtering op basis van TenantContext (MANAGER ziet alleen data binnen eigen ORGANIZATION, EMPLOYEE ziet alleen eigen PERSON/ACCOUNT).
+
+### Security-gerelateerde bestanden
+
+| Bestand | Beschrijving |
+|---|---|
+| `security/JwtTokenProvider.java` | JWT generatie en validatie (JJWT 0.12.6) |
+| `security/JwtAuthenticationFilter.java` | Filter die Bearer tokens valideert en SecurityContext/TenantContext vult |
+| `security/CustomUserDetailsService.java` | Laadt Account + rollen + authorities uit DB voor authenticatie |
+| `security/TenantContext.java` | ThreadLocal holder voor organizationId en accountId |
+| `config/SecurityConfig.java` | Filter chain, PasswordEncoder, AuthenticationManager, `@EnableMethodSecurity` |
+| `controller/AuthController.java` | POST `/api/auth/login` — retourneert JWT |
+| `dto/LoginRequest.java` | Input: userName, password |
+| `dto/LoginResponse.java` | Output: token, accountId, organizationId |
+
+### API testen met curl
+
+```bash
+# Login (verkrijg JWT)
+curl -k -X POST https://localhost:8666/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"userName":"jan.vanbergen","password":"password123"}'
+
+# Gebruik JWT voor beveiligde endpoints
+curl -k https://localhost:8666/api/organizations \
+  -H "Authorization: Bearer <token>"
+```
 
 ## Entity Classes
 
@@ -149,10 +265,10 @@ De ROLEs, die aanwezig zijn:
 - **Testdata**: `src/main/resources/data.sql` — vult de database bij het opstarten met voorbeelddata (moet bijgewerkt worden als datamodel wijzigt)
 - **Testaccounts** (wachtwoord voor alle accounts: `password123`, bcrypt-hash):
 
-  | Username | Rol | Authorities |
-  |---|---|---|
-  | `jan.vanbergen` | ADMIN | READ, WRITE, DELETE, MANAGE_USERS |
-  | `maria.jansen` | USER | READ |
-  | `pieter.degroot` | MANAGER | READ, WRITE, MANAGE_USERS |
+  | Username | Rol | Organisatie | Authorities |
+  |---|---|---|---|
+  | `jan.vanbergen` | ADMIN | Puurkroatie | Alle 21 authorities |
+  | `maria.jansen` | EMPLOYEE | Puurkroatie | PERSON_READ/WRITE, ACCOUNT_READ/WRITE |
+  | `pieter.degroot` | MANAGER | TechPartner BV | PERSON_READ/WRITE/DELETE, ACCOUNT_READ/WRITE/DELETE, ACCOUNTROLE_READ/WRITE/DELETE |
 - **Init**: `spring.jpa.defer-datasource-initialization: true`, `spring.sql.init.mode: always`, `platform: postgres`
 - **psql pad**: `/Applications/Postgres.app/Contents/Versions/latest/bin/psql`

@@ -4,6 +4,7 @@ import nl.puurkroatie.rds.dto.OrganizationDto;
 import nl.puurkroatie.rds.service.OrganizationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,11 +28,13 @@ public class OrganizationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ORGANIZATION_READ')")
     public List<OrganizationDto> findAll() {
         return organizationService.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORGANIZATION_READ')")
     public ResponseEntity<OrganizationDto> findById(@PathVariable UUID id) {
         return organizationService.findById(id)
                 .map(ResponseEntity::ok)
@@ -39,18 +42,21 @@ public class OrganizationController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ORGANIZATION_WRITE')")
     public ResponseEntity<OrganizationDto> create(@RequestBody OrganizationDto dto) {
         OrganizationDto created = organizationService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORGANIZATION_WRITE')")
     public ResponseEntity<OrganizationDto> update(@PathVariable UUID id, @RequestBody OrganizationDto dto) {
         OrganizationDto updated = organizationService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORGANIZATION_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         organizationService.delete(id);
         return ResponseEntity.noContent().build();

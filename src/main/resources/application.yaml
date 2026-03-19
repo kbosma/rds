@@ -41,3 +41,8 @@ spring:
     init:
       platform: postgres
       mode: always
+
+app:
+  jwt:
+    secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgSldUIHNpZ25pbmcgMjU2Yml0
+    expiration-ms: 86400000
