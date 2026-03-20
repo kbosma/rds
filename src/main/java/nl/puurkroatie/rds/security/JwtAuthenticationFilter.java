@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 
 @Component
@@ -43,6 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 TenantContext.setOrganizationId(jwtTokenProvider.getOrganizationId(token));
                 TenantContext.setAccountId(jwtTokenProvider.getAccountId(token));
+                TenantContext.setRoles(new HashSet<>(jwtTokenProvider.getRoles(token)));
             }
 
             filterChain.doFilter(request, response);

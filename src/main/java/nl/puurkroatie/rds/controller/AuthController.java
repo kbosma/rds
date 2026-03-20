@@ -1,7 +1,7 @@
 package nl.puurkroatie.rds.controller;
 
-import nl.puurkroatie.rds.dto.LoginRequest;
-import nl.puurkroatie.rds.dto.LoginResponse;
+import nl.puurkroatie.rds.dto.LoginRequestDto;
+import nl.puurkroatie.rds.dto.LoginResponseDto;
 import nl.puurkroatie.rds.entity.Account;
 import nl.puurkroatie.rds.entity.AccountRole;
 import nl.puurkroatie.rds.entity.RoleAuthority;
@@ -45,7 +45,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Transactional(readOnly = true)
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword()));
 
@@ -61,13 +61,19 @@ public class AuthController {
                 .distinct()
                 .toList();
 
+        List<String> roles = accountRoles.stream()
+                .map(ar -> ar.getRole().getDescription())
+                .distinct()
+                .toList();
+
         String token = jwtTokenProvider.generateToken(
                 account.getAccountId(),
-                account.getOrganization().getOrganizationId(),
+                account.getPerson().getOrganization().getOrganizationId(),
                 account.getUserName(),
-                authorities);
+                authorities,
+                roles);
 
-        return ResponseEntity.ok(new LoginResponse(token, account.getAccountId(),
-                account.getOrganization().getOrganizationId()));
+        return ResponseEntity.ok(new LoginResponseDto(token, account.getAccountId(),
+                account.getPerson().getOrganization().getOrganizationId()));
     }
 }

@@ -9,26 +9,29 @@ public class PersonDto {
     private String firstname;
     private String prefix;
     private String lastname;
+    private UUID organizationId;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
     private UUID modifiedBy;
 
-    public PersonDto(UUID persoonId, String firstname, String prefix, String lastname, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public PersonDto(UUID persoonId, String firstname, String prefix, String lastname, UUID organizationId, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.persoonId = persoonId;
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
+        this.organizationId = organizationId;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
     }
 
-    public PersonDto(String firstname, String prefix, String lastname, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public PersonDto(String firstname, String prefix, String lastname, UUID organizationId, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
+        this.organizationId = organizationId;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -49,6 +52,10 @@ public class PersonDto {
 
     public String getLastname() {
         return lastname;
+    }
+
+    public UUID getOrganizationId() {
+        return organizationId;
     }
 
     public LocalDateTime getCreatedAt() {

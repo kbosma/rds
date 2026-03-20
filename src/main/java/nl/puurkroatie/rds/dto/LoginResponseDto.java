@@ -2,13 +2,13 @@ package nl.puurkroatie.rds.dto;
 
 import java.util.UUID;
 
-public class LoginResponse {
+public class LoginResponseDto {
 
     private final String token;
     private final UUID accountId;
     private final UUID organizationId;
 
-    public LoginResponse(String token, UUID accountId, UUID organizationId) {
+    public LoginResponseDto(String token, UUID accountId, UUID organizationId) {
         this.token = token;
         this.accountId = accountId;
         this.organizationId = organizationId;

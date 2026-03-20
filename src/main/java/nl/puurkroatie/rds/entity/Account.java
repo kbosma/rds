@@ -38,10 +38,6 @@ public class Account {
     private String password;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id", nullable = false)
-    private Organization organization;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
@@ -66,11 +62,10 @@ public class Account {
     protected Account() {
     }
 
-    public Account(UUID accountId, String password, String userName, Organization organization, Person person, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public Account(UUID accountId, String password, String userName, Person person, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.accountId = accountId;
         this.password = password;
         this.userName = userName;
-        this.organization = organization;
         this.person = person;
         this.locked = locked;
         this.expiresAt = expiresAt;
@@ -80,10 +75,9 @@ public class Account {
         this.modifiedBy = modifiedBy;
     }
 
-    public Account(String password, String userName, Organization organization, Person person, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public Account(String password, String userName, Person person, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.password = password;
         this.userName = userName;
-        this.organization = organization;
         this.person = person;
         this.locked = locked;
         this.expiresAt = expiresAt;
@@ -125,10 +119,6 @@ public class Account {
 
     public String getPassword() {
         return password;
-    }
-
-    public Organization getOrganization() {
-        return organization;
     }
 
     public Person getPerson() {

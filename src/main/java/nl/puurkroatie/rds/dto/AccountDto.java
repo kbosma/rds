@@ -8,7 +8,6 @@ public class AccountDto {
     private UUID accountId;
     private String userName;
     private String password;
-    private UUID organizationId;
     private UUID personId;
     private Boolean locked;
     private LocalDateTime expiresAt;
@@ -17,11 +16,10 @@ public class AccountDto {
     private LocalDateTime modifiedAt;
     private UUID modifiedBy;
 
-    public AccountDto(UUID accountId, String userName, String password, UUID organizationId, UUID personId, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public AccountDto(UUID accountId, String userName, String password, UUID personId, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.accountId = accountId;
         this.userName = userName;
         this.password = password;
-        this.organizationId = organizationId;
         this.personId = personId;
         this.locked = locked;
         this.expiresAt = expiresAt;
@@ -31,10 +29,9 @@ public class AccountDto {
         this.modifiedBy = modifiedBy;
     }
 
-    public AccountDto(String userName, String password, UUID organizationId, UUID personId, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public AccountDto(String userName, String password, UUID personId, Boolean locked, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.userName = userName;
         this.password = password;
-        this.organizationId = organizationId;
         this.personId = personId;
         this.locked = locked;
         this.expiresAt = expiresAt;
@@ -54,10 +51,6 @@ public class AccountDto {
 
     public String getPassword() {
         return password;
-    }
-
-    public UUID getOrganizationId() {
-        return organizationId;
     }
 
     public UUID getPersonId() {

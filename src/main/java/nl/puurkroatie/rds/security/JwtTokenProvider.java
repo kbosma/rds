@@ -26,7 +26,8 @@ public class JwtTokenProvider {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(UUID accountId, UUID organizationId, String userName, Collection<String> authorities) {
+    public String generateToken(UUID accountId, UUID organizationId, String userName,
+                                Collection<String> authorities, Collection<String> roles) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
@@ -35,6 +36,7 @@ public class JwtTokenProvider {
                 .claim("org", organizationId.toString())
                 .claim("userName", userName)
                 .claim("authorities", authorities)
+                .claim("roles", roles)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -61,6 +63,11 @@ public class JwtTokenProvider {
     @SuppressWarnings("unchecked")
     public List<String> getAuthorities(String token) {
         return getClaims(token).get("authorities", List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(String token) {
+        return getClaims(token).get("roles", List.class);
     }
 
     private Claims getClaims(String token) {

@@ -1,11 +1,11 @@
 package nl.puurkroatie.rds.dto;
 
-public class LoginRequest {
+public class LoginRequestDto {
 
     private final String userName;
     private final String password;
 
-    public LoginRequest(String userName, String password) {
+    public LoginRequestDto(String userName, String password) {
         this.userName = userName;
         this.password = password;
     }
