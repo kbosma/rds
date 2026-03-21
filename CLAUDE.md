@@ -33,9 +33,10 @@ De ROLEs, die aanwezig zijn:
   - PERSON
   - ACCOUNT
   - ACCOUNTROLE
-- EMPLOYEE - dit is de medewerker van een organisatie en mag enkel zijn gegevens (ACCOUNT-UUID in JWT) inzien en wijzigen met betrekking tot
-  - PERSON
-  - ACCOUNT
+- EMPLOYEE - dit is de medewerker van een organisatie en mag enkel zijn eigen gegevens (ACCOUNT-UUID in JWT) inzien (read-only) met betrekking tot
+  - PERSON (alleen eigen person)
+  - ACCOUNT (alleen eigen account)
+  - EMPLOYEE mag eigen wachtwoord wijzigen via `PUT /api/auth/change-password`
 
 ## Datamodel
 
@@ -64,6 +65,7 @@ De ROLEs, die aanwezig zijn:
   - String - passwordHash
   - UUID - person
   - Boolean - locked
+  - Boolean - mustChangePassword
   - DateTime - expiresAt
   - DateTime - createdAt
   - UUID - createdBy (points to accountId)
@@ -112,13 +114,14 @@ De ROLEs, die aanwezig zijn:
 
 ## Package Structure
 
-- `nl.puurkroatie.rds.entity` — JPA entity classes met Jakarta Persistence annotations
-- `nl.puurkroatie.rds.dto` — DTO records (DTO classes)
-- `nl.puurkroatie.rds.repository` — Spring Data JPA repositories
-- `nl.puurkroatie.rds.service` — Service classes met CRUD-operaties
-- `nl.puurkroatie.rds.controller` — REST controllers (`/api/...`)
-- `nl.puurkroatie.rds.security` — JWT-authenticatie, TenantContext en UserDetailsService
-- `nl.puurkroatie.rds.config` — Spring configuratie (SecurityConfig)
+- `nl.puurkroatie.rds` — Application entry point (`Application.java`)
+- `nl.puurkroatie.rds.auth.entity` — JPA entity classes met Jakarta Persistence annotations
+- `nl.puurkroatie.rds.auth.dto` — DTO classes
+- `nl.puurkroatie.rds.auth.repository` — Spring Data JPA repositories
+- `nl.puurkroatie.rds.auth.service` — Service interfaces en `impl/` met CRUD-operaties
+- `nl.puurkroatie.rds.auth.controller` — REST controllers (`/api/...`)
+- `nl.puurkroatie.rds.auth.security` — JWT-authenticatie, TenantContext en UserDetailsService
+- `nl.puurkroatie.rds.auth.config` — Spring configuratie (SecurityConfig)
 
 ## Authenticatie- en Autorisatie-implementatie
 
@@ -133,7 +136,7 @@ De ROLEs, die aanwezig zijn:
    - Retourneert `UserDetails` met bcrypt-hash en granted authorities
 4. Spring Security verifieert het wachtwoord via `BCryptPasswordEncoder`
 5. Na succesvolle authenticatie genereert `AuthController` een JWT via `JwtTokenProvider.generateToken()` met claims: `sub=accountId`, `org=organizationId`, `authorities=[...]`, `roles=[...]`
-6. Client ontvangt `LoginResponse` met `token`, `accountId` en `organizationId`
+6. Client ontvangt `LoginResponse` met `token`, `accountId`, `organizationId` en `mustChangePassword`
 
 ### Vervolgrequests (JWT-validatie)
 
@@ -180,7 +183,7 @@ Pattern: `{ENTITEIT}_{OPERATIE}` — 21 authorities totaal:
 |---|---|
 | ADMIN | Alle 21 authorities |
 | MANAGER | PERSON_READ/WRITE/DELETE, ACCOUNT_READ/WRITE/DELETE, ROLE_READ, AUTHORITY_READ, ACCOUNTROLE_READ/WRITE/DELETE, ROLEAUTHORITY_READ |
-| EMPLOYEE | PERSON_READ/WRITE, ACCOUNT_READ/WRITE |
+| EMPLOYEE | PERSON_READ, ACCOUNT_READ |
 
 ### `@PreAuthorize` op controllers
 
@@ -209,9 +212,16 @@ Elke controller-methode is beveiligd met `@PreAuthorize("hasAuthority('...')")`:
 
 Services voor PERSON, ACCOUNT en ACCOUNTROLE filteren data op basis van `TenantContext`:
 - **ADMIN** (`TenantContext.hasRole("ADMIN")`): ziet en beheert alle records zonder filtering
-- **Niet-ADMIN** (MANAGER, EMPLOYEE): ziet alleen records binnen eigen ORGANIZATION (`TenantContext.getOrganizationId()`). Schrijfacties op records van andere organisaties resulteren in `AccessDeniedException`.
+- **MANAGER**: ziet alleen records binnen eigen ORGANIZATION (`TenantContext.getOrganizationId()`). Schrijfacties op records van andere organisaties resulteren in `AccessDeniedException`.
+- **EMPLOYEE**: ziet alleen eigen PERSON/ACCOUNT (op basis van `TenantContext.getAccountId()`). Create/update/delete-acties resulteren in `AccessDeniedException`.
 
-> **Nog niet geimplementeerd**: EMPLOYEE-filtering op service-niveau (EMPLOYEE ziet alleen eigen PERSON/ACCOUNT op basis van `TenantContext.getAccountId()`).
+### Wachtwoord wijzigen
+
+- **Endpoint**: `PUT /api/auth/change-password` (alleen EMPLOYEE, niet ADMIN/MANAGER)
+- **Input**: `ChangePasswordDto` met `currentPassword` en `newPassword`
+- Verifieert huidig wachtwoord, zet nieuw wachtwoord en zet `mustChangePassword` op `false`
+- ADMIN/MANAGER kan `mustChangePassword` op `true` zetten via `PUT /api/accounts/{id}`
+- Bij login wordt `mustChangePassword` meegestuurd in de `LoginResponseDto`
 
 ### Security-gerelateerde bestanden
 
@@ -222,9 +232,10 @@ Services voor PERSON, ACCOUNT en ACCOUNTROLE filteren data op basis van `TenantC
 | `security/CustomUserDetailsService.java` | Laadt Account + rollen + authorities uit DB voor authenticatie |
 | `security/TenantContext.java` | ThreadLocal holder voor organizationId, accountId en roles |
 | `config/SecurityConfig.java` | Filter chain, PasswordEncoder, AuthenticationManager, `@EnableMethodSecurity` |
-| `controller/AuthController.java` | POST `/api/auth/login` — retourneert JWT |
-| `dto/LoginRequest.java` | Input: userName, password |
-| `dto/LoginResponse.java` | Output: token, accountId, organizationId |
+| `controller/AuthController.java` | POST `/api/auth/login` — retourneert JWT; PUT `/api/auth/change-password` — wachtwoord wijzigen |
+| `dto/LoginRequestDto.java` | Input: userName, password |
+| `dto/LoginResponseDto.java` | Output: token, accountId, organizationId, mustChangePassword |
+| `dto/ChangePasswordDto.java` | Input: currentPassword, newPassword |
 
 ### API testen met curl
 
@@ -237,7 +248,168 @@ curl -k -X POST https://localhost:8666/api/auth/login \
 # Gebruik JWT voor beveiligde endpoints
 curl -k https://localhost:8666/api/organizations \
   -H "Authorization: Bearer <token>"
+
+# Wachtwoord wijzigen (authenticated)
+curl -k -X PUT https://localhost:8666/api/auth/change-password \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"currentPassword":"password123","newPassword":"newpassword456"}'
 ```
+
+## Domein: Reisburo Boekingssysteem
+
+### Functionele beschrijving
+
+RDS is een boekingssysteem voor reisbureaus. Elke ORGANIZATION is een onafhankelijk reisburo met eigen medewerkers (PERSON/ACCOUNT). Het systeem registreert boekingen waarbij meerdere accommodaties in de tijd worden vastgelegd.
+
+### Kernconcepten
+
+- **BOOKING (Boeking)**: Een reis-boeking aangemaakt door een medewerker van het reisburo. Een boeking doorloopt meerdere stadia (bijv. concept, bevestigd, geaccordeerd, betaald, afgerond, geannuleerd).
+- **BOOKER (Hoofdboeker)**: De verantwoordelijke persoon die de reis boekt. Er is altijd precies 1 hoofdboeker per boeking. De boeker krijgt uiteindelijk toegang tot een portaal om:
+  - Eigen boekingen in te zien
+  - Te communiceren met het reisburo
+  - Boekingen te accorderen
+  - Te betalen
+- **TRAVELLER (Reismetgezel)**: Overige geregistreerde personen op een boeking. Van reismetgezellen worden gegevens vastgelegd om:
+  - Een juiste accommodatie te vinden (aantal bedden, rolstoeltoegankelijkheid)
+  - De prijs te bepalen (kinderen zijn goedkoper)
+- **ACCOMMODATION (Accommodatie)**: Een verblijfslocatie binnen een boeking, met begin- en einddatum. Een boeking kan meerdere accommodaties bevatten (meerdere verblijven in de tijd).
+- **SUPPLIER (Leverancier)**: De eigenaar/aanbieder van een accommodatie. Accommodaties zijn in bezit van verschillende suppliers.
+
+### Tenant-isolatie voor boekingsdata
+
+Alle entiteiten met betrekking tot een boeking vallen onder de tenant-isolatie van het reisburo:
+- Elke booking-entity bevat een property `tenantOrganization` (UUID, verwijst naar ORGANIZATION)
+- Boekingsdata kan enkel door medewerkers van het betreffende reisburo worden ingezien, gemuteerd of verwijderd
+- De property `tenantOrganization` is redundant (afleidbaar via het ACCOUNT van de medewerker), maar wordt expliciet opgeslagen voor directe filtering
+
+### Audit-velden voor booking-entities
+
+Elke booking-entity bevat de standaard audit-velden:
+- `createdAt` (DateTime) — tijdstip van aanmaken
+- `createdBy` (UUID) — verwijst naar het ACCOUNT (accountId) van de ingelogde medewerker
+- `modifiedAt` (DateTime) — tijdstip van laatste wijziging
+- `modifiedBy` (UUID) — verwijst naar het ACCOUNT (accountId) van de ingelogde medewerker
+
+### Boekingsstadia
+
+Een boeking doorloopt meerdere stadia in zijn levenscyclus (exact datamodel volgt).
+
+### Autorisatie voor boekingsdata
+
+- **ADMIN**: volledige toegang tot alle boekingsdata over alle organisaties heen
+- **MANAGER**: toegang tot boekingsdata binnen eigen ORGANIZATION
+- **EMPLOYEE**: toegang tot boekingsdata binnen eigen ORGANIZATION (read/write afhankelijk van authorities)
+- **BOOKER** (toekomstig): beperkte toegang via portaal tot eigen boekingen
+
+### Datamodel voor boekingen
+
+- BOOKING
+  - UUID : bookingId
+  - String : bookingNumber
+  - UUID : bookingStatus
+  - Date : fromDate
+  - Date : untilDate
+  - Money : totalSum
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
+- BOOKER (main bookers)
+  - UUID : bookerId
+  - UUID : booking
+  - String : firstname
+  - String : prefix
+  - String : lastname
+  - String : callsign
+  - String : telephone
+  - String : emailaddress
+  - UUID : gender
+  - Date : birthdate
+  - String : initials
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
+- TRAVELER
+  - UUID : travelerId
+  - UUID : booking
+  - String : firstname
+  - String : prefix
+  - String : lastname
+  - UUID : gender
+  - Date : birthdate
+  - String : initials
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
+- BOOKINGSTATUS (categorie, vastgelegd door ADMIN)
+  - UUID : bookingstatusId
+  - String : displayname
+- GENDER (categorie, vastgelegd door ADMIN)
+  - UUID : genderId
+  - String : displayname
+ADDRESS (several purposes)
+  - UUID : addressId
+  - String : street
+  - Number : housenumber
+  - String : housenumberAddition
+  - String : postalcode
+  - String : city
+  - String : country
+  - UUID : addressrole
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
+- ADDRESSROLE
+  - UUID : addressroleId
+  - String : displayname
+- BOOKERADDRESS (n..m koppeltabel)
+  - UUID : booker
+  - UUID : address
+- ACCOMMODATION
+  - UUID : accommodationId
+  - String : key
+  - String : name
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
+- SUPPLIER
+  - UUID : supplierId
+  - String : key
+  - String : name
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
+ACCOMMODATIONSUPPLIER (n..m koppeltabel)
+  - UUID : accommodation
+  - UUID : supplier
+ACCOMMODATIONADDRESS
+  - UUID : accommodation
+  - UUID : address
+- SUPPLIERADDRESS
+  - UUID : supplier
+  - UUID : address
+- DOCUMENT
+  - UUID : documentId
+  - UUID : booking
+  - String : displayname
+  - ByteArray : document
+  - DateTime - createdAt
+  - UUID - createdBy (points to accountId)
+  - DateTime - modifiedAt
+  - UUID - modifiedBy (points to accountId)
+  - UUID : tenantOrganization
 
 ## Entity Classes
 
@@ -276,7 +448,7 @@ curl -k https://localhost:8666/api/organizations \
   | Username | Rol | Organisatie | Authorities |
   |---|---|---|---|
   | `jan.vanbergen` | ADMIN | Puurkroatie | Alle 21 authorities |
-  | `maria.jansen` | EMPLOYEE | Puurkroatie | PERSON_READ/WRITE, ACCOUNT_READ/WRITE |
+  | `maria.jansen` | EMPLOYEE | Puurkroatie | PERSON_READ, ACCOUNT_READ |
   | `pieter.degroot` | MANAGER | TechPartner BV | PERSON_READ/WRITE/DELETE, ACCOUNT_READ/WRITE/DELETE, ROLE_READ, AUTHORITY_READ, ACCOUNTROLE_READ/WRITE/DELETE, ROLEAUTHORITY_READ |
 - **Init**: `spring.jpa.defer-datasource-initialization: true`, `spring.sql.init.mode: always`, `platform: postgres`
 - **psql pad**: `/Applications/Postgres.app/Contents/Versions/latest/bin/psql`

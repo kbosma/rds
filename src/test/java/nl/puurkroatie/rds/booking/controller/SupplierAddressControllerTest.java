@@ -1,0 +1,120 @@
+package nl.puurkroatie.rds.booking.controller;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+class SupplierAddressControllerTest extends AbstractBookingControllerTest {
+
+    private static final UUID SUPPLIER_ADDRESS_PK_14 = UUID.fromString("06000000-0000-0000-0000-000000000014");
+    private static final UUID SUPPLIER_ADDRESS_TP_16 = UUID.fromString("06000000-0000-0000-0000-000000000016");
+
+    // ADMIN: GET /api/supplier-addresses — alle koppelingen (>= 4)
+    @Test
+    void admin_findAll_returnsAllSupplierAddresses() throws Exception {
+        String token = adminToken();
+
+        mockMvc.perform(get("/api/supplier-addresses")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(4))));
+    }
+
+    // ADMIN: GET /api/supplier-addresses/{supplierId}/{addressId} — specifieke koppeling
+    @Test
+    void admin_findById_returnsSupplierAddress() throws Exception {
+        String token = adminToken();
+
+        mockMvc.perform(get("/api/supplier-addresses/" + SUPPLIER_PK_1 + "/" + SUPPLIER_ADDRESS_PK_14)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.supplierId").value(SUPPLIER_PK_1.toString()))
+                .andExpect(jsonPath("$.addressId").value(SUPPLIER_ADDRESS_PK_14.toString()));
+    }
+
+    // MANAGER: GET /api/supplier-addresses — 200 (heeft BOOKING_READ)
+    @Test
+    void manager_findAll_returns200() throws Exception {
+        String token = managerToken();
+
+        mockMvc.perform(get("/api/supplier-addresses")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    // MANAGER: POST /api/supplier-addresses — 201 (heeft BOOKING_WRITE, binnen eigen org)
+    @Test
+    void manager_createSupplierAddress_returns201() throws Exception {
+        String token = managerToken();
+
+        // Koppel TechPartner supplier 3 aan TechPartner address 11
+        String json = "{\"supplierId\":\"" + SUPPLIER_TP_3 + "\",\"addressId\":\"" + ADDRESS_TP_11 + "\"}";
+
+        mockMvc.perform(post("/api/supplier-addresses")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated());
+    }
+
+    // MANAGER: DELETE /api/supplier-addresses/{supId}/{addrId} eigen org — 204
+    @Test
+    void manager_deleteSupplierAddress_ownOrganization_returns204() throws Exception {
+        String token = managerToken();
+
+        mockMvc.perform(delete("/api/supplier-addresses/" + SUPPLIER_TP_3 + "/" + SUPPLIER_ADDRESS_TP_16)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
+    // EMPLOYEE: GET /api/supplier-addresses — 200 (heeft BOOKING_READ)
+    @Test
+    void employee_findAll_returns200() throws Exception {
+        String token = employeeToken();
+
+        mockMvc.perform(get("/api/supplier-addresses")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    // EMPLOYEE: POST /api/supplier-addresses — 201 (heeft BOOKING_WRITE, binnen eigen org)
+    @Test
+    void employee_createSupplierAddress_returns201() throws Exception {
+        String token = employeeToken();
+
+        // Koppel Puurkroatie supplier 1 aan Puurkroatie address 8
+        String json = "{\"supplierId\":\"" + SUPPLIER_PK_1 + "\",\"addressId\":\"" + ADDRESS_PK_8 + "\"}";
+
+        mockMvc.perform(post("/api/supplier-addresses")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated());
+    }
+
+    // EMPLOYEE: DELETE /api/supplier-addresses/{supId}/{addrId} eigen org — 204
+    @Test
+    void employee_deleteSupplierAddress_ownOrganization_returns204() throws Exception {
+        String token = employeeToken();
+
+        mockMvc.perform(delete("/api/supplier-addresses/" + SUPPLIER_PK_1 + "/" + SUPPLIER_ADDRESS_PK_14)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
+    // Ongeauthenticeerd: GET /api/supplier-addresses — 401
+    @Test
+    void unauthenticated_findAll_returns401() throws Exception {
+        mockMvc.perform(get("/api/supplier-addresses"))
+                .andExpect(status().isUnauthorized());
+    }
+}
