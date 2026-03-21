@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     List<Document> findByTenantOrganization(UUID tenantOrganization);
+
+    List<Document> findByBookingBookingId(UUID bookingId);
 }

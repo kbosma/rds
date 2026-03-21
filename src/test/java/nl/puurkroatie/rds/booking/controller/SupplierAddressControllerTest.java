@@ -51,6 +51,27 @@ class SupplierAddressControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isOk());
     }
 
+    // MANAGER: GET /api/supplier-addresses/{supId}/{addrId} eigen org — 200
+    @Test
+    void manager_findById_ownOrganization_returns200() throws Exception {
+        String token = managerToken();
+
+        mockMvc.perform(get("/api/supplier-addresses/" + SUPPLIER_TP_3 + "/" + SUPPLIER_ADDRESS_TP_16)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.supplierId").value(SUPPLIER_TP_3.toString()));
+    }
+
+    // MANAGER: GET /api/supplier-addresses/{supId}/{addrId} andere org — 404 (service filtert op tenant)
+    @Test
+    void manager_findById_otherOrganization_returns404() throws Exception {
+        String token = managerToken();
+
+        mockMvc.perform(get("/api/supplier-addresses/" + SUPPLIER_PK_1 + "/" + SUPPLIER_ADDRESS_PK_14)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
     // MANAGER: POST /api/supplier-addresses — 201 (heeft BOOKING_WRITE, binnen eigen org)
     @Test
     void manager_createSupplierAddress_returns201() throws Exception {
@@ -84,6 +105,27 @@ class SupplierAddressControllerTest extends AbstractBookingControllerTest {
         mockMvc.perform(get("/api/supplier-addresses")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+    }
+
+    // EMPLOYEE: GET /api/supplier-addresses/{supId}/{addrId} eigen org — 200
+    @Test
+    void employee_findById_ownOrganization_returns200() throws Exception {
+        String token = employeeToken();
+
+        mockMvc.perform(get("/api/supplier-addresses/" + SUPPLIER_PK_1 + "/" + SUPPLIER_ADDRESS_PK_14)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.supplierId").value(SUPPLIER_PK_1.toString()));
+    }
+
+    // EMPLOYEE: GET /api/supplier-addresses/{supId}/{addrId} andere org — 404 (service filtert op tenant)
+    @Test
+    void employee_findById_otherOrganization_returns404() throws Exception {
+        String token = employeeToken();
+
+        mockMvc.perform(get("/api/supplier-addresses/" + SUPPLIER_TP_3 + "/" + SUPPLIER_ADDRESS_TP_16)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 
     // EMPLOYEE: POST /api/supplier-addresses — 201 (heeft BOOKING_WRITE, binnen eigen org)

@@ -46,6 +46,27 @@ class BookerAddressControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isOk());
     }
 
+    // MANAGER: GET /api/booker-addresses/{bookerId}/{addressId} eigen org — 200
+    @Test
+    void manager_findById_ownOrganization_returns200() throws Exception {
+        String token = managerToken();
+
+        mockMvc.perform(get("/api/booker-addresses/" + BOOKER_TP_4 + "/" + ADDRESS_TP_5)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookerId").value(BOOKER_TP_4.toString()));
+    }
+
+    // MANAGER: GET /api/booker-addresses/{bookerId}/{addressId} andere org — 404 (service filtert op tenant)
+    @Test
+    void manager_findById_otherOrganization_returns404() throws Exception {
+        String token = managerToken();
+
+        mockMvc.perform(get("/api/booker-addresses/" + BOOKER_PK_1 + "/" + ADDRESS_PK_1)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
     // MANAGER: POST /api/booker-addresses — 201 (heeft BOOKING_WRITE, koppeling binnen eigen org)
     @Test
     void manager_createBookerAddress_returns201() throws Exception {
@@ -79,6 +100,27 @@ class BookerAddressControllerTest extends AbstractBookingControllerTest {
         mockMvc.perform(get("/api/booker-addresses")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+    }
+
+    // EMPLOYEE: GET /api/booker-addresses/{bookerId}/{addressId} eigen org — 200
+    @Test
+    void employee_findById_ownOrganization_returns200() throws Exception {
+        String token = employeeToken();
+
+        mockMvc.perform(get("/api/booker-addresses/" + BOOKER_PK_1 + "/" + ADDRESS_PK_1)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookerId").value(BOOKER_PK_1.toString()));
+    }
+
+    // EMPLOYEE: GET /api/booker-addresses/{bookerId}/{addressId} andere org — 404 (service filtert op tenant)
+    @Test
+    void employee_findById_otherOrganization_returns404() throws Exception {
+        String token = employeeToken();
+
+        mockMvc.perform(get("/api/booker-addresses/" + BOOKER_TP_4 + "/" + ADDRESS_TP_5)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 
     // EMPLOYEE: POST /api/booker-addresses — 201 (heeft BOOKING_WRITE, koppeling binnen eigen org)

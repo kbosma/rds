@@ -4,9 +4,12 @@ import nl.puurkroatie.rds.booking.entity.Booker;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface BookerRepository extends JpaRepository<Booker, UUID> {
 
     List<Booker> findByTenantOrganization(UUID tenantOrganization);
+
+    Optional<Booker> findByEmailaddressAndBookingBookingNumber(String emailaddress, String bookingNumber);
 }

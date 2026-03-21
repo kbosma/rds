@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class RoleAuthorityControllerTest extends AbstractControllerTest {
+class RoleAuthorityControllerTest extends AbstractAuthControllerTest {
 
     // Test 56: ADMIN: GET /api/role-authorities — 200
     @Test

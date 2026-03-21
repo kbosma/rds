@@ -1,6 +1,6 @@
 package nl.puurkroatie.rds.booking.controller;
 
-import nl.puurkroatie.rds.auth.controller.AbstractControllerTest;
+import nl.puurkroatie.rds.common.controller.AbstractControllerTest;
 
 import java.util.UUID;
 

@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class PersonControllerTest extends AbstractControllerTest {
+class PersonControllerTest extends AbstractAuthControllerTest {
 
     // Test 10: ADMIN: GET /api/persons — alle persons (>= 3)
     @Test

@@ -47,3 +47,8 @@ app:
     secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgSldUIHNpZ25pbmcgMjU2Yml0
 #    5 minuten
     expiration-ms: 300000
+#    1 uur
+    booker-expiration-ms: 3600000
+  otp:
+    expiry-minutes: 10
+    max-active-per-email: 3

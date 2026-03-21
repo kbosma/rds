@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import nl.puurkroatie.rds.bookerportal.security.BookerContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,26 +31,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractToken(request);
 
             if (token != null && jwtTokenProvider.validateToken(token)) {
-                List<SimpleGrantedAuthority> authorities = jwtTokenProvider.getAuthorities(token).stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .toList();
+                String tokenType = jwtTokenProvider.getTokenType(token);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                jwtTokenProvider.getAccountId(token),
-                                null,
-                                authorities);
+                if ("BOOKER".equals(tokenType)) {
+                    List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("BOOKER_PORTAL_READ"));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    jwtTokenProvider.getAccountId(token),
+                                    null,
+                                    authorities);
 
-                TenantContext.setOrganizationId(jwtTokenProvider.getOrganizationId(token));
-                TenantContext.setAccountId(jwtTokenProvider.getAccountId(token));
-                TenantContext.setRoles(new HashSet<>(jwtTokenProvider.getRoles(token)));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    BookerContext.setBookerId(jwtTokenProvider.getAccountId(token));
+                    BookerContext.setBookingId(jwtTokenProvider.getBookingId(token));
+                } else {
+                    List<SimpleGrantedAuthority> authorities = jwtTokenProvider.getAuthorities(token).stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .toList();
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    jwtTokenProvider.getAccountId(token),
+                                    null,
+                                    authorities);
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    TenantContext.setOrganizationId(jwtTokenProvider.getOrganizationId(token));
+                    TenantContext.setAccountId(jwtTokenProvider.getAccountId(token));
+                    TenantContext.setRoles(new HashSet<>(jwtTokenProvider.getRoles(token)));
+                }
             }
 
             filterChain.doFilter(request, response);
         } finally {
             TenantContext.clear();
+            BookerContext.clear();
         }
     }
 

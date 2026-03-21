@@ -19,11 +19,14 @@ public class JwtTokenProvider {
 
     private final SecretKey key;
     private final long expirationMs;
+    private final long bookerExpirationMs;
 
     public JwtTokenProvider(@Value("${app.jwt.secret}") String secret,
-                            @Value("${app.jwt.expiration-ms}") long expirationMs) {
+                            @Value("${app.jwt.expiration-ms}") long expirationMs,
+                            @Value("${app.jwt.booker-expiration-ms:3600000}") long bookerExpirationMs) {
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
         this.expirationMs = expirationMs;
+        this.bookerExpirationMs = bookerExpirationMs;
     }
 
     public String generateToken(UUID accountId, UUID organizationId, String userName,
@@ -33,10 +36,25 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(accountId.toString())
+                .claim("type", "EMPLOYEE")
                 .claim("org", organizationId.toString())
                 .claim("userName", userName)
                 .claim("authorities", authorities)
                 .claim("roles", roles)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateBookerToken(UUID bookerId, UUID bookingId) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + bookerExpirationMs);
+
+        return Jwts.builder()
+                .subject(bookerId.toString())
+                .claim("type", "BOOKER")
+                .claim("bookingId", bookingId.toString())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -52,12 +70,21 @@ public class JwtTokenProvider {
         }
     }
 
+    public String getTokenType(String token) {
+        String type = getClaims(token).get("type", String.class);
+        return type != null ? type : "EMPLOYEE";
+    }
+
     public UUID getAccountId(String token) {
         return UUID.fromString(getClaims(token).getSubject());
     }
 
     public UUID getOrganizationId(String token) {
         return UUID.fromString(getClaims(token).get("org", String.class));
+    }
+
+    public UUID getBookingId(String token) {
+        return UUID.fromString(getClaims(token).get("bookingId", String.class));
     }
 
     @SuppressWarnings("unchecked")
