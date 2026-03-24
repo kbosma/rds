@@ -9,7 +9,6 @@ import java.util.UUID;
 public class BookerDto {
 
     private UUID bookerId;
-    private UUID bookingId;
     private String firstname;
     private String prefix;
     private String lastname;
@@ -26,9 +25,8 @@ public class BookerDto {
     private UUID tenantOrganization;
 
     @JsonCreator
-    public BookerDto(UUID bookerId, UUID bookingId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, UUID genderId, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, UUID genderId, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
-        this.bookingId = bookingId;
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -45,8 +43,7 @@ public class BookerDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public BookerDto(UUID bookingId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, UUID genderId, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
-        this.bookingId = bookingId;
+    public BookerDto(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, UUID genderId, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -65,10 +62,6 @@ public class BookerDto {
 
     public UUID getBookerId() {
         return bookerId;
-    }
-
-    public UUID getBookingId() {
-        return bookingId;
     }
 
     public String getFirstname() {

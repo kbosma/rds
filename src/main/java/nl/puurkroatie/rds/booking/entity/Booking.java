@@ -26,6 +26,10 @@ public class Booking {
     @Column(name = "booking_id")
     private UUID bookingId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booker_id")
+    private Booker booker;
+
     @Column(name = "booking_number", nullable = false)
     private String bookingNumber;
 
@@ -60,8 +64,9 @@ public class Booking {
     protected Booking() {
     }
 
-    public Booking(UUID bookingId, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booking(UUID bookingId, Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookingId = bookingId;
+        this.booker = booker;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
         this.fromDate = fromDate;
@@ -74,7 +79,8 @@ public class Booking {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public Booking(String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+        this.booker = booker;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
         this.fromDate = fromDate;
@@ -101,6 +107,10 @@ public class Booking {
 
     public UUID getBookingId() {
         return bookingId;
+    }
+
+    public Booker getBooker() {
+        return booker;
     }
 
     public String getBookingNumber() {

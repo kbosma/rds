@@ -45,8 +45,8 @@ spring:
 app:
   jwt:
     secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgSldUIHNpZ25pbmcgMjU2Yml0
-#    5 minuten
-    expiration-ms: 300000
+#    1 uur
+    expiration-ms: 3600000
 #    1 uur
     booker-expiration-ms: 3600000
   otp:

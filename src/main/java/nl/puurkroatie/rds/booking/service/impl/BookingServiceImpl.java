@@ -2,8 +2,10 @@ package nl.puurkroatie.rds.booking.service.impl;
 
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingDto;
+import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.BookingStatus;
+import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.booking.repository.BookingStatusRepository;
 import nl.puurkroatie.rds.booking.service.BookingService;
@@ -19,10 +21,12 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingStatusRepository bookingStatusRepository;
+    private final BookerRepository bookerRepository;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookingStatusRepository bookingStatusRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository, BookingStatusRepository bookingStatusRepository, BookerRepository bookerRepository) {
         this.bookingRepository = bookingRepository;
         this.bookingStatusRepository = bookingStatusRepository;
+        this.bookerRepository = bookerRepository;
     }
 
     @Override
@@ -82,6 +86,7 @@ public class BookingServiceImpl implements BookingService {
     private BookingDto toDto(Booking entity) {
         return new BookingDto(
                 entity.getBookingId(),
+                entity.getBooker() != null ? entity.getBooker().getBookerId() : null,
                 entity.getBookingNumber(),
                 entity.getBookingStatus().getBookingstatusId(),
                 entity.getFromDate(),
@@ -95,10 +100,19 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
+    private Booker resolveBooker(UUID bookerId) {
+        if (bookerId == null) {
+            return null;
+        }
+        return bookerRepository.findById(bookerId)
+                .orElseThrow(() -> new RuntimeException("Booker not found with id: " + bookerId));
+    }
+
     private Booking toEntity(BookingDto dto) {
         BookingStatus bookingStatus = bookingStatusRepository.findById(dto.getBookingStatusId())
                 .orElseThrow(() -> new RuntimeException("BookingStatus not found with id: " + dto.getBookingStatusId()));
         return new Booking(
+                resolveBooker(dto.getBookerId()),
                 dto.getBookingNumber(),
                 bookingStatus,
                 dto.getFromDate(),
@@ -117,6 +131,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("BookingStatus not found with id: " + dto.getBookingStatusId()));
         return new Booking(
                 id,
+                resolveBooker(dto.getBookerId()),
                 dto.getBookingNumber(),
                 bookingStatus,
                 dto.getFromDate(),

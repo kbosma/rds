@@ -10,6 +10,7 @@ import java.util.UUID;
 public class BookingDto {
 
     private UUID bookingId;
+    private UUID bookerId;
     private String bookingNumber;
     private UUID bookingStatusId;
     private LocalDate fromDate;
@@ -22,8 +23,9 @@ public class BookingDto {
     private UUID tenantOrganization;
 
     @JsonCreator
-    public BookingDto(UUID bookingId, String bookingNumber, UUID bookingStatusId, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, UUID bookingStatusId, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookingId = bookingId;
+        this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
         this.bookingStatusId = bookingStatusId;
         this.fromDate = fromDate;
@@ -36,7 +38,8 @@ public class BookingDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public BookingDto(String bookingNumber, UUID bookingStatusId, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookingDto(UUID bookerId, String bookingNumber, UUID bookingStatusId, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+        this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
         this.bookingStatusId = bookingStatusId;
         this.fromDate = fromDate;
@@ -51,6 +54,10 @@ public class BookingDto {
 
     public UUID getBookingId() {
         return bookingId;
+    }
+
+    public UUID getBookerId() {
+        return bookerId;
     }
 
     public String getBookingNumber() {

@@ -3,10 +3,8 @@ package nl.puurkroatie.rds.booking.service.impl;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookerDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
-import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.Gender;
 import nl.puurkroatie.rds.booking.repository.BookerRepository;
-import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.booking.repository.GenderRepository;
 import nl.puurkroatie.rds.booking.service.BookerService;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,12 +18,10 @@ import java.util.UUID;
 public class BookerServiceImpl implements BookerService {
 
     private final BookerRepository bookerRepository;
-    private final BookingRepository bookingRepository;
     private final GenderRepository genderRepository;
 
-    public BookerServiceImpl(BookerRepository bookerRepository, BookingRepository bookingRepository, GenderRepository genderRepository) {
+    public BookerServiceImpl(BookerRepository bookerRepository, GenderRepository genderRepository) {
         this.bookerRepository = bookerRepository;
-        this.bookingRepository = bookingRepository;
         this.genderRepository = genderRepository;
     }
 
@@ -86,7 +82,6 @@ public class BookerServiceImpl implements BookerService {
     private BookerDto toDto(Booker entity) {
         return new BookerDto(
                 entity.getBookerId(),
-                entity.getBooking().getBookingId(),
                 entity.getFirstname(),
                 entity.getPrefix(),
                 entity.getLastname(),
@@ -113,10 +108,7 @@ public class BookerServiceImpl implements BookerService {
     }
 
     private Booker toEntity(BookerDto dto) {
-        Booking booking = bookingRepository.findById(dto.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
         return new Booker(
-                booking,
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),
@@ -135,11 +127,8 @@ public class BookerServiceImpl implements BookerService {
     }
 
     private Booker toEntity(UUID id, BookerDto dto) {
-        Booking booking = bookingRepository.findById(dto.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
         return new Booker(
                 id,
-                booking,
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),

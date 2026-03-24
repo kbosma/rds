@@ -11,5 +11,5 @@ public interface BookerRepository extends JpaRepository<Booker, UUID> {
 
     List<Booker> findByTenantOrganization(UUID tenantOrganization);
 
-    Optional<Booker> findByEmailaddressAndBookingBookingNumber(String emailaddress, String bookingNumber);
+    Optional<Booker> findByEmailaddress(String emailaddress);
 }

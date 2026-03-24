@@ -32,5 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
+### Angular / Node ###
+node_modules/
+.angular/
+frontend-employee/dist/
+frontend-booker/dist/
+
 ### Runtime artifacts ###
 access.log

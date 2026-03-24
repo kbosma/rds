@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,10 +25,6 @@ public class Booker {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "booker_id")
     private UUID bookerId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
-    private Booking booking;
 
     @Column(name = "firstname")
     private String firstname;
@@ -75,9 +72,8 @@ public class Booker {
     protected Booker() {
     }
 
-    public Booker(UUID bookerId, Booking booking, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booker(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
-        this.booking = booking;
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -94,8 +90,7 @@ public class Booker {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public Booker(Booking booking, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
-        this.booking = booking;
+    public Booker(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -126,10 +121,6 @@ public class Booker {
 
     public UUID getBookerId() {
         return bookerId;
-    }
-
-    public Booking getBooking() {
-        return booking;
     }
 
     public String getFirstname() {
