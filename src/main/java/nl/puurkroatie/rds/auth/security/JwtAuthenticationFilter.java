@@ -34,7 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String tokenType = jwtTokenProvider.getTokenType(token);
 
                 if ("BOOKER".equals(tokenType)) {
-                    List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("BOOKER_PORTAL_READ"));
+                    List<SimpleGrantedAuthority> authorities = List.of(
+                            new SimpleGrantedAuthority("BOOKER_PORTAL_READ"),
+                            new SimpleGrantedAuthority("BOOKER_PORTAL_UPDATE"));
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

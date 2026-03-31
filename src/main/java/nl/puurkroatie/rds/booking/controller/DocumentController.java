@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.service.DocumentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class DocumentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<DocumentDto> create(@RequestBody DocumentDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    public ResponseEntity<DocumentDto> create(@RequestBody @Valid DocumentDto dto) {
         DocumentDto created = documentService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<DocumentDto> update(@PathVariable UUID id, @RequestBody DocumentDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
+    public ResponseEntity<DocumentDto> update(@PathVariable UUID id, @RequestBody @Valid DocumentDto dto) {
         DocumentDto updated = documentService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

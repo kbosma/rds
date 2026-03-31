@@ -4,12 +4,14 @@ import nl.puurkroatie.rds.auth.entity.RoleAuthority;
 import nl.puurkroatie.rds.auth.entity.RoleAuthorityId;
 import nl.puurkroatie.rds.auth.repository.RoleAuthorityRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class RoleAuthorityService {
 
     private final RoleAuthorityRepository roleAuthorityRepository;
@@ -18,10 +20,12 @@ public class RoleAuthorityService {
         this.roleAuthorityRepository = roleAuthorityRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<RoleAuthority> findAll() {
         return roleAuthorityRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Optional<RoleAuthority> findById(UUID roleId, UUID authorityId) {
         return roleAuthorityRepository.findById(new RoleAuthorityId(roleId, authorityId));
     }

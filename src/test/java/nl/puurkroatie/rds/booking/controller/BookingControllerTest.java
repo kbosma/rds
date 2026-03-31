@@ -82,7 +82,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         String token = managerToken();
 
         String json = "{\"bookingNumber\":\"BK-TEST-001\"," +
-                "\"bookingStatusId\":\"" + BOOKING_STATUS_CONCEPT + "\"," +
+                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-12-01\",\"untilDate\":\"2026-12-14\"," +
                 "\"totalSum\":1500.00}";
 
@@ -101,7 +101,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         String token = managerToken();
 
         String json = "{\"bookingNumber\":\"BK-2026-004-UPD\"," +
-                "\"bookingStatusId\":\"" + BOOKING_STATUS_CONCEPT + "\"," +
+                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-20\",\"untilDate\":\"2026-07-27\"," +
                 "\"totalSum\":1700.00}";
 
@@ -119,7 +119,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         String token = managerToken();
 
         String json = "{\"bookingNumber\":\"BK-HACK\"," +
-                "\"bookingStatusId\":\"" + BOOKING_STATUS_CONCEPT + "\"," +
+                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-01\",\"untilDate\":\"2026-07-14\"," +
                 "\"totalSum\":9999.00}";
 
@@ -194,7 +194,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         String token = employeeToken();
 
         String json = "{\"bookingNumber\":\"BK-TEST-EMP\"," +
-                "\"bookingStatusId\":\"" + BOOKING_STATUS_CONCEPT + "\"," +
+                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-11-01\",\"untilDate\":\"2026-11-14\"," +
                 "\"totalSum\":1200.00}";
 
@@ -213,7 +213,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         String token = employeeToken();
 
         String json = "{\"bookingNumber\":\"BK-2026-001-UPD\"," +
-                "\"bookingStatusId\":\"" + BOOKING_STATUS_CONCEPT + "\"," +
+                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-01\",\"untilDate\":\"2026-07-14\"," +
                 "\"totalSum\":2500.00}";
 
@@ -231,7 +231,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         String token = employeeToken();
 
         String json = "{\"bookingNumber\":\"BK-HACK\"," +
-                "\"bookingStatusId\":\"" + BOOKING_STATUS_CONCEPT + "\"," +
+                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-20\",\"untilDate\":\"2026-07-27\"," +
                 "\"totalSum\":9999.00}";
 

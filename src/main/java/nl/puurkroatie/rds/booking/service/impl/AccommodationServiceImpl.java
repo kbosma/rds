@@ -3,29 +3,37 @@ package nl.puurkroatie.rds.booking.service.impl;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.AccommodationDto;
 import nl.puurkroatie.rds.booking.entity.Accommodation;
+import nl.puurkroatie.rds.booking.mapper.AccommodationMapper;
 import nl.puurkroatie.rds.booking.repository.AccommodationRepository;
 import nl.puurkroatie.rds.booking.service.AccommodationService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AccommodationServiceImpl implements AccommodationService {
 
     private final AccommodationRepository accommodationRepository;
+    private final AccommodationMapper accommodationMapper;
 
-    public AccommodationServiceImpl(AccommodationRepository accommodationRepository) {
+    public AccommodationServiceImpl(AccommodationRepository accommodationRepository, AccommodationMapper accommodationMapper) {
         this.accommodationRepository = accommodationRepository;
+        this.accommodationMapper = accommodationMapper;
     }
 
     @Override
     public AccommodationDto create(AccommodationDto dto) {
-        Accommodation entity = toEntity(dto);
+        Accommodation entity = new Accommodation(
+                dto.getKey(),
+                dto.getName()
+        );
         Accommodation saved = accommodationRepository.save(entity);
-        return toDto(saved);
+        return accommodationMapper.toDto(saved);
     }
 
     @Override
@@ -33,9 +41,9 @@ public class AccommodationServiceImpl implements AccommodationService {
         Accommodation existing = accommodationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Accommodation not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
-        Accommodation entity = toEntity(id, dto);
+        Accommodation entity = accommodationMapper.toEntity(id, dto);
         Accommodation saved = accommodationRepository.save(entity);
-        return toDto(saved);
+        return accommodationMapper.toDto(saved);
     }
 
     @Override
@@ -47,22 +55,24 @@ public class AccommodationServiceImpl implements AccommodationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AccommodationDto> findAll() {
         if (isAdmin()) {
             return accommodationRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(accommodationMapper::toDto)
                     .toList();
         }
         return accommodationRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(accommodationMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AccommodationDto> findById(UUID id) {
         return accommodationRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(accommodationMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -73,43 +83,5 @@ public class AccommodationServiceImpl implements AccommodationService {
         if (!isAdmin() && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
-    }
-
-    private AccommodationDto toDto(Accommodation entity) {
-        return new AccommodationDto(
-                entity.getAccommodationId(),
-                entity.getKey(),
-                entity.getName(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy(),
-                entity.getTenantOrganization()
-        );
-    }
-
-    private Accommodation toEntity(AccommodationDto dto) {
-        return new Accommodation(
-                dto.getKey(),
-                dto.getName(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
-        );
-    }
-
-    private Accommodation toEntity(UUID id, AccommodationDto dto) {
-        return new Accommodation(
-                id,
-                dto.getKey(),
-                dto.getName(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
-        );
     }
 }

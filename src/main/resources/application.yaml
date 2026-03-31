@@ -52,3 +52,12 @@ app:
   otp:
     expiry-minutes: 10
     max-active-per-email: 3
+
+  mollie:
+    api:
+      payments:
+        base: https://api.mollie.com/v2/payments
+    key: Bearer test_GpPHhs7SHk73fAyMyaJUFUKJQdxDD5
+    urls:
+      webhook: http://94.212.62.67:8082/payment/mollie/
+      redirect: http://94.212.62.67:5003/payment

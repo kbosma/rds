@@ -2,28 +2,33 @@ package nl.puurkroatie.rds.auth.service.impl;
 
 import nl.puurkroatie.rds.auth.dto.RoleDto;
 import nl.puurkroatie.rds.auth.entity.Role;
+import nl.puurkroatie.rds.auth.mapper.RoleMapper;
 import nl.puurkroatie.rds.auth.repository.RoleRepository;
 import nl.puurkroatie.rds.auth.service.RoleService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
 
-    public RoleServiceImpl(RoleRepository roleRepository) {
+    public RoleServiceImpl(RoleRepository roleRepository, RoleMapper roleMapper) {
         this.roleRepository = roleRepository;
+        this.roleMapper = roleMapper;
     }
 
     @Override
     public RoleDto create(RoleDto dto) {
-        Role entity = toEntity(dto);
+        Role entity = roleMapper.toEntity(dto);
         Role saved = roleRepository.save(entity);
-        return toDto(saved);
+        return roleMapper.toDto(saved);
     }
 
     @Override
@@ -31,9 +36,9 @@ public class RoleServiceImpl implements RoleService {
         if (!roleRepository.findById(id).isPresent()) {
             throw new RuntimeException("Role not found with id: " + id);
         }
-        Role entity = toEntity(id, dto);
+        Role entity = roleMapper.toEntity(id, dto);
         Role saved = roleRepository.save(entity);
-        return toDto(saved);
+        return roleMapper.toDto(saved);
     }
 
     @Override
@@ -45,35 +50,17 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RoleDto> findAll() {
         return roleRepository.findAll().stream()
-                .map(this::toDto)
+                .map(roleMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<RoleDto> findById(UUID id) {
         return roleRepository.findById(id)
-                .map(this::toDto);
-    }
-
-    private RoleDto toDto(Role entity) {
-        return new RoleDto(
-                entity.getRoleId(),
-                entity.getDescription()
-        );
-    }
-
-    private Role toEntity(RoleDto dto) {
-        return new Role(
-                dto.getDescription()
-        );
-    }
-
-    private Role toEntity(UUID id, RoleDto dto) {
-        return new Role(
-                id,
-                dto.getDescription()
-        );
+                .map(roleMapper::toDto);
     }
 }

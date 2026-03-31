@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/booker-auth/**").permitAll()
+                        .requestMatchers("/api/mollie/payments/webhook").permitAll()
                         .requestMatchers("/api/booker-portal/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()

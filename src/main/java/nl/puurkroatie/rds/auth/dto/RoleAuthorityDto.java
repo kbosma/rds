@@ -1,11 +1,15 @@
 package nl.puurkroatie.rds.auth.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 public class RoleAuthorityDto {
 
-    private UUID roleId;
-    private UUID authorityId;
+    @NotNull
+    private final UUID roleId;
+    @NotNull
+    private final UUID authorityId;
 
     public RoleAuthorityDto(UUID roleId, UUID authorityId) {
         this.roleId = roleId;

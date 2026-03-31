@@ -73,7 +73,7 @@ class AddressControllerTest extends AbstractBookingControllerTest {
         String json = "{\"street\":\"Teststraat\",\"housenumber\":1," +
                 "\"housenumberAddition\":null,\"postalcode\":\"1000 AA\"," +
                 "\"city\":\"Teststad\",\"country\":\"Nederland\"," +
-                "\"addressroleId\":\"" + ADDRESSROLE_WOON + "\"}";
+                "\"addressrole\":\"" + ADDRESSROLE_WOON + "\"}";
 
         mockMvc.perform(post("/api/addresses")
                         .header("Authorization", "Bearer " + token)
@@ -92,7 +92,7 @@ class AddressControllerTest extends AbstractBookingControllerTest {
         String json = "{\"street\":\"Stationsweg Updated\",\"housenumber\":88," +
                 "\"housenumberAddition\":null,\"postalcode\":\"3013 AK\"," +
                 "\"city\":\"Rotterdam\",\"country\":\"Nederland\"," +
-                "\"addressroleId\":\"" + ADDRESSROLE_WOON + "\"}";
+                "\"addressrole\":\"" + ADDRESSROLE_WOON + "\"}";
 
         mockMvc.perform(put("/api/addresses/" + ADDRESS_TP_5)
                         .header("Authorization", "Bearer " + token)
@@ -110,7 +110,7 @@ class AddressControllerTest extends AbstractBookingControllerTest {
         String json = "{\"street\":\"Hack\",\"housenumber\":1," +
                 "\"housenumberAddition\":null,\"postalcode\":\"0000\"," +
                 "\"city\":\"Hack\",\"country\":\"Hack\"," +
-                "\"addressroleId\":\"" + ADDRESSROLE_WOON + "\"}";
+                "\"addressrole\":\"" + ADDRESSROLE_WOON + "\"}";
 
         mockMvc.perform(put("/api/addresses/" + ADDRESS_PK_1)
                         .header("Authorization", "Bearer " + token)
@@ -175,7 +175,7 @@ class AddressControllerTest extends AbstractBookingControllerTest {
         String json = "{\"street\":\"Empstraat\",\"housenumber\":99," +
                 "\"housenumberAddition\":null,\"postalcode\":\"9999 ZZ\"," +
                 "\"city\":\"Empstad\",\"country\":\"Nederland\"," +
-                "\"addressroleId\":\"" + ADDRESSROLE_WOON + "\"}";
+                "\"addressrole\":\"" + ADDRESSROLE_WOON + "\"}";
 
         mockMvc.perform(post("/api/addresses")
                         .header("Authorization", "Bearer " + token)
@@ -194,7 +194,7 @@ class AddressControllerTest extends AbstractBookingControllerTest {
         String json = "{\"street\":\"Kerkstraat Updated\",\"housenumber\":12," +
                 "\"housenumberAddition\":null,\"postalcode\":\"9711 AB\"," +
                 "\"city\":\"Groningen\",\"country\":\"Nederland\"," +
-                "\"addressroleId\":\"" + ADDRESSROLE_WOON + "\"}";
+                "\"addressrole\":\"" + ADDRESSROLE_WOON + "\"}";
 
         mockMvc.perform(put("/api/addresses/" + ADDRESS_PK_1)
                         .header("Authorization", "Bearer " + token)
@@ -212,7 +212,7 @@ class AddressControllerTest extends AbstractBookingControllerTest {
         String json = "{\"street\":\"Hack\",\"housenumber\":1," +
                 "\"housenumberAddition\":null,\"postalcode\":\"0000\"," +
                 "\"city\":\"Hack\",\"country\":\"Hack\"," +
-                "\"addressroleId\":\"" + ADDRESSROLE_WOON + "\"}";
+                "\"addressrole\":\"" + ADDRESSROLE_WOON + "\"}";
 
         mockMvc.perform(put("/api/addresses/" + ADDRESS_TP_5)
                         .header("Authorization", "Bearer " + token)

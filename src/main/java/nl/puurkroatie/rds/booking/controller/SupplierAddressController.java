@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.service.SupplierAddressService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,8 +42,8 @@ public class SupplierAddressController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<SupplierAddressDto> create(@RequestBody SupplierAddressDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    public ResponseEntity<SupplierAddressDto> create(@RequestBody @Valid SupplierAddressDto dto) {
         SupplierAddressDto created = supplierAddressService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

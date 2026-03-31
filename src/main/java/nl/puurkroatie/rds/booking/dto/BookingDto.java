@@ -1,6 +1,9 @@
 package nl.puurkroatie.rds.booking.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import nl.puurkroatie.rds.common.Default;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,8 +14,11 @@ public class BookingDto {
 
     private UUID bookingId;
     private UUID bookerId;
+    @NotNull
+    @Size(max = 255)
     private String bookingNumber;
-    private UUID bookingStatusId;
+    @NotNull
+    private String bookingStatus;
     private LocalDate fromDate;
     private LocalDate untilDate;
     private BigDecimal totalSum;
@@ -22,12 +28,13 @@ public class BookingDto {
     private UUID modifiedBy;
     private UUID tenantOrganization;
 
+    @Default
     @JsonCreator
-    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, UUID bookingStatusId, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookingId = bookingId;
         this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
-        this.bookingStatusId = bookingStatusId;
+        this.bookingStatus = bookingStatus;
         this.fromDate = fromDate;
         this.untilDate = untilDate;
         this.totalSum = totalSum;
@@ -38,10 +45,10 @@ public class BookingDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public BookingDto(UUID bookerId, String bookingNumber, UUID bookingStatusId, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookingDto(UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
-        this.bookingStatusId = bookingStatusId;
+        this.bookingStatus = bookingStatus;
         this.fromDate = fromDate;
         this.untilDate = untilDate;
         this.totalSum = totalSum;
@@ -64,8 +71,8 @@ public class BookingDto {
         return bookingNumber;
     }
 
-    public UUID getBookingStatusId() {
-        return bookingStatusId;
+    public String getBookingStatus() {
+        return bookingStatus;
     }
 
     public LocalDate getFromDate() {

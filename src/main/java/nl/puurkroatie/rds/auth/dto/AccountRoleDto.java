@@ -1,16 +1,20 @@
 package nl.puurkroatie.rds.auth.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class AccountRoleDto {
 
-    private UUID accountId;
-    private UUID roleId;
-    private LocalDateTime createdAt;
-    private UUID createdBy;
-    private LocalDateTime modifiedAt;
-    private UUID modifiedBy;
+    @NotNull
+    private final UUID accountId;
+    @NotNull
+    private final UUID roleId;
+    private final LocalDateTime createdAt;
+    private final UUID createdBy;
+    private final LocalDateTime modifiedAt;
+    private final UUID modifiedBy;
 
     public AccountRoleDto(UUID accountId, UUID roleId, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.accountId = accountId;

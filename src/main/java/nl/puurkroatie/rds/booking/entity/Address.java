@@ -1,16 +1,8 @@
 package nl.puurkroatie.rds.booking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -42,14 +34,14 @@ public class Address {
     @Column(name = "country")
     private String country;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "addressrole_id")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "addressrole", nullable = false)
     private AddressRole addressrole;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -58,13 +50,13 @@ public class Address {
     @Column(name = "modified_by")
     private UUID modifiedBy;
 
-    @Column(name = "tenant_organization", nullable = false)
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
     private UUID tenantOrganization;
 
     protected Address() {
     }
 
-    public Address(UUID addressId, String street, Integer housenumber, String housenumberAddition, String postalcode, String city, String country, AddressRole addressrole, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Address(UUID addressId, String street, Integer housenumber, String housenumberAddition, String postalcode, String city, String country, AddressRole addressrole) {
         this.addressId = addressId;
         this.street = street;
         this.housenumber = housenumber;
@@ -73,14 +65,9 @@ public class Address {
         this.city = city;
         this.country = country;
         this.addressrole = addressrole;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
-    public Address(String street, Integer housenumber, String housenumberAddition, String postalcode, String city, String country, AddressRole addressrole, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Address(String street, Integer housenumber, String housenumberAddition, String postalcode, String city, String country, AddressRole addressrole) {
         this.street = street;
         this.housenumber = housenumber;
         this.housenumberAddition = housenumberAddition;
@@ -88,23 +75,19 @@ public class Address {
         this.city = city;
         this.country = country;
         this.addressrole = addressrole;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
+        this.tenantOrganization = TenantContext.getOrganizationId();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
     }
 
     public UUID getAddressId() {

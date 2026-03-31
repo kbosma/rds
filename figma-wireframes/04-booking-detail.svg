@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&amp;display=swap');
+      text { font-family: 'Roboto', sans-serif; }
+    </style>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Page label -->
+  <rect x="0" y="0" width="1440" height="40" fill="#1976d2"/>
+  <text x="720" y="26" text-anchor="middle" font-size="14" font-weight="500" fill="#ffffff">04 - Boeking Detail / Bewerken</text>
+
+  <!-- Top Toolbar -->
+  <rect x="0" y="40" width="1440" height="56" fill="#1976d2"/>
+  <text x="264" y="74" font-size="18" font-weight="500" fill="#ffffff">RDS - Reisburo Dashboard</text>
+  <text x="1280" y="74" font-size="14" fill="#ffffffcc">jan.vanbergen</text>
+
+  <!-- Sidebar (collapsed indicators) -->
+  <rect x="0" y="96" width="240" height="804" fill="#fafafa"/>
+  <line x1="240" y1="96" x2="240" y2="900" stroke="#e0e0e0" stroke-width="1"/>
+  <rect x="0" y="96" width="240" height="56" fill="#f5f5f5"/>
+  <text x="120" y="130" text-anchor="middle" font-size="20" font-weight="500" fill="#1976d2">RDS</text>
+  <text x="56" y="182" font-size="14" fill="#424242">Dashboard</text>
+  <rect x="0" y="200" width="240" height="48" fill="#e3f2fd"/>
+  <rect x="0" y="200" width="4" height="48" fill="#1976d2"/>
+  <text x="56" y="230" font-size="14" font-weight="500" fill="#1976d2">Boekingen</text>
+  <text x="56" y="278" font-size="14" fill="#424242">Bookers</text>
+  <text x="56" y="326" font-size="14" fill="#424242">Reizigers</text>
+  <text x="56" y="374" font-size="14" fill="#424242">Accommodaties</text>
+  <text x="56" y="422" font-size="14" fill="#424242">Leveranciers</text>
+  <text x="56" y="470" font-size="14" fill="#424242">Documenten</text>
+
+  <!-- Main Content -->
+  <rect x="240" y="96" width="1200" height="804" fill="#fafafa"/>
+
+  <!-- Back button + Title -->
+  <text x="280" y="136" font-size="16" fill="#1976d2">← Terug naar boekingen</text>
+  <text x="280" y="174" font-size="22" font-weight="500" fill="#333">Boeking bewerken — BK-2026-001</text>
+
+  <!-- Form Card: Boekinggegevens -->
+  <rect x="280" y="196" width="540" height="360" rx="8" fill="#ffffff" filter="url(#shadow)"/>
+  <text x="310" y="232" font-size="16" font-weight="500" fill="#333">Boekinggegevens</text>
+
+  <!-- Boekingnummer -->
+  <text x="310" y="268" font-size="12" fill="#1976d2">Boekingnummer</text>
+  <rect x="310" y="276" width="480" height="44" rx="4" fill="#ffffff" stroke="#1976d2" stroke-width="2"/>
+  <text x="324" y="304" font-size="14" fill="#333">BK-2026-001</text>
+
+  <!-- Date row -->
+  <text x="310" y="348" font-size="12" fill="#666">Van datum</text>
+  <rect x="310" y="356" width="228" height="44" rx="4" fill="#ffffff" stroke="#bdbdbd" stroke-width="1"/>
+  <text x="324" y="384" font-size="14" fill="#333">15-04-2026</text>
+  <!-- Calendar icon -->
+  <rect x="510" y="368" width="16" height="14" rx="2" fill="none" stroke="#666" stroke-width="1.2"/>
+  <line x1="515" y1="365" x2="515" y2="368" stroke="#666" stroke-width="1.2"/>
+  <line x1="521" y1="365" x2="521" y2="368" stroke="#666" stroke-width="1.2"/>
+
+  <text x="562" y="348" font-size="12" fill="#666">Tot datum</text>
+  <rect x="562" y="356" width="228" height="44" rx="4" fill="#ffffff" stroke="#bdbdbd" stroke-width="1"/>
+  <text x="576" y="384" font-size="14" fill="#333">22-04-2026</text>
+  <rect x="762" y="368" width="16" height="14" rx="2" fill="none" stroke="#666" stroke-width="1.2"/>
+  <line x1="767" y1="365" x2="767" y2="368" stroke="#666" stroke-width="1.2"/>
+  <line x1="773" y1="365" x2="773" y2="368" stroke="#666" stroke-width="1.2"/>
+
+  <!-- Totaalbedrag -->
+  <text x="310" y="428" font-size="12" fill="#666">Totaalbedrag</text>
+  <rect x="310" y="436" width="228" height="44" rx="4" fill="#ffffff" stroke="#bdbdbd" stroke-width="1"/>
+  <text x="324" y="464" font-size="14" fill="#999">€</text>
+  <text x="344" y="464" font-size="14" fill="#333">2.450,00</text>
+
+  <!-- Status dropdown -->
+  <text x="562" y="428" font-size="12" fill="#666">Status</text>
+  <rect x="562" y="436" width="228" height="44" rx="4" fill="#ffffff" stroke="#bdbdbd" stroke-width="1"/>
+  <text x="576" y="464" font-size="14" fill="#333">Bevestigd</text>
+  <text x="770" y="464" font-size="14" fill="#666">▾</text>
+
+  <!-- Action buttons -->
+  <rect x="580" y="504" width="100" height="36" rx="4" fill="transparent" stroke="#1976d2" stroke-width="1"/>
+  <text x="607" y="528" font-size="13" font-weight="500" fill="#1976d2">ANNULEER</text>
+  <rect x="690" y="504" width="100" height="36" rx="4" fill="#1976d2"/>
+  <text x="717" y="528" font-size="13" font-weight="500" fill="#ffffff">OPSLAAN</text>
+
+  <!-- Booker Card -->
+  <rect x="840" y="196" width="540" height="280" rx="8" fill="#ffffff" filter="url(#shadow)"/>
+  <text x="870" y="232" font-size="16" font-weight="500" fill="#333">Hoofdboeker</text>
+
+  <text x="870" y="268" font-size="12" fill="#666">Naam</text>
+  <text x="870" y="288" font-size="14" fill="#333">Klaas de Boer</text>
+
+  <text x="870" y="318" font-size="12" fill="#666">Roepnaam</text>
+  <text x="870" y="338" font-size="14" fill="#333">Klaas</text>
+
+  <text x="1100" y="268" font-size="12" fill="#666">Telefoon</text>
+  <text x="1100" y="288" font-size="14" fill="#333">06-12345678</text>
+
+  <text x="1100" y="318" font-size="12" fill="#666">E-mail</text>
+  <text x="1100" y="338" font-size="14" fill="#1976d2">klaas@example.com</text>
+
+  <text x="870" y="368" font-size="12" fill="#666">Geboortedatum</text>
+  <text x="870" y="388" font-size="14" fill="#333">15-03-1985</text>
+
+  <text x="1100" y="368" font-size="12" fill="#666">Geslacht</text>
+  <text x="1100" y="388" font-size="14" fill="#333">Man</text>
+
+  <!-- Edit booker button -->
+  <rect x="1262" y="420" width="100" height="32" rx="4" fill="transparent" stroke="#1976d2" stroke-width="1"/>
+  <text x="1284" y="441" font-size="12" font-weight="500" fill="#1976d2">BEWERKEN</text>
+
+  <!-- Travelers Card -->
+  <rect x="840" y="496" width="540" height="220" rx="8" fill="#ffffff" filter="url(#shadow)"/>
+  <text x="870" y="532" font-size="16" font-weight="500" fill="#333">Reizigers (3)</text>
+  <rect x="1262" y="512" width="100" height="32" rx="4" fill="#1976d2"/>
+  <text x="1278" y="533" font-size="12" font-weight="500" fill="#ffffff">+ TOEVOEGEN</text>
+
+  <!-- Traveler table header -->
+  <rect x="860" y="548" width="500" height="30" fill="#fafafa"/>
+  <text x="870" y="568" font-size="11" font-weight="500" fill="#666">NAAM</text>
+  <text x="1060" y="568" font-size="11" font-weight="500" fill="#666">GEBOORTEDATUM</text>
+  <text x="1210" y="568" font-size="11" font-weight="500" fill="#666">GESLACHT</text>
+  <text x="1330" y="568" font-size="11" font-weight="500" fill="#666">ACTIES</text>
+
+  <line x1="860" y1="578" x2="1360" y2="578" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="870" y="600" font-size="13" fill="#333">Marie de Boer</text>
+  <text x="1060" y="600" font-size="13" fill="#333">22-07-1987</text>
+  <text x="1210" y="600" font-size="13" fill="#333">Vrouw</text>
+  <text x="1338" y="600" font-size="14" fill="#1976d2">✎ 🗑</text>
+
+  <line x1="860" y1="610" x2="1360" y2="610" stroke="#f5f5f5" stroke-width="1"/>
+  <text x="870" y="632" font-size="13" fill="#333">Tim de Boer</text>
+  <text x="1060" y="632" font-size="13" fill="#333">05-11-2015</text>
+  <text x="1210" y="632" font-size="13" fill="#333">Man</text>
+  <text x="1338" y="632" font-size="14" fill="#1976d2">✎ 🗑</text>
+
+  <line x1="860" y1="642" x2="1360" y2="642" stroke="#f5f5f5" stroke-width="1"/>
+  <text x="870" y="664" font-size="13" fill="#333">Sophie de Boer</text>
+  <text x="1060" y="664" font-size="13" fill="#333">18-04-2018</text>
+  <text x="1210" y="664" font-size="13" fill="#333">Vrouw</text>
+  <text x="1338" y="664" font-size="14" fill="#1976d2">✎ 🗑</text>
+
+  <!-- Accommodations Card -->
+  <rect x="280" y="576" width="540" height="280" rx="8" fill="#ffffff" filter="url(#shadow)"/>
+  <text x="310" y="612" font-size="16" font-weight="500" fill="#333">Accommodaties (2)</text>
+  <rect x="702" y="592" width="100" height="32" rx="4" fill="#1976d2"/>
+  <text x="718" y="613" font-size="12" font-weight="500" fill="#ffffff">+ TOEVOEGEN</text>
+
+  <!-- Accommodation 1 -->
+  <rect x="300" y="636" width="500" height="80" rx="6" fill="#f5f5f5"/>
+  <text x="316" y="660" font-size="14" font-weight="500" fill="#333">Villa Dalmatia</text>
+  <text x="316" y="680" font-size="12" fill="#666">Leverancier: Adriatic Homes</text>
+  <text x="316" y="700" font-size="12" fill="#666">15-04-2026 → 19-04-2026</text>
+  <text x="720" y="660" font-size="14" fill="#1976d2">✎</text>
+  <text x="746" y="660" font-size="14" fill="#d32f2f">🗑</text>
+
+  <!-- Accommodation 2 -->
+  <rect x="300" y="726" width="500" height="80" rx="6" fill="#f5f5f5"/>
+  <text x="316" y="750" font-size="14" font-weight="500" fill="#333">Apartment Split Center</text>
+  <text x="316" y="770" font-size="12" fill="#666">Leverancier: Split Rentals d.o.o.</text>
+  <text x="316" y="790" font-size="12" fill="#666">19-04-2026 → 22-04-2026</text>
+  <text x="720" y="750" font-size="14" fill="#1976d2">✎</text>
+  <text x="746" y="750" font-size="14" fill="#d32f2f">🗑</text>
+
+  <!-- Payments section indicator -->
+  <rect x="840" y="736" width="540" height="120" rx="8" fill="#ffffff" filter="url(#shadow)"/>
+  <text x="870" y="772" font-size="16" font-weight="500" fill="#333">Betalingen</text>
+  <rect x="1262" y="752" width="100" height="32" rx="4" fill="#1976d2"/>
+  <text x="1276" y="773" font-size="12" font-weight="500" fill="#ffffff">+ BETALING</text>
+
+  <rect x="860" y="790" width="500" height="36" fill="#fafafa"/>
+  <text x="870" y="814" font-size="12" fill="#666">Mollie betaling — € 2.450,00 — </text>
+  <rect x="1080" y="798" width="60" height="20" rx="10" fill="#e3f2fd"/>
+  <text x="1092" y="812" font-size="10" fill="#1565c0">PAID</text>
+</svg>

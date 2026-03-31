@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&amp;display=swap');
+      text { font-family: 'Roboto', sans-serif; }
+    </style>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="8" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1440" height="900" fill="#f5f5f5"/>
+
+  <!-- Login Card -->
+  <rect x="520" y="200" width="400" height="460" rx="8" fill="#ffffff" filter="url(#shadow)"/>
+
+  <!-- Logo / Title -->
+  <text x="720" y="270" text-anchor="middle" font-size="28" font-weight="500" fill="#1976d2">RDS</text>
+  <text x="720" y="300" text-anchor="middle" font-size="14" font-weight="300" fill="#666">Reisburo Dashboard Systeem</text>
+
+  <!-- Username field -->
+  <text x="570" y="355" font-size="12" fill="#666">Gebruikersnaam</text>
+  <rect x="560" y="362" width="320" height="48" rx="4" fill="#ffffff" stroke="#bdbdbd" stroke-width="1"/>
+  <!-- Person icon -->
+  <circle cx="582" cy="386" r="8" fill="none" stroke="#9e9e9e" stroke-width="1.5"/>
+  <line x1="582" y1="394" x2="582" y2="400" stroke="#9e9e9e" stroke-width="1.5"/>
+  <text x="600" y="391" font-size="14" fill="#999">jan.vanbergen</text>
+
+  <!-- Password field -->
+  <text x="570" y="435" font-size="12" fill="#666">Wachtwoord</text>
+  <rect x="560" y="442" width="320" height="48" rx="4" fill="#ffffff" stroke="#bdbdbd" stroke-width="1"/>
+  <!-- Lock icon -->
+  <rect x="575" y="462" width="14" height="10" rx="2" fill="none" stroke="#9e9e9e" stroke-width="1.5"/>
+  <path d="M578 462 v-4 a4 4 0 0 1 8 0 v4" fill="none" stroke="#9e9e9e" stroke-width="1.5"/>
+  <text x="600" y="471" font-size="14" fill="#999">••••••••</text>
+  <!-- Visibility toggle icon -->
+  <circle cx="858" cy="466" r="4" fill="none" stroke="#9e9e9e" stroke-width="1.5"/>
+  <ellipse cx="858" cy="466" rx="10" ry="6" fill="none" stroke="#9e9e9e" stroke-width="1.5"/>
+
+  <!-- Error message area -->
+  <rect x="560" y="502" width="320" height="32" rx="4" fill="#ffebee" opacity="0.7"/>
+  <text x="580" y="523" font-size="12" fill="#d32f2f">Ongeldige gebruikersnaam of wachtwoord</text>
+
+  <!-- Login button -->
+  <rect x="560" y="550" width="320" height="44" rx="4" fill="#1976d2"/>
+  <text x="720" y="578" text-anchor="middle" font-size="15" font-weight="500" fill="#ffffff">INLOGGEN</text>
+
+  <!-- Page label -->
+  <rect x="0" y="0" width="1440" height="40" fill="#1976d2"/>
+  <text x="720" y="26" text-anchor="middle" font-size="14" font-weight="500" fill="#ffffff">01 - Login Page</text>
+</svg>

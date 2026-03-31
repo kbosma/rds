@@ -1,43 +1,19 @@
 package nl.puurkroatie.rds.booking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.UUID;
+public enum Gender {
 
-@Entity
-@Table(name = "gender")
-public class Gender {
+    MAN, VROUW, ANDERS;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "gender_id")
-    private UUID genderId;
-
-    @Column(name = "displayname", nullable = false)
-    private String displayname;
-
-    protected Gender() {
+    @JsonValue
+    public String toValue() {
+        return name().toLowerCase();
     }
 
-    public Gender(UUID genderId, String displayname) {
-        this.genderId = genderId;
-        this.displayname = displayname;
-    }
-
-    public Gender(String displayname) {
-        this.displayname = displayname;
-    }
-
-    public UUID getGenderId() {
-        return genderId;
-    }
-
-    public String getDisplayname() {
-        return displayname;
+    @JsonCreator
+    public static Gender fromValue(String value) {
+        return valueOf(value.toUpperCase());
     }
 }

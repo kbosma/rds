@@ -1,6 +1,9 @@
 package nl.puurkroatie.rds.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import nl.puurkroatie.rds.common.Default;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,15 +11,21 @@ import java.util.UUID;
 public class PersonDto {
 
     private UUID persoonId;
+    @NotNull
+    @Size(max = 255)
     private String firstname;
     private String prefix;
+    @NotNull
+    @Size(max = 255)
     private String lastname;
+    @NotNull
     private UUID organizationId;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
     private UUID modifiedBy;
 
+    @Default
     @JsonCreator
     public PersonDto(UUID persoonId, String firstname, String prefix, String lastname, UUID organizationId, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.persoonId = persoonId;

@@ -4,32 +4,37 @@ import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.Document;
+import nl.puurkroatie.rds.booking.mapper.DocumentMapper;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.booking.repository.DocumentRepository;
 import nl.puurkroatie.rds.booking.service.DocumentService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final BookingRepository bookingRepository;
+    private final DocumentMapper documentMapper;
 
-    public DocumentServiceImpl(DocumentRepository documentRepository, BookingRepository bookingRepository) {
+    public DocumentServiceImpl(DocumentRepository documentRepository, BookingRepository bookingRepository, DocumentMapper documentMapper) {
         this.documentRepository = documentRepository;
         this.bookingRepository = bookingRepository;
+        this.documentMapper = documentMapper;
     }
 
     @Override
     public DocumentDto create(DocumentDto dto) {
         Document entity = toEntity(dto);
         Document saved = documentRepository.save(entity);
-        return toDto(saved);
+        return documentMapper.toDto(saved);
     }
 
     @Override
@@ -39,7 +44,7 @@ public class DocumentServiceImpl implements DocumentService {
         verifyOrganization(existing.getTenantOrganization());
         Document entity = toEntity(id, dto);
         Document saved = documentRepository.save(entity);
-        return toDto(saved);
+        return documentMapper.toDto(saved);
     }
 
     @Override
@@ -51,22 +56,24 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DocumentDto> findAll() {
         if (isAdmin()) {
             return documentRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(documentMapper::toDto)
                     .toList();
         }
         return documentRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(documentMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<DocumentDto> findById(UUID id) {
         return documentRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(documentMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -79,32 +86,13 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
-    private DocumentDto toDto(Document entity) {
-        return new DocumentDto(
-                entity.getDocumentId(),
-                entity.getBooking().getBookingId(),
-                entity.getDisplayname(),
-                entity.getDocument(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy(),
-                entity.getTenantOrganization()
-        );
-    }
-
     private Document toEntity(DocumentDto dto) {
         Booking booking = bookingRepository.findById(dto.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
         return new Document(
                 booking,
                 dto.getDisplayname(),
-                dto.getDocument(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getDocument()
         );
     }
 
@@ -115,12 +103,7 @@ public class DocumentServiceImpl implements DocumentService {
                 id,
                 booking,
                 dto.getDisplayname(),
-                dto.getDocument(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getDocument()
         );
     }
 }

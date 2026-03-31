@@ -5,35 +5,37 @@ import nl.puurkroatie.rds.booking.dto.BookingDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.BookingStatus;
+import nl.puurkroatie.rds.booking.mapper.BookingMapper;
 import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
-import nl.puurkroatie.rds.booking.repository.BookingStatusRepository;
 import nl.puurkroatie.rds.booking.service.BookingService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final BookingStatusRepository bookingStatusRepository;
     private final BookerRepository bookerRepository;
+    private final BookingMapper bookingMapper;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookingStatusRepository bookingStatusRepository, BookerRepository bookerRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper) {
         this.bookingRepository = bookingRepository;
-        this.bookingStatusRepository = bookingStatusRepository;
         this.bookerRepository = bookerRepository;
+        this.bookingMapper = bookingMapper;
     }
 
     @Override
     public BookingDto create(BookingDto dto) {
         Booking entity = toEntity(dto);
         Booking saved = bookingRepository.save(entity);
-        return toDto(saved);
+        return bookingMapper.toDto(saved);
     }
 
     @Override
@@ -43,7 +45,7 @@ public class BookingServiceImpl implements BookingService {
         verifyOrganization(existing.getTenantOrganization());
         Booking entity = toEntity(id, dto);
         Booking saved = bookingRepository.save(entity);
-        return toDto(saved);
+        return bookingMapper.toDto(saved);
     }
 
     @Override
@@ -55,22 +57,24 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDto> findAll() {
         if (isAdmin()) {
             return bookingRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(bookingMapper::toDto)
                     .toList();
         }
         return bookingRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(bookingMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<BookingDto> findById(UUID id) {
         return bookingRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(bookingMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -83,23 +87,6 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private BookingDto toDto(Booking entity) {
-        return new BookingDto(
-                entity.getBookingId(),
-                entity.getBooker() != null ? entity.getBooker().getBookerId() : null,
-                entity.getBookingNumber(),
-                entity.getBookingStatus().getBookingstatusId(),
-                entity.getFromDate(),
-                entity.getUntilDate(),
-                entity.getTotalSum(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy(),
-                entity.getTenantOrganization()
-        );
-    }
-
     private Booker resolveBooker(UUID bookerId) {
         if (bookerId == null) {
             return null;
@@ -109,26 +96,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private Booking toEntity(BookingDto dto) {
-        BookingStatus bookingStatus = bookingStatusRepository.findById(dto.getBookingStatusId())
-                .orElseThrow(() -> new RuntimeException("BookingStatus not found with id: " + dto.getBookingStatusId()));
+        BookingStatus bookingStatus = BookingStatus.fromValue(dto.getBookingStatus());
         return new Booking(
                 resolveBooker(dto.getBookerId()),
                 dto.getBookingNumber(),
                 bookingStatus,
                 dto.getFromDate(),
                 dto.getUntilDate(),
-                dto.getTotalSum(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getTotalSum()
         );
     }
 
     private Booking toEntity(UUID id, BookingDto dto) {
-        BookingStatus bookingStatus = bookingStatusRepository.findById(dto.getBookingStatusId())
-                .orElseThrow(() -> new RuntimeException("BookingStatus not found with id: " + dto.getBookingStatusId()));
+        BookingStatus bookingStatus = BookingStatus.fromValue(dto.getBookingStatus());
         return new Booking(
                 id,
                 resolveBooker(dto.getBookerId()),
@@ -136,12 +116,7 @@ public class BookingServiceImpl implements BookingService {
                 bookingStatus,
                 dto.getFromDate(),
                 dto.getUntilDate(),
-                dto.getTotalSum(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getTotalSum()
         );
     }
 }

@@ -9,6 +9,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.common.Default;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,10 +27,13 @@ public class Organization {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "mollie_key")
+    private String mollieKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -39,33 +45,28 @@ public class Organization {
     protected Organization() {
     }
 
-    public Organization(UUID organizationId, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public Organization(UUID organizationId, String name, String mollieKey) {
         this.organizationId = organizationId;
         this.name = name;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
+        this.mollieKey = mollieKey;
     }
 
-    public Organization(String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    @Default
+    public Organization(String name, String mollieKey) {
         this.name = name;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
+        this.mollieKey = mollieKey;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
     }
 
     public UUID getOrganizationId() {
@@ -74,6 +75,10 @@ public class Organization {
 
     public String getName() {
         return name;
+    }
+
+    public String getMollieKey() {
+        return mollieKey;
     }
 
     public LocalDateTime getCreatedAt() {

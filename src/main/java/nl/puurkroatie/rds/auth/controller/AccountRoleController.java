@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.auth.service.AccountRoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,8 +42,8 @@ public class AccountRoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ACCOUNTROLE_WRITE')")
-    public ResponseEntity<AccountRole> create(@RequestBody AccountRole accountRole) {
+    @PreAuthorize("hasAuthority('ACCOUNTROLE_CREATE')")
+    public ResponseEntity<AccountRole> create(@RequestBody @Valid AccountRole accountRole) {
         AccountRole saved = accountRoleService.save(accountRole);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }

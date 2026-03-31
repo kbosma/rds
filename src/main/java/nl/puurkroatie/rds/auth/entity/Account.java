@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import nl.puurkroatie.rds.auth.security.TenantContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -53,7 +54,7 @@ public class Account {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -65,7 +66,7 @@ public class Account {
     protected Account() {
     }
 
-    public Account(UUID accountId, String password, String userName, Person person, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public Account(UUID accountId, String password, String userName, Person person, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt) {
         this.accountId = accountId;
         this.password = password;
         this.userName = userName;
@@ -73,30 +74,21 @@ public class Account {
         this.locked = locked;
         this.mustChangePassword = mustChangePassword;
         this.expiresAt = expiresAt;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
     }
 
-    public Account(String password, String userName, Person person, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public Account(String password, String userName, Person person, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt) {
         this.password = password;
         this.userName = userName;
         this.person = person;
         this.locked = locked;
         this.mustChangePassword = mustChangePassword;
         this.expiresAt = expiresAt;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
         if (this.mustChangePassword == null) {
             this.mustChangePassword = false;
         }
@@ -108,6 +100,7 @@ public class Account {
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
         if (this.password != null) {
             this.passwordHash = PASSWORD_ENCODER.encode(this.password);
         }

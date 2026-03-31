@@ -4,32 +4,34 @@ import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.AddressDto;
 import nl.puurkroatie.rds.booking.entity.Address;
 import nl.puurkroatie.rds.booking.entity.AddressRole;
+import nl.puurkroatie.rds.booking.mapper.AddressMapper;
 import nl.puurkroatie.rds.booking.repository.AddressRepository;
-import nl.puurkroatie.rds.booking.repository.AddressRoleRepository;
 import nl.puurkroatie.rds.booking.service.AddressService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AddressServiceImpl implements AddressService {
 
     private final AddressRepository addressRepository;
-    private final AddressRoleRepository addressRoleRepository;
+    private final AddressMapper addressMapper;
 
-    public AddressServiceImpl(AddressRepository addressRepository, AddressRoleRepository addressRoleRepository) {
+    public AddressServiceImpl(AddressRepository addressRepository, AddressMapper addressMapper) {
         this.addressRepository = addressRepository;
-        this.addressRoleRepository = addressRoleRepository;
+        this.addressMapper = addressMapper;
     }
 
     @Override
     public AddressDto create(AddressDto dto) {
         Address entity = toEntity(dto);
         Address saved = addressRepository.save(entity);
-        return toDto(saved);
+        return addressMapper.toDto(saved);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class AddressServiceImpl implements AddressService {
         verifyOrganization(existing.getTenantOrganization());
         Address entity = toEntity(id, dto);
         Address saved = addressRepository.save(entity);
-        return toDto(saved);
+        return addressMapper.toDto(saved);
     }
 
     @Override
@@ -51,22 +53,24 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AddressDto> findAll() {
         if (isAdmin()) {
             return addressRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(addressMapper::toDto)
                     .toList();
         }
         return addressRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(addressMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AddressDto> findById(UUID id) {
         return addressRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(addressMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -79,33 +83,8 @@ public class AddressServiceImpl implements AddressService {
         }
     }
 
-    private AddressDto toDto(Address entity) {
-        return new AddressDto(
-                entity.getAddressId(),
-                entity.getStreet(),
-                entity.getHousenumber(),
-                entity.getHousenumberAddition(),
-                entity.getPostalcode(),
-                entity.getCity(),
-                entity.getCountry(),
-                entity.getAddressrole() != null ? entity.getAddressrole().getAddressroleId() : null,
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy(),
-                entity.getTenantOrganization()
-        );
-    }
-
-    private AddressRole resolveAddressRole(UUID addressroleId) {
-        if (addressroleId == null) {
-            return null;
-        }
-        return addressRoleRepository.findById(addressroleId)
-                .orElseThrow(() -> new RuntimeException("AddressRole not found with id: " + addressroleId));
-    }
-
     private Address toEntity(AddressDto dto) {
+        AddressRole addressrole = dto.getAddressrole() != null ? AddressRole.fromValue(dto.getAddressrole()) : null;
         return new Address(
                 dto.getStreet(),
                 dto.getHousenumber(),
@@ -113,16 +92,12 @@ public class AddressServiceImpl implements AddressService {
                 dto.getPostalcode(),
                 dto.getCity(),
                 dto.getCountry(),
-                resolveAddressRole(dto.getAddressroleId()),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                addressrole
         );
     }
 
     private Address toEntity(UUID id, AddressDto dto) {
+        AddressRole addressrole = dto.getAddressrole() != null ? AddressRole.fromValue(dto.getAddressrole()) : null;
         return new Address(
                 id,
                 dto.getStreet(),
@@ -131,12 +106,7 @@ public class AddressServiceImpl implements AddressService {
                 dto.getPostalcode(),
                 dto.getCity(),
                 dto.getCountry(),
-                resolveAddressRole(dto.getAddressroleId()),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                addressrole
         );
     }
 }

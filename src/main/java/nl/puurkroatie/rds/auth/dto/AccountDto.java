@@ -1,6 +1,9 @@
 package nl.puurkroatie.rds.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import nl.puurkroatie.rds.common.Default;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,8 +11,11 @@ import java.util.UUID;
 public class AccountDto {
 
     private UUID accountId;
+    @NotNull
+    @Size(max = 255)
     private String userName;
     private String password;
+    @NotNull
     private UUID personId;
     private Boolean locked;
     private Boolean mustChangePassword;
@@ -19,6 +25,7 @@ public class AccountDto {
     private LocalDateTime modifiedAt;
     private UUID modifiedBy;
 
+    @Default
     @JsonCreator
     public AccountDto(UUID accountId, String userName, String password, UUID personId, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.accountId = accountId;

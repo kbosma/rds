@@ -1,20 +1,14 @@
 package nl.puurkroatie.rds.booking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -26,15 +20,18 @@ public class Booking {
     @Column(name = "booking_id")
     private UUID bookingId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "booker_id")
     private Booker booker;
+
+    @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+    private List<Traveler> travelers = new ArrayList<>();
 
     @Column(name = "booking_number", nullable = false)
     private String bookingNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_status_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "booking_status", nullable = false)
     private BookingStatus bookingStatus;
 
     @Column(name = "from_date")
@@ -49,7 +46,7 @@ public class Booking {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -58,13 +55,13 @@ public class Booking {
     @Column(name = "modified_by")
     private UUID modifiedBy;
 
-    @Column(name = "tenant_organization", nullable = false)
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
     private UUID tenantOrganization;
 
     protected Booking() {
     }
 
-    public Booking(UUID bookingId, Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booking(UUID bookingId, Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum) {
         this.bookingId = bookingId;
         this.booker = booker;
         this.bookingNumber = bookingNumber;
@@ -72,37 +69,28 @@ public class Booking {
         this.fromDate = fromDate;
         this.untilDate = untilDate;
         this.totalSum = totalSum;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
-    public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum) {
         this.booker = booker;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
         this.fromDate = fromDate;
         this.untilDate = untilDate;
         this.totalSum = totalSum;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
+        this.tenantOrganization = TenantContext.getOrganizationId();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
     }
 
     public UUID getBookingId() {
@@ -111,6 +99,10 @@ public class Booking {
 
     public Booker getBooker() {
         return booker;
+    }
+
+    public List<Traveler> getTravelers() {
+        return travelers;
     }
 
     public String getBookingNumber() {

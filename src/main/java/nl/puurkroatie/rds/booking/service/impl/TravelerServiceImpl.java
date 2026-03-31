@@ -5,35 +5,37 @@ import nl.puurkroatie.rds.booking.dto.TravelerDto;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.Gender;
 import nl.puurkroatie.rds.booking.entity.Traveler;
+import nl.puurkroatie.rds.booking.mapper.TravelerMapper;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
-import nl.puurkroatie.rds.booking.repository.GenderRepository;
 import nl.puurkroatie.rds.booking.repository.TravelerRepository;
 import nl.puurkroatie.rds.booking.service.TravelerService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class TravelerServiceImpl implements TravelerService {
 
     private final TravelerRepository travelerRepository;
     private final BookingRepository bookingRepository;
-    private final GenderRepository genderRepository;
+    private final TravelerMapper travelerMapper;
 
-    public TravelerServiceImpl(TravelerRepository travelerRepository, BookingRepository bookingRepository, GenderRepository genderRepository) {
+    public TravelerServiceImpl(TravelerRepository travelerRepository, BookingRepository bookingRepository, TravelerMapper travelerMapper) {
         this.travelerRepository = travelerRepository;
         this.bookingRepository = bookingRepository;
-        this.genderRepository = genderRepository;
+        this.travelerMapper = travelerMapper;
     }
 
     @Override
     public TravelerDto create(TravelerDto dto) {
         Traveler entity = toEntity(dto);
         Traveler saved = travelerRepository.save(entity);
-        return toDto(saved);
+        return travelerMapper.toDto(saved);
     }
 
     @Override
@@ -43,7 +45,7 @@ public class TravelerServiceImpl implements TravelerService {
         verifyOrganization(existing.getTenantOrganization());
         Traveler entity = toEntity(id, dto);
         Traveler saved = travelerRepository.save(entity);
-        return toDto(saved);
+        return travelerMapper.toDto(saved);
     }
 
     @Override
@@ -55,22 +57,24 @@ public class TravelerServiceImpl implements TravelerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TravelerDto> findAll() {
         if (isAdmin()) {
             return travelerRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(travelerMapper::toDto)
                     .toList();
         }
         return travelerRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(travelerMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<TravelerDto> findById(UUID id) {
         return travelerRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(travelerMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -83,68 +87,34 @@ public class TravelerServiceImpl implements TravelerService {
         }
     }
 
-    private TravelerDto toDto(Traveler entity) {
-        return new TravelerDto(
-                entity.getTravelerId(),
-                entity.getBooking().getBookingId(),
-                entity.getFirstname(),
-                entity.getPrefix(),
-                entity.getLastname(),
-                entity.getGender() != null ? entity.getGender().getGenderId() : null,
-                entity.getBirthdate(),
-                entity.getInitials(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy(),
-                entity.getTenantOrganization()
-        );
-    }
-
-    private Gender resolveGender(UUID genderId) {
-        if (genderId == null) {
-            return null;
-        }
-        return genderRepository.findById(genderId)
-                .orElseThrow(() -> new RuntimeException("Gender not found with id: " + genderId));
-    }
-
     private Traveler toEntity(TravelerDto dto) {
         Booking booking = bookingRepository.findById(dto.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
+        Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Traveler(
                 booking,
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),
-                resolveGender(dto.getGenderId()),
+                gender,
                 dto.getBirthdate(),
-                dto.getInitials(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getInitials()
         );
     }
 
     private Traveler toEntity(UUID id, TravelerDto dto) {
         Booking booking = bookingRepository.findById(dto.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
+        Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Traveler(
                 id,
                 booking,
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),
-                resolveGender(dto.getGenderId()),
+                gender,
                 dto.getBirthdate(),
-                dto.getInitials(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getInitials()
         );
     }
 }

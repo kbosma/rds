@@ -1,10 +1,14 @@
 package nl.puurkroatie.rds.booking.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 public class AccommodationAddressDto {
 
+    @NotNull
     private UUID accommodationId;
+    @NotNull
     private UUID addressId;
 
     public AccommodationAddressDto(UUID accommodationId, UUID addressId) {

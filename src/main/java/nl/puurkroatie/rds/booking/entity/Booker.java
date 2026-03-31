@@ -2,16 +2,17 @@ package nl.puurkroatie.rds.booking.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+
+import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,8 +45,8 @@ public class Booker {
     @Column(name = "emailaddress")
     private String emailaddress;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gender_id")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     private Gender gender;
 
     @Column(name = "birthdate")
@@ -57,7 +58,7 @@ public class Booker {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -66,13 +67,13 @@ public class Booker {
     @Column(name = "modified_by")
     private UUID modifiedBy;
 
-    @Column(name = "tenant_organization", nullable = false)
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
     private UUID tenantOrganization;
 
     protected Booker() {
     }
 
-    public Booker(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booker(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials) {
         this.bookerId = bookerId;
         this.firstname = firstname;
         this.prefix = prefix;
@@ -83,14 +84,9 @@ public class Booker {
         this.gender = gender;
         this.birthdate = birthdate;
         this.initials = initials;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
-    public Booker(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Booker(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -100,23 +96,19 @@ public class Booker {
         this.gender = gender;
         this.birthdate = birthdate;
         this.initials = initials;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
+        this.tenantOrganization = TenantContext.getOrganizationId();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
     }
 
     public UUID getBookerId() {

@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.auth.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_WRITE')")
-    public ResponseEntity<RoleDto> create(@RequestBody RoleDto dto) {
+    @PreAuthorize("hasAuthority('ROLE_CREATE')")
+    public ResponseEntity<RoleDto> create(@RequestBody @Valid RoleDto dto) {
         RoleDto created = roleService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_WRITE')")
-    public ResponseEntity<RoleDto> update(@PathVariable UUID id, @RequestBody RoleDto dto) {
+    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    public ResponseEntity<RoleDto> update(@PathVariable UUID id, @RequestBody @Valid RoleDto dto) {
         RoleDto updated = roleService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

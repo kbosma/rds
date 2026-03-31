@@ -17,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import jakarta.validation.Valid;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -53,7 +54,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Transactional(readOnly = true)
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody @Valid LoginRequestDto request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword()));
 
@@ -87,7 +88,7 @@ public class AuthController {
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordDto request) {
+    public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordDto request) {
         if (!isEmployee()) {
             throw new AccessDeniedException("Access denied: only employees can use this endpoint");
         }

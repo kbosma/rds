@@ -9,6 +9,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.common.Default;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,7 +33,7 @@ public class Accommodation {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -39,43 +42,35 @@ public class Accommodation {
     @Column(name = "modified_by")
     private UUID modifiedBy;
 
-    @Column(name = "tenant_organization", nullable = false)
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
     private UUID tenantOrganization;
 
     protected Accommodation() {
     }
 
-    public Accommodation(UUID accommodationId, String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Accommodation(UUID accommodationId, String key, String name) {
         this.accommodationId = accommodationId;
         this.key = key;
         this.name = name;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
-    public Accommodation(String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @Default
+    public Accommodation(String key, String name) {
         this.key = key;
         this.name = name;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
+        this.tenantOrganization = TenantContext.getOrganizationId();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
     }
 
     public UUID getAccommodationId() {

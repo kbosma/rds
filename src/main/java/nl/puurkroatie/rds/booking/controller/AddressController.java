@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.service.AddressService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class AddressController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<AddressDto> create(@RequestBody AddressDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    public ResponseEntity<AddressDto> create(@RequestBody @Valid AddressDto dto) {
         AddressDto created = addressService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<AddressDto> update(@PathVariable UUID id, @RequestBody AddressDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
+    public ResponseEntity<AddressDto> update(@PathVariable UUID id, @RequestBody @Valid AddressDto dto) {
         AddressDto updated = addressService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

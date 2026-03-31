@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.service.SupplierService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class SupplierController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<SupplierDto> create(@RequestBody SupplierDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    public ResponseEntity<SupplierDto> create(@RequestBody @Valid SupplierDto dto) {
         SupplierDto created = supplierService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<SupplierDto> update(@PathVariable UUID id, @RequestBody SupplierDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
+    public ResponseEntity<SupplierDto> update(@PathVariable UUID id, @RequestBody @Valid SupplierDto dto) {
         SupplierDto updated = supplierService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.service.TravelerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class TravelerController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<TravelerDto> create(@RequestBody TravelerDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    public ResponseEntity<TravelerDto> create(@RequestBody @Valid TravelerDto dto) {
         TravelerDto created = travelerService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_WRITE')")
-    public ResponseEntity<TravelerDto> update(@PathVariable UUID id, @RequestBody TravelerDto dto) {
+    @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
+    public ResponseEntity<TravelerDto> update(@PathVariable UUID id, @RequestBody @Valid TravelerDto dto) {
         TravelerDto updated = travelerService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

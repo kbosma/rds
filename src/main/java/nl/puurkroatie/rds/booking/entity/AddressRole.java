@@ -1,43 +1,19 @@
 package nl.puurkroatie.rds.booking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.UUID;
+public enum AddressRole {
 
-@Entity
-@Table(name = "address_role")
-public class AddressRole {
+    WOON, FACTUUR, ACCOMMODATIE, LEVERANCIER;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "addressrole_id")
-    private UUID addressroleId;
-
-    @Column(name = "displayname", nullable = false)
-    private String displayname;
-
-    protected AddressRole() {
+    @JsonValue
+    public String toValue() {
+        return name().toLowerCase();
     }
 
-    public AddressRole(UUID addressroleId, String displayname) {
-        this.addressroleId = addressroleId;
-        this.displayname = displayname;
-    }
-
-    public AddressRole(String displayname) {
-        this.displayname = displayname;
-    }
-
-    public UUID getAddressroleId() {
-        return addressroleId;
-    }
-
-    public String getDisplayname() {
-        return displayname;
+    @JsonCreator
+    public static AddressRole fromValue(String value) {
+        return valueOf(value.toUpperCase());
     }
 }

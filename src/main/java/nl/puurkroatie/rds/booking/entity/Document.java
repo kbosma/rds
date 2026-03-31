@@ -13,6 +13,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import nl.puurkroatie.rds.auth.security.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -39,7 +41,7 @@ public class Document {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
     @Column(name = "modified_at")
@@ -48,45 +50,36 @@ public class Document {
     @Column(name = "modified_by")
     private UUID modifiedBy;
 
-    @Column(name = "tenant_organization", nullable = false)
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
     private UUID tenantOrganization;
 
     protected Document() {
     }
 
-    public Document(UUID documentId, Booking booking, String displayname, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Document(UUID documentId, Booking booking, String displayname, byte[] document) {
         this.documentId = documentId;
         this.booking = booking;
         this.displayname = displayname;
         this.document = document;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
-    public Document(Booking booking, String displayname, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public Document(Booking booking, String displayname, byte[] document) {
         this.booking = booking;
         this.displayname = displayname;
         this.document = document;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
+        this.createdBy = TenantContext.getAccountId();
+        this.tenantOrganization = TenantContext.getOrganizationId();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
+        this.modifiedBy = TenantContext.getAccountId();
     }
 
     public UUID getDocumentId() {

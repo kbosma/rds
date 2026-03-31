@@ -71,7 +71,7 @@ class TravelerControllerTest extends AbstractBookingControllerTest {
 
         String json = "{\"bookingId\":\"" + BOOKING_TP_4 + "\"," +
                 "\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Reiziger\"," +
-                "\"genderId\":\"" + GENDER_MAN + "\"," +
+                "\"gender\":\"" + GENDER_MAN + "\"," +
                 "\"birthdate\":\"2010-05-15\",\"initials\":\"T.\"}";
 
         mockMvc.perform(post("/api/travelers")
@@ -138,7 +138,7 @@ class TravelerControllerTest extends AbstractBookingControllerTest {
 
         String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
                 "\"firstname\":\"Emp\",\"prefix\":null,\"lastname\":\"Reiziger\"," +
-                "\"genderId\":\"" + GENDER_MAN + "\"," +
+                "\"gender\":\"" + GENDER_MAN + "\"," +
                 "\"birthdate\":\"2012-08-20\",\"initials\":\"E.\"}";
 
         mockMvc.perform(post("/api/travelers")

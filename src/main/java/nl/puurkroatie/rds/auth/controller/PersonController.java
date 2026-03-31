@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.auth.service.PersonService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class PersonController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('PERSON_WRITE')")
-    public ResponseEntity<PersonDto> create(@RequestBody PersonDto dto) {
+    @PreAuthorize("hasAuthority('PERSON_CREATE')")
+    public ResponseEntity<PersonDto> create(@RequestBody @Valid PersonDto dto) {
         PersonDto created = personService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('PERSON_WRITE')")
-    public ResponseEntity<PersonDto> update(@PathVariable UUID id, @RequestBody PersonDto dto) {
+    @PreAuthorize("hasAuthority('PERSON_UPDATE')")
+    public ResponseEntity<PersonDto> update(@PathVariable UUID id, @RequestBody @Valid PersonDto dto) {
         PersonDto updated = personService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import nl.puurkroatie.rds.common.Default;
+
 import java.util.UUID;
 
 @Entity
@@ -29,6 +31,7 @@ public class Authority {
         this.description = description;
     }
 
+    @Default
     public Authority(String description) {
         this.description = description;
     }

@@ -2,28 +2,33 @@ package nl.puurkroatie.rds.auth.service.impl;
 
 import nl.puurkroatie.rds.auth.dto.AuthorityDto;
 import nl.puurkroatie.rds.auth.entity.Authority;
+import nl.puurkroatie.rds.auth.mapper.AuthorityMapper;
 import nl.puurkroatie.rds.auth.repository.AuthorityRepository;
 import nl.puurkroatie.rds.auth.service.AuthorityService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AuthorityServiceImpl implements AuthorityService {
 
     private final AuthorityRepository authorityRepository;
+    private final AuthorityMapper authorityMapper;
 
-    public AuthorityServiceImpl(AuthorityRepository authorityRepository) {
+    public AuthorityServiceImpl(AuthorityRepository authorityRepository, AuthorityMapper authorityMapper) {
         this.authorityRepository = authorityRepository;
+        this.authorityMapper = authorityMapper;
     }
 
     @Override
     public AuthorityDto create(AuthorityDto dto) {
-        Authority entity = toEntity(dto);
+        Authority entity = authorityMapper.toEntity(dto);
         Authority saved = authorityRepository.save(entity);
-        return toDto(saved);
+        return authorityMapper.toDto(saved);
     }
 
     @Override
@@ -31,9 +36,9 @@ public class AuthorityServiceImpl implements AuthorityService {
         if (!authorityRepository.findById(id).isPresent()) {
             throw new RuntimeException("Authority not found with id: " + id);
         }
-        Authority entity = toEntity(id, dto);
+        Authority entity = authorityMapper.toEntity(id, dto);
         Authority saved = authorityRepository.save(entity);
-        return toDto(saved);
+        return authorityMapper.toDto(saved);
     }
 
     @Override
@@ -45,35 +50,17 @@ public class AuthorityServiceImpl implements AuthorityService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AuthorityDto> findAll() {
         return authorityRepository.findAll().stream()
-                .map(this::toDto)
+                .map(authorityMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AuthorityDto> findById(UUID id) {
         return authorityRepository.findById(id)
-                .map(this::toDto);
-    }
-
-    private AuthorityDto toDto(Authority entity) {
-        return new AuthorityDto(
-                entity.getAuthorityId(),
-                entity.getDescription()
-        );
-    }
-
-    private Authority toEntity(AuthorityDto dto) {
-        return new Authority(
-                dto.getDescription()
-        );
-    }
-
-    private Authority toEntity(UUID id, AuthorityDto dto) {
-        return new Authority(
-                id,
-                dto.getDescription()
-        );
+                .map(authorityMapper::toDto);
     }
 }

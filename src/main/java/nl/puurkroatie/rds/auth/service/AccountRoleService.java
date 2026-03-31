@@ -8,12 +8,14 @@ import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AccountRoleService {
 
     private final AccountRoleRepository accountRoleRepository;
@@ -24,6 +26,7 @@ public class AccountRoleService {
         this.accountRepository = accountRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<AccountRole> findAll() {
         if (isAdmin()) {
             return accountRoleRepository.findAll();
@@ -31,6 +34,7 @@ public class AccountRoleService {
         return accountRoleRepository.findByAccountPersonOrganizationOrganizationId(TenantContext.getOrganizationId());
     }
 
+    @Transactional(readOnly = true)
     public Optional<AccountRole> findById(UUID accountId, UUID roleId) {
         return accountRoleRepository.findById(new AccountRoleId(accountId, roleId))
                 .filter(ar -> isAdmin() || ar.getAccount().getPerson().getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()));

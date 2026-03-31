@@ -3,6 +3,7 @@ package nl.puurkroatie.rds.auth.service.impl;
 import nl.puurkroatie.rds.auth.dto.PersonDto;
 import nl.puurkroatie.rds.auth.entity.Organization;
 import nl.puurkroatie.rds.auth.entity.Person;
+import nl.puurkroatie.rds.auth.mapper.PersonMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
 import nl.puurkroatie.rds.auth.repository.PersonRepository;
@@ -10,22 +11,26 @@ import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.PersonService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class PersonServiceImpl implements PersonService {
 
     private final PersonRepository personRepository;
     private final OrganizationRepository organizationRepository;
     private final AccountRepository accountRepository;
+    private final PersonMapper personMapper;
 
-    public PersonServiceImpl(PersonRepository personRepository, OrganizationRepository organizationRepository, AccountRepository accountRepository) {
+    public PersonServiceImpl(PersonRepository personRepository, OrganizationRepository organizationRepository, AccountRepository accountRepository, PersonMapper personMapper) {
         this.personRepository = personRepository;
         this.organizationRepository = organizationRepository;
         this.accountRepository = accountRepository;
+        this.personMapper = personMapper;
     }
 
     @Override
@@ -38,7 +43,7 @@ public class PersonServiceImpl implements PersonService {
         }
         Person entity = toEntity(dto);
         Person saved = personRepository.save(entity);
-        return toDto(saved);
+        return personMapper.toDto(saved);
     }
 
     @Override
@@ -54,7 +59,7 @@ public class PersonServiceImpl implements PersonService {
         }
         Person entity = toEntity(id, dto);
         Person saved = personRepository.save(entity);
-        return toDto(saved);
+        return personMapper.toDto(saved);
     }
 
     @Override
@@ -71,33 +76,35 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonDto> findAll() {
         if (isAdmin()) {
             return personRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(personMapper::toDto)
                     .toList();
         }
         if (isEmployee()) {
             return accountRepository.findById(TenantContext.getAccountId())
-                    .map(account -> toDto(account.getPerson()))
+                    .map(account -> personMapper.toDto(account.getPerson()))
                     .map(List::of)
                     .orElse(List.of());
         }
         return personRepository.findByOrganizationOrganizationId(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(personMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<PersonDto> findById(UUID id) {
         if (isEmployee()) {
             return accountRepository.findById(TenantContext.getAccountId())
                     .filter(account -> account.getPerson().getPersoonId().equals(id))
-                    .map(account -> toDto(account.getPerson()));
+                    .map(account -> personMapper.toDto(account.getPerson()));
         }
         return personRepository.findById(id)
                 .filter(person -> isAdmin() || person.getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(personMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -114,20 +121,6 @@ public class PersonServiceImpl implements PersonService {
         }
     }
 
-    private PersonDto toDto(Person entity) {
-        return new PersonDto(
-                entity.getPersoonId(),
-                entity.getFirstname(),
-                entity.getPrefix(),
-                entity.getLastname(),
-                entity.getOrganization().getOrganizationId(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy()
-        );
-    }
-
     private Person toEntity(PersonDto dto) {
         Organization organization = organizationRepository.findById(dto.getOrganizationId())
                 .orElseThrow(() -> new RuntimeException("Organization not found with id: " + dto.getOrganizationId()));
@@ -135,11 +128,7 @@ public class PersonServiceImpl implements PersonService {
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),
-                organization,
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy()
+                organization
         );
     }
 
@@ -151,11 +140,7 @@ public class PersonServiceImpl implements PersonService {
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),
-                organization,
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy()
+                organization
         );
     }
 }

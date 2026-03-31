@@ -74,7 +74,7 @@ class BookerControllerTest extends AbstractBookingControllerTest {
                 "\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Booker\"," +
                 "\"callsign\":\"Tester\",\"telephone\":\"0612345678\"," +
                 "\"emailaddress\":\"test@example.com\"," +
-                "\"genderId\":\"" + GENDER_MAN + "\"," +
+                "\"gender\":\"" + GENDER_MAN + "\"," +
                 "\"birthdate\":\"1990-01-01\",\"initials\":\"T.\"}";
 
         mockMvc.perform(post("/api/bookers")
@@ -143,7 +143,7 @@ class BookerControllerTest extends AbstractBookingControllerTest {
                 "\"firstname\":\"Emp\",\"prefix\":null,\"lastname\":\"Booker\"," +
                 "\"callsign\":\"Emp\",\"telephone\":\"0699999999\"," +
                 "\"emailaddress\":\"emp@example.com\"," +
-                "\"genderId\":\"" + GENDER_MAN + "\"," +
+                "\"gender\":\"" + GENDER_MAN + "\"," +
                 "\"birthdate\":\"1995-06-01\",\"initials\":\"E.\"}";
 
         mockMvc.perform(post("/api/bookers")

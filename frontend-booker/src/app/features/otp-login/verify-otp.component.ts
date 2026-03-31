@@ -1,0 +1,171 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BookerAuthService } from '../../core/auth/booker-auth.service';
+
+@Component({
+  selector: 'app-verify-otp',
+  standalone: true,
+  imports: [
+    FormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
+  template: `
+    <div class="login-wrapper">
+      <mat-card class="login-card">
+        <div class="login-header">
+          <h1 class="app-title">RDS</h1>
+          <p class="app-subtitle">Boekingsportaal</p>
+        </div>
+        <mat-card-content>
+          <p class="instruction">Voer de 6-cijferige code in die u per e-mail heeft ontvangen</p>
+          @if (error()) {
+            <div class="error-banner">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ error() }}</span>
+            </div>
+          }
+          <form (ngSubmit)="onVerify()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Verificatiecode</mat-label>
+              <mat-icon matPrefix>lock</mat-icon>
+              <input matInput [(ngModel)]="code" name="code" required maxlength="6"
+                     pattern="[0-9]{6}" inputmode="numeric" class="code-input" />
+            </mat-form-field>
+            <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="loading()">
+              @if (loading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                VERIFIEER
+              }
+            </button>
+            <button mat-button type="button" class="full-width back-btn" (click)="goBack()">
+              <mat-icon>arrow_back</mat-icon> Terug
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  `,
+  styles: [`
+    .login-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+      padding: 16px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+      border-radius: 12px;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .app-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1976d2;
+      margin: 0;
+      letter-spacing: 2px;
+    }
+    .app-subtitle {
+      color: #666;
+      margin: 4px 0 0;
+      font-size: 14px;
+    }
+    .instruction {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .full-width { width: 100%; }
+    .code-input {
+      font-size: 24px;
+      letter-spacing: 8px;
+      text-align: center;
+    }
+    .error-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #ffebee;
+      color: #c62828;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .error-banner mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    .submit-btn {
+      height: 48px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+    }
+    .back-btn {
+      margin-top: 8px;
+    }
+  `],
+})
+export class VerifyOtpComponent implements OnInit {
+  private authService = inject(BookerAuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  emailaddress = '';
+  bookingNumber = '';
+  code = '';
+  loading = signal(false);
+  error = signal('');
+
+  ngOnInit() {
+    this.emailaddress = this.route.snapshot.queryParamMap.get('email') ?? '';
+    this.bookingNumber = this.route.snapshot.queryParamMap.get('booking') ?? '';
+    if (!this.emailaddress || !this.bookingNumber) {
+      this.router.navigate(['/login']);
+    }
+  }
+
+  onVerify() {
+    this.loading.set(true);
+    this.error.set('');
+    this.authService
+      .verifyOtp(this.emailaddress, this.bookingNumber, this.code)
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.router.navigate(['/dashboard']);
+        },
+        error: () => {
+          this.loading.set(false);
+          this.error.set('Ongeldige of verlopen verificatiecode');
+        },
+      });
+  }
+
+  goBack() {
+    this.router.navigate(['/login']);
+  }
+}

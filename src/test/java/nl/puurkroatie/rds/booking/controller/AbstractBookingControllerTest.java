@@ -37,8 +37,8 @@ public abstract class AbstractBookingControllerTest extends AbstractControllerTe
     protected static final UUID DOCUMENT_PK_1 = UUID.fromString("07000000-0000-0000-0000-000000000001");
     protected static final UUID DOCUMENT_TP_4 = UUID.fromString("07000000-0000-0000-0000-000000000004");
 
-    // Category UUIDs uit data.sql
-    protected static final UUID BOOKING_STATUS_CONCEPT = UUID.fromString("f1000000-0000-0000-0000-000000000001");
-    protected static final UUID GENDER_MAN = UUID.fromString("f2000000-0000-0000-0000-000000000001");
-    protected static final UUID ADDRESSROLE_WOON = UUID.fromString("f3000000-0000-0000-0000-000000000001");
+    // Enum string values (previously UUIDs referencing lookup tables)
+    protected static final String BOOKING_STATUS_AANVRAAG = "aanvraag";
+    protected static final String GENDER_MAN = "man";
+    protected static final String ADDRESSROLE_WOON = "woon";
 }

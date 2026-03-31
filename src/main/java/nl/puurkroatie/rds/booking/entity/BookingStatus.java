@@ -1,43 +1,19 @@
 package nl.puurkroatie.rds.booking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.UUID;
+public enum BookingStatus {
 
-@Entity
-@Table(name = "booking_status")
-public class BookingStatus {
+    AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, AFGEROND;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "bookingstatus_id")
-    private UUID bookingstatusId;
-
-    @Column(name = "displayname", nullable = false)
-    private String displayname;
-
-    protected BookingStatus() {
+    @JsonValue
+    public String toValue() {
+        return name().toLowerCase();
     }
 
-    public BookingStatus(UUID bookingstatusId, String displayname) {
-        this.bookingstatusId = bookingstatusId;
-        this.displayname = displayname;
-    }
-
-    public BookingStatus(String displayname) {
-        this.displayname = displayname;
-    }
-
-    public UUID getBookingstatusId() {
-        return bookingstatusId;
-    }
-
-    public String getDisplayname() {
-        return displayname;
+    @JsonCreator
+    public static BookingStatus fromValue(String value) {
+        return valueOf(value.toUpperCase());
     }
 }

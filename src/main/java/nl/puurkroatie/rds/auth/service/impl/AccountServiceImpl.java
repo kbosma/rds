@@ -4,6 +4,7 @@ import nl.puurkroatie.rds.auth.dto.AccountDto;
 import nl.puurkroatie.rds.auth.dto.ChangePasswordDto;
 import nl.puurkroatie.rds.auth.entity.Account;
 import nl.puurkroatie.rds.auth.entity.Person;
+import nl.puurkroatie.rds.auth.mapper.AccountMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.PersonRepository;
 import nl.puurkroatie.rds.auth.security.TenantContext;
@@ -11,22 +12,26 @@ import nl.puurkroatie.rds.auth.service.AccountService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AccountMapper accountMapper;
 
-    public AccountServiceImpl(AccountRepository accountRepository, PersonRepository personRepository, PasswordEncoder passwordEncoder) {
+    public AccountServiceImpl(AccountRepository accountRepository, PersonRepository personRepository, PasswordEncoder passwordEncoder, AccountMapper accountMapper) {
         this.accountRepository = accountRepository;
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
+        this.accountMapper = accountMapper;
     }
 
     @Override
@@ -41,7 +46,7 @@ public class AccountServiceImpl implements AccountService {
         }
         Account entity = toEntity(dto);
         Account saved = accountRepository.save(entity);
-        return toDto(saved);
+        return accountMapper.toDto(saved);
     }
 
     @Override
@@ -59,7 +64,7 @@ public class AccountServiceImpl implements AccountService {
         }
         Account entity = toEntity(id, dto);
         Account saved = accountRepository.save(entity);
-        return toDto(saved);
+        return accountMapper.toDto(saved);
     }
 
     @Override
@@ -76,24 +81,26 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AccountDto> findAll() {
         if (isAdmin()) {
             return accountRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(accountMapper::toDto)
                     .toList();
         }
         if (isEmployee()) {
             return accountRepository.findById(TenantContext.getAccountId())
-                    .map(this::toDto)
+                    .map(accountMapper::toDto)
                     .map(List::of)
                     .orElse(List.of());
         }
         return accountRepository.findByPersonOrganizationOrganizationId(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(accountMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<AccountDto> findById(UUID id) {
         if (isEmployee()) {
             if (!id.equals(TenantContext.getAccountId())) {
@@ -102,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
         }
         return accountRepository.findById(id)
                 .filter(account -> isAdmin() || account.getPerson().getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(accountMapper::toDto);
     }
 
     @Override
@@ -132,22 +139,6 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
-    private AccountDto toDto(Account entity) {
-        return new AccountDto(
-                entity.getAccountId(),
-                entity.getUserName(),
-                null,
-                entity.getPerson().getPersoonId(),
-                entity.getLocked(),
-                entity.getMustChangePassword(),
-                entity.getExpiresAt(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy()
-        );
-    }
-
     private Account toEntity(AccountDto dto) {
         Person person = personRepository.findById(dto.getPersonId())
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + dto.getPersonId()));
@@ -157,11 +148,7 @@ public class AccountServiceImpl implements AccountService {
                 person,
                 dto.getLocked(),
                 dto.getMustChangePassword(),
-                dto.getExpiresAt(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy()
+                dto.getExpiresAt()
         );
     }
 
@@ -175,11 +162,7 @@ public class AccountServiceImpl implements AccountService {
                 person,
                 dto.getLocked(),
                 dto.getMustChangePassword(),
-                dto.getExpiresAt(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy()
+                dto.getExpiresAt()
         );
     }
 }

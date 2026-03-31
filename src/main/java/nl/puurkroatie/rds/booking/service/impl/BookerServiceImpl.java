@@ -4,32 +4,34 @@ import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookerDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.Gender;
+import nl.puurkroatie.rds.booking.mapper.BookerMapper;
 import nl.puurkroatie.rds.booking.repository.BookerRepository;
-import nl.puurkroatie.rds.booking.repository.GenderRepository;
 import nl.puurkroatie.rds.booking.service.BookerService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class BookerServiceImpl implements BookerService {
 
     private final BookerRepository bookerRepository;
-    private final GenderRepository genderRepository;
+    private final BookerMapper bookerMapper;
 
-    public BookerServiceImpl(BookerRepository bookerRepository, GenderRepository genderRepository) {
+    public BookerServiceImpl(BookerRepository bookerRepository, BookerMapper bookerMapper) {
         this.bookerRepository = bookerRepository;
-        this.genderRepository = genderRepository;
+        this.bookerMapper = bookerMapper;
     }
 
     @Override
     public BookerDto create(BookerDto dto) {
         Booker entity = toEntity(dto);
         Booker saved = bookerRepository.save(entity);
-        return toDto(saved);
+        return bookerMapper.toDto(saved);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class BookerServiceImpl implements BookerService {
         verifyOrganization(existing.getTenantOrganization());
         Booker entity = toEntity(id, dto);
         Booker saved = bookerRepository.save(entity);
-        return toDto(saved);
+        return bookerMapper.toDto(saved);
     }
 
     @Override
@@ -51,22 +53,24 @@ public class BookerServiceImpl implements BookerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookerDto> findAll() {
         if (isAdmin()) {
             return bookerRepository.findAll().stream()
-                    .map(this::toDto)
+                    .map(bookerMapper::toDto)
                     .toList();
         }
         return bookerRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
-                .map(this::toDto)
+                .map(bookerMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<BookerDto> findById(UUID id) {
         return bookerRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(this::toDto);
+                .map(bookerMapper::toDto);
     }
 
     private boolean isAdmin() {
@@ -79,35 +83,8 @@ public class BookerServiceImpl implements BookerService {
         }
     }
 
-    private BookerDto toDto(Booker entity) {
-        return new BookerDto(
-                entity.getBookerId(),
-                entity.getFirstname(),
-                entity.getPrefix(),
-                entity.getLastname(),
-                entity.getCallsign(),
-                entity.getTelephone(),
-                entity.getEmailaddress(),
-                entity.getGender() != null ? entity.getGender().getGenderId() : null,
-                entity.getBirthdate(),
-                entity.getInitials(),
-                entity.getCreatedAt(),
-                entity.getCreatedBy(),
-                entity.getModifiedAt(),
-                entity.getModifiedBy(),
-                entity.getTenantOrganization()
-        );
-    }
-
-    private Gender resolveGender(UUID genderId) {
-        if (genderId == null) {
-            return null;
-        }
-        return genderRepository.findById(genderId)
-                .orElseThrow(() -> new RuntimeException("Gender not found with id: " + genderId));
-    }
-
     private Booker toEntity(BookerDto dto) {
+        Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Booker(
                 dto.getFirstname(),
                 dto.getPrefix(),
@@ -115,18 +92,14 @@ public class BookerServiceImpl implements BookerService {
                 dto.getCallsign(),
                 dto.getTelephone(),
                 dto.getEmailaddress(),
-                resolveGender(dto.getGenderId()),
+                gender,
                 dto.getBirthdate(),
-                dto.getInitials(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getInitials()
         );
     }
 
     private Booker toEntity(UUID id, BookerDto dto) {
+        Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Booker(
                 id,
                 dto.getFirstname(),
@@ -135,14 +108,9 @@ public class BookerServiceImpl implements BookerService {
                 dto.getCallsign(),
                 dto.getTelephone(),
                 dto.getEmailaddress(),
-                resolveGender(dto.getGenderId()),
+                gender,
                 dto.getBirthdate(),
-                dto.getInitials(),
-                dto.getCreatedAt(),
-                dto.getCreatedBy(),
-                dto.getModifiedAt(),
-                dto.getModifiedBy(),
-                TenantContext.getOrganizationId()
+                dto.getInitials()
         );
     }
 }

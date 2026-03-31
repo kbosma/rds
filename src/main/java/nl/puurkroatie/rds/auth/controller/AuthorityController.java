@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.auth.service.AuthorityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,15 +43,15 @@ public class AuthorityController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('AUTHORITY_WRITE')")
-    public ResponseEntity<AuthorityDto> create(@RequestBody AuthorityDto dto) {
+    @PreAuthorize("hasAuthority('AUTHORITY_CREATE')")
+    public ResponseEntity<AuthorityDto> create(@RequestBody @Valid AuthorityDto dto) {
         AuthorityDto created = authorityService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('AUTHORITY_WRITE')")
-    public ResponseEntity<AuthorityDto> update(@PathVariable UUID id, @RequestBody AuthorityDto dto) {
+    @PreAuthorize("hasAuthority('AUTHORITY_UPDATE')")
+    public ResponseEntity<AuthorityDto> update(@PathVariable UUID id, @RequestBody @Valid AuthorityDto dto) {
         AuthorityDto updated = authorityService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

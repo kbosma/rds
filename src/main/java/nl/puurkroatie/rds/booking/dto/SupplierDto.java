@@ -1,6 +1,9 @@
 package nl.puurkroatie.rds.booking.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import nl.puurkroatie.rds.common.Default;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,7 +11,11 @@ import java.util.UUID;
 public class SupplierDto {
 
     private UUID supplierId;
+    @NotNull
+    @Size(max = 255)
     private String key;
+    @NotNull
+    @Size(max = 255)
     private String name;
     private LocalDateTime createdAt;
     private UUID createdBy;
@@ -16,6 +23,7 @@ public class SupplierDto {
     private UUID modifiedBy;
     private UUID tenantOrganization;
 
+    @Default
     @JsonCreator
     public SupplierDto(UUID supplierId, String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.supplierId = supplierId;
