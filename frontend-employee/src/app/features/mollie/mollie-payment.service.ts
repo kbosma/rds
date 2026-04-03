@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
-import { MolliePayment } from '../../shared/models';
+import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -32,5 +32,20 @@ export class MolliePaymentService {
 
   createAtMollie(request: { amount: { currency: string; value: string }; description: string; redirectUrl: string; webhookUrl: string; metadata?: Record<string, string> }) {
     return this.http.post<MolliePayment>(`${environment.apiUrl}/${this.endpoint}/create-at-mollie`, request);
+  }
+
+  getStatusEntries(molliePaymentId: string) {
+    return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries/by-payment/${molliePaymentId}`);
+  }
+
+  getAllStatusEntries() {
+    return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries`);
+  }
+
+  createStatusEntry(molliePaymentId: string, status: string) {
+    return this.http.post<MolliePaymentStatusEntry>(`${environment.apiUrl}/mollie/payment-status-entries`, {
+      molliePaymentId,
+      status,
+    });
   }
 }

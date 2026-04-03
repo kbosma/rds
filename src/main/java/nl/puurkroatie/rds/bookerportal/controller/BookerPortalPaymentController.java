@@ -3,6 +3,7 @@ package nl.puurkroatie.rds.bookerportal.controller;
 import nl.puurkroatie.rds.bookerportal.security.BookerContext;
 import nl.puurkroatie.rds.bookerportal.service.BookerPortalPaymentService;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentDto;
+import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,13 @@ public class BookerPortalPaymentController {
     public ResponseEntity<List<MolliePaymentDto>> findAll() {
         UUID bookingId = BookerContext.getBookingId();
         return ResponseEntity.ok(bookerPortalPaymentService.findPaymentsByBookingId(bookingId));
+    }
+
+    @GetMapping("/status-entries")
+    @PreAuthorize("hasAuthority('BOOKER_PORTAL_READ')")
+    public ResponseEntity<List<MolliePaymentStatusEntryDto>> findStatusEntries() {
+        UUID bookingId = BookerContext.getBookingId();
+        return ResponseEntity.ok(bookerPortalPaymentService.findStatusEntriesByBookingId(bookingId));
     }
 
     @PostMapping("/pay/{molliePaymentId}")

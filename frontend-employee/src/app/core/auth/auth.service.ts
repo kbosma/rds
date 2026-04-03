@@ -26,6 +26,9 @@ export class AuthService {
     return {
       accountId: payload.sub,
       organizationId: payload.org,
+      personId: payload.personId ?? '',
+      personName: payload.personName ?? '',
+      organizationName: payload.organizationName ?? '',
       roles: payload.roles ?? [],
       authorities: payload.authorities ?? [],
     };

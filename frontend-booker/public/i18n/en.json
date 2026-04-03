@@ -1,0 +1,65 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "search": "Search",
+    "status": "Status",
+    "date": "Date",
+    "amount": "Amount",
+    "description": "Description",
+    "total": "Total",
+    "paid": "Paid",
+    "outstanding": "Outstanding",
+    "system": "System"
+  },
+  "app": {
+    "title": "RDS",
+    "subtitle": "Booking Portal"
+  },
+  "nav": {
+    "overview": "Overview",
+    "documents": "Documents",
+    "payments": "Payments",
+    "logout": "Log out"
+  },
+  "auth": {
+    "instruction": "Enter your details to receive a verification code",
+    "emailAddress": "Email address",
+    "bookingNumber": "Booking number",
+    "requestCode": "Request verification code",
+    "codeSent": "Verification code has been sent to your email address",
+    "verifyInstruction": "Enter the 6-digit code you received by email",
+    "verificationCode": "Verification code",
+    "verify": "Verify",
+    "invalidCode": "Invalid or expired verification code"
+  },
+  "dashboard": {
+    "title": "My Booking",
+    "bookingId": "Booking ID",
+    "documents": "Documents",
+    "viewDocuments": "View your travel documents",
+    "payments": "Payments",
+    "viewPayments": "View and pay your booking"
+  },
+  "documents": {
+    "title": "Documents",
+    "document": "Document",
+    "noDocuments": "No documents available."
+  },
+  "payments": {
+    "title": "Payments",
+    "noPayments": "No payments available.",
+    "pay": "Pay",
+    "statusHistory": "Status history",
+    "noStatusHistory": "No status history available.",
+    "statusOpen": "Open",
+    "statusPending": "Pending",
+    "statusAuthorized": "Authorized",
+    "statusPaid": "Paid",
+    "statusFailed": "Failed",
+    "statusCanceled": "Canceled",
+    "statusExpired": "Expired"
+  }
+}

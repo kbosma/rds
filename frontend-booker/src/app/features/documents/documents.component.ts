@@ -4,6 +4,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 
 interface Document {
@@ -15,9 +16,9 @@ interface Document {
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [DatePipe, MatTableModule, MatIconModule, MatProgressSpinnerModule, MatCardModule],
+  imports: [DatePipe, MatTableModule, MatIconModule, MatProgressSpinnerModule, MatCardModule, TranslateModule],
   template: `
-    <h1>Documenten</h1>
+    <h1>{{ 'documents.title' | translate }}</h1>
 
     @if (loading()) {
       <div class="loading">
@@ -27,14 +28,14 @@ interface Document {
       <mat-card class="empty-card">
         <mat-card-content class="empty-content">
           <mat-icon>description</mat-icon>
-          <p>Geen documenten beschikbaar.</p>
+          <p>{{ 'documents.noDocuments' | translate }}</p>
         </mat-card-content>
       </mat-card>
     } @else {
       <div class="table-container">
         <table mat-table [dataSource]="documents()" class="full-width">
           <ng-container matColumnDef="displayname">
-            <th mat-header-cell *matHeaderCellDef>Document</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'documents.document' | translate }}</th>
             <td mat-cell *matCellDef="let doc">
               <div class="doc-name">
                 <mat-icon>description</mat-icon>
@@ -44,7 +45,7 @@ interface Document {
           </ng-container>
 
           <ng-container matColumnDef="createdAt">
-            <th mat-header-cell *matHeaderCellDef>Datum</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | translate }}</th>
             <td mat-cell *matCellDef="let doc">{{ doc.createdAt | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 

@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
 
 @Component({
@@ -20,16 +21,17 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="login-wrapper">
       <mat-card class="login-card">
         <div class="login-header">
-          <h1 class="app-title">RDS</h1>
-          <p class="app-subtitle">Boekingsportaal</p>
+          <h1 class="app-title">{{ 'app.title' | translate }}</h1>
+          <p class="app-subtitle">{{ 'app.subtitle' | translate }}</p>
         </div>
         <mat-card-content>
-          <p class="instruction">Voer uw gegevens in om een verificatiecode te ontvangen</p>
+          <p class="instruction">{{ 'auth.instruction' | translate }}</p>
           @if (message()) {
             <div [class]="messageType() === 'success' ? 'success-banner' : 'error-banner'">
               <mat-icon>{{ messageType() === 'success' ? 'check_circle' : 'error_outline' }}</mat-icon>
@@ -38,12 +40,12 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
           }
           <form (ngSubmit)="onRequestOtp()">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>E-mailadres</mat-label>
+              <mat-label>{{ 'auth.emailAddress' | translate }}</mat-label>
               <mat-icon matPrefix>email</mat-icon>
               <input matInput type="email" [(ngModel)]="emailaddress" name="emailaddress" required />
             </mat-form-field>
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Boekingnummer</mat-label>
+              <mat-label>{{ 'auth.bookingNumber' | translate }}</mat-label>
               <mat-icon matPrefix>confirmation_number</mat-icon>
               <input matInput [(ngModel)]="bookingNumber" name="bookingNumber" required />
             </mat-form-field>
@@ -51,7 +53,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
               @if (loading()) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
-                VERIFICATIECODE AANVRAGEN
+                <ng-container><mat-icon>send</mat-icon> {{ 'auth.requestCode' | translate }}</ng-container>
               }
             </button>
           </form>
@@ -137,6 +139,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
 export class RequestOtpComponent {
   private authService = inject(BookerAuthService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   emailaddress = '';
   bookingNumber = '';
@@ -152,7 +155,7 @@ export class RequestOtpComponent {
       .subscribe({
         next: () => {
           this.loading.set(false);
-          this.message.set('Verificatiecode is verzonden naar uw e-mailadres');
+          this.message.set(this.translate.instant('auth.codeSent'));
           this.messageType.set('success');
           this.router.navigate(['/verify'], {
             queryParams: {
@@ -163,7 +166,7 @@ export class RequestOtpComponent {
         },
         error: () => {
           this.loading.set(false);
-          this.message.set('Verificatiecode is verzonden naar uw e-mailadres');
+          this.message.set(this.translate.instant('auth.codeSent'));
           this.messageType.set('success');
         },
       });

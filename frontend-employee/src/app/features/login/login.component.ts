@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -21,13 +22,14 @@ import { AuthService } from '../../core/auth/auth.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="login-wrapper">
       <mat-card class="login-card">
         <div class="login-header">
-          <h1 class="app-title">RDS</h1>
-          <p class="app-subtitle">Reis Dossier Systeem</p>
+          <h1 class="app-title">{{ 'app.title' | translate }}</h1>
+          <p class="app-subtitle">{{ 'app.subtitle' | translate }}</p>
         </div>
         <mat-card-content>
           @if (error()) {
@@ -38,12 +40,12 @@ import { AuthService } from '../../core/auth/auth.service';
           }
           <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Gebruikersnaam</mat-label>
+              <mat-label>{{ 'auth.username' | translate }}</mat-label>
               <mat-icon matPrefix>person</mat-icon>
               <input matInput formControlName="userName" autocomplete="username" />
             </mat-form-field>
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Wachtwoord</mat-label>
+              <mat-label>{{ 'auth.password' | translate }}</mat-label>
               <mat-icon matPrefix>lock</mat-icon>
               <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="current-password" />
               <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())" tabindex="-1">
@@ -54,7 +56,7 @@ import { AuthService } from '../../core/auth/auth.service';
               @if (loading()) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
-                INLOGGEN
+                <ng-container><mat-icon>login</mat-icon> {{ 'auth.login' | translate }}</ng-container>
               }
             </button>
           </form>
@@ -127,6 +129,7 @@ export class LoginComponent {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
+  private translate = inject(TranslateService);
 
   loginForm = this.fb.group({
     userName: ['', Validators.required],
@@ -149,7 +152,7 @@ export class LoginComponent {
       error: (err) => {
         this.loading.set(false);
         const detail = err?.error?.message ?? err?.message ?? '';
-        this.error.set(detail || 'Controleer gebruikersnaam en wachtwoord');
+        this.error.set(detail || this.translate.instant('auth.loginError'));
       },
     });
   }

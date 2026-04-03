@@ -1,5 +1,6 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,13 +9,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AccommodationService } from './accommodation.service';
 import { AccommodationSupplierService } from './accommodation-supplier.service';
 import { AccommodationAddressService } from './accommodation-address.service';
 import { AddressService } from './address.service';
 import { SupplierAddressService } from './supplier-address.service';
 import { SupplierService } from '../suppliers/supplier.service';
+import { AuthService } from '../../core/auth/auth.service';
 import {
   Accommodation, Supplier, Address,
   AccommodationSupplier, AccommodationAddress, SupplierAddress,
@@ -25,12 +28,9 @@ export interface AccommodationView {
   accommodation: Accommodation;
   supplierName: string | null;
   addressLine: string | null;
-  // For detail dialog
   supplier: Supplier | null;
-  accommodationAddress: Address | null;
-  accommodationAddressRole: string | null;
-  supplierAddress: Address | null;
-  supplierAddressRole: string | null;
+  accommodationAddresses: Address[];
+  supplierAddresses: Address[];
 }
 
 const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
@@ -39,6 +39,7 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
   selector: 'app-accommodation-list',
   standalone: true,
   imports: [
+    RouterLink,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -47,19 +48,22 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
     MatProgressSpinnerModule,
     MatDividerModule,
     MatDialogModule,
+    TranslateModule,
   ],
   template: `
     <div class="header">
-      <h1>Accommodaties</h1>
-      <button mat-raised-button color="primary">
-        <mat-icon>add</mat-icon> NIEUWE ACCOMMODATIE
-      </button>
+      <h1>{{ 'accommodations.title' | translate }}</h1>
+      @if (canEdit) {
+        <button mat-raised-button color="primary" routerLink="/accommodations/new">
+          <mat-icon>add</mat-icon> {{ 'accommodations.newAccommodation' | translate }}
+        </button>
+      }
     </div>
 
     <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>Zoeken</mat-label>
+      <mat-label>{{ 'common.search' | translate }}</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput (input)="applyFilter($event)" placeholder="Zoek op naam, code of leverancier..." />
+      <input matInput (input)="applyFilter($event)" [placeholder]="'accommodations.searchPlaceholder' | translate" />
     </mat-form-field>
 
     @if (loading()) {
@@ -77,22 +81,24 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
               <mat-divider></mat-divider>
               <div class="acc-detail">
                 <mat-icon>business</mat-icon>
-                <span>{{ view.supplierName || 'Geen leverancier' }}</span>
+                <span>{{ view.supplierName || ('accommodations.noSupplier' | translate) }}</span>
               </div>
               <div class="acc-detail">
                 <mat-icon>location_on</mat-icon>
-                <span>{{ view.addressLine || 'Geen adres' }}</span>
+                <span>{{ view.addressLine || ('accommodations.noAddress' | translate) }}</span>
               </div>
             </mat-card-content>
             <mat-card-actions align="end">
-              <button mat-button color="primary" (click)="openDetails(view)">DETAILS</button>
-              <button mat-button color="primary">BEWERKEN</button>
+              <button mat-button color="primary" (click)="openDetails(view)"><mat-icon>visibility</mat-icon> {{ 'common.details' | translate }}</button>
+              @if (canEdit) {
+                <a mat-button color="primary" [routerLink]="'/accommodations/' + view.accommodation.accommodationId"><mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}</a>
+              }
             </mat-card-actions>
           </mat-card>
         }
       </div>
 
-      <p class="count-text">{{ filtered().length }} accommodaties gevonden</p>
+      <p class="count-text">{{ 'accommodations.countFound' | translate: { count: filtered().length } }}</p>
     }
   `,
   styles: [`
@@ -178,15 +184,18 @@ export class AccommodationListComponent implements OnInit {
   private supplierService = inject(SupplierService);
   private addressService = inject(AddressService);
   private supplierAddressService = inject(SupplierAddressService);
+  private authService = inject(AuthService);
   private dialog = inject(MatDialog);
+  private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
+
+  canEdit = this.authService.hasRole('ADMIN') || this.authService.hasRole('MANAGER');
 
   allViews = signal<AccommodationView[]>([]);
   filtered = signal<AccommodationView[]>([]);
   loading = signal(true);
 
   ngOnInit() {
-
     forkJoin({
       accommodations: this.accommodationService.getAll(),
       accSuppliers: this.accommodationSupplierService.getAll(),
@@ -204,32 +213,37 @@ export class AccommodationListComponent implements OnInit {
           const accSup = accSuppliers.find(as => as.accommodationId === acc.accommodationId);
           const supplier = accSup ? supplierMap.get(accSup.supplierId) ?? null : null;
 
-          // Find accommodation address via accommodation-address koppeltabel
-          const accAddr = accAddresses.find(aa => aa.accommodationId === acc.accommodationId);
-          const accommodationAddress = accAddr ? addressMap.get(accAddr.addressId) ?? null : null;
-          const accommodationAddressRole = accommodationAddress?.addressrole ?? null;
+          // Find all accommodation addresses via koppeltabel
+          const accAddrLinks = accAddresses.filter(aa => aa.accommodationId === acc.accommodationId);
+          const accommodationAddrs = accAddrLinks
+            .map(link => addressMap.get(link.addressId))
+            .filter((a): a is Address => !!a);
 
-          // Find supplier address via supplier-address koppeltabel
-          let supplierAddress: Address | null = null;
-          let supplierAddressRole: string | null = null;
+          // Find all supplier addresses via koppeltabel
+          let supplierAddrs: Address[] = [];
           if (supplier) {
-            const supAddr = supAddresses.find(sa => sa.supplierId === supplier.supplierId);
-            supplierAddress = supAddr ? addressMap.get(supAddr.addressId) ?? null : null;
-            supplierAddressRole = supplierAddress?.addressrole ?? null;
+            const supAddrLinks = supAddresses.filter(sa => sa.supplierId === supplier.supplierId);
+            supplierAddrs = supAddrLinks
+              .map(link => addressMap.get(link.addressId))
+              .filter((a): a is Address => !!a);
           }
 
-          // Build address line for card
+          // Build address line for card (first address)
           let addressLine: string | null = null;
-          if (accommodationAddress) {
-            const parts = [accommodationAddress.street];
-            if (accommodationAddress.housenumber) {
-              parts.push(String(accommodationAddress.housenumber));
-              if (accommodationAddress.housenumberAddition) {
-                parts[parts.length - 1] += accommodationAddress.housenumberAddition;
+          if (accommodationAddrs.length > 0) {
+            const first = accommodationAddrs[0];
+            const parts = [first.street];
+            if (first.housenumber) {
+              parts.push(String(first.housenumber));
+              if (first.housenumberAddition) {
+                parts[parts.length - 1] += first.housenumberAddition;
               }
             }
-            parts.push(accommodationAddress.city);
+            parts.push(first.city);
             addressLine = parts.join(' ');
+            if (accommodationAddrs.length > 1) {
+              addressLine += ' ' + this.translate.instant('accommodations.moreAddresses', { count: accommodationAddrs.length - 1 });
+            }
           }
 
           return {
@@ -237,10 +251,8 @@ export class AccommodationListComponent implements OnInit {
             supplierName: supplier?.name ?? null,
             addressLine,
             supplier,
-            accommodationAddress,
-            accommodationAddressRole,
-            supplierAddress,
-            supplierAddressRole,
+            accommodationAddresses: accommodationAddrs,
+            supplierAddresses: supplierAddrs,
           };
         });
 
@@ -275,10 +287,8 @@ export class AccommodationListComponent implements OnInit {
     const data: AccommodationDetailData = {
       accommodation: view.accommodation,
       supplier: view.supplier,
-      accommodationAddress: view.accommodationAddress,
-      accommodationAddressRole: view.accommodationAddressRole,
-      supplierAddress: view.supplierAddress,
-      supplierAddressRole: view.supplierAddressRole,
+      accommodationAddresses: view.accommodationAddresses,
+      supplierAddresses: view.supplierAddresses,
     };
     this.dialog.open(AccommodationDetailDialogComponent, {
       data,

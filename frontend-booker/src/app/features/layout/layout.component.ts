@@ -4,7 +4,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { TranslateModule } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
+import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
 
 @Component({
   selector: 'app-layout',
@@ -17,26 +19,29 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
     MatButtonModule,
     MatIconModule,
     MatTabsModule,
+    TranslateModule,
+    LanguageSwitcherComponent,
   ],
   template: `
     <mat-toolbar class="app-toolbar">
-      <span class="brand">RDS</span>
-      <span class="brand-sub">Boekingsportaal</span>
+      <span class="brand">{{ 'app.title' | translate }}</span>
+      <span class="brand-sub">{{ 'app.subtitle' | translate }}</span>
       <span class="spacer"></span>
-      <button mat-icon-button (click)="auth.logout()" aria-label="Uitloggen">
+      <app-language-switcher />
+      <button mat-icon-button (click)="auth.logout()" [attr.aria-label]="'nav.logout' | translate">
         <mat-icon>logout</mat-icon>
       </button>
     </mat-toolbar>
 
     <nav class="nav-tabs">
       <a mat-button routerLink="/dashboard" routerLinkActive="active-tab">
-        <mat-icon>home</mat-icon> Overzicht
+        <mat-icon>home</mat-icon> {{ 'nav.overview' | translate }}
       </a>
       <a mat-button routerLink="/documents" routerLinkActive="active-tab">
-        <mat-icon>description</mat-icon> Documenten
+        <mat-icon>description</mat-icon> {{ 'nav.documents' | translate }}
       </a>
       <a mat-button routerLink="/payments" routerLinkActive="active-tab">
-        <mat-icon>payments</mat-icon> Betalingen
+        <mat-icon>payments</mat-icon> {{ 'nav.payments' | translate }}
       </a>
     </nav>
 

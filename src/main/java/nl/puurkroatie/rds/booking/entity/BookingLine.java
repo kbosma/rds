@@ -44,8 +44,8 @@ public class BookingLine {
     @Column(name = "until_date")
     private LocalDate untilDate;
 
-    @Column(name = "total_sum")
-    private BigDecimal totalSum;
+    @Column(name = "price")
+    private BigDecimal price;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,13 +66,13 @@ public class BookingLine {
     }
 
     public BookingLine(Booking booking, Accommodation accommodation, Supplier supplier,
-                       LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum) {
+                       LocalDate fromDate, LocalDate untilDate, BigDecimal price) {
         this.booking = booking;
         this.accommodation = accommodation;
         this.supplier = supplier;
         this.fromDate = fromDate;
         this.untilDate = untilDate;
-        this.totalSum = totalSum;
+        this.price = price;
     }
 
     @PrePersist
@@ -108,8 +108,8 @@ public class BookingLine {
         return untilDate;
     }
 
-    public BigDecimal getTotalSum() {
-        return totalSum;
+    public BigDecimal getPrice() {
+        return price;
     }
 
     public LocalDateTime getCreatedAt() {

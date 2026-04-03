@@ -28,13 +28,13 @@ public class SupplierAddressController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     public List<SupplierAddressDto> findAll() {
         return supplierAddressService.findAll();
     }
 
     @GetMapping("/{supplierId}/{addressId}")
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     public ResponseEntity<SupplierAddressDto> findById(@PathVariable UUID supplierId, @PathVariable UUID addressId) {
         return supplierAddressService.findById(supplierId, addressId)
                 .map(ResponseEntity::ok)
@@ -42,14 +42,14 @@ public class SupplierAddressController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    @PreAuthorize("hasAuthority('SUPPLIER_CREATE')")
     public ResponseEntity<SupplierAddressDto> create(@RequestBody @Valid SupplierAddressDto dto) {
         SupplierAddressDto created = supplierAddressService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @DeleteMapping("/{supplierId}/{addressId}")
-    @PreAuthorize("hasAuthority('BOOKING_DELETE')")
+    @PreAuthorize("hasAuthority('SUPPLIER_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID supplierId, @PathVariable UUID addressId) {
         supplierAddressService.delete(supplierId, addressId);
         return ResponseEntity.noContent().build();

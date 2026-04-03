@@ -29,13 +29,13 @@ public class SupplierController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     public List<SupplierDto> findAll() {
         return supplierService.findAll();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     public ResponseEntity<SupplierDto> findById(@PathVariable UUID id) {
         return supplierService.findById(id)
                 .map(ResponseEntity::ok)
@@ -43,21 +43,21 @@ public class SupplierController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    @PreAuthorize("hasAuthority('SUPPLIER_CREATE')")
     public ResponseEntity<SupplierDto> create(@RequestBody @Valid SupplierDto dto) {
         SupplierDto created = supplierService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
+    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
     public ResponseEntity<SupplierDto> update(@PathVariable UUID id, @RequestBody @Valid SupplierDto dto) {
         SupplierDto updated = supplierService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_DELETE')")
+    @PreAuthorize("hasAuthority('SUPPLIER_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         supplierService.delete(id);
         return ResponseEntity.noContent().build();

@@ -2,21 +2,22 @@ import { Component, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, RouterLink],
+  imports: [MatCardModule, MatIconModule, RouterLink, TranslateModule],
   template: `
-    <h1>Mijn Boeking</h1>
+    <h1>{{ 'dashboard.title' | translate }}</h1>
 
     <div class="card-grid">
       <mat-card class="info-card">
         <mat-card-content class="info-content">
           <mat-icon class="info-icon">book_online</mat-icon>
           <div>
-            <div class="info-label">Boeking ID</div>
+            <div class="info-label">{{ 'dashboard.bookingId' | translate }}</div>
             <div class="info-value">{{ auth.currentBooker()?.bookingId }}</div>
           </div>
         </mat-card-content>
@@ -26,8 +27,8 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
         <mat-card-content class="action-content">
           <mat-icon class="action-icon">description</mat-icon>
           <div>
-            <div class="action-title">Documenten</div>
-            <div class="action-sub">Bekijk uw reisdocumenten</div>
+            <div class="action-title">{{ 'dashboard.documents' | translate }}</div>
+            <div class="action-sub">{{ 'dashboard.viewDocuments' | translate }}</div>
           </div>
           <mat-icon class="chevron">chevron_right</mat-icon>
         </mat-card-content>
@@ -37,8 +38,8 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
         <mat-card-content class="action-content">
           <mat-icon class="action-icon">payments</mat-icon>
           <div>
-            <div class="action-title">Betalingen</div>
-            <div class="action-sub">Bekijk en betaal uw boeking</div>
+            <div class="action-title">{{ 'dashboard.payments' | translate }}</div>
+            <div class="action-sub">{{ 'dashboard.viewPayments' | translate }}</div>
           </div>
           <mat-icon class="chevron">chevron_right</mat-icon>
         </mat-card-content>

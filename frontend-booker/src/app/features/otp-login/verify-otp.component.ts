@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
 
 @Component({
@@ -20,16 +21,17 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="login-wrapper">
       <mat-card class="login-card">
         <div class="login-header">
-          <h1 class="app-title">RDS</h1>
-          <p class="app-subtitle">Boekingsportaal</p>
+          <h1 class="app-title">{{ 'app.title' | translate }}</h1>
+          <p class="app-subtitle">{{ 'app.subtitle' | translate }}</p>
         </div>
         <mat-card-content>
-          <p class="instruction">Voer de 6-cijferige code in die u per e-mail heeft ontvangen</p>
+          <p class="instruction">{{ 'auth.verifyInstruction' | translate }}</p>
           @if (error()) {
             <div class="error-banner">
               <mat-icon>error_outline</mat-icon>
@@ -38,7 +40,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
           }
           <form (ngSubmit)="onVerify()">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Verificatiecode</mat-label>
+              <mat-label>{{ 'auth.verificationCode' | translate }}</mat-label>
               <mat-icon matPrefix>lock</mat-icon>
               <input matInput [(ngModel)]="code" name="code" required maxlength="6"
                      pattern="[0-9]{6}" inputmode="numeric" class="code-input" />
@@ -47,11 +49,11 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
               @if (loading()) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
-                VERIFIEER
+                <ng-container><mat-icon>verified</mat-icon> {{ 'auth.verify' | translate }}</ng-container>
               }
             </button>
             <button mat-button type="button" class="full-width back-btn" (click)="goBack()">
-              <mat-icon>arrow_back</mat-icon> Terug
+              <mat-icon>arrow_back</mat-icon> {{ 'common.back' | translate }}
             </button>
           </form>
         </mat-card-content>
@@ -133,6 +135,7 @@ export class VerifyOtpComponent implements OnInit {
   private authService = inject(BookerAuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   emailaddress = '';
   bookingNumber = '';
@@ -160,7 +163,7 @@ export class VerifyOtpComponent implements OnInit {
         },
         error: () => {
           this.loading.set(false);
-          this.error.set('Ongeldige of verlopen verificatiecode');
+          this.error.set(this.translate.instant('auth.invalidCode'));
         },
       });
   }

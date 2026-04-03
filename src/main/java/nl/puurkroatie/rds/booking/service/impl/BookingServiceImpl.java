@@ -8,6 +8,7 @@ import nl.puurkroatie.rds.booking.entity.BookingStatus;
 import nl.puurkroatie.rds.booking.mapper.BookingMapper;
 import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
+import nl.puurkroatie.rds.booking.service.BookingNumberGenerator;
 import nl.puurkroatie.rds.booking.service.BookingService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -24,16 +25,19 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookerRepository bookerRepository;
     private final BookingMapper bookingMapper;
+    private final BookingNumberGenerator bookingNumberGenerator;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper) {
+    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper, BookingNumberGenerator bookingNumberGenerator) {
         this.bookingRepository = bookingRepository;
         this.bookerRepository = bookerRepository;
         this.bookingMapper = bookingMapper;
+        this.bookingNumberGenerator = bookingNumberGenerator;
     }
 
     @Override
     public BookingDto create(BookingDto dto) {
-        Booking entity = toEntity(dto);
+        String bookingNumber = bookingNumberGenerator.generate();
+        Booking entity = toEntity(dto, bookingNumber);
         Booking saved = bookingRepository.save(entity);
         return bookingMapper.toDto(saved);
     }
@@ -43,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
         Booking existing = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
-        Booking entity = toEntity(id, dto);
+        Booking entity = toEntity(id, dto, existing.getBookingNumber());
         Booking saved = bookingRepository.save(entity);
         return bookingMapper.toDto(saved);
     }
@@ -95,28 +99,22 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Booker not found with id: " + bookerId));
     }
 
-    private Booking toEntity(BookingDto dto) {
+    private Booking toEntity(BookingDto dto, String bookingNumber) {
         BookingStatus bookingStatus = BookingStatus.fromValue(dto.getBookingStatus());
         return new Booking(
                 resolveBooker(dto.getBookerId()),
-                dto.getBookingNumber(),
-                bookingStatus,
-                dto.getFromDate(),
-                dto.getUntilDate(),
-                dto.getTotalSum()
+                bookingNumber,
+                bookingStatus
         );
     }
 
-    private Booking toEntity(UUID id, BookingDto dto) {
+    private Booking toEntity(UUID id, BookingDto dto, String bookingNumber) {
         BookingStatus bookingStatus = BookingStatus.fromValue(dto.getBookingStatus());
         return new Booking(
                 id,
                 resolveBooker(dto.getBookerId()),
-                dto.getBookingNumber(),
-                bookingStatus,
-                dto.getFromDate(),
-                dto.getUntilDate(),
-                dto.getTotalSum()
+                bookingNumber,
+                bookingStatus
         );
     }
 }

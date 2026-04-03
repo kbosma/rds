@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
 import { BookerService } from './booker.service';
 import { Booker } from '../../shared/models';
 
@@ -25,16 +26,17 @@ import { Booker } from '../../shared/models';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="header">
-      <h1>Bookers</h1>
+      <h1>{{ 'bookers.title' | translate }}</h1>
     </div>
 
     <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>Zoeken</mat-label>
+      <mat-label>{{ 'common.search' | translate }}</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput (keyup)="applyFilter($event)" placeholder="Zoek op naam, e-mail of telefoon..." />
+      <input matInput (keyup)="applyFilter($event)" [placeholder]="'bookers.searchPlaceholder' | translate" />
     </mat-form-field>
 
     @if (loading()) {
@@ -45,29 +47,29 @@ import { Booker } from '../../shared/models';
       <div class="table-container">
         <table mat-table [dataSource]="dataSource" matSort class="full-width">
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Naam</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.name' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.firstname }} {{ row.prefix }} {{ row.lastname }}</td>
           </ng-container>
 
           <ng-container matColumnDef="emailaddress">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>E-mail</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.email' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <span class="email-link">{{ row.emailaddress }}</span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="telephone">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Telefoon</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.telephone' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.telephone }}</td>
           </ng-container>
 
           <ng-container matColumnDef="birthdate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Geboortedatum</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.birthdate' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.birthdate | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acties</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <button mat-icon-button color="primary">
                 <mat-icon>visibility</mat-icon>
@@ -84,7 +86,7 @@ import { Booker } from '../../shared/models';
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              Geen bookers gevonden.
+              {{ 'bookers.noBookersFound' | translate }}
             </td>
           </tr>
         </table>

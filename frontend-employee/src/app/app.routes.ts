@@ -44,9 +44,9 @@ export const routes: Routes = [
       },
       {
         path: 'accommodations',
-        loadComponent: () =>
-          import('./features/accommodations/accommodation-list.component').then(
-            (m) => m.AccommodationListComponent
+        loadChildren: () =>
+          import('./features/accommodations/accommodation.routes').then(
+            (m) => m.accommodationRoutes
           ),
       },
       {
@@ -96,6 +96,27 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/role-list.component').then(
             (m) => m.RoleListComponent
+          ),
+      },
+      {
+        path: 'admin/authorities',
+        loadComponent: () =>
+          import('./features/admin/authority-list.component').then(
+            (m) => m.AuthorityListComponent
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/my-profile.component').then(
+            (m) => m.MyProfileComponent
+          ),
+      },
+      {
+        path: 'change-password',
+        loadComponent: () =>
+          import('./features/profile/change-password.component').then(
+            (m) => m.ChangePasswordComponent
           ),
       },
     ],

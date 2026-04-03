@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Booking, BookingService } from './booking.service';
 
 @Component({
@@ -35,24 +36,25 @@ import { Booking, BookingService } from './booking.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatSelectModule,
+    TranslateModule,
   ],
   template: `
     <div class="header">
-      <h1>Boekingen</h1>
+      <h1>{{ 'bookings.title' | translate }}</h1>
       <a mat-raised-button color="primary" routerLink="new">
-        <mat-icon>add</mat-icon> NIEUWE BOEKING
+        <mat-icon>add</mat-icon> {{ 'bookings.newBooking' | translate }}
       </a>
     </div>
 
     <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>Zoeken</mat-label>
+      <mat-label>{{ 'common.search' | translate }}</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput (keyup)="applyFilters()" #searchInput placeholder="Zoek op boekingnummer, booker..." />
+      <input matInput (keyup)="applyFilters()" #searchInput [placeholder]="'bookings.searchPlaceholder' | translate" />
     </mat-form-field>
 
     <div class="filter-row">
       <mat-form-field appearance="outline" class="date-field">
-        <mat-label>Periode van</mat-label>
+        <mat-label>{{ 'bookings.periodFrom' | translate }}</mat-label>
         <input matInput [matDatepicker]="filterFromPicker"
                [(ngModel)]="filterFromDate" (dateChange)="applyFilters()" />
         <mat-datepicker-toggle matSuffix [for]="filterFromPicker"></mat-datepicker-toggle>
@@ -60,7 +62,7 @@ import { Booking, BookingService } from './booking.service';
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="date-field">
-        <mat-label>Periode tot</mat-label>
+        <mat-label>{{ 'bookings.periodUntil' | translate }}</mat-label>
         <input matInput [matDatepicker]="filterUntilPicker"
                [(ngModel)]="filterUntilDate" (dateChange)="applyFilters()" />
         <mat-datepicker-toggle matSuffix [for]="filterUntilPicker"></mat-datepicker-toggle>
@@ -68,16 +70,16 @@ import { Booking, BookingService } from './booking.service';
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="status-field">
-        <mat-label>Status</mat-label>
+        <mat-label>{{ 'common.status' | translate }}</mat-label>
         <mat-select multiple [(ngModel)]="selectedStatuses" (selectionChange)="applyFilters()">
-          @for (status of availableStatuses; track status) {
-            <mat-option [value]="status">{{ status }}</mat-option>
+          @for (status of availableStatuses; track status.value) {
+            <mat-option [value]="status.value">{{ status.labelKey | translate }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
 
       <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
-        <mat-icon>clear</mat-icon> Wissen
+        <mat-icon>clear</mat-icon> {{ 'common.clear' | translate }}
       </button>
     </div>
 
@@ -89,38 +91,38 @@ import { Booking, BookingService } from './booking.service';
       <div class="table-container">
         <table mat-table [dataSource]="dataSource" matSort class="full-width booking-table">
           <ng-container matColumnDef="bookingNumber">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Boekingnummer</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'bookings.bookingNumber' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <a [routerLink]="row.bookingId" class="booking-link">{{ row.bookingNumber }}</a>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="fromDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Van</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.from' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.fromDate | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="untilDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Tot</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.until' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.untilDate | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="statusName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <span class="status-badge" [class]="'status-' + row.bookingStatus">
-                {{ row.bookingStatus }}
+                {{ 'bookings.status_' + row.bookingStatus | translate }}
               </span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="totalSum">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Bedrag</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.amount' | translate }}</th>
             <td mat-cell *matCellDef="let row">&euro; {{ row.totalSum | number:'1.2-2' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acties</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <a mat-icon-button [routerLink]="row.bookingId" color="primary">
                 <mat-icon>edit</mat-icon>
@@ -134,7 +136,7 @@ import { Booking, BookingService } from './booking.service';
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              Geen boekingen gevonden.
+              {{ 'bookings.noBookingsFound' | translate }}
             </td>
           </tr>
         </table>
@@ -233,7 +235,14 @@ export class BookingListComponent implements OnInit {
   dataSource = new MatTableDataSource<Booking>();
   loading = signal(true);
 
-  availableStatuses = ['aanvraag', 'offerte', 'boeking', 'voorschot', 'betaald', 'afgerond'];
+  availableStatuses = [
+    { value: 'aanvraag', labelKey: 'bookings.status_aanvraag' },
+    { value: 'offerte', labelKey: 'bookings.status_offerte' },
+    { value: 'boeking', labelKey: 'bookings.status_boeking' },
+    { value: 'voorschot', labelKey: 'bookings.status_voorschot' },
+    { value: 'betaald', labelKey: 'bookings.status_betaald' },
+    { value: 'afgerond', labelKey: 'bookings.status_afgerond' },
+  ];
 
   allBookings: Booking[] = [];
   filterFromDate: Date | null = null;
@@ -270,7 +279,6 @@ export class BookingListComponent implements OnInit {
 
     let filtered = this.allBookings;
 
-    // Text search filter
     if (searchValue) {
       filtered = filtered.filter(b =>
         b.bookingNumber.toLowerCase().includes(searchValue)
@@ -278,8 +286,6 @@ export class BookingListComponent implements OnInit {
       );
     }
 
-    // Period overlap filter: booking overlaps [filterFrom, filterUntil]
-    // Overlap condition: booking.fromDate <= filterUntil AND booking.untilDate >= filterFrom
     if (this.filterFromDate || this.filterUntilDate) {
       const filterFrom = this.filterFromDate ? this.toDateString(this.filterFromDate) : null;
       const filterUntil = this.filterUntilDate ? this.toDateString(this.filterUntilDate) : null;
@@ -291,7 +297,6 @@ export class BookingListComponent implements OnInit {
       });
     }
 
-    // Status filter
     if (this.selectedStatuses.length > 0) {
       filtered = filtered.filter(b => this.selectedStatuses.includes(b.bookingStatus));
     }

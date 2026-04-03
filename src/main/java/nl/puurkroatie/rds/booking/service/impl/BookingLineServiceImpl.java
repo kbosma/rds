@@ -17,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,9 +87,11 @@ public class BookingLineServiceImpl implements BookingLineService {
         verifyOrganization(accommodation.getTenantOrganization());
         verifyOrganization(supplier.getTenantOrganization());
 
+        validateNoDateOverlap(booking.getBookingId(), dto.getFromDate(), dto.getUntilDate(), null);
+
         BookingLine entity = new BookingLine(
                 booking, accommodation, supplier,
-                dto.getFromDate(), dto.getUntilDate(), dto.getTotalSum()
+                dto.getFromDate(), dto.getUntilDate(), dto.getPrice()
         );
         BookingLine saved = bookingLineRepository.save(entity);
         return bookingLineMapper.toDto(saved);
@@ -108,9 +111,12 @@ public class BookingLineServiceImpl implements BookingLineService {
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + supplierId));
 
+        BookingLineId currentId = new BookingLineId(bookingId, accommodationId, supplierId);
+        validateNoDateOverlap(bookingId, dto.getFromDate(), dto.getUntilDate(), currentId);
+
         BookingLine updated = new BookingLine(
                 booking, accommodation, supplier,
-                dto.getFromDate(), dto.getUntilDate(), dto.getTotalSum()
+                dto.getFromDate(), dto.getUntilDate(), dto.getPrice()
         );
         BookingLine saved = bookingLineRepository.save(updated);
         return bookingLineMapper.toDto(saved);
@@ -133,6 +139,31 @@ public class BookingLineServiceImpl implements BookingLineService {
     private void verifyOrganization(UUID organizationId) {
         if (!isAdmin() && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
+        }
+    }
+
+    private void validateNoDateOverlap(UUID bookingId, LocalDate fromDate, LocalDate untilDate, BookingLineId excludeId) {
+        if (fromDate == null || untilDate == null) {
+            return;
+        }
+        List<BookingLine> existingLines = bookingLineRepository.findByBookingBookingId(bookingId);
+        for (BookingLine line : existingLines) {
+            if (excludeId != null && excludeId.equals(
+                    new BookingLineId(line.getBooking().getBookingId(),
+                            line.getAccommodation().getAccommodationId(),
+                            line.getSupplier().getSupplierId()))) {
+                continue;
+            }
+            if (line.getFromDate() == null || line.getUntilDate() == null) {
+                continue;
+            }
+            // Overlap: newFrom < existingUntil AND newUntil > existingFrom
+            // (gelijke grenzen zijn toegestaan: untilDate mag gelijk zijn aan fromDate van andere line)
+            if (fromDate.isBefore(line.getUntilDate()) && untilDate.isAfter(line.getFromDate())) {
+                throw new IllegalArgumentException(
+                        "Datumperiode overlapt met bestaande boekingsregel: "
+                                + line.getFromDate() + " — " + line.getUntilDate());
+            }
         }
     }
 }

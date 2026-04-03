@@ -12,4 +12,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findByTenantOrganization(UUID tenantOrganization);
 
     Optional<Booking> findByBookingNumberAndBookerEmailaddress(String bookingNumber, String emailaddress);
+
+    boolean existsByBookingNumber(String bookingNumber);
 }

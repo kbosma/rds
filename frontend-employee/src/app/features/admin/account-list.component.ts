@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccountService } from './account.service';
 import { Account } from '../../shared/models';
 
@@ -25,20 +26,21 @@ import { Account } from '../../shared/models';
     MatIconModule,
     MatChipsModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="header">
-      <h1>Accounts</h1>
+      <h1>{{ 'accounts.title' | translate }}</h1>
       <button mat-raised-button color="primary">
-        <mat-icon>add</mat-icon> NIEUW ACCOUNT
+        <mat-icon>add</mat-icon> {{ 'accounts.newAccount' | translate }}
       </button>
     </div>
 
     <div class="filter-bar">
       <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Zoeken</mat-label>
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
         <mat-icon matPrefix>search</mat-icon>
-        <input matInput (keyup)="applyFilter($event)" placeholder="Zoek op gebruikersnaam..." />
+        <input matInput (keyup)="applyFilter($event)" [placeholder]="'accounts.searchPlaceholder' | translate" />
       </mat-form-field>
 
       <div class="filter-chips">
@@ -46,7 +48,7 @@ import { Account } from '../../shared/models';
           <button mat-stroked-button
                   [class.active-chip]="activeChip() === chip.value"
                   (click)="filterByRole(chip.value)">
-            {{ chip.label }}
+            {{ chip.labelKey | translate }}
           </button>
         }
       </div>
@@ -60,26 +62,26 @@ import { Account } from '../../shared/models';
       <div class="table-container">
         <table mat-table [dataSource]="dataSource" matSort class="full-width">
           <ng-container matColumnDef="userName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Gebruikersnaam</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'accounts.username' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.userName }}</td>
           </ng-container>
 
           <ng-container matColumnDef="person">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Persoon</th>
-            <td mat-cell *matCellDef="let row">{{ row.person }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'accounts.person' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.personId }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <span class="status-badge" [class.status-active]="!row.locked" [class.status-locked]="row.locked">
-                {{ row.locked ? 'Vergrendeld' : 'Actief' }}
+                {{ row.locked ? ('accounts.locked' | translate) : ('accounts.active' | translate) }}
               </span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acties</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <button mat-icon-button color="primary">
                 <mat-icon>edit</mat-icon>
@@ -99,7 +101,7 @@ import { Account } from '../../shared/models';
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              Geen accounts gevonden.
+              {{ 'accounts.noAccountsFound' | translate }}
             </td>
           </tr>
         </table>
@@ -109,8 +111,8 @@ import { Account } from '../../shared/models';
     }
 
     <div class="legend">
-      <span class="legend-item"><span class="status-badge status-active">Actief</span> Account is actief</span>
-      <span class="legend-item"><span class="status-badge status-locked">Vergrendeld</span> Account is vergrendeld</span>
+      <span class="legend-item"><span class="status-badge status-active">{{ 'accounts.active' | translate }}</span> {{ 'accounts.legendActive' | translate }}</span>
+      <span class="legend-item"><span class="status-badge status-locked">{{ 'accounts.locked' | translate }}</span> {{ 'accounts.legendLocked' | translate }}</span>
     </div>
   `,
   styles: [`
@@ -210,10 +212,10 @@ export class AccountListComponent implements OnInit {
   activeChip = signal('ALL');
 
   roleChips = [
-    { label: 'Alle', value: 'ALL' },
-    { label: 'ADMIN', value: 'ADMIN' },
-    { label: 'MANAGER', value: 'MANAGER' },
-    { label: 'EMPLOYEE', value: 'EMPLOYEE' },
+    { labelKey: 'accounts.all', value: 'ALL' },
+    { labelKey: 'accounts.roleAdmin', value: 'ADMIN' },
+    { labelKey: 'accounts.roleManager', value: 'MANAGER' },
+    { labelKey: 'accounts.roleEmployee', value: 'EMPLOYEE' },
   ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

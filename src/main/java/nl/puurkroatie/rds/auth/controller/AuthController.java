@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.auth.dto.LoginRequestDto;
 import nl.puurkroatie.rds.auth.dto.LoginResponseDto;
 import nl.puurkroatie.rds.auth.entity.Account;
 import nl.puurkroatie.rds.auth.entity.AccountRole;
+import nl.puurkroatie.rds.auth.entity.Person;
 import nl.puurkroatie.rds.auth.entity.RoleAuthority;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
@@ -75,10 +76,16 @@ public class AuthController {
                 .distinct()
                 .toList();
 
+        String personName = buildPersonName(account.getPerson());
+        String organizationName = account.getPerson().getOrganization().getName();
+
         String token = jwtTokenProvider.generateToken(
                 account.getAccountId(),
                 account.getPerson().getOrganization().getOrganizationId(),
+                account.getPerson().getPersoonId(),
                 account.getUserName(),
+                personName,
+                organizationName,
                 authorities,
                 roles);
 
@@ -98,5 +105,19 @@ public class AuthController {
 
     private boolean isEmployee() {
         return TenantContext.hasRole("EMPLOYEE") && !TenantContext.hasRole("MANAGER") && !TenantContext.hasRole("ADMIN");
+    }
+
+    private String buildPersonName(Person person) {
+        StringBuilder sb = new StringBuilder();
+        if (person.getFirstname() != null) {
+            sb.append(person.getFirstname());
+        }
+        if (person.getPrefix() != null && !person.getPrefix().isEmpty()) {
+            sb.append(" ").append(person.getPrefix());
+        }
+        if (person.getLastname() != null) {
+            sb.append(" ").append(person.getLastname());
+        }
+        return sb.toString().trim();
     }
 }

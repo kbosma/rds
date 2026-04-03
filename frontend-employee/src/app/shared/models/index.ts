@@ -13,3 +13,6 @@ export * from './address.model';
 export * from './accommodation-supplier.model';
 export * from './accommodation-address.model';
 export * from './supplier-address.model';
+export * from './role.model';
+export * from './account-role.model';
+export * from './authority.model';

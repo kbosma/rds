@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -81,8 +82,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void manager_createBooking_returns201() throws Exception {
         String token = managerToken();
 
-        String json = "{\"bookingNumber\":\"BK-TEST-001\"," +
-                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-12-01\",\"untilDate\":\"2026-12-14\"," +
                 "\"totalSum\":1500.00}";
 
@@ -91,7 +91,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.bookingNumber").value("BK-TEST-001"))
+                .andExpect(jsonPath("$.bookingNumber").value(matchesPattern("BK-\\d{4}-\\d{5}")))
                 .andExpect(jsonPath("$.tenantOrganization").value(ORG_TECHPARTNER_ID.toString()));
     }
 
@@ -100,8 +100,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void manager_updateBooking_ownOrganization_returns200() throws Exception {
         String token = managerToken();
 
-        String json = "{\"bookingNumber\":\"BK-2026-004-UPD\"," +
-                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-20\",\"untilDate\":\"2026-07-27\"," +
                 "\"totalSum\":1700.00}";
 
@@ -110,7 +109,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bookingNumber").value("BK-2026-004-UPD"));
+                .andExpect(jsonPath("$.bookingNumber").value("BK-2026-004"));
     }
 
     // MANAGER: PUT /api/bookings/{id} andere org — 403
@@ -118,8 +117,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void manager_updateBooking_otherOrganization_returns403() throws Exception {
         String token = managerToken();
 
-        String json = "{\"bookingNumber\":\"BK-HACK\"," +
-                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-01\",\"untilDate\":\"2026-07-14\"," +
                 "\"totalSum\":9999.00}";
 
@@ -193,8 +191,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void employee_createBooking_returns201() throws Exception {
         String token = employeeToken();
 
-        String json = "{\"bookingNumber\":\"BK-TEST-EMP\"," +
-                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-11-01\",\"untilDate\":\"2026-11-14\"," +
                 "\"totalSum\":1200.00}";
 
@@ -203,7 +200,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.bookingNumber").value("BK-TEST-EMP"))
+                .andExpect(jsonPath("$.bookingNumber").value(matchesPattern("BK-\\d{4}-\\d{5}")))
                 .andExpect(jsonPath("$.tenantOrganization").value(ORG_PUURKROATIE_ID.toString()));
     }
 
@@ -212,8 +209,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void employee_updateBooking_ownOrganization_returns200() throws Exception {
         String token = employeeToken();
 
-        String json = "{\"bookingNumber\":\"BK-2026-001-UPD\"," +
-                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-01\",\"untilDate\":\"2026-07-14\"," +
                 "\"totalSum\":2500.00}";
 
@@ -222,7 +218,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bookingNumber").value("BK-2026-001-UPD"));
+                .andExpect(jsonPath("$.bookingNumber").value("BK-2026-001"));
     }
 
     // EMPLOYEE: PUT /api/bookings/{id} andere org — 403
@@ -230,8 +226,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void employee_updateBooking_otherOrganization_returns403() throws Exception {
         String token = employeeToken();
 
-        String json = "{\"bookingNumber\":\"BK-HACK\"," +
-                "\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
                 "\"fromDate\":\"2026-07-20\",\"untilDate\":\"2026-07-27\"," +
                 "\"totalSum\":9999.00}";
 

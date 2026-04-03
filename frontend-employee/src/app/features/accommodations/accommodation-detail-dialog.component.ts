@@ -3,15 +3,14 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { TranslateModule } from '@ngx-translate/core';
 import { Accommodation, Supplier, Address } from '../../shared/models';
 
 export interface AccommodationDetailData {
   accommodation: Accommodation;
   supplier: Supplier | null;
-  accommodationAddress: Address | null;
-  accommodationAddressRole: string | null;
-  supplierAddress: Address | null;
-  supplierAddressRole: string | null;
+  accommodationAddresses: Address[];
+  supplierAddresses: Address[];
 }
 
 @Component({
@@ -22,6 +21,7 @@ export interface AccommodationDetailData {
     MatButtonModule,
     MatIconModule,
     MatDividerModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -29,60 +29,61 @@ export interface AccommodationDetailData {
       {{ data.accommodation.name }}
     </h2>
     <mat-dialog-content>
-      <div class="section-label">Code</div>
+      <div class="section-label">{{ 'common.code' | translate }}</div>
       <div class="section-value">{{ data.accommodation.key }}</div>
 
-      @if (data.accommodationAddress) {
-        <mat-divider></mat-divider>
-        <h3 class="section-title">
-          <mat-icon>location_on</mat-icon> Accommodatie-adres
-          @if (data.accommodationAddressRole) {
-            <span class="role-badge">{{ data.accommodationAddressRole }}</span>
-          }
-        </h3>
-        <div class="address-block">
-          <div class="address-line">{{ formatAddress(data.accommodationAddress) }}</div>
-          <div class="address-line">{{ data.accommodationAddress.postalcode }} {{ data.accommodationAddress.city }}</div>
-          <div class="address-line">{{ data.accommodationAddress.country }}</div>
-        </div>
+      <!-- Accommodation addresses -->
+      <mat-divider></mat-divider>
+      <h3 class="section-title">
+        <mat-icon>location_on</mat-icon> {{ 'accommodations.addresses' | translate }}
+      </h3>
+      @if (data.accommodationAddresses.length > 0) {
+        @for (addr of data.accommodationAddresses; track addr.addressId) {
+          <div class="address-block">
+            <span class="role-badge">{{ addr.addressrole }}</span>
+            <div class="address-line">{{ formatAddress(addr) }}</div>
+            <div class="address-line">{{ addr.postalcode }} {{ addr.city }}</div>
+            <div class="address-line">{{ addr.country }}</div>
+          </div>
+        }
+      } @else {
+        <p class="empty-text">{{ 'accommodations.noAddresses' | translate }}</p>
       }
 
+      <!-- Supplier -->
+      <mat-divider></mat-divider>
       @if (data.supplier) {
-        <mat-divider></mat-divider>
         <h3 class="section-title">
-          <mat-icon>business</mat-icon> Leverancier
+          <mat-icon>business</mat-icon> {{ 'accommodations.supplierLabel' | translate }}
         </h3>
         <div class="info-grid">
           <div class="info-item">
-            <span class="info-label">Naam</span>
+            <span class="info-label">{{ 'common.name' | translate }}</span>
             <span class="info-value">{{ data.supplier.name }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Code</span>
+            <span class="info-label">{{ 'common.code' | translate }}</span>
             <span class="info-value">{{ data.supplier.key }}</span>
           </div>
         </div>
 
-        @if (data.supplierAddress) {
-          <h4 class="sub-title">
-            Adres leverancier
-            @if (data.supplierAddressRole) {
-              <span class="role-badge">{{ data.supplierAddressRole }}</span>
-            }
-          </h4>
-          <div class="address-block">
-            <div class="address-line">{{ formatAddress(data.supplierAddress) }}</div>
-            <div class="address-line">{{ data.supplierAddress.postalcode }} {{ data.supplierAddress.city }}</div>
-            <div class="address-line">{{ data.supplierAddress.country }}</div>
-          </div>
+        @if (data.supplierAddresses.length > 0) {
+          <h4 class="sub-title">{{ 'accommodations.supplierAddresses' | translate }}</h4>
+          @for (addr of data.supplierAddresses; track addr.addressId) {
+            <div class="address-block">
+              <span class="role-badge">{{ addr.addressrole }}</span>
+              <div class="address-line">{{ formatAddress(addr) }}</div>
+              <div class="address-line">{{ addr.postalcode }} {{ addr.city }}</div>
+              <div class="address-line">{{ addr.country }}</div>
+            </div>
+          }
         }
       } @else {
-        <mat-divider></mat-divider>
-        <p class="empty-text">Geen leverancier gekoppeld.</p>
+        <p class="empty-text">{{ 'accommodations.noSupplierLinked' | translate }}</p>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>SLUITEN</button>
+      <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.close' | translate }}</button>
     </mat-dialog-actions>
   `,
   styles: [`
@@ -121,9 +122,6 @@ export interface AccommodationDetailData {
       color: #1976d2;
     }
     .sub-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       font-size: 14px;
       font-weight: 500;
       margin: 12px 0 6px;
@@ -138,6 +136,7 @@ export interface AccommodationDetailData {
       padding: 2px 8px;
       border-radius: 12px;
       text-transform: uppercase;
+      margin-bottom: 4px;
     }
     .info-grid {
       display: grid;
@@ -160,7 +159,7 @@ export interface AccommodationDetailData {
     }
     .address-block {
       padding-left: 28px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .address-line {
       font-size: 14px;

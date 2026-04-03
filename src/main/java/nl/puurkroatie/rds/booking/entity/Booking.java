@@ -27,21 +27,15 @@ public class Booking {
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     private List<Traveler> travelers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+    private List<BookingLine> bookingLines = new ArrayList<>();
+
     @Column(name = "booking_number", nullable = false)
     private String bookingNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_status", nullable = false)
     private BookingStatus bookingStatus;
-
-    @Column(name = "from_date")
-    private LocalDate fromDate;
-
-    @Column(name = "until_date")
-    private LocalDate untilDate;
-
-    @Column(name = "total_sum")
-    private BigDecimal totalSum;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -61,23 +55,17 @@ public class Booking {
     protected Booking() {
     }
 
-    public Booking(UUID bookingId, Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum) {
+    public Booking(UUID bookingId, Booker booker, String bookingNumber, BookingStatus bookingStatus) {
         this.bookingId = bookingId;
         this.booker = booker;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
-        this.totalSum = totalSum;
     }
 
-    public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum) {
+    public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus) {
         this.booker = booker;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
-        this.totalSum = totalSum;
     }
 
     @PrePersist
@@ -113,16 +101,43 @@ public class Booking {
         return bookingStatus;
     }
 
+    @Transient
     public LocalDate getFromDate() {
-        return fromDate;
+        if (bookingLines == null || bookingLines.isEmpty()) {
+            return null;
+        }
+        return bookingLines.stream()
+                .map(BookingLine::getFromDate)
+                .filter(java.util.Objects::nonNull)
+                .min(java.util.Comparator.naturalOrder())
+                .orElse(null);
     }
 
+    @Transient
     public LocalDate getUntilDate() {
-        return untilDate;
+        if (bookingLines == null || bookingLines.isEmpty()) {
+            return null;
+        }
+        return bookingLines.stream()
+                .map(BookingLine::getUntilDate)
+                .filter(java.util.Objects::nonNull)
+                .max(java.util.Comparator.naturalOrder())
+                .orElse(null);
     }
 
+    @Transient
     public BigDecimal getTotalSum() {
-        return totalSum;
+        if (bookingLines == null || bookingLines.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return bookingLines.stream()
+                .map(BookingLine::getPrice)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<BookingLine> getBookingLines() {
+        return bookingLines;
     }
 
     public LocalDateTime getCreatedAt() {

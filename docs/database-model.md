@@ -224,10 +224,12 @@ Hoofdentiteit voor boekingen. Multi-tenant.
 | booker_id | UUID | FK → booker | Gekoppelde booker |
 | booking_number | VARCHAR | NOT NULL | Boekingnummer |
 | booking_status | VARCHAR | NOT NULL, enum BookingStatus | Status |
-| from_date | DATE | | Startdatum |
-| until_date | DATE | | Einddatum |
-| total_sum | DECIMAL | | Totaalbedrag |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
+
+**Berekende velden (niet in database, `@Transient`):**
+- `fromDate` (LocalDate) — kleinste `fromDate` van alle gekoppelde BookingLines
+- `untilDate` (LocalDate) — grootste `untilDate` van alle gekoppelde BookingLines
+- `totalSum` (BigDecimal) — som van alle gekoppelde `BookingLine.price` waarden
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
 | modified_at | TIMESTAMP | | |
@@ -236,6 +238,7 @@ Hoofdentiteit voor boekingen. Multi-tenant.
 **Relaties:**
 - OneToOne → Booker (optional)
 - OneToMany ← Traveler (mappedBy="booking")
+- OneToMany ← BookingLine (mappedBy="booking")
 
 **Enum BookingStatus:** `AANVRAAG`, `OFFERTE`, `BOEKING`, `VOORSCHOT`, `BETAALD`, `AFGEROND`
 
@@ -492,7 +495,7 @@ Boekingsregel: koppeling Booking ↔ Accommodation ↔ Supplier met extra velden
 | supplier_id | UUID | PK (composite), FK → supplier, NOT NULL | |
 | from_date | DATE | | Startdatum |
 | until_date | DATE | | Einddatum |
-| total_sum | DECIMAL | | Bedrag |
+| price | DECIMAL | | Prijs |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |

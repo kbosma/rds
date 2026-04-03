@@ -1,0 +1,65 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "close": "Sluiten",
+    "back": "Terug",
+    "search": "Zoeken",
+    "status": "Status",
+    "date": "Datum",
+    "amount": "Bedrag",
+    "description": "Omschrijving",
+    "total": "Totaal",
+    "paid": "Betaald",
+    "outstanding": "Openstaand",
+    "system": "Systeem"
+  },
+  "app": {
+    "title": "RDS",
+    "subtitle": "Boekingsportaal"
+  },
+  "nav": {
+    "overview": "Overzicht",
+    "documents": "Documenten",
+    "payments": "Betalingen",
+    "logout": "Uitloggen"
+  },
+  "auth": {
+    "instruction": "Voer uw gegevens in om een verificatiecode te ontvangen",
+    "emailAddress": "E-mailadres",
+    "bookingNumber": "Boekingnummer",
+    "requestCode": "Verificatiecode aanvragen",
+    "codeSent": "Verificatiecode is verzonden naar uw e-mailadres",
+    "verifyInstruction": "Voer de 6-cijferige code in die u per e-mail heeft ontvangen",
+    "verificationCode": "Verificatiecode",
+    "verify": "Verifiëren",
+    "invalidCode": "Ongeldige of verlopen verificatiecode"
+  },
+  "dashboard": {
+    "title": "Mijn Boeking",
+    "bookingId": "Boeking ID",
+    "documents": "Documenten",
+    "viewDocuments": "Bekijk uw reisdocumenten",
+    "payments": "Betalingen",
+    "viewPayments": "Bekijk en betaal uw boeking"
+  },
+  "documents": {
+    "title": "Documenten",
+    "document": "Document",
+    "noDocuments": "Geen documenten beschikbaar."
+  },
+  "payments": {
+    "title": "Betalingen",
+    "noPayments": "Geen betalingen beschikbaar.",
+    "pay": "Betalen",
+    "statusHistory": "Status historie",
+    "noStatusHistory": "Geen status historie beschikbaar.",
+    "statusOpen": "Open",
+    "statusPending": "In behandeling",
+    "statusAuthorized": "Geautoriseerd",
+    "statusPaid": "Betaald",
+    "statusFailed": "Mislukt",
+    "statusCanceled": "Geannuleerd",
+    "statusExpired": "Verlopen"
+  }
+}

@@ -14,4 +14,16 @@ export class AddressService {
   getById(id: string) {
     return this.api.getById<Address>(this.endpoint, id);
   }
+
+  create(address: Partial<Address>) {
+    return this.api.create<Address>(this.endpoint, address);
+  }
+
+  update(id: string, address: Partial<Address>) {
+    return this.api.update<Address>(this.endpoint, id, address);
+  }
+
+  delete(id: string) {
+    return this.api.delete(this.endpoint, id);
+  }
 }

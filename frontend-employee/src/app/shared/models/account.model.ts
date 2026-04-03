@@ -1,7 +1,7 @@
 export interface Account {
   accountId: string;
   userName: string;
-  person: string;
+  personId: string;
   locked: boolean;
   mustChangePassword: boolean;
   expiresAt: string;

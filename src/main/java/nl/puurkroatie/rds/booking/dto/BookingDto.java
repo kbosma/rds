@@ -14,8 +14,7 @@ public class BookingDto {
 
     private UUID bookingId;
     private UUID bookerId;
-    @NotNull
-    @Size(max = 255)
+    @Size(max = 14)
     private String bookingNumber;
     @NotNull
     private String bookingStatus;
@@ -45,13 +44,10 @@ public class BookingDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public BookingDto(UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookingDto(UUID bookerId, String bookingNumber, String bookingStatus, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
-        this.totalSum = totalSum;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;

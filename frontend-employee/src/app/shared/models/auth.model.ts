@@ -8,6 +8,9 @@ export interface LoginResponse {
 export interface TokenPayload {
   sub: string;
   org: string;
+  personId: string;
+  personName: string;
+  organizationName: string;
   roles: string[];
   authorities: string[];
   exp: number;

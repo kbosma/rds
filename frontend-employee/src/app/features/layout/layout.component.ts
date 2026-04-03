@@ -6,14 +6,17 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   route: string;
   icon: string;
   authority?: string;
-  section?: string;
+  roles?: string[];
+  sectionKey?: string;
 }
 
 @Component({
@@ -29,23 +32,25 @@ interface NavItem {
     MatIconModule,
     MatButtonModule,
     MatDividerModule,
+    TranslateModule,
+    LanguageSwitcherComponent,
   ],
   template: `
     <mat-sidenav-container class="layout-container">
       <mat-sidenav mode="side" opened class="sidenav">
         <div class="sidenav-header">
-          <h2 class="brand-title">RDS</h2>
-          <span class="brand-subtitle">Reis Dossier Systeem</span>
+          <h2 class="brand-title">{{ 'app.title' | translate }}</h2>
+          <span class="brand-subtitle">{{ 'app.subtitle' | translate }}</span>
         </div>
         <mat-nav-list class="nav-list">
           @for (item of visibleNavItems(); track item.route) {
-            @if (item.section) {
+            @if (item.sectionKey) {
               <mat-divider></mat-divider>
-              <div class="section-header">{{ item.section }}</div>
+              <div class="section-header">{{ item.sectionKey | translate }}</div>
             }
             <a mat-list-item [routerLink]="item.route" routerLinkActive="active-item" class="nav-item">
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-              <span matListItemTitle>{{ item.label }}</span>
+              <span matListItemTitle>{{ item.labelKey | translate }}</span>
             </a>
           }
         </mat-nav-list>
@@ -53,12 +58,13 @@ interface NavItem {
 
       <mat-sidenav-content class="content">
         <mat-toolbar class="app-toolbar">
-          <span class="toolbar-title">RDS - Reis Dossier Systeem</span>
+          <span class="toolbar-title">{{ 'app.toolbarTitle' | translate }}</span>
           <span class="toolbar-spacer"></span>
           @if (userName()) {
             <span class="username">{{ userName() }}</span>
           }
-          <button mat-icon-button (click)="auth.logout()" aria-label="Uitloggen">
+          <app-language-switcher />
+          <button mat-icon-button (click)="auth.logout()" [attr.aria-label]="'auth.logout' | translate">
             <mat-icon>logout</mat-icon>
           </button>
         </mat-toolbar>
@@ -153,27 +159,36 @@ export class LayoutComponent {
   auth = inject(AuthService);
 
   private allNavItems: NavItem[] = [
-    { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
-    { label: 'Boekingen', route: '/bookings', icon: 'book_online', authority: 'BOOKING_READ' },
-    { label: 'Bookers', route: '/bookers', icon: 'person', authority: 'BOOKING_READ' },
-    { label: 'Reizigers', route: '/travelers', icon: 'group', authority: 'BOOKING_READ' },
-    { label: 'Accommodaties', route: '/accommodations', icon: 'hotel', authority: 'BOOKING_READ' },
-    { label: 'Leveranciers', route: '/suppliers', icon: 'business', authority: 'BOOKING_READ' },
-    { label: 'Documenten', route: '/documents', icon: 'description', authority: 'BOOKING_READ' },
-    { label: 'Betalingen', route: '/payments', icon: 'payment', authority: 'PAYMENT_READ' },
-    { label: 'Organisaties', route: '/admin/organizations', icon: 'corporate_fare', authority: 'ORGANIZATION_READ', section: 'BEHEER' },
-    { label: 'Personen', route: '/admin/persons', icon: 'people', authority: 'PERSON_READ' },
-    { label: 'Accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: 'ACCOUNT_READ' },
-    { label: 'Rollen', route: '/admin/roles', icon: 'admin_panel_settings', authority: 'ROLE_READ' },
+    { labelKey: 'nav.dashboard', route: '/dashboard', icon: 'dashboard' },
+    { labelKey: 'nav.bookings', route: '/bookings', icon: 'book_online', authority: 'BOOKING_READ', roles: ['MANAGER', 'EMPLOYEE'] },
+    { labelKey: 'nav.bookers', route: '/bookers', icon: 'person', authority: 'BOOKING_READ', roles: ['MANAGER', 'EMPLOYEE'] },
+    { labelKey: 'nav.documents', route: '/documents', icon: 'description', authority: 'BOOKING_READ', roles: ['MANAGER', 'EMPLOYEE'] },
+    { labelKey: 'nav.payments', route: '/payments', icon: 'payment', authority: 'PAYMENT_READ', roles: ['MANAGER', 'EMPLOYEE'] },
+    { labelKey: 'nav.organizations', route: '/admin/organizations', icon: 'corporate_fare', authority: 'ORGANIZATION_READ', roles: ['ADMIN'], sectionKey: 'nav.admin' },
+    { labelKey: 'nav.roles', route: '/admin/roles', icon: 'admin_panel_settings', authority: 'ROLE_READ', roles: ['ADMIN'] },
+    { labelKey: 'nav.authorities', route: '/admin/authorities', icon: 'security', authority: 'AUTHORITY_READ', roles: ['ADMIN'] },
+    { labelKey: 'nav.accommodations', route: '/accommodations', icon: 'hotel', authority: 'ACCOMMODATION_READ', roles: ['MANAGER'], sectionKey: 'nav.admin' },
+    { labelKey: 'nav.suppliers', route: '/suppliers', icon: 'business', authority: 'SUPPLIER_READ', roles: ['MANAGER'] },
+    { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', authority: 'PERSON_READ', roles: ['MANAGER'] },
+    { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: 'ACCOUNT_READ', roles: ['MANAGER'] },
+    { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', authority: 'PERSON_UPDATE', roles: ['EMPLOYEE'], sectionKey: 'nav.admin' },
+    { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', authority: 'ACCOUNT_UPDATE', roles: ['EMPLOYEE'] },
   ];
 
   visibleNavItems = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return [];
-    return this.allNavItems.filter(
-      (item) => !item.authority || user.authorities.includes(item.authority)
-    );
+    return this.allNavItems.filter((item) => {
+      if (item.authority && !user.authorities.includes(item.authority)) return false;
+      if (item.roles && !item.roles.some((role) => user.roles.includes(role))) return false;
+      return true;
+    });
   });
 
-  userName = computed(() => this.auth.currentUser()?.accountId ?? '');
+  userName = computed(() => {
+    const user = this.auth.currentUser();
+    if (!user) return '';
+    const name = user.personName || user.accountId;
+    return user.organizationName ? `${name} (${user.organizationName})` : name;
+  });
 }

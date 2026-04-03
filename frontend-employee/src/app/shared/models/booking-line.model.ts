@@ -6,7 +6,7 @@ export interface BookingLine {
   supplierName: string;
   fromDate: string;
   untilDate: string;
-  totalSum: number;
+  price: number;
   createdAt: string;
   createdBy: string;
   modifiedAt: string;

@@ -10,6 +10,7 @@ import nl.puurkroatie.rds.mollie.entity.MolliePayment;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
 import nl.puurkroatie.rds.mollie.mapper.MolliePaymentMapper;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentRepository;
+import nl.puurkroatie.rds.mollie.service.MolliePaymentStatusEntryService;
 import nl.puurkroatie.rds.mollie.service.MollieService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,13 @@ public class MollieServiceImpl implements MollieService {
     private final MolliePaymentRepository molliePaymentRepository;
     private final RestClient mollieRestClient;
     private final MolliePaymentMapper molliePaymentMapper;
+    private final MolliePaymentStatusEntryService statusEntryService;
 
-    public MollieServiceImpl(MolliePaymentRepository molliePaymentRepository, RestClient mollieRestClient, MolliePaymentMapper molliePaymentMapper) {
+    public MollieServiceImpl(MolliePaymentRepository molliePaymentRepository, RestClient mollieRestClient, MolliePaymentMapper molliePaymentMapper, MolliePaymentStatusEntryService statusEntryService) {
         this.molliePaymentRepository = molliePaymentRepository;
         this.mollieRestClient = mollieRestClient;
         this.molliePaymentMapper = molliePaymentMapper;
+        this.statusEntryService = statusEntryService;
     }
 
     @Override
@@ -48,6 +51,7 @@ public class MollieServiceImpl implements MollieService {
                 dto.getCheckoutUrl()
         );
         MolliePayment saved = molliePaymentRepository.save(entity);
+        statusEntryService.createInitialStatus(saved.getMolliePaymentId());
         return molliePaymentMapper.toDto(saved);
     }
 
@@ -123,7 +127,8 @@ public class MollieServiceImpl implements MollieService {
                     response.getDescription(),
                     checkoutUrl
             );
-            molliePaymentRepository.save(entity);
+            MolliePayment saved = molliePaymentRepository.save(entity);
+            statusEntryService.createInitialStatus(saved.getMolliePaymentId());
         }
 
         return response;
@@ -151,6 +156,9 @@ public class MollieServiceImpl implements MollieService {
                                 existing.getCheckoutUrl()
                         );
                         molliePaymentRepository.save(updated);
+                        if (status != null) {
+                            statusEntryService.createStatusFromWebhook(existing.getMolliePaymentId(), status);
+                        }
                     });
         }
 

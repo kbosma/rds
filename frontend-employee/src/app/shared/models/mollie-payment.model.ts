@@ -13,3 +13,13 @@ export interface MolliePayment {
   modifiedBy: string;
   tenantOrganization: string;
 }
+
+export interface MolliePaymentStatusEntry {
+  molliePaymentStatusEntryId: string;
+  molliePaymentId: string;
+  status: string;
+  createdAt: string;
+  createdBy: string | null;
+  modifiedAt: string | null;
+  modifiedBy: string | null;
+}

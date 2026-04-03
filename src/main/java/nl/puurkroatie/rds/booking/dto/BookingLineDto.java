@@ -21,7 +21,7 @@ public class BookingLineDto {
 
     private LocalDate fromDate;
     private LocalDate untilDate;
-    private BigDecimal totalSum;
+    private BigDecimal price;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -30,7 +30,7 @@ public class BookingLineDto {
 
     public BookingLineDto(UUID bookingId, UUID accommodationId, UUID supplierId,
                           String accommodationName, String supplierName,
-                          LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum,
+                          LocalDate fromDate, LocalDate untilDate, BigDecimal price,
                           LocalDateTime createdAt, UUID createdBy,
                           LocalDateTime modifiedAt, UUID modifiedBy,
                           UUID tenantOrganization) {
@@ -41,7 +41,7 @@ public class BookingLineDto {
         this.supplierName = supplierName;
         this.fromDate = fromDate;
         this.untilDate = untilDate;
-        this.totalSum = totalSum;
+        this.price = price;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -77,8 +77,8 @@ public class BookingLineDto {
         return untilDate;
     }
 
-    public BigDecimal getTotalSum() {
-        return totalSum;
+    public BigDecimal getPrice() {
+        return price;
     }
 
     public LocalDateTime getCreatedAt() {

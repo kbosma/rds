@@ -28,13 +28,13 @@ public class AccommodationAddressController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('ACCOMMODATION_READ')")
     public List<AccommodationAddressDto> findAll() {
         return accommodationAddressService.findAll();
     }
 
     @GetMapping("/{accommodationId}/{addressId}")
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('ACCOMMODATION_READ')")
     public ResponseEntity<AccommodationAddressDto> findById(@PathVariable UUID accommodationId, @PathVariable UUID addressId) {
         return accommodationAddressService.findById(accommodationId, addressId)
                 .map(ResponseEntity::ok)
@@ -42,14 +42,14 @@ public class AccommodationAddressController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    @PreAuthorize("hasAuthority('ACCOMMODATION_CREATE')")
     public ResponseEntity<AccommodationAddressDto> create(@RequestBody @Valid AccommodationAddressDto dto) {
         AccommodationAddressDto created = accommodationAddressService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @DeleteMapping("/{accommodationId}/{addressId}")
-    @PreAuthorize("hasAuthority('BOOKING_DELETE')")
+    @PreAuthorize("hasAuthority('ACCOMMODATION_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID accommodationId, @PathVariable UUID addressId) {
         accommodationAddressService.delete(accommodationId, addressId);
         return ResponseEntity.noContent().build();

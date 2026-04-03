@@ -29,7 +29,8 @@ public class JwtTokenProvider {
         this.bookerExpirationMs = bookerExpirationMs;
     }
 
-    public String generateToken(UUID accountId, UUID organizationId, String userName,
+    public String generateToken(UUID accountId, UUID organizationId, UUID personId,
+                                String userName, String personName, String organizationName,
                                 Collection<String> authorities, Collection<String> roles) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
@@ -38,7 +39,10 @@ public class JwtTokenProvider {
                 .subject(accountId.toString())
                 .claim("type", "EMPLOYEE")
                 .claim("org", organizationId.toString())
+                .claim("personId", personId.toString())
                 .claim("userName", userName)
+                .claim("personName", personName)
+                .claim("organizationName", organizationName)
                 .claim("authorities", authorities)
                 .claim("roles", roles)
                 .issuedAt(now)
@@ -81,6 +85,11 @@ public class JwtTokenProvider {
 
     public UUID getOrganizationId(String token) {
         return UUID.fromString(getClaims(token).get("org", String.class));
+    }
+
+    public UUID getPersonId(String token) {
+        String personId = getClaims(token).get("personId", String.class);
+        return personId != null ? UUID.fromString(personId) : null;
     }
 
     public UUID getBookingId(String token) {
