@@ -16,3 +16,5 @@ export * from './supplier-address.model';
 export * from './role.model';
 export * from './account-role.model';
 export * from './authority.model';
+export * from './organization-theme.model';
+export * from './document.model';

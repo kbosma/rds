@@ -12,8 +12,17 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TranslateModule } from '@ngx-translate/core';
+import { forkJoin } from 'rxjs';
 import { MolliePaymentService } from './mollie-payment.service';
+import { BookingService } from '../bookings/booking.service';
 import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+
+interface BookingMolliePaymentLink {
+  bookingId: string;
+  molliePaymentId: string;
+}
 
 @Component({
   selector: 'app-mollie-payments-overview',
@@ -85,6 +94,13 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'payments.mollieId' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <span class="mollie-id">{{ row.molliePaymentExternalId }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="bookingNumber">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'bookings.bookingNumber' | translate }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="booking-number">{{ bookingNumberMap().get(row.molliePaymentId) ?? '—' }}</span>
             </td>
           </ng-container>
 
@@ -267,6 +283,10 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       font-family: monospace;
       font-size: 13px;
     }
+    .booking-number {
+      color: #1976d2;
+      font-weight: 500;
+    }
     .method-badge {
       display: inline-block;
       padding: 2px 10px;
@@ -347,9 +367,12 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 })
 export class MolliePaymentsOverviewComponent implements OnInit {
   private molliePaymentService = inject(MolliePaymentService);
+  private bookingService = inject(BookingService);
+  private http = inject(HttpClient);
   private destroyRef = inject(DestroyRef);
 
   payments = signal<MolliePayment[]>([]);
+  bookingNumberMap = signal<Map<string, string>>(new Map());
   loading = signal(true);
   searchTerm = signal('');
   pageIndex = signal(0);
@@ -361,14 +384,14 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   statusEntries = signal<MolliePaymentStatusEntry[]>([]);
   statusEntriesLoading = signal(false);
 
-  displayedColumns = ['molliePaymentExternalId', 'createdAt', 'description', 'method', 'amount', 'status', 'expand'];
+  displayedColumns = ['molliePaymentExternalId', 'bookingNumber', 'createdAt', 'description', 'method', 'amount', 'status', 'expand'];
 
   totalAmount = computed(() =>
-    this.payments().reduce((sum, p) => sum + (p.amount ?? 0), 0)
+    this.filteredPayments().reduce((sum, p) => sum + (p.amount ?? 0), 0)
   );
 
   paidAmount = computed(() =>
-    this.payments()
+    this.filteredPayments()
       .filter((p) => p.status?.toLowerCase() === 'paid')
       .reduce((sum, p) => sum + (p.amount ?? 0), 0)
   );
@@ -379,11 +402,13 @@ export class MolliePaymentsOverviewComponent implements OnInit {
     const term = this.searchTerm().toLowerCase();
     let result = this.payments();
     if (term) {
+      const bnMap = this.bookingNumberMap();
       result = result.filter((p) =>
         (p.molliePaymentExternalId ?? '').toLowerCase().includes(term) ||
         (p.description ?? '').toLowerCase().includes(term) ||
         (p.status ?? '').toLowerCase().includes(term) ||
-        (p.method ?? '').toLowerCase().includes(term)
+        (p.method ?? '').toLowerCase().includes(term) ||
+        (bnMap.get(p.molliePaymentId) ?? '').toLowerCase().includes(term)
       );
     }
 
@@ -409,9 +434,23 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.molliePaymentService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (payments) => {
+    forkJoin({
+      payments: this.molliePaymentService.getAll(),
+      links: this.http.get<BookingMolliePaymentLink[]>(`${environment.apiUrl}/booking-mollie-payments`),
+      bookings: this.bookingService.getAll(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ payments, links, bookings }) => {
         this.payments.set(payments);
+
+        const bookingMap = new Map(bookings.map(b => [b.bookingId, b.bookingNumber]));
+        const bnMap = new Map<string, string>();
+        for (const link of links) {
+          const bookingNumber = bookingMap.get(link.bookingId);
+          if (bookingNumber) {
+            bnMap.set(link.molliePaymentId, bookingNumber);
+          }
+        }
+        this.bookingNumberMap.set(bnMap);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

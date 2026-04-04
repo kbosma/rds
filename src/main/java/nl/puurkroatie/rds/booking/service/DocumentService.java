@@ -17,4 +17,6 @@ public interface DocumentService {
     List<DocumentDto> findAll();
 
     Optional<DocumentDto> findById(UUID id);
+
+    List<DocumentDto> findByBookingId(UUID bookingId);
 }

@@ -54,6 +54,7 @@
     "authorities": "Authorities",
     "myProfile": "My profile",
     "changePassword": "Password",
+    "theme": "Brand Style",
     "admin": "ADMIN"
   },
   "auth": {
@@ -164,7 +165,19 @@
   "bookers": {
     "title": "Bookers",
     "searchPlaceholder": "Search by name, email or phone...",
-    "noBookersFound": "No bookers found."
+    "noBookersFound": "No bookers found.",
+    "viewTitle": "View booker",
+    "editTitle": "Edit booker",
+    "saved": "Booker saved",
+    "saveError": "Error saving booker",
+    "firstname": "First name",
+    "prefix": "Prefix",
+    "lastname": "Last name",
+    "callsign": "Nickname",
+    "initials": "Initials",
+    "gender": "Gender",
+    "genderMale": "Male",
+    "genderFemale": "Female"
   },
   "accommodations": {
     "title": "Accommodations",
@@ -261,6 +274,36 @@
     "title": "Suppliers"
   },
   "documents": {
-    "title": "Documents"
+    "title": "Documents",
+    "searchPlaceholder": "Search by name or booking number...",
+    "displayname": "Document name",
+    "modifiedAt": "Modified",
+    "noDocumentsFound": "No documents found.",
+    "uploadTitle": "Upload document",
+    "saved": "Document saved",
+    "saveError": "Error saving document",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+    "removed": "Document removed",
+    "removeError": "Error removing document",
+    "noDocumentsYet": "No documents added yet.",
+    "url": "URL",
+    "urlPlaceholder": "https://example.com/file.pdf",
+    "fetchUrl": "Fetch",
+    "dropzoneText": "Drop a file here",
+    "dropzoneHint": "or use one of the other options",
+    "chooseFile": "Choose file",
+    "invalidMimeType": "Invalid file type. Only PDF files are allowed.",
+    "fetchError": "Error fetching URL",
+    "displaynamePlaceholder": "Document name"
+  },
+  "theme": {
+    "title": "Brand Style",
+    "settings": "Theme settings",
+    "primaryColor": "Primary color",
+    "accentColor": "Accent color",
+    "logoUrl": "Logo URL",
+    "preview": "Preview",
+    "saved": "Brand style saved",
+    "saveError": "Error saving brand style"
   }
 }

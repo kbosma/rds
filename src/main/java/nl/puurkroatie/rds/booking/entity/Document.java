@@ -34,6 +34,9 @@ public class Document {
     @Column(name = "displayname", nullable = false)
     private String displayname;
 
+    @Column(name = "mime_type")
+    private String mimeType;
+
     @Lob
     @Column(name = "document")
     private byte[] document;
@@ -56,16 +59,18 @@ public class Document {
     protected Document() {
     }
 
-    public Document(UUID documentId, Booking booking, String displayname, byte[] document) {
+    public Document(UUID documentId, Booking booking, String displayname, String mimeType, byte[] document) {
         this.documentId = documentId;
         this.booking = booking;
         this.displayname = displayname;
+        this.mimeType = mimeType;
         this.document = document;
     }
 
-    public Document(Booking booking, String displayname, byte[] document) {
+    public Document(Booking booking, String displayname, String mimeType, byte[] document) {
         this.booking = booking;
         this.displayname = displayname;
+        this.mimeType = mimeType;
         this.document = document;
     }
 
@@ -92,6 +97,10 @@ public class Document {
 
     public String getDisplayname() {
         return displayname;
+    }
+
+    public String getMimeType() {
+        return mimeType;
     }
 
     public byte[] getDocument() {

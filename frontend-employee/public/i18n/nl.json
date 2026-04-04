@@ -54,6 +54,7 @@
     "authorities": "Authorities",
     "myProfile": "Mijn gegevens",
     "changePassword": "Wachtwoord",
+    "theme": "Huisstijl",
     "admin": "BEHEER"
   },
   "auth": {
@@ -164,7 +165,19 @@
   "bookers": {
     "title": "Boekers",
     "searchPlaceholder": "Zoek op naam, e-mail of telefoon...",
-    "noBookersFound": "Geen boekers gevonden."
+    "noBookersFound": "Geen boekers gevonden.",
+    "viewTitle": "Boeker bekijken",
+    "editTitle": "Boeker bewerken",
+    "saved": "Boeker opgeslagen",
+    "saveError": "Fout bij opslaan boeker",
+    "firstname": "Voornaam",
+    "prefix": "Tussenvoegsel",
+    "lastname": "Achternaam",
+    "callsign": "Roepnaam",
+    "initials": "Initialen",
+    "gender": "Geslacht",
+    "genderMale": "Man",
+    "genderFemale": "Vrouw"
   },
   "accommodations": {
     "title": "Accommodaties",
@@ -261,6 +274,36 @@
     "title": "Leveranciers"
   },
   "documents": {
-    "title": "Documenten"
+    "title": "Documenten",
+    "searchPlaceholder": "Zoek op naam of boekingsnummer...",
+    "displayname": "Documentnaam",
+    "modifiedAt": "Gewijzigd",
+    "noDocumentsFound": "Geen documenten gevonden.",
+    "uploadTitle": "Document uploaden",
+    "saved": "Document opgeslagen",
+    "saveError": "Fout bij opslaan document",
+    "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
+    "removed": "Document verwijderd",
+    "removeError": "Fout bij verwijderen document",
+    "noDocumentsYet": "Nog geen documenten toegevoegd.",
+    "url": "URL",
+    "urlPlaceholder": "https://voorbeeld.nl/bestand.pdf",
+    "fetchUrl": "Ophalen",
+    "dropzoneText": "Sleep een bestand hierheen",
+    "dropzoneHint": "of gebruik een van de andere opties",
+    "chooseFile": "Kies bestand",
+    "invalidMimeType": "Ongeldig bestandstype. Alleen PDF-bestanden zijn toegestaan.",
+    "fetchError": "Fout bij ophalen van URL",
+    "displaynamePlaceholder": "Documentnaam"
+  },
+  "theme": {
+    "title": "Huisstijl",
+    "settings": "Thema-instellingen",
+    "primaryColor": "Primaire kleur",
+    "accentColor": "Accentkleur",
+    "logoUrl": "Logo URL",
+    "preview": "Voorbeeld",
+    "saved": "Huisstijl opgeslagen",
+    "saveError": "Fout bij opslaan huisstijl"
   }
 }

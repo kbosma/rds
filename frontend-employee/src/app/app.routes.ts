@@ -106,6 +106,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/theme',
+        loadComponent: () =>
+          import('./features/admin/organization-theme.component').then(
+            (m) => m.OrganizationThemeComponent
+          ),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/my-profile.component').then(

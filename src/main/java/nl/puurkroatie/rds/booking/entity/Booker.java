@@ -98,6 +98,22 @@ public class Booker {
         this.initials = initials;
     }
 
+    public Booker(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, UUID tenantOrganization) {
+        this.bookerId = bookerId;
+        this.firstname = firstname;
+        this.prefix = prefix;
+        this.lastname = lastname;
+        this.callsign = callsign;
+        this.telephone = telephone;
+        this.emailaddress = emailaddress;
+        this.gender = gender;
+        this.birthdate = birthdate;
+        this.initials = initials;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.tenantOrganization = tenantOrganization;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

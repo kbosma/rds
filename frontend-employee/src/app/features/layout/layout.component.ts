@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { ThemeService } from '../admin/theme.service';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
 
 interface NavItem {
@@ -92,7 +93,7 @@ interface NavItem {
       margin: 0;
       font-size: 28px;
       font-weight: 700;
-      color: #1976d2;
+      color: var(--theme-primary);
       letter-spacing: 2px;
     }
     .brand-subtitle {
@@ -117,14 +118,14 @@ interface NavItem {
       margin: 2px 0;
     }
     .active-item {
-      background-color: #e3f2fd !important;
-      border-left: 4px solid #1976d2 !important;
+      background-color: color-mix(in srgb, var(--theme-primary) 10%, white) !important;
+      border-left: 4px solid var(--theme-primary) !important;
     }
     .active-item mat-icon {
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .active-item span[matListItemTitle] {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-weight: 500;
     }
     .content {
@@ -132,7 +133,7 @@ interface NavItem {
       flex-direction: column;
     }
     .app-toolbar {
-      background: #1976d2;
+      background: var(--theme-primary);
       color: white;
     }
     .toolbar-title {
@@ -157,6 +158,11 @@ interface NavItem {
 })
 export class LayoutComponent {
   auth = inject(AuthService);
+  private themeService = inject(ThemeService);
+
+  constructor() {
+    this.themeService.loadAndApplyTheme();
+  }
 
   private allNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', route: '/dashboard', icon: 'dashboard' },
@@ -171,6 +177,7 @@ export class LayoutComponent {
     { labelKey: 'nav.suppliers', route: '/suppliers', icon: 'business', authority: 'SUPPLIER_READ', roles: ['MANAGER'] },
     { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', authority: 'PERSON_READ', roles: ['MANAGER'] },
     { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: 'ACCOUNT_READ', roles: ['MANAGER'] },
+    { labelKey: 'nav.theme', route: '/admin/theme', icon: 'palette', authority: 'ORGANIZATION_THEME_READ', roles: ['MANAGER'] },
     { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', authority: 'PERSON_UPDATE', roles: ['EMPLOYEE'], sectionKey: 'nav.admin' },
     { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', authority: 'ACCOUNT_UPDATE', roles: ['EMPLOYEE'] },
   ];

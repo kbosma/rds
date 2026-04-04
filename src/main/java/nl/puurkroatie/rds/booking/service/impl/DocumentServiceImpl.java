@@ -70,6 +70,15 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<DocumentDto> findByBookingId(UUID bookingId) {
+        return documentRepository.findByBookingBookingId(bookingId).stream()
+                .filter(doc -> isAdmin() || doc.getTenantOrganization().equals(TenantContext.getOrganizationId()))
+                .map(documentMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<DocumentDto> findById(UUID id) {
         return documentRepository.findById(id)
                 .filter(entity -> isAdmin() || entity.getTenantOrganization().equals(TenantContext.getOrganizationId()))
@@ -92,6 +101,7 @@ public class DocumentServiceImpl implements DocumentService {
         return new Document(
                 booking,
                 dto.getDisplayname(),
+                dto.getMimeType(),
                 dto.getDocument()
         );
     }
@@ -103,6 +113,7 @@ public class DocumentServiceImpl implements DocumentService {
                 id,
                 booking,
                 dto.getDisplayname(),
+                dto.getMimeType(),
                 dto.getDocument()
         );
     }

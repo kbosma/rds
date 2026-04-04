@@ -2,7 +2,9 @@ package nl.puurkroatie.rds.booking.controller;
 
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
 import nl.puurkroatie.rds.booking.service.DocumentService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
@@ -32,6 +34,29 @@ public class DocumentController {
     @PreAuthorize("hasAuthority('BOOKING_READ')")
     public List<DocumentDto> findAll() {
         return documentService.findAll();
+    }
+
+    @GetMapping("/booking/{bookingId}")
+    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    public List<DocumentDto> findByBookingId(@PathVariable UUID bookingId) {
+        return documentService.findByBookingId(bookingId);
+    }
+
+    @GetMapping(value = "/{id}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    public ResponseEntity<byte[]> getContent(@PathVariable UUID id) {
+        return documentService.findById(id)
+                .map(doc -> {
+                    MediaType mediaType = doc.getMimeType() != null
+                            ? MediaType.parseMediaType(doc.getMimeType())
+                            : MediaType.APPLICATION_OCTET_STREAM;
+                    String disposition = mediaType.equals(MediaType.APPLICATION_PDF) ? "inline" : "attachment";
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(mediaType);
+                    headers.set(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + doc.getDisplayname() + "\"");
+                    return ResponseEntity.ok().headers(headers).body(doc.getDocument());
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}")

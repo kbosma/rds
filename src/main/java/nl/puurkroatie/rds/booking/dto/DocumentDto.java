@@ -16,6 +16,7 @@ public class DocumentDto {
     @NotNull
     @Size(max = 255)
     private String displayname;
+    private String mimeType;
     private byte[] document;
     private LocalDateTime createdAt;
     private UUID createdBy;
@@ -25,10 +26,11 @@ public class DocumentDto {
 
     @Default
     @JsonCreator
-    public DocumentDto(UUID documentId, UUID bookingId, String displayname, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.documentId = documentId;
         this.bookingId = bookingId;
         this.displayname = displayname;
+        this.mimeType = mimeType;
         this.document = document;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
@@ -37,9 +39,10 @@ public class DocumentDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public DocumentDto(UUID bookingId, String displayname, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public DocumentDto(UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookingId = bookingId;
         this.displayname = displayname;
+        this.mimeType = mimeType;
         this.document = document;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
@@ -58,6 +61,10 @@ public class DocumentDto {
 
     public String getDisplayname() {
         return displayname;
+    }
+
+    public String getMimeType() {
+        return mimeType;
     }
 
     public byte[] getDocument() {

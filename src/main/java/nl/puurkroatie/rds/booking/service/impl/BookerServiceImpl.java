@@ -39,7 +39,7 @@ public class BookerServiceImpl implements BookerService {
         Booker existing = bookerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booker not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
-        Booker entity = toEntity(id, dto);
+        Booker entity = toEntity(id, dto, existing);
         Booker saved = bookerRepository.save(entity);
         return bookerMapper.toDto(saved);
     }
@@ -98,7 +98,7 @@ public class BookerServiceImpl implements BookerService {
         );
     }
 
-    private Booker toEntity(UUID id, BookerDto dto) {
+    private Booker toEntity(UUID id, BookerDto dto, Booker existing) {
         Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Booker(
                 id,
@@ -110,7 +110,10 @@ public class BookerServiceImpl implements BookerService {
                 dto.getEmailaddress(),
                 gender,
                 dto.getBirthdate(),
-                dto.getInitials()
+                dto.getInitials(),
+                existing.getCreatedAt(),
+                existing.getCreatedBy(),
+                existing.getTenantOrganization()
         );
     }
 }
