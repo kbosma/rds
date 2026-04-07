@@ -13,27 +13,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AccommodationAddressControllerTest extends AbstractBookingControllerTest {
 
-    // ADMIN: GET /api/accommodation-addresses — alle koppelingen (>= 6)
+    // ADMIN: GET /api/accommodation-addresses — geen ACCOMMODATION_READ authority → 403
     @Test
-    void admin_findAll_returnsAllAccommodationAddresses() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/accommodation-addresses")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(6))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/accommodation-addresses/{accommodationId}/{addressId} — specifieke koppeling
+    // ADMIN: GET /api/accommodation-addresses/{accommodationId}/{addressId} — geen ACCOMMODATION_READ authority → 403
     @Test
-    void admin_findById_returnsAccommodationAddress() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/accommodation-addresses/" + ACCOMMODATION_PK_1 + "/" + ADDRESS_PK_8)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accommodationId").value(ACCOMMODATION_PK_1.toString()))
-                .andExpect(jsonPath("$.addressId").value(ADDRESS_PK_8.toString()));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/accommodation-addresses — 200 (heeft BOOKING_READ)
@@ -124,12 +121,11 @@ class AccommodationAddressControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // EMPLOYEE: POST /api/accommodation-addresses — 201 (heeft BOOKING_WRITE, binnen eigen org)
+    // EMPLOYEE: POST /api/accommodation-addresses — geen ACCOMMODATION_CREATE authority → 403
     @Test
-    void employee_createAccommodationAddress_returns201() throws Exception {
+    void employee_createAccommodationAddress_returns403() throws Exception {
         String token = employeeToken();
 
-        // Koppel Puurkroatie accommodation 2 aan Puurkroatie address 8
         String json = "{\"accommodationId\":\"04000000-0000-0000-0000-000000000002\"," +
                 "\"addressId\":\"" + ADDRESS_PK_8 + "\"}";
 
@@ -137,17 +133,17 @@ class AccommodationAddressControllerTest extends AbstractBookingControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isForbidden());
     }
 
-    // EMPLOYEE: DELETE /api/accommodation-addresses/{accId}/{addrId} eigen org — 204
+    // EMPLOYEE: DELETE /api/accommodation-addresses/{accId}/{addrId} — geen ACCOMMODATION_DELETE authority → 403
     @Test
-    void employee_deleteAccommodationAddress_ownOrganization_returns204() throws Exception {
+    void employee_deleteAccommodationAddress_returns403() throws Exception {
         String token = employeeToken();
 
         mockMvc.perform(delete("/api/accommodation-addresses/" + ACCOMMODATION_PK_1 + "/" + ADDRESS_PK_8)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isForbidden());
     }
 
     // Ongeauthenticeerd: GET /api/accommodation-addresses — 401

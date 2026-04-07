@@ -13,27 +13,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class BookerAddressControllerTest extends AbstractBookingControllerTest {
 
-    // ADMIN: GET /api/booker-addresses — alle booker-address koppelingen (>= 7)
+    // ADMIN: GET /api/booker-addresses — geen BOOKING_READ authority → 403
     @Test
-    void admin_findAll_returnsAllBookerAddresses() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/booker-addresses")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(7))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/booker-addresses/{bookerId}/{addressId} — specifieke koppeling opvraagbaar
+    // ADMIN: GET /api/booker-addresses/{bookerId}/{addressId} — geen BOOKING_READ authority → 403
     @Test
-    void admin_findById_returnsBookerAddress() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/booker-addresses/" + BOOKER_PK_1 + "/" + ADDRESS_PK_1)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bookerId").value(BOOKER_PK_1.toString()))
-                .andExpect(jsonPath("$.addressId").value(ADDRESS_PK_1.toString()));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/booker-addresses — 200 (heeft BOOKING_READ)

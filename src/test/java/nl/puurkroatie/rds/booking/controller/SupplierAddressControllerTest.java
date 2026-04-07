@@ -18,27 +18,24 @@ class SupplierAddressControllerTest extends AbstractBookingControllerTest {
     private static final UUID SUPPLIER_ADDRESS_PK_14 = UUID.fromString("06000000-0000-0000-0000-000000000014");
     private static final UUID SUPPLIER_ADDRESS_TP_16 = UUID.fromString("06000000-0000-0000-0000-000000000016");
 
-    // ADMIN: GET /api/supplier-addresses — alle koppelingen (>= 4)
+    // ADMIN: GET /api/supplier-addresses — geen SUPPLIER_READ authority → 403
     @Test
-    void admin_findAll_returnsAllSupplierAddresses() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/supplier-addresses")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(4))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/supplier-addresses/{supplierId}/{addressId} — specifieke koppeling
+    // ADMIN: GET /api/supplier-addresses/{supplierId}/{addressId} — geen SUPPLIER_READ authority → 403
     @Test
-    void admin_findById_returnsSupplierAddress() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/supplier-addresses/" + SUPPLIER_PK_1 + "/" + SUPPLIER_ADDRESS_PK_14)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.supplierId").value(SUPPLIER_PK_1.toString()))
-                .andExpect(jsonPath("$.addressId").value(SUPPLIER_ADDRESS_PK_14.toString()));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/supplier-addresses — 200 (heeft BOOKING_READ)
@@ -128,29 +125,28 @@ class SupplierAddressControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // EMPLOYEE: POST /api/supplier-addresses — 201 (heeft BOOKING_WRITE, binnen eigen org)
+    // EMPLOYEE: POST /api/supplier-addresses — geen SUPPLIER_CREATE authority → 403
     @Test
-    void employee_createSupplierAddress_returns201() throws Exception {
+    void employee_createSupplierAddress_returns403() throws Exception {
         String token = employeeToken();
 
-        // Koppel Puurkroatie supplier 1 aan Puurkroatie address 8
         String json = "{\"supplierId\":\"" + SUPPLIER_PK_1 + "\",\"addressId\":\"" + ADDRESS_PK_8 + "\"}";
 
         mockMvc.perform(post("/api/supplier-addresses")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isForbidden());
     }
 
-    // EMPLOYEE: DELETE /api/supplier-addresses/{supId}/{addrId} eigen org — 204
+    // EMPLOYEE: DELETE /api/supplier-addresses/{supId}/{addrId} — geen SUPPLIER_DELETE authority → 403
     @Test
-    void employee_deleteSupplierAddress_ownOrganization_returns204() throws Exception {
+    void employee_deleteSupplierAddress_returns403() throws Exception {
         String token = employeeToken();
 
         mockMvc.perform(delete("/api/supplier-addresses/" + SUPPLIER_PK_1 + "/" + SUPPLIER_ADDRESS_PK_14)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isForbidden());
     }
 
     // Ongeauthenticeerd: GET /api/supplier-addresses — 401

@@ -15,27 +15,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SupplierControllerTest extends AbstractBookingControllerTest {
 
-    // ADMIN: GET /api/suppliers — alle suppliers over alle organisaties (>= 4)
+    // ADMIN: GET /api/suppliers — geen SUPPLIER_READ authority → 403
     @Test
-    void admin_findAll_returnsAllSuppliers() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/suppliers")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(4))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/suppliers/{id} — elke supplier opvraagbaar
+    // ADMIN: GET /api/suppliers/{id} — geen SUPPLIER_READ authority → 403
     @Test
-    void admin_findById_returnsAnySupplier() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/suppliers/" + SUPPLIER_PK_1)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.supplierId").value(SUPPLIER_PK_1.toString()))
-                .andExpect(jsonPath("$.name").value("Hotel Resort Adriatic"));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/suppliers — alleen suppliers van eigen organisatie
@@ -158,9 +155,9 @@ class SupplierControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // EMPLOYEE: POST /api/suppliers — 201 (heeft BOOKING_WRITE)
+    // EMPLOYEE: POST /api/suppliers — geen SUPPLIER_CREATE authority → 403
     @Test
-    void employee_createSupplier_returns201() throws Exception {
+    void employee_createSupplier_returns403() throws Exception {
         String token = employeeToken();
 
         String json = "{\"key\":\"SUP-EMP-001\",\"name\":\"Employee Leverancier\"}";
@@ -169,14 +166,12 @@ class SupplierControllerTest extends AbstractBookingControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Employee Leverancier"))
-                .andExpect(jsonPath("$.tenantOrganization").value(ORG_PUURKROATIE_ID.toString()));
+                .andExpect(status().isForbidden());
     }
 
-    // EMPLOYEE: PUT /api/suppliers/{id} eigen org — 200
+    // EMPLOYEE: PUT /api/suppliers/{id} — geen SUPPLIER_UPDATE authority → 403
     @Test
-    void employee_updateSupplier_ownOrganization_returns200() throws Exception {
+    void employee_updateSupplier_returns403() throws Exception {
         String token = employeeToken();
 
         String json = "{\"key\":\"SUP-HR-001\",\"name\":\"Hotel Resort Adriatic Updated\"}";
@@ -185,8 +180,7 @@ class SupplierControllerTest extends AbstractBookingControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Hotel Resort Adriatic Updated"));
+                .andExpect(status().isForbidden());
     }
 
     // EMPLOYEE: PUT /api/suppliers/{id} andere org — 403

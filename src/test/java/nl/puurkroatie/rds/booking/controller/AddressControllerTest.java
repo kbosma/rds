@@ -15,27 +15,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AddressControllerTest extends AbstractBookingControllerTest {
 
-    // ADMIN: GET /api/addresses — alle adressen over alle organisaties (>= 17)
+    // ADMIN: GET /api/addresses — geen BOOKING_READ authority → 403
     @Test
-    void admin_findAll_returnsAllAddresses() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/addresses")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(17))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/addresses/{id} — elk adres opvraagbaar
+    // ADMIN: GET /api/addresses/{id} — geen BOOKING_READ authority → 403
     @Test
-    void admin_findById_returnsAnyAddress() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/addresses/" + ADDRESS_PK_1)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.addressId").value(ADDRESS_PK_1.toString()))
-                .andExpect(jsonPath("$.street").value("Kerkstraat"));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/addresses — alleen adressen van eigen organisatie

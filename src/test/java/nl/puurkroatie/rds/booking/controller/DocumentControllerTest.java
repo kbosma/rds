@@ -15,27 +15,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class DocumentControllerTest extends AbstractBookingControllerTest {
 
-    // ADMIN: GET /api/documents — alle documenten over alle organisaties (>= 5)
+    // ADMIN: GET /api/documents — geen BOOKING_READ authority → 403
     @Test
-    void admin_findAll_returnsAllDocuments() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/documents")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(5))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/documents/{id} — elk document opvraagbaar
+    // ADMIN: GET /api/documents/{id} — geen BOOKING_READ authority → 403
     @Test
-    void admin_findById_returnsAnyDocument() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/documents/" + DOCUMENT_PK_1)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.documentId").value(DOCUMENT_PK_1.toString()))
-                .andExpect(jsonPath("$.displayname").value("Bevestigingsbrief BK-2026-001"));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/documents — alleen documenten van eigen organisatie

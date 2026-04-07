@@ -14,27 +14,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class TravelerControllerTest extends AbstractBookingControllerTest {
 
-    // ADMIN: GET /api/travelers — alle travelers over alle organisaties (>= 8)
+    // ADMIN: GET /api/travelers — geen BOOKING_READ authority → 403
     @Test
-    void admin_findAll_returnsAllTravelers() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/travelers")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(8))));
+                .andExpect(status().isForbidden());
     }
 
-    // ADMIN: GET /api/travelers/{id} — elke traveler opvraagbaar
+    // ADMIN: GET /api/travelers/{id} — geen BOOKING_READ authority → 403
     @Test
-    void admin_findById_returnsAnyTraveler() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
 
         mockMvc.perform(get("/api/travelers/" + TRAVELER_PK_1)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.travelerId").value(TRAVELER_PK_1.toString()))
-                .andExpect(jsonPath("$.firstname").value("Inge"));
+                .andExpect(status().isForbidden());
     }
 
     // MANAGER: GET /api/travelers — alleen travelers van eigen organisatie

@@ -58,17 +58,14 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
 
     // === CRUD: GET /api/mollie/payments ===
 
+    // ADMIN: geen PAYMENT_READ authority → 403
     @Test
-    void admin_findAll_returns200() throws Exception {
+    void admin_findAll_returns403() throws Exception {
         String token = adminToken();
-        when(mollieService.findAll()).thenReturn(List.of(samplePaymentDto()));
 
         mockMvc.perform(get("/api/mollie/payments")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].molliePaymentId").value(PAYMENT_ID.toString()))
-                .andExpect(jsonPath("$[0].molliePaymentExternalId").value(MOLLIE_EXTERNAL_ID));
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -90,39 +87,22 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
 
     // === CRUD: GET /api/mollie/payments/{id} ===
 
+    // ADMIN: geen PAYMENT_READ authority → 403
     @Test
-    void admin_findById_returns200() throws Exception {
+    void admin_findById_returns403() throws Exception {
         String token = adminToken();
-        when(mollieService.findById(PAYMENT_ID)).thenReturn(Optional.of(samplePaymentDto()));
 
         mockMvc.perform(get("/api/mollie/payments/" + PAYMENT_ID)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.molliePaymentId").value(PAYMENT_ID.toString()))
-                .andExpect(jsonPath("$.status").value(STATUS_OPEN))
-                .andExpect(jsonPath("$.method").value("ideal"))
-                .andExpect(jsonPath("$.amount").value(125.00))
-                .andExpect(jsonPath("$.currency").value("EUR"));
-    }
-
-    @Test
-    void admin_findById_notFound_returns404() throws Exception {
-        String token = adminToken();
-        UUID unknownId = UUID.randomUUID();
-        when(mollieService.findById(unknownId)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/api/mollie/payments/" + unknownId)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     // === CRUD: POST /api/mollie/payments ===
 
+    // ADMIN: geen PAYMENT_CREATE authority → 403
     @Test
-    void admin_create_returns201() throws Exception {
+    void admin_create_returns403() throws Exception {
         String token = adminToken();
-        MolliePaymentDto created = samplePaymentDto();
-        when(mollieService.create(any(MolliePaymentDto.class))).thenReturn(created);
 
         String json = objectMapper.writeValueAsString(new MolliePaymentDto(
                 null, STATUS_OPEN, null,
@@ -134,62 +114,44 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.molliePaymentId").value(PAYMENT_ID.toString()))
-                .andExpect(jsonPath("$.status").value(STATUS_OPEN));
+                .andExpect(status().isForbidden());
     }
 
     // === CRUD: PUT /api/mollie/payments/{id} ===
 
+    // ADMIN: geen PAYMENT_UPDATE authority → 403
     @Test
-    void admin_update_returns200() throws Exception {
+    void admin_update_returns403() throws Exception {
         String token = adminToken();
-        MolliePaymentDto updated = new MolliePaymentDto(
-                PAYMENT_ID, MOLLIE_EXTERNAL_ID, STATUS_PAID,
-                MolliePaymentMethod.IDEAL, new BigDecimal("125.00"), "EUR",
-                "Boeking BK-2026-001", "https://www.mollie.com/checkout/test",
-                null, null, null, null, ORG_PUURKROATIE_ID
-        );
-        when(mollieService.update(eq(PAYMENT_ID), any(MolliePaymentDto.class))).thenReturn(updated);
 
-        String json = objectMapper.writeValueAsString(updated);
+        MolliePaymentDto dto = samplePaymentDto();
+        String json = objectMapper.writeValueAsString(dto);
 
         mockMvc.perform(put("/api/mollie/payments/" + PAYMENT_ID)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(STATUS_PAID));
+                .andExpect(status().isForbidden());
     }
 
     // === CRUD: DELETE /api/mollie/payments/{id} ===
 
+    // ADMIN: geen PAYMENT_DELETE authority → 403
     @Test
-    void admin_delete_returns204() throws Exception {
+    void admin_delete_returns403() throws Exception {
         String token = adminToken();
-        doNothing().when(mollieService).delete(PAYMENT_ID);
 
         mockMvc.perform(delete("/api/mollie/payments/" + PAYMENT_ID)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
-
-        verify(mollieService).delete(PAYMENT_ID);
+                .andExpect(status().isForbidden());
     }
 
     // === POST /api/mollie/payments/create-at-mollie ===
 
+    // ADMIN: geen PAYMENT_CREATE authority → 403
     @Test
-    void admin_createPaymentAtMollie_returns201() throws Exception {
+    void admin_createPaymentAtMollie_returns403() throws Exception {
         String token = adminToken();
-
-        PaymentResponseDto mollieResponse = new PaymentResponseDto(
-                "tr_newpayment",
-                "open",
-                new PaymentResponseDto.Amount("EUR", "250.00"),
-                "Boeking BK-2026-002",
-                new PaymentResponseDto.Links(new PaymentResponseDto.Checkout("https://www.mollie.com/checkout/select-method/tr_newpayment"))
-        );
-        when(mollieService.createPaymentAtMollie(any(PaymentRequestDto.class))).thenReturn(mollieResponse);
 
         String json = objectMapper.writeValueAsString(new PaymentRequestDto(
                 new PaymentRequestDto.Amount("EUR", "250.00"),
@@ -203,13 +165,7 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("tr_newpayment"))
-                .andExpect(jsonPath("$.status").value("open"))
-                .andExpect(jsonPath("$.amount.currency").value("EUR"))
-                .andExpect(jsonPath("$.amount.value").value("250.00"))
-                .andExpect(jsonPath("$.description").value("Boeking BK-2026-002"))
-                .andExpect(jsonPath("$._links.checkout.href").value("https://www.mollie.com/checkout/select-method/tr_newpayment"));
+                .andExpect(status().isForbidden());
     }
 
     @Test
