@@ -12,4 +12,12 @@ export class AccountRoleService {
   getAll(): Observable<AccountRole[]> {
     return this.http.get<AccountRole[]>(this.baseUrl);
   }
+
+  create(accountId: string, roleId: string): Observable<AccountRole> {
+    return this.http.post<AccountRole>(this.baseUrl, { accountId, roleId });
+  }
+
+  delete(accountId: string, roleId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${accountId}/${roleId}`);
+  }
 }

@@ -3,7 +3,12 @@
 :root {
   --theme-primary: #1976d2;
   --theme-accent: #ff9800;
+  --theme-card-title: #333333;
 }
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+mat-card-title, .mat-mdc-card-title {
+  color: var(--theme-card-title) !important;
+}

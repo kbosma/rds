@@ -38,6 +38,11 @@ export class ThemeService {
   applyTheme(theme: OrganizationTheme): void {
     document.documentElement.style.setProperty('--theme-primary', theme.primaryColor);
     document.documentElement.style.setProperty('--theme-accent', theme.accentColor);
+    if (theme.cardTitleColor) {
+      document.documentElement.style.setProperty('--theme-card-title', theme.cardTitleColor);
+    } else {
+      document.documentElement.style.removeProperty('--theme-card-title');
+    }
   }
 
   loadAndApplyTheme(): void {

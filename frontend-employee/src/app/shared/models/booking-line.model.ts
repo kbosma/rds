@@ -1,4 +1,5 @@
 export interface BookingLine {
+  bookingLineId: string;
   bookingId: string;
   accommodationId: string;
   supplierId: string;

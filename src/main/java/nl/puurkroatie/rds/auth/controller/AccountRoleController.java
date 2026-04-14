@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.auth.controller;
 
+import nl.puurkroatie.rds.auth.dto.AccountRoleCreateDto;
 import nl.puurkroatie.rds.auth.entity.AccountRole;
 import nl.puurkroatie.rds.auth.service.AccountRoleService;
 import org.springframework.http.HttpStatus;
@@ -43,8 +44,8 @@ public class AccountRoleController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ACCOUNTROLE_CREATE')")
-    public ResponseEntity<AccountRole> create(@RequestBody @Valid AccountRole accountRole) {
-        AccountRole saved = accountRoleService.save(accountRole);
+    public ResponseEntity<AccountRole> create(@RequestBody @Valid AccountRoleCreateDto dto) {
+        AccountRole saved = accountRoleService.create(dto.getAccountId(), dto.getRoleId());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 

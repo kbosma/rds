@@ -14,6 +14,148 @@
 2. sla op in DB
 3. webhook update status
 
+[//]: # (Flow 1: EMPLOYEE maakt betaling aan &#40;frontend-employee&#41;)
+
+[//]: # ()
+[//]: # (frontend-employee → POST /api/mollie/payments → MolliePaymentController)
+
+[//]: # ()
+[//]: # (Stap voor stap:)
+
+[//]: # ()
+[//]: # (1. EMPLOYEE maakt een MolliePaymentDto aan in de UI &#40;bedrag, valuta, beschrijving&#41;)
+
+[//]: # (2. MolliePaymentController.create&#40;&#41; &#40;regel 50-55&#41; — vereist PAYMENT_CREATE authority)
+
+[//]: # (3. MollieServiceImpl.create&#40;&#41; &#40;regel 42-56&#41;:)
+
+[//]: # (   - Maakt een MolliePayment entity aan &#40;zonder molliePaymentExternalId — nog niet bij Mollie&#41;)
+
+[//]: # (   - @PrePersist zet automatisch: createdAt, createdBy, tenantOrganization &#40;via TenantContext&#41;, status → OPEN)
+
+[//]: # (   - Slaat op in DB)
+
+[//]: # (   - Maakt een initiële StatusEntry aan via statusEntryService)
+
+[//]: # (   - Retourneert DTO)
+
+[//]: # ()
+[//]: # (Resultaat: Er bestaat nu een MolliePayment record in de DB met status OPEN, maar nog geen echte Mollie-betaling. Het is een "aankondiging" van een verwachte betaling.)
+
+[//]: # ()
+[//]: # (De link naar een booking gebeurt via de BookingMolliePayment koppeltabel &#40;apart beheerd&#41;.)
+
+[//]: # ()
+[//]: # (  ---)
+
+[//]: # (Flow 2: BOOKER betaalt via booker-portal &#40;frontend-booker&#41;)
+
+[//]: # ()
+[//]: # (frontend-booker → POST /api/booker-portal/payments/pay/{molliePaymentId} → BookerPortalPaymentController)
+
+[//]: # ()
+[//]: # (Stap voor stap:)
+
+[//]: # ()
+[//]: # (1. BOOKER ziet zijn betalingen &#40;via GET /api/booker-portal/payments → haalt alle MolliePayments voor zijn booking op via BookingMolliePayment koppeltabel&#41;)
+
+[//]: # (2. BOOKER klikt "Betalen" op een openstaande betaling)
+
+[//]: # (3. BookerPortalPaymentController.initiatePayment&#40;&#41; &#40;regel 43-49&#41; — vereist BOOKER_PORTAL_UPDATE)
+
+[//]: # (   - Haalt bookingId uit BookerContext &#40;sessie-gebonden, niet TenantContext&#41;)
+
+[//]: # (4. BookerPortalPaymentService.initiatePayment&#40;&#41; &#40;regel 69-118&#41;:)
+
+[//]: # (   - Verificatie: controleert dat de molliePaymentId daadwerkelijk bij deze booking hoort &#40;via BookingMolliePayment&#41;)
+
+[//]: # (   - Bouwt PaymentRequestDto: bedrag + valuta van bestaand record, redirect/webhook URLs uit MollieConfig)
+
+[//]: # (   - Roept Mollie API aan via mollieRestClient.post&#40;&#41; — dit maakt de echte betaling bij Mollie)
+
+[//]: # (   - Update bestaand record: vult molliePaymentExternalId &#40;Mollie's tr_xxxx ID&#41;, checkoutUrl, en status in)
+
+[//]: # (   - Retourneert PaymentResponseDto met o.a. de checkoutUrl)
+
+[//]: # (5. Frontend redirect de booker naar de checkoutUrl &#40;Mollie betaalpagina&#41;)
+
+[//]: # ()
+[//]: # (  ---)
+
+[//]: # (Flow 3: Webhook &#40;na betaling&#41;)
+
+[//]: # ()
+[//]: # (Mollie → POST /api/mollie/payments/webhook?id=tr_xxxx → MolliePaymentController)
+
+[//]: # ()
+[//]: # (1. MolliePaymentController.handleWebhook&#40;&#41; &#40;regel 78-82&#41; — geen auth &#40;Mollie roept dit aan&#41;)
+
+[//]: # (2. MollieServiceImpl.updatePaymentFromMollie&#40;&#41; &#40;regel 138-166&#41;:)
+
+[//]: # (   - Haalt actuele status op bij Mollie via GET /{id})
+
+[//]: # (   - Zoekt het interne record op via molliePaymentExternalId)
+
+[//]: # (   - Update de status &#40;bijv. OPEN → PAID&#41;)
+
+[//]: # (   - Maakt een StatusEntry aan voor audit trail)
+
+[//]: # ()
+[//]: # (  ---)
+
+[//]: # (Samenvatting visueel)
+
+[//]: # ()
+[//]: # (EMPLOYEE &#40;frontend-employee&#41;           BOOKER &#40;frontend-booker&#41;)
+
+[//]: # (│                                       │)
+
+[//]: # (│ POST /api/mollie/payments             │ GET /api/booker-portal/payments)
+
+[//]: # (│ &#40;PAYMENT_CREATE&#41;                      │ &#40;BOOKER_PORTAL_READ&#41;)
+
+[//]: # (▼                                       │)
+
+[//]: # (┌──────────────┐                            │ POST /api/booker-portal/payments/pay/{id})
+
+[//]: # (│ MolliePayment│ ◄─── record in DB ──────── │ &#40;BOOKER_PORTAL_UPDATE&#41;)
+
+[//]: # (│ status: OPEN │                            ▼)
+
+[//]: # (│ externalId:  │                    ┌──────────────────────┐)
+
+[//]: # (│   &#40;null&#41;     │                    │ BookerPortalPayment  │)
+
+[//]: # (└──────────────┘                    │ Service              │)
+
+[//]: # (│  1. verify ownership │)
+
+[//]: # (│  2. POST → Mollie API│)
+
+[//]: # (│  3. update record    │)
+
+[//]: # (│     + externalId     │)
+
+[//]: # (│     + checkoutUrl    │)
+
+[//]: # (└──────────┬───────────┘)
+
+[//]: # (│)
+
+[//]: # (▼)
+
+[//]: # (Booker → Mollie checkout)
+
+[//]: # (│)
+
+[//]: # (▼)
+
+[//]: # (Mollie → webhook → status update)
+
+[//]: # ()
+[//]: # (Key takeaway: De EMPLOYEE maakt het betalingsrecord aan &#40;bedrag, beschrijving&#41;, de BOOKER triggert de daadwerkelijke Mollie-betaling. De webhook sluit de cirkel door de status te updaten na betaling.)
+
+
 ---
 
 ## Statussen

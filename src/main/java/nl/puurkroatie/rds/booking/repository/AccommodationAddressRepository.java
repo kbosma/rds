@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface AccommodationAddressRepository extends JpaRepository<AccommodationAddress, AccommodationAddressId> {
 
     List<AccommodationAddress> findByAccommodationTenantOrganization(UUID tenantOrganization);
+
+    List<AccommodationAddress> findByAccommodationAccommodationIdIn(List<UUID> accommodationIds);
 }

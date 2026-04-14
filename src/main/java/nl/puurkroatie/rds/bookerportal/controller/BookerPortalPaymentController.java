@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.bookerportal.service.BookerPortalPaymentService;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentDto;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentResponseDto;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,9 +43,27 @@ public class BookerPortalPaymentController {
 
     @PostMapping("/pay/{molliePaymentId}")
     @PreAuthorize("hasAuthority('BOOKER_PORTAL_UPDATE')")
-    public ResponseEntity<PaymentResponseDto> initiatePayment(@PathVariable UUID molliePaymentId) {
+    public ResponseEntity<PaymentResponseDto> initiatePayment(@PathVariable UUID molliePaymentId,
+                                                               HttpServletRequest request) {
         UUID bookingId = BookerContext.getBookingId();
-        PaymentResponseDto response = bookerPortalPaymentService.initiatePayment(molliePaymentId, bookingId);
+        String redirectUrl = resolveRedirectUrl(request);
+        PaymentResponseDto response = bookerPortalPaymentService.initiatePayment(molliePaymentId, bookingId, redirectUrl);
         return ResponseEntity.ok(response);
+    }
+
+    private String resolveRedirectUrl(HttpServletRequest request) {
+        String origin = request.getHeader("Origin");
+        if (origin != null && !origin.isEmpty()) {
+            return origin + "/payments";
+        }
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            try {
+                java.net.URI uri = java.net.URI.create(referer);
+                return uri.getScheme() + "://" + uri.getAuthority() + "/payments";
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 }

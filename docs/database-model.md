@@ -85,7 +85,7 @@ Persoon, gekoppeld aan een organisatie.
 
 ### account
 
-Gebruikersaccount met login-gegevens.
+Gebruikersaccount met login-gegevens en optionele TOTP 2FA.
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
@@ -95,6 +95,10 @@ Gebruikersaccount met login-gegevens.
 | person_id | UUID | FK → person, NOT NULL | Gekoppelde persoon |
 | locked | BOOLEAN | NOT NULL | Account vergrendeld |
 | must_change_password | BOOLEAN | NOT NULL | Wachtwoord wijzigen verplicht |
+| totp_secret | VARCHAR | | TOTP geheim (base32) |
+| totp_enabled | BOOLEAN | NOT NULL | 2FA ingeschakeld |
+| totp_verified | BOOLEAN | NOT NULL | 2FA setup bevestigd |
+| recovery_codes | TEXT | | Herstelcodes (comma-separated) |
 | expires_at | TIMESTAMP | | Verloopt op |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
@@ -103,21 +107,25 @@ Gebruikersaccount met login-gegevens.
 
 **Relaties:** ManyToOne → Person
 
-**Bijzonderheden:** `password` is een `@Transient` veld dat automatisch gehashed wordt via BCryptPasswordEncoder in `@PrePersist`/`@PreUpdate`.
+**Bijzonderheden:** `password` is een `@Transient` veld dat automatisch gehashed wordt via BCryptPasswordEncoder in `@PrePersist`/`@PreUpdate`. TOTP-velden (`totp_enabled`, `totp_verified`) worden default op `false` gezet in `@PrePersist`.
 
 **Backend bestanden:**
 - Entity: `auth/entity/Account.java`
 - DTO: `auth/dto/AccountDto.java`
 - Mapper: `auth/mapper/AccountMapper.java`
-- Service: `auth/service/AccountService.java`
-- ServiceImpl: `auth/service/impl/AccountServiceImpl.java`
+- Service: `auth/service/AccountService.java`, `auth/service/TotpService.java`
+- ServiceImpl: `auth/service/impl/AccountServiceImpl.java`, `auth/service/impl/TotpServiceImpl.java`
 - Repository: `auth/repository/AccountRepository.java`
 - Controller: `auth/controller/AccountController.java`
 
 **Frontend bestanden:**
 - Model: `frontend-employee/src/app/shared/models/account.model.ts`
 - Service: `frontend-employee/src/app/features/admin/account.service.ts`
-- Component: `frontend-employee/src/app/features/admin/account-list.component.ts`
+- Components:
+  - `frontend-employee/src/app/features/admin/account-list.component.ts`
+  - `frontend-employee/src/app/features/profile/totp-settings.component.ts`
+  - `frontend-employee/src/app/features/profile/totp-setup-dialog.component.ts`
+  - `frontend-employee/src/app/features/profile/totp-disable-dialog.component.ts`
 
 ---
 
@@ -225,20 +233,21 @@ Hoofdentiteit voor boekingen. Multi-tenant.
 | booking_number | VARCHAR | NOT NULL | Boekingnummer |
 | booking_status | VARCHAR | NOT NULL, enum BookingStatus | Status |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
-
-**Berekende velden (niet in database, `@Transient`):**
-- `fromDate` (LocalDate) — kleinste `fromDate` van alle gekoppelde BookingLines
-- `untilDate` (LocalDate) — grootste `untilDate` van alle gekoppelde BookingLines
-- `totalSum` (BigDecimal) — som van alle gekoppelde `BookingLine.price` waarden
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
 | modified_at | TIMESTAMP | | |
 | modified_by | UUID | | |
 
+**Berekende velden (niet in database, `@Transient`):**
+- `fromDate` (LocalDate) — kleinste `fromDate` van alle gekoppelde BookingLines
+- `untilDate` (LocalDate) — grootste `untilDate` van alle gekoppelde BookingLines
+- `totalSum` (BigDecimal) — som van alle `BookingLine.price` + alle `BookingActivity.totalPrice`
+
 **Relaties:**
 - OneToOne → Booker (optional)
 - OneToMany ← Traveler (mappedBy="booking")
 - OneToMany ← BookingLine (mappedBy="booking")
+- OneToMany ← BookingActivity (mappedBy="booking")
 
 **Enum BookingStatus:** `AANVRAAG`, `OFFERTE`, `BOEKING`, `VOORSCHOT`, `BETAALD`, `AFGEROND`
 
@@ -373,7 +382,7 @@ Accommodatie. Multi-tenant.
 - Service: `frontend-employee/src/app/features/accommodations/accommodation.service.ts`
 - Components:
   - `frontend-employee/src/app/features/accommodations/accommodation-list.component.ts` (kaartweergave)
-  - `frontend-employee/src/app/features/accommodations/accommodation-detail-dialog.component.ts` (detail-dialog)
+  - `frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts` (detail)
 
 ---
 
@@ -407,7 +416,44 @@ Leverancier. Multi-tenant.
 - Components:
   - `frontend-employee/src/app/features/suppliers/supplier-list.component.ts` *(placeholder)*
   - `frontend-employee/src/app/features/accommodations/accommodation-list.component.ts` (leveranciernaam bij accommodatie)
-  - `frontend-employee/src/app/features/accommodations/accommodation-detail-dialog.component.ts` (leverancier-details)
+  - `frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts` (leverancier-details)
+
+---
+
+### activity
+
+Activiteit (tour, excursie, ticket, transfer). Multi-tenant. Referentie-entity die door MANAGERs beheerd wordt.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| activity_id | UUID | PK, auto-generated | |
+| name | VARCHAR | NOT NULL | Naam |
+| description | VARCHAR | | Omschrijving |
+| activity_type | VARCHAR | NOT NULL, enum ActivityType | Type activiteit |
+| tenant_organization | UUID | NOT NULL, immutable | Tenant |
+| created_at | TIMESTAMP | NOT NULL, immutable | |
+| created_by | UUID | immutable | |
+| modified_at | TIMESTAMP | | |
+| modified_by | UUID | | |
+
+**Enum ActivityType:** `TOUR`, `EXCURSIE`, `TICKET`, `TRANSFER`
+
+**Backend bestanden:**
+- Entity: `booking/entity/Activity.java`
+- Enum: `booking/entity/ActivityType.java`
+- DTO: `booking/dto/ActivityDto.java`
+- Mapper: `booking/mapper/ActivityMapper.java`
+- Service: `booking/service/ActivityService.java`
+- ServiceImpl: `booking/service/impl/ActivityServiceImpl.java`
+- Repository: `booking/repository/ActivityRepository.java`
+- Controller: `booking/controller/ActivityController.java`
+
+**Frontend bestanden:**
+- Model: `frontend-employee/src/app/shared/models/activity.model.ts`
+- Service: `frontend-employee/src/app/features/activities/activity.service.ts`
+- Components:
+  - `frontend-employee/src/app/features/activities/activity-list.component.ts` (lijst)
+  - `frontend-employee/src/app/features/activities/activity-detail.component.ts` (detail/bewerken)
 
 ---
 
@@ -447,7 +493,7 @@ Adres met adresrol. Multi-tenant.
 - Service: `frontend-employee/src/app/features/accommodations/address.service.ts`
 - Components:
   - `frontend-employee/src/app/features/accommodations/accommodation-list.component.ts`
-  - `frontend-employee/src/app/features/accommodations/accommodation-detail-dialog.component.ts`
+  - `frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts`
 
 ---
 
@@ -479,20 +525,58 @@ Document (binair), gekoppeld aan een boeking. Multi-tenant.
 - Controller: `booking/controller/DocumentController.java`
 
 **Frontend bestanden:**
-- Component: `frontend-employee/src/app/features/documents/document-list.component.ts` *(placeholder)*
+- Model: `frontend-employee/src/app/shared/models/document.model.ts`
+- Service: `frontend-employee/src/app/features/documents/document.service.ts`
+- Components:
+  - `frontend-employee/src/app/features/documents/document-upload-dialog.component.ts`
+  - `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (documenten-tabel)
 - Booker portal: `frontend-booker/src/app/features/documents/documents.component.ts`
 
 ---
 
-### booking_line *(koppeltabel met data)*
+### document_template
 
-Boekingsregel: koppeling Booking ↔ Accommodation ↔ Supplier met extra velden. Multi-tenant.
+Documenttemplate (DOCX) voor het genereren van documenten met XDocReport. Multi-tenant.
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
-| booking_id | UUID | PK (composite), FK → booking, NOT NULL | |
-| accommodation_id | UUID | PK (composite), FK → accommodation, NOT NULL | |
-| supplier_id | UUID | PK (composite), FK → supplier, NOT NULL | |
+| document_template_id | UUID | PK, auto-generated | |
+| name | VARCHAR | NOT NULL | Naam |
+| description | VARCHAR | | Omschrijving |
+| template_data | BYTEA | @Lob | DOCX template (binair) |
+| tenant_organization | UUID | NOT NULL, immutable | Tenant |
+| created_at | TIMESTAMP | NOT NULL, immutable | |
+| created_by | UUID | immutable | |
+| modified_at | TIMESTAMP | | |
+| modified_by | UUID | | |
+
+**Backend bestanden:**
+- Entity: `booking/entity/DocumentTemplate.java`
+- DTO: `booking/dto/DocumentTemplateDto.java`
+- Mapper: `booking/mapper/DocumentTemplateMapper.java`
+- Service: `booking/service/DocumentTemplateService.java`
+- ServiceImpl: `booking/service/impl/DocumentTemplateServiceImpl.java`
+- Repository: `booking/repository/DocumentTemplateRepository.java`
+- Controller: `booking/controller/DocumentTemplateController.java`
+
+**Frontend bestanden:**
+- Model: `frontend-employee/src/app/shared/models/document-template.model.ts`
+- Components:
+  - `frontend-employee/src/app/features/templates/template-list.component.ts`
+  - `frontend-employee/src/app/features/templates/template-detail.component.ts`
+
+---
+
+### booking_line
+
+Boekingsregel: koppeling Booking ↔ Accommodation ↔ Supplier met eigen UUID PK en extra velden. Multi-tenant.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| booking_line_id | UUID | PK, auto-generated | |
+| booking_id | UUID | FK → booking, NOT NULL | Boeking |
+| accommodation_id | UUID | FK → accommodation, NOT NULL | Accommodatie |
+| supplier_id | UUID | FK → supplier, NOT NULL | Leverancier |
 | from_date | DATE | | Startdatum |
 | until_date | DATE | | Einddatum |
 | price | DECIMAL | | Prijs |
@@ -502,9 +586,10 @@ Boekingsregel: koppeling Booking ↔ Accommodation ↔ Supplier met extra velden
 | modified_at | TIMESTAMP | | |
 | modified_by | UUID | | |
 
+**Relaties:** ManyToOne → Booking, ManyToOne → Accommodation, ManyToOne → Supplier
+
 **Backend bestanden:**
 - Entity: `booking/entity/BookingLine.java`
-- IdClass: `booking/entity/BookingLineId.java`
 - DTO: `booking/dto/BookingLineDto.java`
 - Mapper: `booking/mapper/BookingLineMapper.java`
 - Service: `booking/service/BookingLineService.java`
@@ -515,7 +600,51 @@ Boekingsregel: koppeling Booking ↔ Accommodation ↔ Supplier met extra velden
 **Frontend bestanden:**
 - Model: `frontend-employee/src/app/shared/models/booking-line.model.ts`
 - Service: `frontend-employee/src/app/features/bookings/booking-line.service.ts`
-- Component: `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (boekingsregels)
+- Components:
+  - `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (boekingsregels)
+  - `frontend-employee/src/app/features/bookings/booking-line-dialog.component.ts` (add/edit dialog)
+
+---
+
+### booking_activity
+
+Boekingsactiviteit: koppeling Booking ↔ Activity met eigen UUID PK en extra velden (n:m, dezelfde activiteit kan meerdere keren in een booking). Multi-tenant.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| booking_activity_id | UUID | PK, auto-generated | |
+| booking_id | UUID | FK → booking, NOT NULL | Boeking |
+| activity_id | UUID | FK → activity, NOT NULL | Activiteit |
+| from_date | DATE | | Startdatum |
+| until_date | DATE | | Einddatum |
+| meeting_point | VARCHAR | | Trefpunt |
+| total_price | DECIMAL | | Totaalprijs |
+| tenant_organization | UUID | NOT NULL, immutable | Tenant |
+| created_at | TIMESTAMP | NOT NULL, immutable | |
+| created_by | UUID | immutable | |
+| modified_at | TIMESTAMP | | |
+| modified_by | UUID | | |
+
+**Relaties:** ManyToOne → Booking, ManyToOne → Activity
+
+**Bijzonderheden:** `totalPrice` telt mee in de berekende `Booking.totalSum`.
+
+**Backend bestanden:**
+- Entity: `booking/entity/BookingActivity.java`
+- DTO: `booking/dto/BookingActivityDto.java`
+- Mapper: `booking/mapper/BookingActivityMapper.java`
+- Service: `booking/service/BookingActivityService.java`
+- ServiceImpl: `booking/service/impl/BookingActivityServiceImpl.java`
+- Repository: `booking/repository/BookingActivityRepository.java`
+- Controller: `booking/controller/BookingActivityController.java`
+
+**Frontend bestanden:**
+- Model: `frontend-employee/src/app/shared/models/booking-activity.model.ts`
+- Service: `frontend-employee/src/app/features/bookings/booking-activity.service.ts`
+- Components:
+  - `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (activiteiten-tabel)
+  - `frontend-employee/src/app/features/bookings/booking-activity-dialog.component.ts` (add/edit dialog)
+- Booker portal: `frontend-booker/src/app/features/activities/activities.component.ts`
 
 ---
 
@@ -566,7 +695,7 @@ Koppeling Accommodation ↔ Address.
 - Service: `frontend-employee/src/app/features/accommodations/accommodation-address.service.ts`
 - Components:
   - `frontend-employee/src/app/features/accommodations/accommodation-list.component.ts`
-  - `frontend-employee/src/app/features/accommodations/accommodation-detail-dialog.component.ts`
+  - `frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts`
 
 ---
 
@@ -594,7 +723,7 @@ Koppeling Accommodation ↔ Supplier.
 - Service: `frontend-employee/src/app/features/accommodations/accommodation-supplier.service.ts`
 - Components:
   - `frontend-employee/src/app/features/accommodations/accommodation-list.component.ts`
-  - `frontend-employee/src/app/features/accommodations/accommodation-detail-dialog.component.ts`
+  - `frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts`
 
 ---
 
@@ -622,7 +751,7 @@ Koppeling Supplier ↔ Address.
 - Service: `frontend-employee/src/app/features/accommodations/supplier-address.service.ts`
 - Components:
   - `frontend-employee/src/app/features/accommodations/accommodation-list.component.ts`
-  - `frontend-employee/src/app/features/accommodations/accommodation-detail-dialog.component.ts`
+  - `frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts`
 
 ---
 
@@ -698,6 +827,37 @@ Mollie-betaling. Multi-tenant.
 
 ---
 
+### mollie_payment_status_entry
+
+Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment).
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| mollie_payment_status_entry_id | UUID | PK, auto-generated | |
+| mollie_payment_id | UUID | FK → mollie_payment, NOT NULL | Betaling |
+| status | VARCHAR | NOT NULL, enum MolliePaymentStatus | Status |
+| created_at | TIMESTAMP | NOT NULL, immutable | |
+| created_by | UUID | immutable | |
+| modified_at | TIMESTAMP | | |
+| modified_by | UUID | | |
+
+**Relaties:** ManyToOne → MolliePayment
+
+**Backend bestanden:**
+- Entity: `mollie/entity/MolliePaymentStatusEntry.java`
+- DTO: `mollie/dto/MolliePaymentStatusEntryDto.java`
+- Service: `mollie/service/MolliePaymentStatusEntryService.java`
+- ServiceImpl: `mollie/service/impl/MolliePaymentStatusEntryServiceImpl.java`
+- Repository: `mollie/repository/MolliePaymentStatusEntryRepository.java`
+- Controller: `mollie/controller/MolliePaymentStatusEntryController.java`
+
+**Frontend bestanden:**
+- Model: onderdeel van `frontend-employee/src/app/shared/models/mollie-payment.model.ts`
+- Component: `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (status-historie in expanded payment row)
+- Booker portal: `frontend-booker/src/app/features/payments/payments.component.ts`
+
+---
+
 ## Booker Portal Module
 
 ### otp
@@ -735,7 +895,8 @@ One-Time Password voor booker portal authenticatie. Geen tenant-filtering.
 | BookingStatus | AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, AFGEROND | booking.booking_status |
 | Gender | MAN, VROUW, ANDERS | booker.gender, traveler.gender |
 | AddressRole | WOON, FACTUUR, ACCOMMODATIE, LEVERANCIER | address.addressrole |
-| MolliePaymentStatus | OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED | mollie_payment.status |
+| ActivityType | TOUR, EXCURSIE, TICKET, TRANSFER | activity.activity_type |
+| MolliePaymentStatus | OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED | mollie_payment.status, mollie_payment_status_entry.status |
 | MolliePaymentMethod | IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY | mollie_payment.method |
 
 Alle enums worden als `STRING` opgeslagen in de database en serialiseren naar lowercase in JSON.
@@ -752,12 +913,15 @@ Booking ── Booker
 Booking ──< Document
 Booking ──< BookingLine >── Accommodation
                         >── Supplier
-Booking ──< BookingMolliePayment >── MolliePayment
+Booking ──< BookingActivity >── Activity
+Booking ──< BookingMolliePayment >── MolliePayment ──< MolliePaymentStatusEntry
 
 Booker  ──< BookerAddress  >── Address
 Accommodation ──< AccommodationAddress >── Address
 Accommodation ──< AccommodationSupplier >── Supplier
 Supplier ──< SupplierAddress >── Address
+
+DocumentTemplate (standalone, multi-tenant)
 ```
 
 Legenda: `──<` = one-to-many, `──` = one-to-one, `>──` = many-to-one

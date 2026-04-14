@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface SupplierAddressRepository extends JpaRepository<SupplierAddress, SupplierAddressId> {
 
     List<SupplierAddress> findBySupplierTenantOrganization(UUID tenantOrganization);
+
+    List<SupplierAddress> findBySupplierSupplierIdIn(List<UUID> supplierIds);
 }

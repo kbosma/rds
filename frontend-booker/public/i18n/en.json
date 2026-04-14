@@ -20,7 +20,9 @@
   },
   "nav": {
     "overview": "Overview",
+    "itinerary": "Itinerary",
     "documents": "Documents",
+    "activities": "Activities",
     "payments": "Payments",
     "logout": "Log out"
   },
@@ -41,12 +43,45 @@
     "documents": "Documents",
     "viewDocuments": "View your travel documents",
     "payments": "Payments",
-    "viewPayments": "View and pay your booking"
+    "viewPayments": "View and pay your booking",
+    "itinerary": "Itinerary",
+    "viewItinerary": "View your complete travel schedule",
+    "activities": "Activities",
+    "viewActivities": "View your planned activities"
   },
   "documents": {
     "title": "Documents",
     "document": "Document",
     "noDocuments": "No documents available."
+  },
+  "itinerary": {
+    "title": "Itinerary",
+    "subtitle": "Your complete travel schedule at a glance",
+    "noItems": "There are no items in your itinerary yet.",
+    "period": "Period",
+    "accommodations": "Accommodations",
+    "activities": "Activities",
+    "allDay": "All day",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "ongoing": "Ongoing stay",
+    "nights": "{{count}} nights",
+    "type_tour": "Tour",
+    "type_excursie": "Excursion",
+    "type_ticket": "Ticket",
+    "type_transfer": "Transfer"
+  },
+  "activities": {
+    "title": "Activities",
+    "activity": "Activity",
+    "period": "Period",
+    "meetingPoint": "Meeting point",
+    "totalPrice": "Total price",
+    "noActivities": "No activities available.",
+    "type_tour": "Tour",
+    "type_excursie": "Excursion",
+    "type_ticket": "Ticket",
+    "type_transfer": "Transfer"
   },
   "payments": {
     "title": "Payments",

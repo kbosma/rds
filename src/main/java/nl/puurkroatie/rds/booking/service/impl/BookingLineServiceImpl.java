@@ -5,7 +5,6 @@ import nl.puurkroatie.rds.booking.dto.BookingLineDto;
 import nl.puurkroatie.rds.booking.entity.Accommodation;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.BookingLine;
-import nl.puurkroatie.rds.booking.entity.BookingLineId;
 import nl.puurkroatie.rds.booking.entity.Supplier;
 import nl.puurkroatie.rds.booking.mapper.BookingLineMapper;
 import nl.puurkroatie.rds.booking.repository.AccommodationRepository;
@@ -68,8 +67,8 @@ public class BookingLineServiceImpl implements BookingLineService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<BookingLineDto> findById(UUID bookingId, UUID accommodationId, UUID supplierId) {
-        return bookingLineRepository.findById(new BookingLineId(bookingId, accommodationId, supplierId))
+    public Optional<BookingLineDto> findById(UUID bookingLineId) {
+        return bookingLineRepository.findById(bookingLineId)
                 .filter(bl -> isAdmin() || bl.getTenantOrganization().equals(TenantContext.getOrganizationId()))
                 .map(bookingLineMapper::toDto);
     }
@@ -87,8 +86,6 @@ public class BookingLineServiceImpl implements BookingLineService {
         verifyOrganization(accommodation.getTenantOrganization());
         verifyOrganization(supplier.getTenantOrganization());
 
-        validateNoDateOverlap(booking.getBookingId(), dto.getFromDate(), dto.getUntilDate(), null);
-
         BookingLine entity = new BookingLine(
                 booking, accommodation, supplier,
                 dto.getFromDate(), dto.getUntilDate(), dto.getPrice()
@@ -98,24 +95,18 @@ public class BookingLineServiceImpl implements BookingLineService {
     }
 
     @Override
-    public BookingLineDto update(UUID bookingId, UUID accommodationId, UUID supplierId, BookingLineDto dto) {
-        BookingLine existing = bookingLineRepository.findById(new BookingLineId(bookingId, accommodationId, supplierId))
+    public BookingLineDto update(UUID bookingLineId, BookingLineDto dto) {
+        BookingLine existing = bookingLineRepository.findById(bookingLineId)
                 .orElseThrow(() -> new RuntimeException("BookingLine not found"));
 
         verifyOrganization(existing.getTenantOrganization());
 
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-        Accommodation accommodation = accommodationRepository.findById(accommodationId)
-                .orElseThrow(() -> new RuntimeException("Accommodation not found with id: " + accommodationId));
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + supplierId));
-
-        BookingLineId currentId = new BookingLineId(bookingId, accommodationId, supplierId);
-        validateNoDateOverlap(bookingId, dto.getFromDate(), dto.getUntilDate(), currentId);
+        Booking booking = existing.getBooking();
+        Accommodation accommodation = existing.getAccommodation();
+        Supplier supplier = existing.getSupplier();
 
         BookingLine updated = new BookingLine(
-                booking, accommodation, supplier,
+                bookingLineId, booking, accommodation, supplier,
                 dto.getFromDate(), dto.getUntilDate(), dto.getPrice()
         );
         BookingLine saved = bookingLineRepository.save(updated);
@@ -123,13 +114,13 @@ public class BookingLineServiceImpl implements BookingLineService {
     }
 
     @Override
-    public void delete(UUID bookingId, UUID accommodationId, UUID supplierId) {
-        BookingLine existing = bookingLineRepository.findById(new BookingLineId(bookingId, accommodationId, supplierId))
+    public void delete(UUID bookingLineId) {
+        BookingLine existing = bookingLineRepository.findById(bookingLineId)
                 .orElseThrow(() -> new RuntimeException("BookingLine not found"));
 
         verifyOrganization(existing.getTenantOrganization());
 
-        bookingLineRepository.deleteById(new BookingLineId(bookingId, accommodationId, supplierId));
+        bookingLineRepository.deleteById(bookingLineId);
     }
 
     private boolean isAdmin() {
@@ -139,31 +130,6 @@ public class BookingLineServiceImpl implements BookingLineService {
     private void verifyOrganization(UUID organizationId) {
         if (!isAdmin() && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
-        }
-    }
-
-    private void validateNoDateOverlap(UUID bookingId, LocalDate fromDate, LocalDate untilDate, BookingLineId excludeId) {
-        if (fromDate == null || untilDate == null) {
-            return;
-        }
-        List<BookingLine> existingLines = bookingLineRepository.findByBookingBookingId(bookingId);
-        for (BookingLine line : existingLines) {
-            if (excludeId != null && excludeId.equals(
-                    new BookingLineId(line.getBooking().getBookingId(),
-                            line.getAccommodation().getAccommodationId(),
-                            line.getSupplier().getSupplierId()))) {
-                continue;
-            }
-            if (line.getFromDate() == null || line.getUntilDate() == null) {
-                continue;
-            }
-            // Overlap: newFrom < existingUntil AND newUntil > existingFrom
-            // (gelijke grenzen zijn toegestaan: untilDate mag gelijk zijn aan fromDate van andere line)
-            if (fromDate.isBefore(line.getUntilDate()) && untilDate.isAfter(line.getFromDate())) {
-                throw new IllegalArgumentException(
-                        "Datumperiode overlapt met bestaande boekingsregel: "
-                                + line.getFromDate() + " — " + line.getUntilDate());
-            }
         }
     }
 }

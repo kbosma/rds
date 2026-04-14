@@ -7,11 +7,30 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule } from '@ngx-translate/core';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
 import { AccountService } from './account.service';
+import { PersonService } from './person.service';
+import { OrganizationService } from './organization.service';
+import { AccountRoleService } from './account-role.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Account } from '../../shared/models';
+
+interface AccountRow extends Account {
+  personName: string;
+  organizationName: string;
+  organizationId: string;
+  roleDescriptions: string[];
+}
+
+interface FilterChip {
+  labelKey?: string;
+  label?: string;
+  value: string;
+}
 
 @Component({
   selector: 'app-account-list',
@@ -24,14 +43,14 @@ import { Account } from '../../shared/models';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatChipsModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
     TranslateModule,
   ],
   template: `
     <div class="header">
       <h1>{{ 'accounts.title' | translate }}</h1>
-      <button mat-raised-button color="primary">
+      <button mat-raised-button color="primary" (click)="navigateToNew()">
         <mat-icon>add</mat-icon> {{ 'accounts.newAccount' | translate }}
       </button>
     </div>
@@ -46,12 +65,24 @@ import { Account } from '../../shared/models';
       <div class="filter-chips">
         @for (chip of roleChips; track chip.value) {
           <button mat-stroked-button
-                  [class.active-chip]="activeChip() === chip.value"
+                  [class.active-chip]="activeRoleChip() === chip.value"
                   (click)="filterByRole(chip.value)">
             {{ chip.labelKey | translate }}
           </button>
         }
       </div>
+
+      @if (isAdmin) {
+        <div class="filter-chips">
+          @for (chip of orgChips(); track chip.value) {
+            <button mat-stroked-button
+                    [class.active-chip]="activeOrgChip() === chip.value"
+                    (click)="filterByOrganization(chip.value)">
+              {{ chip.labelKey ? (chip.labelKey | translate) : chip.label }}
+            </button>
+          }
+        </div>
+      }
     </div>
 
     @if (loading()) {
@@ -68,7 +99,12 @@ import { Account } from '../../shared/models';
 
           <ng-container matColumnDef="person">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'accounts.person' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.personId }}</td>
+            <td mat-cell *matCellDef="let row">{{ row.personName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="organization">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'accounts.organization' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.organizationName }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">
@@ -83,13 +119,10 @@ import { Account } from '../../shared/models';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <button mat-icon-button color="primary">
+              <button mat-icon-button color="primary" (click)="navigateToEdit(row)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="primary">
-                <mat-icon>vpn_key</mat-icon>
-              </button>
-              <button mat-icon-button color="warn">
+              <button mat-icon-button color="warn" (click)="deleteAccount(row)">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -142,6 +175,7 @@ import { Account } from '../../shared/models';
       display: flex;
       gap: 8px;
       padding-top: 8px;
+      flex-wrap: wrap;
     }
     .filter-chips button {
       border-radius: 20px;
@@ -204,12 +238,24 @@ import { Account } from '../../shared/models';
 })
 export class AccountListComponent implements OnInit {
   private accountService = inject(AccountService);
+  private personService = inject(PersonService);
+  private organizationService = inject(OrganizationService);
+  private accountRoleService = inject(AccountRoleService);
+  private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
+  private translate = inject(TranslateService);
 
-  displayedColumns = ['userName', 'person', 'status', 'actions'];
-  dataSource = new MatTableDataSource<Account>();
+  isAdmin = this.authService.hasRole('ADMIN');
+  displayedColumns = this.isAdmin
+    ? ['userName', 'person', 'organization', 'status', 'actions']
+    : ['userName', 'person', 'status', 'actions'];
+  dataSource = new MatTableDataSource<AccountRow>();
   loading = signal(true);
-  activeChip = signal('ALL');
+  activeRoleChip = signal('ALL');
+  activeOrgChip = signal('ALL');
+  orgChips = signal<FilterChip[]>([{ labelKey: 'accounts.allOrganizations', value: 'ALL' }]);
 
   roleChips = [
     { labelKey: 'accounts.all', value: 'ALL' },
@@ -221,13 +267,48 @@ export class AccountListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  private allAccounts: Account[] = [];
+  private allAccounts: AccountRow[] = [];
 
   ngOnInit() {
-    this.accountService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (accounts) => {
-        this.allAccounts = accounts;
-        this.dataSource.data = accounts;
+    forkJoin({
+      accounts: this.accountService.getAll(),
+      persons: this.personService.getAll(),
+      organizations: this.isAdmin ? this.organizationService.getAll() : of([]),
+      accountRoles: this.accountRoleService.getAll(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ accounts, persons, organizations, accountRoles }) => {
+        const personMap = new Map(persons.map(p => [p.persoonId, p]));
+        const orgMap = new Map(organizations.map(o => [o.organizationId, o.name]));
+        const roleMap = new Map<string, string[]>();
+        for (const ar of accountRoles) {
+          const existing = roleMap.get(ar.account.accountId) || [];
+          existing.push(ar.role.description);
+          roleMap.set(ar.account.accountId, existing);
+        }
+
+        if (this.isAdmin) {
+          this.orgChips.set([
+            { labelKey: 'accounts.allOrganizations', value: 'ALL' },
+            ...organizations.map(o => ({ label: o.name, value: o.organizationId })),
+          ]);
+        }
+
+        this.allAccounts = accounts.map(a => {
+          const person = personMap.get(a.personId);
+          const orgId = person?.organizationId || '';
+          const personName = person
+            ? `${person.firstname} ${person.prefix ? person.prefix + ' ' : ''}${person.lastname}`
+            : a.personId;
+          return {
+            ...a,
+            personName,
+            organizationId: orgId,
+            organizationName: orgMap.get(orgId) || '',
+            roleDescriptions: roleMap.get(a.accountId) || [],
+          };
+        });
+
+        this.dataSource.data = this.allAccounts;
         this.loading.set(false);
         setTimeout(() => {
           this.dataSource.paginator = this.paginator;
@@ -244,11 +325,52 @@ export class AccountListComponent implements OnInit {
   }
 
   filterByRole(role: string) {
-    this.activeChip.set(role);
-    if (role === 'ALL') {
-      this.dataSource.data = this.allAccounts;
-    } else {
-      this.dataSource.data = this.allAccounts;
+    this.activeRoleChip.set(role);
+    this.applyFilters();
+  }
+
+  filterByOrganization(orgId: string) {
+    this.activeOrgChip.set(orgId);
+    this.applyFilters();
+  }
+
+  navigateToNew() {
+    this.router.navigate(['/admin/accounts/new']);
+  }
+
+  navigateToEdit(account: AccountRow) {
+    this.router.navigate(['/admin/accounts', account.accountId]);
+  }
+
+  deleteAccount(account: AccountRow) {
+    const message = this.translate.instant('accounts.deleteConfirm', { name: account.userName });
+    if (!confirm(message)) return;
+
+    this.accountService.delete(account.accountId).subscribe({
+      next: () => {
+        this.snackBar.open(this.translate.instant('accounts.removed'), '', { duration: 3000 });
+        this.allAccounts = this.allAccounts.filter(a => a.accountId !== account.accountId);
+        this.applyFilters();
+      },
+      error: () => {
+        this.snackBar.open(this.translate.instant('accounts.removeError'), '', { duration: 3000 });
+      },
+    });
+  }
+
+  private applyFilters() {
+    const role = this.activeRoleChip();
+    const orgId = this.activeOrgChip();
+
+    let filtered = this.allAccounts;
+
+    if (role !== 'ALL') {
+      filtered = filtered.filter(a => a.roleDescriptions.includes(role));
     }
+    if (orgId !== 'ALL') {
+      filtered = filtered.filter(a => a.organizationId === orgId);
+    }
+
+    this.dataSource.data = filtered;
   }
 }

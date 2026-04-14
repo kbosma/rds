@@ -40,6 +40,9 @@ public class OrganizationTheme {
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 
+    @Column(name = "card_title_color", length = 7)
+    private String cardTitleColor;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -55,20 +58,22 @@ public class OrganizationTheme {
     protected OrganizationTheme() {
     }
 
-    public OrganizationTheme(UUID organizationThemeId, Organization organization, String primaryColor, String accentColor, String logoUrl) {
+    public OrganizationTheme(UUID organizationThemeId, Organization organization, String primaryColor, String accentColor, String logoUrl, String cardTitleColor) {
         this.organizationThemeId = organizationThemeId;
         this.organization = organization;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;
+        this.cardTitleColor = cardTitleColor;
     }
 
     @Default
-    public OrganizationTheme(Organization organization, String primaryColor, String accentColor, String logoUrl) {
+    public OrganizationTheme(Organization organization, String primaryColor, String accentColor, String logoUrl, String cardTitleColor) {
         this.organization = organization;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;
+        this.cardTitleColor = cardTitleColor;
     }
 
     @PrePersist
@@ -101,6 +106,10 @@ public class OrganizationTheme {
 
     public String getLogoUrl() {
         return logoUrl;
+    }
+
+    public String getCardTitleColor() {
+        return cardTitleColor;
     }
 
     public LocalDateTime getCreatedAt() {

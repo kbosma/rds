@@ -2,6 +2,8 @@ package nl.puurkroatie.rds.booking.controller;
 
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
 import nl.puurkroatie.rds.booking.service.DocumentService;
+import nl.puurkroatie.rds.docgen.dto.GenerateDocumentRequest;
+import nl.puurkroatie.rds.docgen.service.DocumentGenerationService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,9 +27,11 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final DocumentGenerationService documentGenerationService;
 
-    public DocumentController(DocumentService documentService) {
+    public DocumentController(DocumentService documentService, DocumentGenerationService documentGenerationService) {
         this.documentService = documentService;
+        this.documentGenerationService = documentGenerationService;
     }
 
     @GetMapping
@@ -86,5 +90,13 @@ public class DocumentController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         documentService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/generate")
+    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    public ResponseEntity<DocumentDto> generate(@RequestBody @Valid GenerateDocumentRequest request) {
+        DocumentDto generated = documentGenerationService.generate(
+                request.getTemplateId(), request.getBookingId(), request.getOutputFormat());
+        return ResponseEntity.status(HttpStatus.CREATED).body(generated);
     }
 }

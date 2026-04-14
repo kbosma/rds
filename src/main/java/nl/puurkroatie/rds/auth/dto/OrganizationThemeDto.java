@@ -27,6 +27,9 @@ public class OrganizationThemeDto {
     @Size(max = 500)
     private String logoUrl;
 
+    @Pattern(regexp = "^#[0-9a-fA-F]{6}$")
+    private String cardTitleColor;
+
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -35,12 +38,13 @@ public class OrganizationThemeDto {
     @Default
     @JsonCreator
     public OrganizationThemeDto(UUID organizationThemeId, UUID organizationId, String primaryColor, String accentColor, String logoUrl,
-                                LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+                                String cardTitleColor, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.organizationThemeId = organizationThemeId;
         this.organizationId = organizationId;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;
+        this.cardTitleColor = cardTitleColor;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -65,6 +69,10 @@ public class OrganizationThemeDto {
 
     public String getLogoUrl() {
         return logoUrl;
+    }
+
+    public String getCardTitleColor() {
+        return cardTitleColor;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -12,11 +12,11 @@ public interface BookingLineService {
 
     List<BookingLineDto> findByBookingId(UUID bookingId);
 
-    Optional<BookingLineDto> findById(UUID bookingId, UUID accommodationId, UUID supplierId);
+    Optional<BookingLineDto> findById(UUID bookingLineId);
 
     BookingLineDto create(BookingLineDto dto);
 
-    BookingLineDto update(UUID bookingId, UUID accommodationId, UUID supplierId, BookingLineDto dto);
+    BookingLineDto update(UUID bookingLineId, BookingLineDto dto);
 
-    void delete(UUID bookingId, UUID accommodationId, UUID supplierId);
+    void delete(UUID bookingLineId);
 }

@@ -66,7 +66,7 @@ public class BookerPortalPaymentService {
                 .toList();
     }
 
-    public PaymentResponseDto initiatePayment(UUID molliePaymentId, UUID bookingId) {
+    public PaymentResponseDto initiatePayment(UUID molliePaymentId, UUID bookingId, String redirectUrl) {
         // Verify payment belongs to this booking
         boolean belongs = bookingMolliePaymentRepository.findByBookingBookingId(bookingId).stream()
                 .anyMatch(bmp -> bmp.getMolliePayment().getMolliePaymentId().equals(molliePaymentId));
@@ -79,10 +79,11 @@ public class BookerPortalPaymentService {
                 .orElseThrow(() -> new RuntimeException("MolliePayment not found: " + molliePaymentId));
 
         // Build Mollie API request from existing payment data
+        String effectiveRedirectUrl = redirectUrl != null ? redirectUrl : mollieConfig.getUrls().getRedirect();
         PaymentRequestDto request = new PaymentRequestDto(
                 new PaymentRequestDto.Amount(payment.getCurrency(), payment.getAmount().toPlainString()),
                 payment.getDescription(),
-                mollieConfig.getUrls().getRedirect(),
+                effectiveRedirectUrl,
                 mollieConfig.getUrls().getWebhook(),
                 null
         );

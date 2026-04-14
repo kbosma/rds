@@ -1,14 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DocumentService } from './document.service';
+import { TemplateService } from '../templates/template.service';
+import { DocumentTemplate } from '../../shared/models';
 import { HttpClient } from '@angular/common/http';
 
 const ALLOWED_MIME_TYPES = ['application/pdf'];
@@ -36,57 +41,97 @@ export interface DocumentUploadDialogData {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
     TranslateModule,
   ],
   template: `
-    <h2 mat-dialog-title>{{ 'documents.uploadTitle' | translate }}</h2>
+    <h2 mat-dialog-title>{{ 'documents.dialogTitle' | translate }}</h2>
     <mat-dialog-content>
-      <!-- Displayname -->
+      <!-- Displayname (shared) -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ 'documents.displayname' | translate }}</mat-label>
         <input matInput [(ngModel)]="displayname" [placeholder]="'documents.displaynamePlaceholder' | translate" />
       </mat-form-field>
 
-      <!-- URL fetch -->
-      <div class="upload-section">
-        <mat-form-field appearance="outline" class="url-field">
-          <mat-label>{{ 'documents.url' | translate }}</mat-label>
-          <input matInput [(ngModel)]="url" [placeholder]="'documents.urlPlaceholder' | translate" />
-        </mat-form-field>
-        <button mat-stroked-button color="primary" (click)="fetchFromUrl()" [disabled]="!url || fetching()">
-          @if (fetching()) {
-            <mat-spinner diameter="18"></mat-spinner>
-          } @else {
-            <ng-container><mat-icon>download</mat-icon> {{ 'documents.fetchUrl' | translate }}</ng-container>
-          }
-        </button>
-      </div>
+      <!-- Mode toggle -->
+      <mat-button-toggle-group [(ngModel)]="mode" class="mode-toggle">
+        <mat-button-toggle value="generate">
+          <mat-icon>auto_awesome</mat-icon> {{ 'documents.generateSection' | translate }}
+        </mat-button-toggle>
+        <mat-button-toggle value="upload">
+          <mat-icon>upload_file</mat-icon> {{ 'documents.uploadSection' | translate }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
 
-      <!-- File picker -->
-      <div class="upload-section">
-        <input type="file" accept=".pdf" #fileInput (change)="onFileSelected($event)" hidden />
-        <button mat-stroked-button color="primary" (click)="fileInput.click()">
-          <mat-icon>upload_file</mat-icon> {{ 'documents.chooseFile' | translate }}
-        </button>
-        @if (selectedFileName()) {
-          <span class="file-name">{{ selectedFileName() }}</span>
-        }
-      </div>
+      <!-- Generate section -->
+      @if (mode === 'generate') {
+        <div class="section">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'documents.template' | translate }}</mat-label>
+            <mat-select [(ngModel)]="selectedTemplateId">
+              @for (tpl of templates(); track tpl.documentTemplateId) {
+                <mat-option [value]="tpl.documentTemplateId">{{ tpl.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-      <!-- Drag and drop -->
-      <div class="dropzone"
-           [class.drag-over]="dragOver()"
-           (dragover)="onDragOver($event)"
-           (dragleave)="onDragLeave($event)"
-           (drop)="onDrop($event)">
-        <mat-icon class="dropzone-icon">cloud_upload</mat-icon>
-        <p class="dropzone-text">{{ 'documents.dropzoneText' | translate }}</p>
-        <p class="dropzone-hint">{{ 'documents.dropzoneHint' | translate }}</p>
-      </div>
+          <mat-button-toggle-group [(ngModel)]="outputFormat" class="format-toggle">
+            <mat-button-toggle value="pdf">
+              <mat-icon>picture_as_pdf</mat-icon> PDF
+            </mat-button-toggle>
+            <mat-button-toggle value="docx">
+              <mat-icon>description</mat-icon> DOCX
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+      }
+
+      <!-- Upload section -->
+      @if (mode === 'upload') {
+        <div class="section">
+          <!-- URL fetch -->
+          <div class="upload-section">
+            <mat-form-field appearance="outline" class="url-field">
+              <mat-label>{{ 'documents.url' | translate }}</mat-label>
+              <input matInput [(ngModel)]="url" [placeholder]="'documents.urlPlaceholder' | translate" />
+            </mat-form-field>
+            <button mat-stroked-button color="primary" (click)="fetchFromUrl()" [disabled]="!url || fetching()">
+              @if (fetching()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                <ng-container><mat-icon>download</mat-icon> {{ 'documents.fetchUrl' | translate }}</ng-container>
+              }
+            </button>
+          </div>
+
+          <!-- File picker -->
+          <div class="upload-section">
+            <input type="file" accept=".pdf" #fileInput (change)="onFileSelected($event)" hidden />
+            <button mat-stroked-button color="primary" (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon> {{ 'documents.chooseFile' | translate }}
+            </button>
+            @if (selectedFileName()) {
+              <span class="file-name">{{ selectedFileName() }}</span>
+            }
+          </div>
+
+          <!-- Drag and drop -->
+          <div class="dropzone"
+               [class.drag-over]="dragOver()"
+               (dragover)="onDragOver($event)"
+               (dragleave)="onDragLeave($event)"
+               (drop)="onDrop($event)">
+            <mat-icon class="dropzone-icon">cloud_upload</mat-icon>
+            <p class="dropzone-text">{{ 'documents.dropzoneText' | translate }}</p>
+            <p class="dropzone-hint">{{ 'documents.dropzoneHint' | translate }}</p>
+          </div>
+        </div>
+      }
 
       @if (errorMessage()) {
         <p class="error-text">{{ errorMessage() }}</p>
@@ -94,17 +139,46 @@ export interface DocumentUploadDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
-      <button mat-raised-button color="primary" (click)="upload()" [disabled]="!fileData() || !displayname || saving()">
-        @if (saving()) {
-          <mat-spinner diameter="20"></mat-spinner>
-        } @else {
-          <ng-container><mat-icon>cloud_upload</mat-icon> {{ 'common.save' | translate }}</ng-container>
-        }
-      </button>
+      @if (mode === 'generate') {
+        <button mat-raised-button color="primary" (click)="generate()" [disabled]="!canGenerate() || saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            <ng-container><mat-icon>auto_awesome</mat-icon> {{ 'documents.generate' | translate }}</ng-container>
+          }
+        </button>
+      } @else {
+        <button mat-raised-button color="primary" (click)="upload()" [disabled]="!canUpload() || saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            <ng-container><mat-icon>cloud_upload</mat-icon> {{ 'common.save' | translate }}</ng-container>
+          }
+        </button>
+      }
     </mat-dialog-actions>
   `,
   styles: [`
     .full-width { width: 100%; }
+    .mode-toggle {
+      display: flex;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .mode-toggle mat-button-toggle {
+      flex: 1;
+    }
+    .format-toggle {
+      display: flex;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .format-toggle mat-button-toggle {
+      flex: 1;
+    }
+    .section {
+      margin-top: 8px;
+    }
     .upload-section {
       display: flex;
       align-items: center;
@@ -156,25 +230,70 @@ export interface DocumentUploadDialogData {
     }
   `],
 })
-export class DocumentUploadDialogComponent {
+export class DocumentUploadDialogComponent implements OnInit {
   private dialogRef = inject(MatDialogRef<DocumentUploadDialogComponent>);
   private data: DocumentUploadDialogData = inject(MAT_DIALOG_DATA);
   private documentService = inject(DocumentService);
+  private templateService = inject(TemplateService);
   private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
+  mode: 'generate' | 'upload' = 'generate';
   displayname = '';
   url = '';
 
+  // Generate state
+  templates = signal<DocumentTemplate[]>([]);
+  selectedTemplateId = '';
+  outputFormat: 'pdf' | 'docx' = 'pdf';
+
+  // Upload state
   fileData = signal<number[] | null>(null);
   fileMimeType = signal('');
   selectedFileName = signal('');
   dragOver = signal(false);
   fetching = signal(false);
+
+  // Shared state
   saving = signal(false);
   errorMessage = signal('');
 
+  ngOnInit() {
+    this.templateService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (templates) => this.templates.set(templates),
+    });
+  }
+
+  canGenerate(): boolean {
+    return !!this.selectedTemplateId && !!this.outputFormat;
+  }
+
+  canUpload(): boolean {
+    return !!this.fileData() && !!this.displayname;
+  }
+
+  generate() {
+    if (!this.canGenerate()) return;
+
+    this.saving.set(true);
+    this.errorMessage.set('');
+
+    this.documentService.generate(this.selectedTemplateId, this.data.bookingId, this.outputFormat).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.snackBar.open(this.translate.instant('documents.generated'), this.translate.instant('common.close'), { duration: 3000 });
+        this.dialogRef.close(true);
+      },
+      error: () => {
+        this.saving.set(false);
+        this.snackBar.open(this.translate.instant('documents.generateError'), this.translate.instant('common.close'), { duration: 5000 });
+      },
+    });
+  }
+
+  // Upload methods
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -233,7 +352,7 @@ export class DocumentUploadDialogComponent {
   }
 
   upload() {
-    if (!this.fileData() || !this.displayname) return;
+    if (!this.canUpload()) return;
 
     this.saving.set(true);
     this.documentService.create({

@@ -20,4 +20,6 @@ public interface AccountService {
     Optional<AccountDto> findById(UUID id);
 
     void changePassword(UUID accountId, ChangePasswordDto dto);
+
+    void verifyAccountAccess(UUID accountId);
 }

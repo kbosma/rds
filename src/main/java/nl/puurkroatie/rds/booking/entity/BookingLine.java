@@ -3,8 +3,9 @@ package nl.puurkroatie.rds.booking.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -20,20 +21,21 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "booking_line")
-@IdClass(BookingLineId.class)
 public class BookingLine {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "booking_line_id")
+    private UUID bookingLineId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
@@ -75,6 +77,17 @@ public class BookingLine {
         this.price = price;
     }
 
+    public BookingLine(UUID bookingLineId, Booking booking, Accommodation accommodation, Supplier supplier,
+                       LocalDate fromDate, LocalDate untilDate, BigDecimal price) {
+        this.bookingLineId = bookingLineId;
+        this.booking = booking;
+        this.accommodation = accommodation;
+        this.supplier = supplier;
+        this.fromDate = fromDate;
+        this.untilDate = untilDate;
+        this.price = price;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -86,6 +99,10 @@ public class BookingLine {
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
         this.modifiedBy = TenantContext.getAccountId();
+    }
+
+    public UUID getBookingLineId() {
+        return bookingLineId;
     }
 
     public Booking getBooking() {

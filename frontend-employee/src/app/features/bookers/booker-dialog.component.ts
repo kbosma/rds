@@ -78,8 +78,8 @@ export interface BookerDialogData {
           <mat-form-field appearance="outline" class="flex-1">
             <mat-label>{{ 'bookers.gender' | translate }}</mat-label>
             <mat-select formControlName="gender">
-              <mat-option value="MAN">{{ 'bookers.genderMale' | translate }}</mat-option>
-              <mat-option value="VROUW">{{ 'bookers.genderFemale' | translate }}</mat-option>
+              <mat-option value="man">{{ 'bookers.genderMale' | translate }}</mat-option>
+              <mat-option value="vrouw">{{ 'bookers.genderFemale' | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline" class="flex-1">

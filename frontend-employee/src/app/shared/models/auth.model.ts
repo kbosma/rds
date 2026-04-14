@@ -1,8 +1,11 @@
 export interface LoginResponse {
-  token: string;
-  accountId: string;
-  organizationId: string;
-  mustChangePassword: boolean;
+  token: string | null;
+  accountId: string | null;
+  organizationId: string | null;
+  mustChangePassword: boolean | null;
+  requiresTotp: boolean | null;
+  requiresTotpSetup: boolean | null;
+  tempToken: string | null;
 }
 
 export interface TokenPayload {
@@ -14,4 +17,11 @@ export interface TokenPayload {
   roles: string[];
   authorities: string[];
   exp: number;
+}
+
+export interface TotpSetupResponse {
+  secret: string;
+  qrCodeDataUri: string;
+  manualEntryKey: string;
+  recoveryCodes: string[];
 }

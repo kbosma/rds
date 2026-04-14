@@ -48,6 +48,18 @@ public class Account {
     @Column(name = "must_change_password", nullable = false)
     private Boolean mustChangePassword;
 
+    @Column(name = "totp_secret")
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private Boolean totpEnabled;
+
+    @Column(name = "totp_verified", nullable = false)
+    private Boolean totpVerified;
+
+    @Column(name = "recovery_codes", columnDefinition = "TEXT")
+    private String recoveryCodes;
+
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
@@ -73,6 +85,8 @@ public class Account {
         this.person = person;
         this.locked = locked;
         this.mustChangePassword = mustChangePassword;
+        this.totpEnabled = false;
+        this.totpVerified = false;
         this.expiresAt = expiresAt;
     }
 
@@ -82,6 +96,8 @@ public class Account {
         this.person = person;
         this.locked = locked;
         this.mustChangePassword = mustChangePassword;
+        this.totpEnabled = false;
+        this.totpVerified = false;
         this.expiresAt = expiresAt;
     }
 
@@ -91,6 +107,12 @@ public class Account {
         this.createdBy = TenantContext.getAccountId();
         if (this.mustChangePassword == null) {
             this.mustChangePassword = false;
+        }
+        if (this.totpEnabled == null) {
+            this.totpEnabled = false;
+        }
+        if (this.totpVerified == null) {
+            this.totpVerified = false;
         }
         if (this.password != null) {
             this.passwordHash = PASSWORD_ENCODER.encode(this.password);
@@ -152,5 +174,21 @@ public class Account {
 
     public UUID getModifiedBy() {
         return modifiedBy;
+    }
+
+    public String getTotpSecret() {
+        return totpSecret;
+    }
+
+    public Boolean getTotpEnabled() {
+        return totpEnabled;
+    }
+
+    public Boolean getTotpVerified() {
+        return totpVerified;
+    }
+
+    public String getRecoveryCodes() {
+        return recoveryCodes;
     }
 }

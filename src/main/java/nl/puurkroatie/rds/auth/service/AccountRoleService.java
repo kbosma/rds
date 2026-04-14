@@ -3,8 +3,10 @@ package nl.puurkroatie.rds.auth.service;
 import nl.puurkroatie.rds.auth.entity.Account;
 import nl.puurkroatie.rds.auth.entity.AccountRole;
 import nl.puurkroatie.rds.auth.entity.AccountRoleId;
+import nl.puurkroatie.rds.auth.entity.Role;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
+import nl.puurkroatie.rds.auth.repository.RoleRepository;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -20,10 +22,12 @@ public class AccountRoleService {
 
     private final AccountRoleRepository accountRoleRepository;
     private final AccountRepository accountRepository;
+    private final RoleRepository roleRepository;
 
-    public AccountRoleService(AccountRoleRepository accountRoleRepository, AccountRepository accountRepository) {
+    public AccountRoleService(AccountRoleRepository accountRoleRepository, AccountRepository accountRepository, RoleRepository roleRepository) {
         this.accountRoleRepository = accountRoleRepository;
         this.accountRepository = accountRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Transactional(readOnly = true)
@@ -40,13 +44,15 @@ public class AccountRoleService {
                 .filter(ar -> isAdmin() || ar.getAccount().getPerson().getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()));
     }
 
-    public AccountRole save(AccountRole accountRole) {
+    public AccountRole create(UUID accountId, UUID roleId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
         if (!isAdmin()) {
-            Account account = accountRepository.findById(accountRole.getAccount().getAccountId())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
             verifyOrganization(account.getPerson().getOrganization().getOrganizationId());
         }
-        return accountRoleRepository.save(accountRole);
+        return accountRoleRepository.save(new AccountRole(account, role));
     }
 
     public void deleteById(UUID accountId, UUID roleId) {

@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.auth.controller;
 
 import nl.puurkroatie.rds.auth.dto.AccountDto;
 import nl.puurkroatie.rds.auth.service.AccountService;
+import nl.puurkroatie.rds.auth.service.TotpService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,9 +24,11 @@ import java.util.UUID;
 public class AccountController {
 
     private final AccountService accountService;
+    private final TotpService totpService;
 
-    public AccountController(AccountService accountService) {
+    public AccountController(AccountService accountService, TotpService totpService) {
         this.accountService = accountService;
+        this.totpService = totpService;
     }
 
     @GetMapping
@@ -60,6 +63,14 @@ public class AccountController {
     @PreAuthorize("hasAuthority('ACCOUNT_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         accountService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/totp")
+    @PreAuthorize("hasAuthority('ACCOUNT_UPDATE')")
+    public ResponseEntity<Void> resetTotp(@PathVariable UUID id) {
+        accountService.verifyAccountAccess(id);
+        totpService.adminReset(id);
         return ResponseEntity.noContent().build();
     }
 }

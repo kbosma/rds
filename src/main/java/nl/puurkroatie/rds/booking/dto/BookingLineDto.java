@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public class BookingLineDto {
 
+    private UUID bookingLineId;
+
     @NotNull
     private UUID bookingId;
     @NotNull
@@ -28,12 +30,13 @@ public class BookingLineDto {
     private UUID modifiedBy;
     private UUID tenantOrganization;
 
-    public BookingLineDto(UUID bookingId, UUID accommodationId, UUID supplierId,
+    public BookingLineDto(UUID bookingLineId, UUID bookingId, UUID accommodationId, UUID supplierId,
                           String accommodationName, String supplierName,
                           LocalDate fromDate, LocalDate untilDate, BigDecimal price,
                           LocalDateTime createdAt, UUID createdBy,
                           LocalDateTime modifiedAt, UUID modifiedBy,
                           UUID tenantOrganization) {
+        this.bookingLineId = bookingLineId;
         this.bookingId = bookingId;
         this.accommodationId = accommodationId;
         this.supplierId = supplierId;
@@ -47,6 +50,10 @@ public class BookingLineDto {
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
         this.tenantOrganization = tenantOrganization;
+    }
+
+    public UUID getBookingLineId() {
+        return bookingLineId;
     }
 
     public UUID getBookingId() {

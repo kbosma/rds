@@ -20,6 +20,12 @@ import { Accommodation, Supplier, AccommodationSupplier, BookingLine } from '../
 export interface BookingLineDialogData {
   bookingId: string;
   bookingLine?: BookingLine;
+  existingLines: BookingLine[];
+}
+
+interface DateWarning {
+  type: 'overlap' | 'gap';
+  message: string;
 }
 
 @Component({
@@ -100,23 +106,53 @@ export interface BookingLineDialogData {
             <input matInput type="number" formControlName="price" />
           </mat-form-field>
         </form>
+
+        @if (warnings().length > 0) {
+          <div class="warnings-panel">
+            <div class="warnings-title">
+              <mat-icon class="warning-icon">warning</mat-icon>
+              {{ 'bookingLine.dateWarningTitle' | translate }}
+            </div>
+            @for (w of warnings(); track w.message) {
+              <div class="warning-item">
+                <mat-icon class="warning-icon-small">{{ w.type === 'overlap' ? 'event_busy' : 'event_available' }}</mat-icon>
+                {{ w.message }}
+              </div>
+            }
+          </div>
+        }
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
-      <button mat-raised-button color="primary"
-              (click)="onSubmit()"
-              [disabled]="saving() || form.invalid || loadingData()">
-        @if (saving()) {
-          <mat-spinner diameter="20"></mat-spinner>
-        } @else {
-          @if (isEdit) {
-            <mat-icon>save</mat-icon> {{ 'common.save' | translate }}
+      @if (warnings().length > 0 && warningsShown()) {
+        <button mat-button (click)="resetWarnings()">
+          <mat-icon>edit_calendar</mat-icon> {{ 'bookingLine.adjustDates' | translate }}
+        </button>
+        <button mat-raised-button color="warn"
+                (click)="onSubmit()"
+                [disabled]="saving() || form.invalid || loadingData()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
           } @else {
-            <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+            <ng-container><mat-icon>save</mat-icon> {{ 'bookingLine.saveAnyway' | translate }}</ng-container>
           }
-        }
-      </button>
+        </button>
+      } @else {
+        <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+        <button mat-raised-button color="primary"
+                (click)="onSubmit()"
+                [disabled]="saving() || form.invalid || loadingData()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            @if (isEdit) {
+              <mat-icon>save</mat-icon> {{ 'common.save' | translate }}
+            } @else {
+              <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+            }
+          }
+        </button>
+      }
     </mat-dialog-actions>
   `,
   styles: [`
@@ -147,6 +183,38 @@ export interface BookingLineDialogData {
       font-weight: 500;
       margin-top: 2px;
     }
+    .warnings-panel {
+      background: #fff3e0;
+      border: 1px solid #ffb74d;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 8px;
+    }
+    .warnings-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      color: #e65100;
+      margin-bottom: 8px;
+    }
+    .warning-icon {
+      color: #e65100;
+    }
+    .warning-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #bf360c;
+      padding: 4px 0;
+    }
+    .warning-icon-small {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #e65100;
+    }
   `],
 })
 export class BookingLineDialogComponent implements OnInit {
@@ -172,6 +240,8 @@ export class BookingLineDialogComponent implements OnInit {
   resolvedSupplierName = signal<string | null>(null);
   loadingData = signal(true);
   saving = signal(false);
+  warnings = signal<DateWarning[]>([]);
+  warningsShown = signal(false);
 
   form = this.fb.group({
     accommodationId: [this.data.bookingLine?.accommodationId ?? '', Validators.required],
@@ -187,6 +257,9 @@ export class BookingLineDialogComponent implements OnInit {
     } else {
       this.loadReferenceData();
     }
+
+    this.form.get('fromDate')!.valueChanges.subscribe(() => this.resetWarnings());
+    this.form.get('untilDate')!.valueChanges.subscribe(() => this.resetWarnings());
   }
 
   private loadReferenceData() {
@@ -228,15 +301,90 @@ export class BookingLineDialogComponent implements OnInit {
     }
   }
 
+  resetWarnings() {
+    this.warnings.set([]);
+    this.warningsShown.set(false);
+  }
+
+  private analyzeDateWarnings(): DateWarning[] {
+    const raw = this.form.getRawValue();
+    if (!raw.fromDate || !raw.untilDate) return [];
+
+    const currentLineId = this.data.bookingLine?.bookingLineId;
+    const otherLines = (this.data.existingLines ?? [])
+      .filter(l => l.bookingLineId !== currentLineId)
+      .filter(l => l.fromDate && l.untilDate);
+
+    const currentAccName = this.isEdit
+      ? this.editAccommodationName
+      : (this.accommodations().find(a => a.accommodationId === raw.accommodationId)?.name ?? '?');
+
+    const allLines = [
+      ...otherLines.map(l => ({
+        name: l.accommodationName,
+        fromDate: l.fromDate,
+        untilDate: l.untilDate,
+      })),
+      {
+        name: currentAccName,
+        fromDate: raw.fromDate,
+        untilDate: raw.untilDate,
+      },
+    ].sort((a, b) => a.fromDate.localeCompare(b.fromDate));
+
+    const warnings: DateWarning[] = [];
+
+    for (let i = 0; i < allLines.length - 1; i++) {
+      const current = allLines[i];
+      const next = allLines[i + 1];
+
+      if (current.untilDate > next.fromDate) {
+        warnings.push({
+          type: 'overlap',
+          message: this.translate.instant('bookingLine.overlapWarning', {
+            name1: current.name,
+            name2: next.name,
+          }),
+        });
+      } else if (current.untilDate < next.fromDate) {
+        warnings.push({
+          type: 'gap',
+          message: this.translate.instant('bookingLine.gapWarning', {
+            from: this.formatDate(current.untilDate),
+            until: this.formatDate(next.fromDate),
+          }),
+        });
+      }
+    }
+
+    return warnings;
+  }
+
+  private formatDate(dateStr: string): string {
+    const [y, m, d] = dateStr.split('-');
+    return `${d}-${m}-${y}`;
+  }
+
   onSubmit() {
     if (this.form.invalid) return;
+
+    // Check warnings before saving
+    if (!this.warningsShown()) {
+      const detected = this.analyzeDateWarnings();
+      if (detected.length > 0) {
+        this.warnings.set(detected);
+        this.warningsShown.set(true);
+        return;
+      }
+    }
+
     this.saving.set(true);
 
     const raw = this.form.getRawValue();
 
     if (this.isEdit) {
       const bl = this.data.bookingLine!;
-      this.bookingLineService.update(bl.bookingId, bl.accommodationId, bl.supplierId, {
+      this.bookingLineService.update(bl.bookingLineId, {
         bookingId: bl.bookingId,
         accommodationId: bl.accommodationId,
         supplierId: bl.supplierId,

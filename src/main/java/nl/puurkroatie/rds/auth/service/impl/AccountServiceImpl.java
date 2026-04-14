@@ -125,6 +125,19 @@ public class AccountServiceImpl implements AccountService {
         accountRepository.updatePassword(accountId, encodedPassword);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public void verifyAccountAccess(UUID accountId) {
+        if (isEmployee()) {
+            throw new AccessDeniedException("Access denied: employees cannot manage accounts");
+        }
+        if (!isAdmin()) {
+            Account account = accountRepository.findById(accountId)
+                    .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+            verifyOrganization(account.getPerson().getOrganization().getOrganizationId());
+        }
+    }
+
     private boolean isAdmin() {
         return TenantContext.hasRole("ADMIN");
     }

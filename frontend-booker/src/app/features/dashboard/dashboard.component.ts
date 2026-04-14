@@ -23,12 +23,34 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
         </mat-card-content>
       </mat-card>
 
+      <mat-card class="action-card" routerLink="/itinerary">
+        <mat-card-content class="action-content">
+          <mat-icon class="action-icon">map</mat-icon>
+          <div>
+            <div class="action-title">{{ 'dashboard.itinerary' | translate }}</div>
+            <div class="action-sub">{{ 'dashboard.viewItinerary' | translate }}</div>
+          </div>
+          <mat-icon class="chevron">chevron_right</mat-icon>
+        </mat-card-content>
+      </mat-card>
+
       <mat-card class="action-card" routerLink="/documents">
         <mat-card-content class="action-content">
           <mat-icon class="action-icon">description</mat-icon>
           <div>
             <div class="action-title">{{ 'dashboard.documents' | translate }}</div>
             <div class="action-sub">{{ 'dashboard.viewDocuments' | translate }}</div>
+          </div>
+          <mat-icon class="chevron">chevron_right</mat-icon>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="action-card" routerLink="/activities">
+        <mat-card-content class="action-content">
+          <mat-icon class="action-icon">local_activity</mat-icon>
+          <div>
+            <div class="action-title">{{ 'dashboard.activities' | translate }}</div>
+            <div class="action-sub">{{ 'dashboard.viewActivities' | translate }}</div>
           </div>
           <mat-icon class="chevron">chevron_right</mat-icon>
         </mat-card-content>

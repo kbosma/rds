@@ -51,6 +51,19 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateTotpPendingToken(UUID accountId) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 300_000); // 5 minutes
+
+        return Jwts.builder()
+                .subject(accountId.toString())
+                .claim("type", "TOTP_PENDING")
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(key)
+                .compact();
+    }
+
     public String generateBookerToken(UUID bookerId, UUID bookingId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + bookerExpirationMs);

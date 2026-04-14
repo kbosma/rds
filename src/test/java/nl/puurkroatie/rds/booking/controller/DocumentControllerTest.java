@@ -35,6 +35,71 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ADMIN: POST /api/documents — geen BOOKING_CREATE authority → 403
+    @Test
+    void admin_create_returns403() throws Exception {
+        String token = adminToken();
+
+        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
+                "\"displayname\":\"Admin Document\",\"document\":null}";
+
+        mockMvc.perform(post("/api/documents")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    // ADMIN: PUT /api/documents/{id} — geen BOOKING_UPDATE authority → 403
+    @Test
+    void admin_update_returns403() throws Exception {
+        String token = adminToken();
+
+        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
+                "\"displayname\":\"Admin Update\",\"document\":null}";
+
+        mockMvc.perform(put("/api/documents/" + DOCUMENT_PK_1)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    // ADMIN: DELETE /api/documents/{id} — geen BOOKING_DELETE authority → 403
+    @Test
+    void admin_delete_returns403() throws Exception {
+        String token = adminToken();
+
+        mockMvc.perform(delete("/api/documents/" + DOCUMENT_PK_1)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    // ADMIN: GET /api/documents/{id}/content — geen BOOKING_READ authority → 403
+    @Test
+    void admin_getContent_returns403() throws Exception {
+        String token = adminToken();
+
+        mockMvc.perform(get("/api/documents/" + DOCUMENT_PK_1 + "/content")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    // ADMIN: POST /api/documents/generate — geen BOOKING_CREATE authority → 403
+    @Test
+    void admin_generate_returns403() throws Exception {
+        String token = adminToken();
+
+        String json = "{\"templateId\":\"00000000-0000-0000-0000-000000000001\"," +
+                "\"bookingId\":\"" + BOOKING_PK_1 + "\",\"outputFormat\":\"docx\"}";
+
+        mockMvc.perform(post("/api/documents/generate")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
     // MANAGER: GET /api/documents — alleen documenten van eigen organisatie
     @Test
     void manager_findAll_returnsOnlyOwnOrganizationDocuments() throws Exception {

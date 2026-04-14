@@ -23,6 +23,6 @@ public interface OrganizationThemeMapper {
     OrganizationTheme toEntity(OrganizationThemeDto dto);
 
     default OrganizationTheme toEntity(UUID id, OrganizationThemeDto dto, Organization organization) {
-        return new OrganizationTheme(id, organization, dto.getPrimaryColor(), dto.getAccentColor(), dto.getLogoUrl());
+        return new OrganizationTheme(id, organization, dto.getPrimaryColor(), dto.getAccentColor(), dto.getLogoUrl(), dto.getCardTitleColor());
     }
 }

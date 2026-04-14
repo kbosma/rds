@@ -38,28 +38,76 @@ import { AuthService } from '../../core/auth/auth.service';
               <span>{{ error() }}</span>
             </div>
           }
-          <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>{{ 'auth.username' | translate }}</mat-label>
-              <mat-icon matPrefix>person</mat-icon>
-              <input matInput formControlName="userName" autocomplete="username" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>{{ 'auth.password' | translate }}</mat-label>
-              <mat-icon matPrefix>lock</mat-icon>
-              <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="current-password" />
-              <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())" tabindex="-1">
-                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+
+          @if (!auth.requiresTotp()) {
+            <!-- Step 1: Username + Password -->
+            <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'auth.username' | translate }}</mat-label>
+                <mat-icon matPrefix>person</mat-icon>
+                <input matInput formControlName="userName" autocomplete="username" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'auth.password' | translate }}</mat-label>
+                <mat-icon matPrefix>lock</mat-icon>
+                <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="current-password" />
+                <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())" tabindex="-1">
+                  <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+              <button mat-raised-button color="primary" type="submit" class="full-width login-btn" [disabled]="loading() || loginForm.invalid">
+                @if (loading()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                } @else {
+                  <ng-container><mat-icon>login</mat-icon> {{ 'auth.login' | translate }}</ng-container>
+                }
               </button>
-            </mat-form-field>
-            <button mat-raised-button color="primary" type="submit" class="full-width login-btn" [disabled]="loading() || loginForm.invalid">
-              @if (loading()) {
-                <mat-spinner diameter="20"></mat-spinner>
-              } @else {
-                <ng-container><mat-icon>login</mat-icon> {{ 'auth.login' | translate }}</ng-container>
-              }
-            </button>
-          </form>
+            </form>
+          } @else {
+            <!-- Step 2: TOTP Code -->
+            @if (!showRecovery()) {
+              <form [formGroup]="totpForm" (ngSubmit)="onTotpLogin()">
+                <p class="totp-info">{{ 'auth.totpPrompt' | translate }}</p>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>{{ 'auth.totpCode' | translate }}</mat-label>
+                  <mat-icon matPrefix>security</mat-icon>
+                  <input matInput formControlName="totpCode" autocomplete="one-time-code" maxlength="6" />
+                </mat-form-field>
+                <button mat-raised-button color="primary" type="submit" class="full-width login-btn" [disabled]="loading() || totpForm.invalid">
+                  @if (loading()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container><mat-icon>verified_user</mat-icon> {{ 'auth.verify' | translate }}</ng-container>
+                  }
+                </button>
+              </form>
+              <div class="totp-actions">
+                <button mat-button (click)="showRecovery.set(true)">{{ 'auth.useRecoveryCode' | translate }}</button>
+                <button mat-button (click)="onBack()">{{ 'common.back' | translate }}</button>
+              </div>
+            } @else {
+              <!-- Recovery code input -->
+              <form [formGroup]="recoveryForm" (ngSubmit)="onRecoveryLogin()">
+                <p class="totp-info">{{ 'auth.recoveryPrompt' | translate }}</p>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>{{ 'auth.recoveryCode' | translate }}</mat-label>
+                  <mat-icon matPrefix>vpn_key</mat-icon>
+                  <input matInput formControlName="recoveryCode" autocomplete="off" />
+                </mat-form-field>
+                <button mat-raised-button color="primary" type="submit" class="full-width login-btn" [disabled]="loading() || recoveryForm.invalid">
+                  @if (loading()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container><mat-icon>vpn_key</mat-icon> {{ 'auth.verify' | translate }}</ng-container>
+                  }
+                </button>
+              </form>
+              <div class="totp-actions">
+                <button mat-button (click)="showRecovery.set(false)">{{ 'auth.useTotpCode' | translate }}</button>
+                <button mat-button (click)="onBack()">{{ 'common.back' | translate }}</button>
+              </div>
+            }
+          }
         </mat-card-content>
       </mat-card>
     </div>
@@ -122,10 +170,21 @@ import { AuthService } from '../../core/auth/auth.service';
       letter-spacing: 1px;
       margin-top: 8px;
     }
+    .totp-info {
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .totp-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
   `],
 })
 export class LoginComponent {
-  private auth = inject(AuthService);
+  auth = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
@@ -136,9 +195,18 @@ export class LoginComponent {
     password: ['', Validators.required],
   });
 
+  totpForm = this.fb.group({
+    totpCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  });
+
+  recoveryForm = this.fb.group({
+    recoveryCode: ['', Validators.required],
+  });
+
   hidePassword = signal(true);
   loading = signal(false);
   error = signal('');
+  showRecovery = signal(false);
 
   onLogin() {
     this.loading.set(true);
@@ -147,7 +215,9 @@ export class LoginComponent {
     this.auth.login(userName!, password!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/dashboard']);
+        if (!this.auth.requiresTotp()) {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (err) => {
         this.loading.set(false);
@@ -155,5 +225,47 @@ export class LoginComponent {
         this.error.set(detail || this.translate.instant('auth.loginError'));
       },
     });
+  }
+
+  onTotpLogin() {
+    this.loading.set(true);
+    this.error.set('');
+    const { totpCode } = this.totpForm.value;
+    this.auth.loginWithTotp(totpCode!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        const detail = err?.error?.message ?? err?.message ?? '';
+        this.error.set(detail || this.translate.instant('auth.totpError'));
+      },
+    });
+  }
+
+  onRecoveryLogin() {
+    this.loading.set(true);
+    this.error.set('');
+    const { recoveryCode } = this.recoveryForm.value;
+    this.auth.loginWithRecovery(recoveryCode!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        const detail = err?.error?.message ?? err?.message ?? '';
+        this.error.set(detail || this.translate.instant('auth.recoveryError'));
+      },
+    });
+  }
+
+  onBack() {
+    this.auth.resetTotpState();
+    this.error.set('');
+    this.showRecovery.set(false);
+    this.totpForm.reset();
+    this.recoveryForm.reset();
   }
 }

@@ -14,4 +14,16 @@ export class AuthorityService {
   getById(id: string) {
     return this.api.getById<Authority>(this.endpoint, id);
   }
+
+  create(authority: Partial<Authority>) {
+    return this.api.create<Authority>(this.endpoint, authority);
+  }
+
+  update(id: string, authority: Partial<Authority>) {
+    return this.api.update<Authority>(this.endpoint, id, authority);
+  }
+
+  delete(id: string) {
+    return this.api.delete(this.endpoint, id);
+  }
 }

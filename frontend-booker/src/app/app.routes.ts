@@ -38,6 +38,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'itinerary',
+        loadComponent: () =>
+          import('./features/itinerary/itinerary.component').then(
+            (m) => m.ItineraryComponent
+          ),
+      },
+      {
+        path: 'activities',
+        loadComponent: () =>
+          import('./features/activities/activities.component').then(
+            (m) => m.ActivitiesComponent
+          ),
+      },
+      {
         path: 'payments',
         loadComponent: () =>
           import('./features/payments/payments.component').then(

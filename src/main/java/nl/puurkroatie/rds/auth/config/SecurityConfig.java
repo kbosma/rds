@@ -32,6 +32,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/login/totp").permitAll()
+                        .requestMatchers("/api/auth/login/recovery").permitAll()
                         .requestMatchers("/api/booker-auth/**").permitAll()
                         .requestMatchers("/api/mollie/payments/webhook").permitAll()
                         .requestMatchers("/api/booker-portal/**").authenticated()

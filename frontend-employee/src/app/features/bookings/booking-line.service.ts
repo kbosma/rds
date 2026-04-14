@@ -14,22 +14,22 @@ export class BookingLineService {
   }
 
   getByBookingId(bookingId: string): Observable<BookingLine[]> {
-    return this.http.get<BookingLine[]>(`${this.baseUrl}/${bookingId}`);
+    return this.http.get<BookingLine[]>(`${this.baseUrl}/booking/${bookingId}`);
   }
 
-  getById(bookingId: string, accommodationId: string, supplierId: string): Observable<BookingLine> {
-    return this.http.get<BookingLine>(`${this.baseUrl}/${bookingId}/${accommodationId}/${supplierId}`);
+  getById(bookingLineId: string): Observable<BookingLine> {
+    return this.http.get<BookingLine>(`${this.baseUrl}/${bookingLineId}`);
   }
 
   create(bookingLine: Partial<BookingLine>): Observable<BookingLine> {
     return this.http.post<BookingLine>(this.baseUrl, bookingLine);
   }
 
-  update(bookingId: string, accommodationId: string, supplierId: string, bookingLine: Partial<BookingLine>): Observable<BookingLine> {
-    return this.http.put<BookingLine>(`${this.baseUrl}/${bookingId}/${accommodationId}/${supplierId}`, bookingLine);
+  update(bookingLineId: string, bookingLine: Partial<BookingLine>): Observable<BookingLine> {
+    return this.http.put<BookingLine>(`${this.baseUrl}/${bookingLineId}`, bookingLine);
   }
 
-  delete(bookingId: string, accommodationId: string, supplierId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${bookingId}/${accommodationId}/${supplierId}`);
+  delete(bookingLineId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${bookingLineId}`);
   }
 }

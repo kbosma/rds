@@ -34,18 +34,16 @@ public class BookingLineController {
         return bookingLineService.findAll();
     }
 
-    @GetMapping("/{bookingId}")
+    @GetMapping("/booking/{bookingId}")
     @PreAuthorize("hasAuthority('BOOKING_READ')")
     public List<BookingLineDto> findByBookingId(@PathVariable UUID bookingId) {
         return bookingLineService.findByBookingId(bookingId);
     }
 
-    @GetMapping("/{bookingId}/{accommodationId}/{supplierId}")
+    @GetMapping("/{bookingLineId}")
     @PreAuthorize("hasAuthority('BOOKING_READ')")
-    public ResponseEntity<BookingLineDto> findById(@PathVariable UUID bookingId,
-                                                   @PathVariable UUID accommodationId,
-                                                   @PathVariable UUID supplierId) {
-        return bookingLineService.findById(bookingId, accommodationId, supplierId)
+    public ResponseEntity<BookingLineDto> findById(@PathVariable UUID bookingLineId) {
+        return bookingLineService.findById(bookingLineId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -57,22 +55,18 @@ public class BookingLineController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/{bookingId}/{accommodationId}/{supplierId}")
+    @PutMapping("/{bookingLineId}")
     @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
-    public ResponseEntity<BookingLineDto> update(@PathVariable UUID bookingId,
-                                                 @PathVariable UUID accommodationId,
-                                                 @PathVariable UUID supplierId,
+    public ResponseEntity<BookingLineDto> update(@PathVariable UUID bookingLineId,
                                                  @RequestBody @Valid BookingLineDto dto) {
-        BookingLineDto updated = bookingLineService.update(bookingId, accommodationId, supplierId, dto);
+        BookingLineDto updated = bookingLineService.update(bookingLineId, dto);
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{bookingId}/{accommodationId}/{supplierId}")
+    @DeleteMapping("/{bookingLineId}")
     @PreAuthorize("hasAuthority('BOOKING_DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable UUID bookingId,
-                                       @PathVariable UUID accommodationId,
-                                       @PathVariable UUID supplierId) {
-        bookingLineService.delete(bookingId, accommodationId, supplierId);
+    public ResponseEntity<Void> delete(@PathVariable UUID bookingLineId) {
+        bookingLineService.delete(bookingLineId);
         return ResponseEntity.noContent().build();
     }
 }

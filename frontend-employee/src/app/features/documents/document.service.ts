@@ -37,4 +37,8 @@ export class DocumentService {
   getContent(id: string) {
     return this.http.get(`${environment.apiUrl}/${this.endpoint}/${id}/content`, { responseType: 'blob' });
   }
+
+  generate(templateId: string, bookingId: string, outputFormat: string) {
+    return this.http.post<Document>(`${environment.apiUrl}/${this.endpoint}/generate`, { templateId, bookingId, outputFormat });
+  }
 }

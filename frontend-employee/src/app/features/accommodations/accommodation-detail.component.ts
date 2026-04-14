@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, switchMap } from 'rxjs';
 import { AccommodationService } from './accommodation.service';
@@ -32,6 +33,7 @@ import { Accommodation, Address, AccommodationAddress } from '../../shared/model
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatDividerModule,
+    MatSelectModule,
     TranslateModule,
   ],
   template: `
@@ -100,7 +102,12 @@ import { Accommodation, Address, AccommodationAddress } from '../../shared/model
                 <form [formGroup]="addressForm">
                   <mat-form-field appearance="outline" class="full-width">
                     <mat-label>{{ 'accommodations.addressRole' | translate }}</mat-label>
-                    <input matInput formControlName="addressrole" />
+                    <mat-select formControlName="addressrole">
+                      <mat-option value="woon">{{ 'accommodations.roleWoon' | translate }}</mat-option>
+                      <mat-option value="factuur">{{ 'accommodations.roleFactuur' | translate }}</mat-option>
+                      <mat-option value="accommodatie">{{ 'accommodations.roleAccommodatie' | translate }}</mat-option>
+                      <mat-option value="leverancier">{{ 'accommodations.roleLeverancier' | translate }}</mat-option>
+                    </mat-select>
                   </mat-form-field>
 
                   <div class="row">

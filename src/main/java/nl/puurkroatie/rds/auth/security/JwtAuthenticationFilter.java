@@ -33,6 +33,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (token != null && jwtTokenProvider.validateToken(token)) {
                 String tokenType = jwtTokenProvider.getTokenType(token);
 
+                if ("TOTP_PENDING".equals(tokenType)) {
+                    String path = request.getRequestURI();
+                    if (path.equals("/api/auth/login/totp") || path.equals("/api/auth/login/recovery") || path.equals("/api/auth/totp/setup")) {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        jwtTokenProvider.getAccountId(token),
+                                        null,
+                                        List.of(new SimpleGrantedAuthority("TOTP_PENDING")));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 if ("BOOKER".equals(tokenType)) {
                     List<SimpleGrantedAuthority> authorities = List.of(
                             new SimpleGrantedAuthority("BOOKER_PORTAL_READ"),

@@ -10,5 +10,6 @@ public interface AccountMapper {
 
     @Mapping(source = "person.persoonId", target = "personId")
     @Mapping(target = "password", ignore = true)
+    @Mapping(source = "totpEnabled", target = "totpEnabled")
     AccountDto toDto(Account entity);
 }

@@ -1,12 +1,14 @@
 package nl.puurkroatie.rds.auth.service.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import nl.puurkroatie.rds.auth.dto.OrganizationThemeDto;
-import nl.puurkroatie.rds.auth.entity.Organization;
 import nl.puurkroatie.rds.auth.entity.OrganizationTheme;
 import nl.puurkroatie.rds.auth.mapper.OrganizationThemeMapper;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
 import nl.puurkroatie.rds.auth.repository.OrganizationThemeRepository;
+import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.OrganizationThemeService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,45 +34,50 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
 
     @Override
     public OrganizationThemeDto create(OrganizationThemeDto dto) {
-        Organization organization = organizationRepository.findById(dto.getOrganizationId())
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + dto.getOrganizationId()));
-        OrganizationTheme entity = new OrganizationTheme(organization, dto.getPrimaryColor(), dto.getAccentColor(), dto.getLogoUrl());
-        OrganizationTheme saved = organizationThemeRepository.save(entity);
-        return organizationThemeMapper.toDto(saved);
+        verifyOrganization(dto.getOrganizationId());
+        var organization = organizationRepository.findById(dto.getOrganizationId())
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with id: " + dto.getOrganizationId()));
+        OrganizationTheme entity = new OrganizationTheme(organization, dto.getPrimaryColor(), dto.getAccentColor(), dto.getLogoUrl(), dto.getCardTitleColor());
+        return organizationThemeMapper.toDto(organizationThemeRepository.save(entity));
     }
 
     @Override
     public OrganizationThemeDto update(UUID id, OrganizationThemeDto dto) {
-        if (!organizationThemeRepository.existsById(id)) {
-            throw new RuntimeException("OrganizationTheme not found with id: " + id);
-        }
-        Organization organization = organizationRepository.findById(dto.getOrganizationId())
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + dto.getOrganizationId()));
-        OrganizationTheme entity = organizationThemeMapper.toEntity(id, dto, organization);
-        OrganizationTheme saved = organizationThemeRepository.save(entity);
-        return organizationThemeMapper.toDto(saved);
+        OrganizationTheme existing = organizationThemeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("OrganizationTheme not found with id: " + id));
+        verifyOrganization(existing.getOrganization().getOrganizationId());
+        OrganizationTheme entity = organizationThemeMapper.toEntity(id, dto, existing.getOrganization());
+        return organizationThemeMapper.toDto(organizationThemeRepository.save(entity));
     }
 
     @Override
     public void delete(UUID id) {
-        if (!organizationThemeRepository.existsById(id)) {
-            throw new RuntimeException("OrganizationTheme not found with id: " + id);
-        }
+        OrganizationTheme existing = organizationThemeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("OrganizationTheme not found with id: " + id));
+        verifyOrganization(existing.getOrganization().getOrganizationId());
         organizationThemeRepository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<OrganizationThemeDto> findAll() {
-        return organizationThemeRepository.findAll().stream()
+        if (isAdmin()) {
+            return organizationThemeRepository.findAll().stream()
+                    .map(organizationThemeMapper::toDto)
+                    .toList();
+        }
+        return organizationThemeRepository
+                .findByOrganization_OrganizationId(TenantContext.getOrganizationId())
                 .map(organizationThemeMapper::toDto)
-                .toList();
+                .map(List::of)
+                .orElse(List.of());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<OrganizationThemeDto> findById(UUID id) {
         return organizationThemeRepository.findById(id)
+                .filter(t -> isAdmin() || t.getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
                 .map(organizationThemeMapper::toDto);
     }
 
@@ -79,5 +86,15 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
     public Optional<OrganizationThemeDto> findByOrganizationId(UUID organizationId) {
         return organizationThemeRepository.findByOrganization_OrganizationId(organizationId)
                 .map(organizationThemeMapper::toDto);
+    }
+
+    private boolean isAdmin() {
+        return TenantContext.hasRole("ADMIN");
+    }
+
+    private void verifyOrganization(UUID organizationId) {
+        if (!isAdmin() && !organizationId.equals(TenantContext.getOrganizationId())) {
+            throw new AccessDeniedException("Access denied: resource belongs to another organization");
+        }
     }
 }

@@ -7,16 +7,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { BookingLineService } from './booking-line.service';
 import { BookingLine } from '../../shared/models';
 
-/*
- * BookingLineService gebruikt HttpClient direct (niet ApiService)
- * omdat het composite keys heeft (bookingId + accommodationId + supplierId).
- * Daarom testen we hier met HttpTestingController.
- */
 describe('BookingLineService', () => {
   let service: BookingLineService;
   let httpTesting: HttpTestingController;
 
   const mockLine: BookingLine = {
+    bookingLineId: 'bl-1',
     bookingId: 'b-1',
     accommodationId: 'a-1',
     supplierId: 's-1',
@@ -49,16 +45,16 @@ describe('BookingLineService', () => {
     req.flush([mockLine]);
   });
 
-  it('getByBookingId() should GET /api/booking-lines/{bookingId}', () => {
+  it('getByBookingId() should GET /api/booking-lines/booking/{bookingId}', () => {
     service.getByBookingId('b-1').subscribe((r) => expect(r).toEqual([mockLine]));
-    const req = httpTesting.expectOne('/api/booking-lines/b-1');
+    const req = httpTesting.expectOne('/api/booking-lines/booking/b-1');
     expect(req.request.method).toBe('GET');
     req.flush([mockLine]);
   });
 
-  it('getById() should GET with composite key in URL', () => {
-    service.getById('b-1', 'a-1', 's-1').subscribe((r) => expect(r).toEqual(mockLine));
-    const req = httpTesting.expectOne('/api/booking-lines/b-1/a-1/s-1');
+  it('getById() should GET with bookingLineId in URL', () => {
+    service.getById('bl-1').subscribe((r) => expect(r).toEqual(mockLine));
+    const req = httpTesting.expectOne('/api/booking-lines/bl-1');
     expect(req.request.method).toBe('GET');
     req.flush(mockLine);
   });
@@ -72,18 +68,18 @@ describe('BookingLineService', () => {
     req.flush(mockLine);
   });
 
-  it('update() should PUT with composite key in URL', () => {
+  it('update() should PUT with bookingLineId in URL', () => {
     const data: Partial<BookingLine> = { price: 1500 };
-    service.update('b-1', 'a-1', 's-1', data).subscribe();
-    const req = httpTesting.expectOne('/api/booking-lines/b-1/a-1/s-1');
+    service.update('bl-1', data).subscribe();
+    const req = httpTesting.expectOne('/api/booking-lines/bl-1');
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(data);
     req.flush(mockLine);
   });
 
-  it('delete() should DELETE with composite key in URL', () => {
-    service.delete('b-1', 'a-1', 's-1').subscribe();
-    const req = httpTesting.expectOne('/api/booking-lines/b-1/a-1/s-1');
+  it('delete() should DELETE with bookingLineId in URL', () => {
+    service.delete('bl-1').subscribe();
+    const req = httpTesting.expectOne('/api/booking-lines/bl-1');
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });

@@ -16,7 +16,9 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Booking, BookingService } from './booking.service';
 import { BookingLineService } from './booking-line.service';
+import { BookingActivityService } from './booking-activity.service';
 import { BookingLineDialogComponent, BookingLineDialogData } from './booking-line-dialog.component';
+import { BookingActivityDialogComponent, BookingActivityDialogData } from './booking-activity-dialog.component';
 import { BookingEditDialogComponent, BookingEditDialogData } from './booking-edit-dialog.component';
 import { BookerDialogComponent, BookerDialogData } from '../bookers/booker-dialog.component';
 import { BookerService } from '../bookers/booker.service';
@@ -25,7 +27,7 @@ import { MolliePaymentService } from '../mollie/mollie-payment.service';
 import { DocumentService } from '../documents/document.service';
 import { DocumentUploadDialogComponent, DocumentUploadDialogData } from '../documents/document-upload-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
-import { Booker, Traveler, BookingLine, MolliePayment, MolliePaymentStatusEntry, Document } from '../../shared/models';
+import { Booker, Traveler, BookingLine, BookingActivity, MolliePayment, MolliePaymentStatusEntry, Document } from '../../shared/models';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -239,7 +241,107 @@ interface BookingMolliePaymentLink {
         </mat-card>
       </div>
 
-      <!-- Payments & Documents -->
+      <!-- Activities & Documents -->
+      @if (!isNew()) {
+      <div class="middle-grid">
+        <mat-card class="middle-card">
+          <mat-card-header>
+            <mat-card-title>{{ 'bookingActivity.title' | translate }}</mat-card-title>
+            <button mat-stroked-button color="primary" class="card-header-btn"
+                    (click)="openBookingActivityDialog()">
+              <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            @if (bookingActivities().length > 0) {
+              <table mat-table [dataSource]="bookingActivities()" class="full-width">
+                <ng-container matColumnDef="activity">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.activity' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba">
+                    <div class="activity-cell">
+                      <mat-icon class="activity-icon">local_activity</mat-icon>
+                      <div>
+                        <div class="activity-name">{{ ba.activityName }}</div>
+                        <div class="activity-type">{{ 'activity.' + ba.activityType | translate }}</div>
+                      </div>
+                    </div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="period">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'common.from' | translate }} — {{ 'common.until' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba">{{ ba.fromDate | date:'dd-MM-yyyy' }} — {{ ba.untilDate | date:'dd-MM-yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalPrice">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.totalPrice' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba">
+                    <span class="price-value">{{ ba.totalPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="activityActions">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba" class="actions-cell">
+                    <button mat-icon-button color="primary" (click)="openBookingActivityDialog(ba)"><mat-icon>edit</mat-icon></button>
+                    <button mat-icon-button color="warn" (click)="deleteBookingActivity(ba)"><mat-icon>delete</mat-icon></button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="bookingActivityColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: bookingActivityColumns;"></tr>
+              </table>
+            } @else {
+              <p class="empty-text">{{ 'bookingActivity.noActivitiesYet' | translate }}</p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="middle-card">
+          <mat-card-header>
+            <mat-card-title>{{ 'documents.title' | translate }}</mat-card-title>
+            @if (authService.hasAuthority('BOOKING_CREATE')) {
+              <button mat-stroked-button color="primary" class="card-header-btn"
+                      (click)="openDocumentUploadDialog()">
+                <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+              </button>
+            }
+          </mat-card-header>
+          <mat-card-content>
+            @if (documents().length > 0) {
+              <table mat-table [dataSource]="documents()" class="full-width">
+                <ng-container matColumnDef="displayname">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'documents.displayname' | translate }}</th>
+                  <td mat-cell *matCellDef="let d">
+                    <div class="document-name">
+                      <mat-icon class="doc-icon">description</mat-icon>
+                      {{ d.displayname }}
+                    </div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="createdAt">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | translate }}</th>
+                  <td mat-cell *matCellDef="let d">{{ d.createdAt | date:'dd-MM-yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let d">
+                    <button mat-icon-button color="primary" (click)="viewDocument(d)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="deleteDocument(d)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="documentColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: documentColumns;"></tr>
+              </table>
+            } @else {
+              <p class="empty-text">{{ 'documents.noDocumentsYet' | translate }}</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+      }
+
+      <!-- Payments -->
       @if (!isNew()) {
       <div class="bottom-grid">
         <mat-card class="bottom-card">
@@ -407,52 +509,6 @@ interface BookingMolliePaymentLink {
             }
           </mat-card-content>
         </mat-card>
-
-        <mat-card class="bottom-card">
-          <mat-card-header>
-            <mat-card-title>{{ 'documents.title' | translate }}</mat-card-title>
-            @if (authService.hasAuthority('BOOKING_CREATE')) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
-                      (click)="openDocumentUploadDialog()">
-                <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
-              </button>
-            }
-          </mat-card-header>
-          <mat-card-content>
-            @if (documents().length > 0) {
-              <table mat-table [dataSource]="documents()" class="full-width">
-                <ng-container matColumnDef="displayname">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'documents.displayname' | translate }}</th>
-                  <td mat-cell *matCellDef="let d">
-                    <div class="document-name">
-                      <mat-icon class="doc-icon">description</mat-icon>
-                      {{ d.displayname }}
-                    </div>
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="createdAt">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | translate }}</th>
-                  <td mat-cell *matCellDef="let d">{{ d.createdAt | date:'dd-MM-yyyy' }}</td>
-                </ng-container>
-                <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let d">
-                    <button mat-icon-button color="primary" (click)="viewDocument(d)">
-                      <mat-icon>visibility</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="deleteDocument(d)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="documentColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: documentColumns;"></tr>
-              </table>
-            } @else {
-              <p class="empty-text">{{ 'documents.noDocumentsYet' | translate }}</p>
-            }
-          </mat-card-content>
-        </mat-card>
       </div>
       }
     }
@@ -538,6 +594,21 @@ interface BookingMolliePaymentLink {
       color: #888;
       font-style: italic;
     }
+    .middle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      align-items: start;
+    }
+    .middle-card {
+      border-radius: 12px;
+    }
+    .middle-card mat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
     .bottom-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -595,6 +666,27 @@ interface BookingMolliePaymentLink {
     .price-value {
       font-weight: 600;
       color: #2e7d32;
+    }
+    .activity-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .activity-icon {
+      color: #7b1fa2;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    .activity-name {
+      font-weight: 500;
+    }
+    .activity-type {
+      color: #666;
+      font-size: 12px;
+    }
+    .actions-cell {
+      white-space: nowrap;
     }
     .new-payment-form {
       padding: 16px 0;
@@ -701,6 +793,7 @@ export class BookingDetailComponent implements OnInit {
   private router = inject(Router);
   private bookingService = inject(BookingService);
   private bookingLineService = inject(BookingLineService);
+  private bookingActivityService = inject(BookingActivityService);
   private bookerService = inject(BookerService);
   private travelerService = inject(TravelerService);
   private molliePaymentService = inject(MolliePaymentService);
@@ -763,6 +856,10 @@ export class BookingDetailComponent implements OnInit {
   showNewStatusForm = signal(false);
   creatingStatusEntry = signal(false);
 
+  // Booking Activities
+  bookingActivities = signal<BookingActivity[]>([]);
+  bookingActivityColumns = ['activity', 'period', 'totalPrice', 'activityActions'];
+
   bookingLineColumns = ['accommodation', 'period', 'price', 'actions'];
   travelerColumns = ['name', 'birthdate', 'actions'];
   paymentColumns = ['description', 'amount', 'status', 'createdAt', 'expand'];
@@ -813,6 +910,7 @@ export class BookingDetailComponent implements OnInit {
             next: (lines) => this.bookingLines.set(lines),
           });
 
+          this.loadBookingActivities();
           this.loadPayments();
           this.loadDocuments();
         },
@@ -918,6 +1016,7 @@ export class BookingDetailComponent implements OnInit {
     const data: BookingLineDialogData = {
       bookingId: this.bookingId,
       bookingLine: line,
+      existingLines: this.bookingLines(),
     };
 
     this.dialog.open(BookingLineDialogComponent, { data, width: '500px' })
@@ -995,7 +1094,7 @@ export class BookingDetailComponent implements OnInit {
   deleteBookingLine(line: BookingLine) {
     if (!confirm(this.translate.instant('bookings.deleteConfirm', { name: line.accommodationName }))) return;
 
-    this.bookingLineService.delete(line.bookingId, line.accommodationId, line.supplierId)
+    this.bookingLineService.delete(line.bookingLineId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -1005,6 +1104,53 @@ export class BookingDetailComponent implements OnInit {
         error: () => {
           this.snackBar.open(this.translate.instant('bookings.removeError'), this.translate.instant('common.close'), { duration: 5000 });
         },
+      });
+  }
+
+  openBookingActivityDialog(ba?: BookingActivity) {
+    if (!this.bookingId) return;
+
+    const data: BookingActivityDialogData = {
+      bookingId: this.bookingId,
+      bookingActivity: ba,
+    };
+
+    this.dialog.open(BookingActivityDialogComponent, { data, width: '500px' })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.loadBookingActivities();
+          this.reloadBookingData();
+        }
+      });
+  }
+
+  deleteBookingActivity(ba: BookingActivity) {
+    if (!confirm(this.translate.instant('bookings.deleteConfirm', { name: ba.activityName }))) return;
+
+    this.bookingActivityService.delete(ba.bookingActivityId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snackBar.open(this.translate.instant('bookingActivity.removed'), this.translate.instant('common.close'), { duration: 3000 });
+          this.loadBookingActivities();
+          this.reloadBookingData();
+        },
+        error: () => {
+          this.snackBar.open(this.translate.instant('bookings.removeError'), this.translate.instant('common.close'), { duration: 5000 });
+        },
+      });
+  }
+
+  private loadBookingActivities() {
+    if (!this.bookingId) return;
+
+    this.bookingActivityService.getByBookingId(this.bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (activities) => this.bookingActivities.set(activities),
+        error: () => this.bookingActivities.set([]),
       });
   }
 

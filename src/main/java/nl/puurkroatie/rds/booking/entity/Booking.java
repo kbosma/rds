@@ -30,6 +30,9 @@ public class Booking {
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     private List<BookingLine> bookingLines = new ArrayList<>();
 
+    @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+    private List<BookingActivity> bookingActivities = new ArrayList<>();
+
     @Column(name = "booking_number", nullable = false)
     private String bookingNumber;
 
@@ -127,17 +130,29 @@ public class Booking {
 
     @Transient
     public BigDecimal getTotalSum() {
-        if (bookingLines == null || bookingLines.isEmpty()) {
-            return BigDecimal.ZERO;
+        BigDecimal lineSum = BigDecimal.ZERO;
+        if (bookingLines != null) {
+            lineSum = bookingLines.stream()
+                    .map(BookingLine::getPrice)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
-        return bookingLines.stream()
-                .map(BookingLine::getPrice)
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal activitySum = BigDecimal.ZERO;
+        if (bookingActivities != null) {
+            activitySum = bookingActivities.stream()
+                    .map(BookingActivity::getTotalPrice)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        return lineSum.add(activitySum);
     }
 
     public List<BookingLine> getBookingLines() {
         return bookingLines;
+    }
+
+    public List<BookingActivity> getBookingActivities() {
+        return bookingActivities;
     }
 
     public LocalDateTime getCreatedAt() {

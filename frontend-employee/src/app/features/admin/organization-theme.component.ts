@@ -56,6 +56,17 @@ import { OrganizationTheme } from '../../shared/models';
                      class="color-picker" />
             </div>
 
+            <div class="color-fields">
+              <mat-form-field>
+                <mat-label>{{ 'theme.cardTitleColor' | translate }}</mat-label>
+                <input matInput formControlName="cardTitleColor" type="text" />
+              </mat-form-field>
+              <input type="color"
+                     [value]="form.get('cardTitleColor')!.value"
+                     (input)="form.get('cardTitleColor')!.setValue($any($event.target).value)"
+                     class="color-picker" />
+            </div>
+
             <mat-form-field class="full-width">
               <mat-label>{{ 'theme.logoUrl' | translate }}</mat-label>
               <input matInput formControlName="logoUrl" type="text" />
@@ -89,6 +100,14 @@ import { OrganizationTheme } from '../../shared/models';
               </div>
               <div class="preview-nav-item">
                 <span>Boekers</span>
+              </div>
+            </div>
+            <div class="preview-card-section">
+              <div class="preview-card-title" [style.color]="form.get('cardTitleColor')!.value">
+                {{ 'theme.previewCardTitle' | translate }}
+              </div>
+              <div class="preview-card-body">
+                {{ 'theme.previewCardBody' | translate }}
               </div>
             </div>
             <div class="preview-accent-bar">
@@ -157,6 +176,19 @@ import { OrganizationTheme } from '../../shared/models';
     .preview-nav-item.active {
       font-weight: 500;
     }
+    .preview-card-section {
+      padding: 16px;
+      background: white;
+    }
+    .preview-card-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .preview-card-body {
+      font-size: 13px;
+      color: #666;
+    }
     .preview-accent-bar {
       display: flex;
       gap: 8px;
@@ -188,6 +220,7 @@ export class OrganizationThemeComponent implements OnInit {
   form = this.fb.group({
     primaryColor: ['#1976d2', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
     accentColor: ['#ff9800', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+    cardTitleColor: ['#333333', [Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
     logoUrl: [''],
   });
 
@@ -198,6 +231,7 @@ export class OrganizationThemeComponent implements OnInit {
         this.form.patchValue({
           primaryColor: theme.primaryColor,
           accentColor: theme.accentColor,
+          cardTitleColor: theme.cardTitleColor ?? '#333333',
           logoUrl: theme.logoUrl ?? '',
         });
       },
@@ -217,6 +251,7 @@ export class OrganizationThemeComponent implements OnInit {
       organizationId,
       primaryColor: this.form.value.primaryColor!,
       accentColor: this.form.value.accentColor!,
+      cardTitleColor: this.form.value.cardTitleColor || null,
       logoUrl: this.form.value.logoUrl || null,
     };
 

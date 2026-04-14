@@ -20,7 +20,9 @@
   },
   "nav": {
     "overview": "Overzicht",
+    "itinerary": "Reisschema",
     "documents": "Documenten",
+    "activities": "Activiteiten",
     "payments": "Betalingen",
     "logout": "Uitloggen"
   },
@@ -41,12 +43,45 @@
     "documents": "Documenten",
     "viewDocuments": "Bekijk uw reisdocumenten",
     "payments": "Betalingen",
-    "viewPayments": "Bekijk en betaal uw boeking"
+    "viewPayments": "Bekijk en betaal uw boeking",
+    "itinerary": "Reisschema",
+    "viewItinerary": "Bekijk uw volledige reisplanning",
+    "activities": "Activiteiten",
+    "viewActivities": "Bekijk uw geplande activiteiten"
   },
   "documents": {
     "title": "Documenten",
     "document": "Document",
     "noDocuments": "Geen documenten beschikbaar."
+  },
+  "itinerary": {
+    "title": "Reisschema",
+    "subtitle": "Uw volledige reisplanning op een rij",
+    "noItems": "Er zijn nog geen items in uw reisschema.",
+    "period": "Periode",
+    "accommodations": "Accommodaties",
+    "activities": "Activiteiten",
+    "allDay": "Hele dag",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "ongoing": "Doorlopend verblijf",
+    "nights": "{{count}} nachten",
+    "type_tour": "Tour",
+    "type_excursie": "Excursie",
+    "type_ticket": "Ticket",
+    "type_transfer": "Transfer"
+  },
+  "activities": {
+    "title": "Activiteiten",
+    "activity": "Activiteit",
+    "period": "Periode",
+    "meetingPoint": "Trefpunt",
+    "totalPrice": "Totaalprijs",
+    "noActivities": "Geen activiteiten beschikbaar.",
+    "type_tour": "Tour",
+    "type_excursie": "Excursie",
+    "type_ticket": "Ticket",
+    "type_transfer": "Transfer"
   },
   "payments": {
     "title": "Betalingen",

@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface BookerAddressRepository extends JpaRepository<BookerAddress, BookerAddressId> {
 
     List<BookerAddress> findByBookerTenantOrganization(UUID tenantOrganization);
+
+    List<BookerAddress> findByBookerBookerId(UUID bookerId);
 }

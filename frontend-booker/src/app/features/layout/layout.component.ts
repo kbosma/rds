@@ -37,8 +37,14 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       <a mat-button routerLink="/dashboard" routerLinkActive="active-tab">
         <mat-icon>home</mat-icon> {{ 'nav.overview' | translate }}
       </a>
+      <a mat-button routerLink="/itinerary" routerLinkActive="active-tab">
+        <mat-icon>map</mat-icon> {{ 'nav.itinerary' | translate }}
+      </a>
       <a mat-button routerLink="/documents" routerLinkActive="active-tab">
         <mat-icon>description</mat-icon> {{ 'nav.documents' | translate }}
+      </a>
+      <a mat-button routerLink="/activities" routerLinkActive="active-tab">
+        <mat-icon>local_activity</mat-icon> {{ 'nav.activities' | translate }}
       </a>
       <a mat-button routerLink="/payments" routerLinkActive="active-tab">
         <mat-icon>payments</mat-icon> {{ 'nav.payments' | translate }}

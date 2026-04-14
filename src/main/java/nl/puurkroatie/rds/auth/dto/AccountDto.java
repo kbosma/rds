@@ -19,6 +19,7 @@ public class AccountDto {
     private UUID personId;
     private Boolean locked;
     private Boolean mustChangePassword;
+    private Boolean totpEnabled;
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private UUID createdBy;
@@ -27,13 +28,14 @@ public class AccountDto {
 
     @Default
     @JsonCreator
-    public AccountDto(UUID accountId, String userName, String password, UUID personId, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public AccountDto(UUID accountId, String userName, String password, UUID personId, Boolean locked, Boolean mustChangePassword, Boolean totpEnabled, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.accountId = accountId;
         this.userName = userName;
         this.password = password;
         this.personId = personId;
         this.locked = locked;
         this.mustChangePassword = mustChangePassword;
+        this.totpEnabled = totpEnabled;
         this.expiresAt = expiresAt;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
@@ -41,12 +43,13 @@ public class AccountDto {
         this.modifiedBy = modifiedBy;
     }
 
-    public AccountDto(String userName, String password, UUID personId, Boolean locked, Boolean mustChangePassword, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public AccountDto(String userName, String password, UUID personId, Boolean locked, Boolean mustChangePassword, Boolean totpEnabled, LocalDateTime expiresAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.userName = userName;
         this.password = password;
         this.personId = personId;
         this.locked = locked;
         this.mustChangePassword = mustChangePassword;
+        this.totpEnabled = totpEnabled;
         this.expiresAt = expiresAt;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
@@ -76,6 +79,10 @@ public class AccountDto {
 
     public Boolean getMustChangePassword() {
         return mustChangePassword;
+    }
+
+    public Boolean getTotpEnabled() {
+        return totpEnabled;
     }
 
     public LocalDateTime getExpiresAt() {
