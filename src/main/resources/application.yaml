@@ -1,17 +1,17 @@
 server:
   port: 8666
-  #  address: 127.0.0.100
-  address: 0.0.0.0
+  address: 127.0.0.1
+#  address: 0.0.0.0
 
   shutdown: graceful
   max-http-request-header-size: 16KB
 
   ssl:
-    enabled: true
-    key-store: /Users/kees/Code/rds/rds-platform.p12
-    key-store-password: rdsrds
-    key-store-type: PKCS12
-    key-alias: rds-platform
+    enabled: false
+#    key-store: /Users/kees/Code/rds/rds-platform.p12
+#    key-store-password: rdsrds
+#    key-store-type: PKCS12
+#    key-alias: rds-platform
 
   jetty:
     threads:
@@ -21,7 +21,7 @@ server:
 
     accesslog:
       enabled: true
-      directory: /opt/integratie/log/fluent-controller
+      directory: /opt/rds/log
       filename: access.log
       file-date-format: .yyyy-MM-dd
       retention-period: 30
@@ -32,15 +32,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/rdsdb
     username: rds
     password: rds
+#    password: strongpassword
     driverClassName: org.postgresql.Driver
   jpa:
-    defer-datasource-initialization: true
     hibernate:
-      ddl-auto: create-drop
-  sql:
-    init:
-      platform: postgres
-      mode: always
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
 app:
   jwt:
@@ -60,4 +60,6 @@ app:
     key: Bearer test_GpPHhs7SHk73fAyMyaJUFUKJQdxDD5
     urls:
       webhook: http://217.63.23.31:8082/api/mollie/payments/webhook
-      redirect: http://217.63.23.31:5003/payments
+      redirect: http://178.104.163.88:5003/payments
+#      webhook: http://178.104.163.88/api/mollie/payments/webhook
+#      redirect: https://rds.kbtg/booker/payments

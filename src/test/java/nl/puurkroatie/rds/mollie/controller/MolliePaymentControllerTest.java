@@ -15,13 +15,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -35,8 +32,6 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
 
     private static final UUID PAYMENT_ID = UUID.fromString("cc000000-0000-0000-0000-000000000001");
     private static final String MOLLIE_EXTERNAL_ID = "tr_test123";
-    private static final String STATUS_OPEN = "open";
-    private static final String STATUS_PAID = "paid";
 
     @MockitoBean
     private MollieService mollieService;
@@ -45,7 +40,6 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
         return new MolliePaymentDto(
                 PAYMENT_ID,
                 MOLLIE_EXTERNAL_ID,
-                STATUS_OPEN,
                 MolliePaymentMethod.IDEAL,
                 new BigDecimal("125.00"),
                 "EUR",
@@ -105,7 +99,7 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
         String token = adminToken();
 
         String json = objectMapper.writeValueAsString(new MolliePaymentDto(
-                null, STATUS_OPEN, null,
+                null, null,
                 new BigDecimal("125.00"), "EUR", "Boeking BK-2026-001",
                 null, null, null, null, null, null
         ));
@@ -244,7 +238,7 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
 
     @Test
     void unauthenticated_create_returns401() throws Exception {
-        String json = "{\"status\":\"open\",\"amount\":100,\"currency\":\"EUR\"}";
+        String json = "{\"amount\":100,\"currency\":\"EUR\"}";
 
         mockMvc.perform(post("/api/mollie/payments")
                         .contentType(MediaType.APPLICATION_JSON)

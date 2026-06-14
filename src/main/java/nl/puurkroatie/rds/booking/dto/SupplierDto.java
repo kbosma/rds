@@ -24,7 +24,6 @@ public class SupplierDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public SupplierDto(UUID supplierId, String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.supplierId = supplierId;
         this.key = key;
@@ -36,14 +35,15 @@ public class SupplierDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public SupplierDto(String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public SupplierDto(UUID supplierId, String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.supplierId = supplierId;
         this.key = key;
         this.name = name;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getSupplierId() {

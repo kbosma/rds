@@ -12,6 +12,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.time.LocalDateTime;
@@ -37,6 +40,7 @@ public class Person {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Organization organization;
 
     @Column(name = "created_at", nullable = false, updatable = false)

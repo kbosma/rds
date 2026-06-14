@@ -62,6 +62,13 @@ interface PersonOption {
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="onSave()">
+            @if (!isNew()) {
+              <div class="readonly-field">
+                <span class="readonly-label">{{ 'accounts.person' | translate }}</span>
+                <span class="readonly-value">{{ personDisplayName() }}</span>
+              </div>
+            }
+
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ 'accounts.username' | translate }}</mat-label>
               <input matInput formControlName="userName" />
@@ -72,16 +79,16 @@ interface PersonOption {
                 <mat-label>{{ 'auth.password' | translate }}</mat-label>
                 <input matInput type="password" formControlName="password" />
               </mat-form-field>
-            }
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>{{ 'accounts.person' | translate }}</mat-label>
-              <mat-select formControlName="personId">
-                @for (person of personOptions(); track person.persoonId) {
-                  <mat-option [value]="person.persoonId">{{ person.displayName }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'accounts.person' | translate }}</mat-label>
+                <mat-select formControlName="personId">
+                  @for (person of personOptions(); track person.persoonId) {
+                    <mat-option [value]="person.persoonId">{{ person.displayName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
 
             <div class="checkbox-row">
               <mat-checkbox formControlName="locked">{{ 'accounts.locked' | translate }}</mat-checkbox>
@@ -91,7 +98,7 @@ interface PersonOption {
             <div class="actions">
               <a mat-button routerLink="/admin/accounts"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</a>
               <button mat-raised-button color="primary" type="submit"
-                      [disabled]="saving() || form.invalid">
+                      [disabled]="saving() || form.invalid || (!isNew() && !form.dirty)">
                 @if (saving()) {
                   <mat-spinner diameter="20"></mat-spinner>
                 } @else {
@@ -181,6 +188,20 @@ interface PersonOption {
       gap: 24px;
       margin: 8px 0 16px;
     }
+    .readonly-field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 16px;
+    }
+    .readonly-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .readonly-value {
+      font-size: 16px;
+      color: #333;
+    }
     .actions {
       display: flex;
       justify-content: flex-end;
@@ -237,6 +258,7 @@ export class AccountDetailComponent implements OnInit {
   saving = signal(false);
   addingRole = signal(false);
   currentName = signal('');
+  personDisplayName = signal('');
   personOptions = signal<PersonOption[]>([]);
   assignedRoles = signal<AccountRole[]>([]);
   allRoles = signal<Role[]>([]);
@@ -261,6 +283,8 @@ export class AccountDetailComponent implements OnInit {
       this.accountId = id;
       this.form.get('password')!.clearValidators();
       this.form.get('password')!.updateValueAndValidity();
+      this.form.get('personId')!.clearValidators();
+      this.form.get('personId')!.updateValueAndValidity();
       this.loading.set(true);
       this.loadAccount(id);
     } else {
@@ -293,8 +317,16 @@ export class AccountDetailComponent implements OnInit {
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ account, persons, accountRoles, roles }) => {
         this.currentName.set(account.userName);
-        this.personOptions.set(this.mapPersonOptions(persons));
         this.allRoles.set(roles);
+
+        // Resolve person display name
+        const personMap = new Map(persons.map(p => [p.persoonId, p]));
+        const person = personMap.get(account.personId);
+        if (person) {
+          this.personDisplayName.set(
+            `${person.firstname} ${person.prefix ? person.prefix + ' ' : ''}${person.lastname}`
+          );
+        }
 
         const assigned = accountRoles.filter(ar => ar.account.accountId === id);
         this.assignedRoles.set(assigned);
@@ -302,7 +334,6 @@ export class AccountDetailComponent implements OnInit {
 
         this.form.patchValue({
           userName: account.userName,
-          personId: account.personId,
           locked: account.locked,
           mustChangePassword: account.mustChangePassword,
         });
@@ -326,17 +357,15 @@ export class AccountDetailComponent implements OnInit {
     this.saving.set(true);
 
     const { userName, password, personId, locked, mustChangePassword } = this.form.value;
-    const payload: Record<string, unknown> = {
-      userName: userName!,
-      personId: personId!,
-      locked: locked!,
-      mustChangePassword: mustChangePassword!,
-    };
-    if (this.isNew() && password) {
-      payload['password'] = password;
-    }
 
     if (this.isNew()) {
+      const payload: Record<string, unknown> = {
+        userName: userName!,
+        personId: personId!,
+        locked: locked!,
+        mustChangePassword: mustChangePassword!,
+        password: password!,
+      };
       this.accountService.create(payload as Partial<Account>)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -351,12 +380,18 @@ export class AccountDetailComponent implements OnInit {
           },
         });
     } else {
+      const payload: Record<string, unknown> = {
+        userName: userName!,
+        locked: locked!,
+        mustChangePassword: mustChangePassword!,
+      };
       this.accountService.update(this.accountId!, payload as Partial<Account>)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.saving.set(false);
             this.currentName.set(userName!);
+            this.form.markAsPristine();
             this.snackBar.open(this.translate.instant('accounts.saved'), this.translate.instant('common.close'), { duration: 3000 });
           },
           error: () => {

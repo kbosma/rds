@@ -145,8 +145,8 @@ public class AuthController {
 
     @PutMapping("/change-password")
     public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordDto request) {
-        if (!isEmployee()) {
-            throw new AccessDeniedException("Access denied: only employees can use this endpoint");
+        if (isAdmin()) {
+            throw new AccessDeniedException("Access denied: admins cannot use this endpoint");
         }
         accountService.changePassword(TenantContext.getAccountId(), request);
         return ResponseEntity.ok().build();
@@ -196,8 +196,8 @@ public class AuthController {
                 account.getMustChangePassword());
     }
 
-    private boolean isEmployee() {
-        return TenantContext.hasRole("EMPLOYEE") && !TenantContext.hasRole("MANAGER") && !TenantContext.hasRole("ADMIN");
+    private boolean isAdmin() {
+        return TenantContext.hasRole("ADMIN");
     }
 
     private String buildPersonName(Person person) {

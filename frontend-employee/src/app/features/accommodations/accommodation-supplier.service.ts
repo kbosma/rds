@@ -10,4 +10,12 @@ export class AccommodationSupplierService {
   getAll() {
     return this.api.getAll<AccommodationSupplier>(this.endpoint);
   }
+
+  create(link: AccommodationSupplier) {
+    return this.api.create<AccommodationSupplier>(this.endpoint, link);
+  }
+
+  delete(accommodationId: string, supplierId: string) {
+    return this.api.delete(this.endpoint, `${accommodationId}/${supplierId}`);
+  }
 }

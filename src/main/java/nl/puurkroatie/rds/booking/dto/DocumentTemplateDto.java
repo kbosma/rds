@@ -24,7 +24,6 @@ public class DocumentTemplateDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public DocumentTemplateDto(UUID documentTemplateId, String name, String description, byte[] templateData, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.documentTemplateId = documentTemplateId;
         this.name = name;
@@ -37,7 +36,9 @@ public class DocumentTemplateDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public DocumentTemplateDto(String name, String description, byte[] templateData, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public DocumentTemplateDto(UUID documentTemplateId, String name, String description, byte[] templateData, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.documentTemplateId = documentTemplateId;
         this.name = name;
         this.description = description;
         this.templateData = templateData;
@@ -45,7 +46,6 @@ public class DocumentTemplateDto {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getDocumentTemplateId() {

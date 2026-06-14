@@ -13,7 +13,6 @@ public class OrganizationThemeDto {
 
     private UUID organizationThemeId;
 
-    @NotNull
     private UUID organizationId;
 
     @NotNull
@@ -36,11 +35,24 @@ public class OrganizationThemeDto {
     private UUID modifiedBy;
 
     @Default
-    @JsonCreator
     public OrganizationThemeDto(UUID organizationThemeId, UUID organizationId, String primaryColor, String accentColor, String logoUrl,
                                 String cardTitleColor, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.organizationThemeId = organizationThemeId;
         this.organizationId = organizationId;
+        this.primaryColor = primaryColor;
+        this.accentColor = accentColor;
+        this.logoUrl = logoUrl;
+        this.cardTitleColor = cardTitleColor;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.modifiedAt = modifiedAt;
+        this.modifiedBy = modifiedBy;
+    }
+
+    @JsonCreator
+    public OrganizationThemeDto(UUID organizationThemeId, String primaryColor, String accentColor, String logoUrl,
+                                String cardTitleColor, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.organizationThemeId = organizationThemeId;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;

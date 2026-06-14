@@ -44,6 +44,7 @@ public class OrganizationThemeController {
     }
 
     @GetMapping("/my-theme")
+    @PreAuthorize("hasAuthority('ORGANIZATION_THEME_READ')")
     public ResponseEntity<OrganizationThemeDto> findMyTheme() {
         UUID organizationId = TenantContext.getOrganizationId();
         return organizationThemeService.findByOrganizationId(organizationId)

@@ -7,6 +7,8 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "role_authority")
@@ -16,11 +18,13 @@ public class RoleAuthority {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Role role;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "authority_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Authority authority;
 
     protected RoleAuthority() {

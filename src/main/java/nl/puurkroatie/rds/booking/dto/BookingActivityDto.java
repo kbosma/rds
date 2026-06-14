@@ -1,5 +1,7 @@
 package nl.puurkroatie.rds.booking.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import nl.puurkroatie.rds.common.Default;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -28,6 +30,7 @@ public class BookingActivityDto {
     private UUID modifiedBy;
     private UUID tenantOrganization;
 
+    @Default
     public BookingActivityDto(UUID bookingActivityId, UUID bookingId, UUID activityId,
                               String activityName, String activityType,
                               LocalDateTime fromDate, LocalDateTime untilDate, String meetingPoint, BigDecimal totalPrice,
@@ -48,6 +51,27 @@ public class BookingActivityDto {
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
         this.tenantOrganization = tenantOrganization;
+    }
+
+    @JsonCreator
+    public BookingActivityDto(UUID bookingActivityId, UUID bookingId, UUID activityId,
+                              String activityName, String activityType,
+                              LocalDateTime fromDate, LocalDateTime untilDate, String meetingPoint, BigDecimal totalPrice,
+                              LocalDateTime createdAt, UUID createdBy,
+                              LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.bookingActivityId = bookingActivityId;
+        this.bookingId = bookingId;
+        this.activityId = activityId;
+        this.activityName = activityName;
+        this.activityType = activityType;
+        this.fromDate = fromDate;
+        this.untilDate = untilDate;
+        this.meetingPoint = meetingPoint;
+        this.totalPrice = totalPrice;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.modifiedAt = modifiedAt;
+        this.modifiedBy = modifiedBy;
     }
 
     public UUID getBookingActivityId() {

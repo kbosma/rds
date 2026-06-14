@@ -8,7 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from './theme.service';
-import { AuthService } from '../../core/auth/auth.service';
 import { OrganizationTheme } from '../../shared/models';
 
 @Component({
@@ -211,7 +210,6 @@ import { OrganizationTheme } from '../../shared/models';
 })
 export class OrganizationThemeComponent implements OnInit {
   private themeService = inject(ThemeService);
-  private auth = inject(AuthService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
 
@@ -244,11 +242,7 @@ export class OrganizationThemeComponent implements OnInit {
   save(): void {
     if (this.form.invalid) return;
 
-    const organizationId = this.auth.currentUser()?.organizationId;
-    if (!organizationId) return;
-
     const payload: Partial<OrganizationTheme> = {
-      organizationId,
       primaryColor: this.form.value.primaryColor!,
       accentColor: this.form.value.accentColor!,
       cardTitleColor: this.form.value.cardTitleColor || null,

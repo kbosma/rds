@@ -28,7 +28,6 @@ public class BookingDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookingId = bookingId;
         this.bookerId = bookerId;
@@ -44,15 +43,19 @@ public class BookingDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public BookingDto(UUID bookerId, String bookingNumber, String bookingStatus, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.bookingId = bookingId;
         this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
+        this.fromDate = fromDate;
+        this.untilDate = untilDate;
+        this.totalSum = totalSum;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getBookingId() {

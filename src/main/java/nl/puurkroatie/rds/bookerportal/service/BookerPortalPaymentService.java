@@ -8,7 +8,6 @@ import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentRequestDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentResponseDto;
 import nl.puurkroatie.rds.mollie.entity.MolliePayment;
-import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
 import nl.puurkroatie.rds.mollie.mapper.MolliePaymentMapper;
 import nl.puurkroatie.rds.mollie.mapper.MolliePaymentStatusEntryMapper;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentRepository;
@@ -97,15 +96,10 @@ public class BookerPortalPaymentService {
             String checkoutUrl = response.getLinks() != null && response.getLinks().getCheckout() != null
                     ? response.getLinks().getCheckout().getHref()
                     : null;
-            MolliePaymentStatus status = response.getStatus() != null
-                    ? MolliePaymentStatus.fromValue(response.getStatus())
-                    : null;
-
-            // Update existing payment with Mollie external ID, checkout URL and status
+            // Update existing payment with Mollie external ID and checkout URL
             MolliePayment updated = new MolliePayment(
                     payment.getMolliePaymentId(),
                     response.getId(),
-                    status,
                     payment.getMethod(),
                     payment.getAmount(),
                     payment.getCurrency(),

@@ -1,5 +1,7 @@
 package nl.puurkroatie.rds.booking.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import nl.puurkroatie.rds.common.Default;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -30,6 +32,7 @@ public class BookingLineDto {
     private UUID modifiedBy;
     private UUID tenantOrganization;
 
+    @Default
     public BookingLineDto(UUID bookingLineId, UUID bookingId, UUID accommodationId, UUID supplierId,
                           String accommodationName, String supplierName,
                           LocalDate fromDate, LocalDate untilDate, BigDecimal price,
@@ -50,6 +53,27 @@ public class BookingLineDto {
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
         this.tenantOrganization = tenantOrganization;
+    }
+
+    @JsonCreator
+    public BookingLineDto(UUID bookingLineId, UUID bookingId, UUID accommodationId, UUID supplierId,
+                          String accommodationName, String supplierName,
+                          LocalDate fromDate, LocalDate untilDate, BigDecimal price,
+                          LocalDateTime createdAt, UUID createdBy,
+                          LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.bookingLineId = bookingLineId;
+        this.bookingId = bookingId;
+        this.accommodationId = accommodationId;
+        this.supplierId = supplierId;
+        this.accommodationName = accommodationName;
+        this.supplierName = supplierName;
+        this.fromDate = fromDate;
+        this.untilDate = untilDate;
+        this.price = price;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.modifiedAt = modifiedAt;
+        this.modifiedBy = modifiedBy;
     }
 
     public UUID getBookingLineId() {

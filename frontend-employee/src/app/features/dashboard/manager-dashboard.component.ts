@@ -12,7 +12,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { BookingService } from '../bookings/booking.service';
 import { BookingLineService } from '../bookings/booking-line.service';
 import { MolliePaymentService } from '../mollie/mollie-payment.service';
-import { Booking } from '../../shared/models';
+import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -364,8 +364,9 @@ export class ManagerDashboardComponent implements OnInit {
       bookings: this.bookingService.getAll(),
       bookingLines: this.bookingLineService.getAll(),
       payments: this.molliePaymentService.getAll(),
+      statusEntries: this.molliePaymentService.getAllStatusEntries(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ bookings, bookingLines, payments }) => {
+      next: ({ bookings, bookingLines, payments, statusEntries }) => {
         const yearBookings = bookings.filter(b => this.isInYear(b));
         const yearBookingIds = new Set(yearBookings.map(b => b.bookingId));
         const yearLines = bookingLines.filter(bl => yearBookingIds.has(bl.bookingId));
@@ -376,7 +377,12 @@ export class ManagerDashboardComponent implements OnInit {
         this.futureBookings.set(yearBookings.filter(b => b.fromDate && b.fromDate > today).length);
         const yearPayments = payments.filter(p => p.createdAt && new Date(p.createdAt).getFullYear() === this.currentYear);
         const revenue = yearBookings.reduce((sum, b) => sum + (b.totalSum ?? 0), 0);
-        const paid = yearPayments.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.amount ?? 0), 0);
+        // Build map of latest status per payment from status entries
+        const latestStatusMap = new Map<string, string>();
+        for (const entry of statusEntries) {
+          latestStatusMap.set(entry.molliePaymentId, entry.status?.toLowerCase() ?? '');
+        }
+        const paid = yearPayments.filter(p => latestStatusMap.get(p.molliePaymentId) === 'paid').reduce((sum, p) => sum + (p.amount ?? 0), 0);
         this.totalRevenue.set(revenue);
         this.paidAmount.set(paid);
         this.outstandingAmount.set(revenue - paid);

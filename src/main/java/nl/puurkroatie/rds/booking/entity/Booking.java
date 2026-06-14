@@ -2,6 +2,9 @@ package nl.puurkroatie.rds.booking.entity;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.math.BigDecimal;
@@ -22,6 +25,7 @@ public class Booking {
 
     @OneToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "booker_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booker booker;
 
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)

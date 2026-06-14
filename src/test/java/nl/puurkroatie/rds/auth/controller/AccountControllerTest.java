@@ -64,10 +64,8 @@ class AccountControllerTest extends AbstractAuthControllerTest {
     void manager_updateAccount_ownOrganization_returns200() throws Exception {
         String token = managerToken();
 
-        String accountJson = "{\"userName\":\"pieter.degroot\",\"password\":\"password123\"," +
-                "\"personId\":\"" + MANAGER_PERSON_ID + "\"," +
-                "\"locked\":false,\"mustChangePassword\":true," +
-                "\"expiresAt\":\"2027-06-01T00:00:00\"}";
+        String accountJson = "{\"userName\":\"pieter.degroot\"," +
+                "\"locked\":false,\"mustChangePassword\":true}";
 
         mockMvc.perform(put("/api/accounts/" + MANAGER_ACCOUNT_ID)
                         .header("Authorization", "Bearer " + token)
@@ -82,10 +80,8 @@ class AccountControllerTest extends AbstractAuthControllerTest {
     void manager_updateAccount_otherOrganization_returns403() throws Exception {
         String token = managerToken();
 
-        String accountJson = "{\"userName\":\"jan.vanbergen\",\"password\":\"password123\"," +
-                "\"personId\":\"" + ADMIN_PERSON_ID + "\"," +
-                "\"locked\":false,\"mustChangePassword\":false," +
-                "\"expiresAt\":\"2027-01-01T00:00:00\"}";
+        String accountJson = "{\"userName\":\"jan.vanbergen\"," +
+                "\"locked\":false,\"mustChangePassword\":false}";
 
         mockMvc.perform(put("/api/accounts/" + ADMIN_ACCOUNT_ID)
                         .header("Authorization", "Bearer " + token)
@@ -149,8 +145,7 @@ class AccountControllerTest extends AbstractAuthControllerTest {
     void employee_updateAccount_returns403() throws Exception {
         String token = employeeToken();
 
-        String accountJson = "{\"userName\":\"maria.jansen\",\"password\":\"password123\"," +
-                "\"personId\":\"" + EMPLOYEE_PERSON_ID + "\"," +
+        String accountJson = "{\"userName\":\"maria.jansen\"," +
                 "\"locked\":false,\"mustChangePassword\":false}";
 
         mockMvc.perform(put("/api/accounts/" + EMPLOYEE_ACCOUNT_ID)

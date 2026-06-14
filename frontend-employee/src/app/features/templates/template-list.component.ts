@@ -168,7 +168,7 @@ export class TemplateListComponent implements OnInit {
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
 
-  canEdit = this.authService.hasRole('MANAGER');
+  canEdit = this.authService.hasAuthority('TEMPLATE_CREATE');
 
   allTemplates = signal<DocumentTemplate[]>([]);
   filtered = signal<DocumentTemplate[]>([]);

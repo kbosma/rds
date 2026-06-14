@@ -25,7 +25,6 @@ public class DocumentDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.documentId = documentId;
         this.bookingId = bookingId;
@@ -39,7 +38,9 @@ public class DocumentDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public DocumentDto(UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.documentId = documentId;
         this.bookingId = bookingId;
         this.displayname = displayname;
         this.mimeType = mimeType;
@@ -48,7 +49,6 @@ public class DocumentDto {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getDocumentId() {

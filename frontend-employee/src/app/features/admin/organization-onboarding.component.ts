@@ -6,7 +6,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +16,6 @@ import { PersonService } from './person.service';
 import { AccountService } from './account.service';
 import { AccountRoleService } from './account-role.service';
 import { RoleService } from './role.service';
-import { Role } from '../../shared/models';
 
 @Component({
   selector: 'app-organization-onboarding',
@@ -29,7 +27,6 @@ import { Role } from '../../shared/models';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatSelectModule,
     MatCheckboxModule,
     MatSnackBarModule,
     MatCardModule,
@@ -131,11 +128,7 @@ import { Role } from '../../shared/models';
         <form [formGroup]="roleForm" class="step-form">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>{{ 'onboarding.role' | translate }}</mat-label>
-            <mat-select formControlName="roleId">
-              @for (role of availableRoles(); track role.roleId) {
-                <mat-option [value]="role.roleId">{{ role.description }}</mat-option>
-              }
-            </mat-select>
+            <input matInput [value]="'MANAGER'" disabled />
           </mat-form-field>
 
           @if (createdOrganizationName()) {
@@ -238,7 +231,6 @@ export class OrganizationOnboardingComponent {
   private roleService = inject(RoleService);
 
   saving = signal(false);
-  availableRoles = signal<Role[]>([]);
 
   private createdOrganizationId = '';
   private createdPersonId = '';
@@ -262,7 +254,7 @@ export class OrganizationOnboardingComponent {
   accountForm = this.fb.group({
     userName: ['', Validators.required],
     password: ['', Validators.required],
-    mustChangePassword: [true],
+    mustChangePassword: [{ value: true, disabled: true }],
   });
 
   roleForm = this.fb.group({
@@ -271,17 +263,16 @@ export class OrganizationOnboardingComponent {
 
   constructor() {
     this.loadRoles();
-
-    this.roleForm.get('roleId')!.valueChanges.subscribe(roleId => {
-      const role = this.availableRoles().find(r => r.roleId === roleId);
-      this.selectedRoleName.set(role?.description || '');
-    });
   }
 
   private loadRoles() {
     this.roleService.getAll().subscribe({
       next: (roles) => {
-        this.availableRoles.set(roles.filter(r => r.description !== 'ADMIN'));
+        const managerRole = roles.find(r => r.description === 'MANAGER');
+        if (managerRole) {
+          this.roleForm.patchValue({ roleId: managerRole.roleId });
+          this.selectedRoleName.set('MANAGER');
+        }
       },
     });
   }
@@ -335,7 +326,7 @@ export class OrganizationOnboardingComponent {
     this.saving.set(true);
 
     const accountData = {
-      ...this.accountForm.value,
+      ...this.accountForm.getRawValue(),
       personId: this.createdPersonId,
     };
 

@@ -14,6 +14,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.time.LocalDate;
@@ -31,6 +34,7 @@ public class Traveler {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booking booking;
 
     @Column(name = "firstname")

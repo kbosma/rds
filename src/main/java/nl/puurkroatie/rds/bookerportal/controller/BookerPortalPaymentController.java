@@ -54,13 +54,13 @@ public class BookerPortalPaymentController {
     private String resolveRedirectUrl(HttpServletRequest request) {
         String origin = request.getHeader("Origin");
         if (origin != null && !origin.isEmpty()) {
-            return origin + "/payments";
+            return origin + "/booker/payments";
         }
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
                 java.net.URI uri = java.net.URI.create(referer);
-                return uri.getScheme() + "://" + uri.getAuthority() + "/payments";
+                return uri.getScheme() + "://" + uri.getAuthority() + "/booker/payments";
             } catch (Exception ignored) {
             }
         }

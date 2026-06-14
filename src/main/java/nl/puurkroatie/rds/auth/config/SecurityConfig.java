@@ -31,11 +31,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/login/totp").permitAll()
                         .requestMatchers("/api/auth/login/recovery").permitAll()
                         .requestMatchers("/api/booker-auth/**").permitAll()
                         .requestMatchers("/api/mollie/payments/webhook").permitAll()
+                        .requestMatchers("/monitoring/**").permitAll()
                         .requestMatchers("/api/booker-portal/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()

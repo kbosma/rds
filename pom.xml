@@ -68,6 +68,15 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
@@ -136,6 +145,14 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+        <!-- J A V A   M E L O D Y -->
+        <dependency>
+            <groupId>net.bull.javamelody</groupId>
+            <artifactId>javamelody-spring-boot4-starter</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
 	</dependencies>
 
 	<build>
@@ -157,6 +174,7 @@
 					</annotationProcessorPaths>
 					<compilerArgs>
 						<arg>-Amapstruct.componentModel=spring</arg>
+						<arg>-parameters</arg>
 					</compilerArgs>
 				</configuration>
 			</plugin>

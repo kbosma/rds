@@ -83,7 +83,8 @@ export class MyProfileComponent implements OnInit {
 
   save() {
     if (this.form.invalid || !this.personId) return;
-    this.personService.update(this.personId, this.form.value).subscribe({
+    const payload = { ...this.form.value };
+    this.personService.update(this.personId, payload).subscribe({
       next: () => {
         this.form.markAsPristine();
         this.snackBar.open(this.translate.instant('profile.saved'), '', { duration: 3000 });

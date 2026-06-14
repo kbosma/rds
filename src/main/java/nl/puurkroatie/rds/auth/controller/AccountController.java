@@ -54,7 +54,7 @@ public class AccountController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ACCOUNT_UPDATE')")
-    public ResponseEntity<AccountDto> update(@PathVariable UUID id, @RequestBody @Valid AccountDto dto) {
+    public ResponseEntity<AccountDto> update(@PathVariable UUID id, @RequestBody AccountDto dto) {
         AccountDto updated = accountService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

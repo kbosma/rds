@@ -7,6 +7,8 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import nl.puurkroatie.rds.mollie.entity.MolliePayment;
 
 @Entity
@@ -17,11 +19,13 @@ public class BookingMolliePayment {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booking booking;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mollie_payment_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private MolliePayment molliePayment;
 
     protected BookingMolliePayment() {

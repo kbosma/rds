@@ -35,19 +35,19 @@ public class DocumentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('DOCUMENT_READ')")
     public List<DocumentDto> findAll() {
         return documentService.findAll();
     }
 
     @GetMapping("/booking/{bookingId}")
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('DOCUMENT_READ')")
     public List<DocumentDto> findByBookingId(@PathVariable UUID bookingId) {
         return documentService.findByBookingId(bookingId);
     }
 
     @GetMapping(value = "/{id}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('DOCUMENT_READ')")
     public ResponseEntity<byte[]> getContent(@PathVariable UUID id) {
         return documentService.findById(id)
                 .map(doc -> {
@@ -64,7 +64,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_READ')")
+    @PreAuthorize("hasAuthority('DOCUMENT_READ')")
     public ResponseEntity<DocumentDto> findById(@PathVariable UUID id) {
         return documentService.findById(id)
                 .map(ResponseEntity::ok)
@@ -72,28 +72,28 @@ public class DocumentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    @PreAuthorize("hasAuthority('DOCUMENT_CREATE')")
     public ResponseEntity<DocumentDto> create(@RequestBody @Valid DocumentDto dto) {
         DocumentDto created = documentService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_UPDATE')")
+    @PreAuthorize("hasAuthority('DOCUMENT_UPDATE')")
     public ResponseEntity<DocumentDto> update(@PathVariable UUID id, @RequestBody @Valid DocumentDto dto) {
         DocumentDto updated = documentService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('BOOKING_DELETE')")
+    @PreAuthorize("hasAuthority('DOCUMENT_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         documentService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/generate")
-    @PreAuthorize("hasAuthority('BOOKING_CREATE')")
+    @PreAuthorize("hasAuthority('DOCUMENT_CREATE')")
     public ResponseEntity<DocumentDto> generate(@RequestBody @Valid GenerateDocumentRequest request) {
         DocumentDto generated = documentGenerationService.generate(
                 request.getTemplateId(), request.getBookingId(), request.getOutputFormat());

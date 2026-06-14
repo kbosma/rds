@@ -1,5 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
+import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
@@ -12,9 +14,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TranslateModule } from '@ngx-translate/core';
 import { BookerService } from './booker.service';
-import { BookerDialogComponent, BookerDialogData } from './booker-dialog.component';
-import { AuthService } from '../../core/auth/auth.service';
-import { Booker } from '../../shared/models';
+import { BookingSelectDialogComponent, BookingSelectDialogData } from './booking-select-dialog.component';
+import { BookingService } from '../bookings/booking.service';
+import { Booker, Booking } from '../../shared/models';
 
 @Component({
   selector: 'app-booker-list',
@@ -72,23 +74,11 @@ import { Booker } from '../../shared/models';
             <td mat-cell *matCellDef="let row">{{ row.birthdate | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-            <td mat-cell *matCellDef="let row">
-              <button mat-icon-button color="primary" (click)="openBookerDialog(row, true)">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              @if (authService.hasAuthority('BOOKING_UPDATE')) {
-                <button mat-icon-button color="primary" (click)="openBookerDialog(row, false)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-              }
-            </td>
-          </ng-container>
-
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+              [class.alt-row]="i % 2 === 1"
+              class="clickable-row"
+              (click)="onBookerClick(row)"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
@@ -131,6 +121,12 @@ import { Booker } from '../../shared/models';
     .email-link {
       color: #1976d2;
     }
+    .clickable-row {
+      cursor: pointer;
+    }
+    .clickable-row:hover {
+      background-color: #e3f2fd;
+    }
     .no-data {
       text-align: center;
       padding: 24px;
@@ -145,20 +141,26 @@ import { Booker } from '../../shared/models';
 })
 export class BookerListComponent implements OnInit {
   private bookerService = inject(BookerService);
+  private bookingService = inject(BookingService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  authService = inject(AuthService);
 
-  displayedColumns = ['name', 'emailaddress', 'telephone', 'birthdate', 'actions'];
+  displayedColumns = ['name', 'emailaddress', 'telephone', 'birthdate'];
   dataSource = new MatTableDataSource<Booker>();
   loading = signal(true);
+  private allBookings: Booking[] = [];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   ngOnInit() {
-    this.bookerService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (bookers) => {
+    forkJoin({
+      bookers: this.bookerService.getAll(),
+      bookings: this.bookingService.getAll(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ bookers, bookings }) => {
+        this.allBookings = bookings;
         this.dataSource.data = bookers;
         this.dataSource.sortingDataAccessor = (item, property) => {
           if (property === 'name') {
@@ -185,26 +187,27 @@ export class BookerListComponent implements OnInit {
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
-  openBookerDialog(booker: Booker, readOnly: boolean) {
-    const data: BookerDialogData = { booker, readOnly };
-    this.dialog.open(BookerDialogComponent, { data, width: '500px' })
+  onBookerClick(booker: Booker) {
+    const bookings = this.allBookings.filter(b => b.bookerId === booker.bookerId);
+
+    if (bookings.length === 0) {
+      return;
+    }
+
+    if (bookings.length === 1) {
+      this.router.navigate(['/bookings', bookings[0].bookingId]);
+      return;
+    }
+
+    const bookerName = `${booker.firstname} ${booker.prefix ?? ''} ${booker.lastname}`.replace(/\s+/g, ' ').trim();
+    const data: BookingSelectDialogData = { bookerName, bookings };
+    this.dialog.open(BookingSelectDialogComponent, { data, width: '500px' })
       .afterClosed()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((result) => {
-        if (result) {
-          this.loadBookers();
+      .subscribe((bookingId: string | undefined) => {
+        if (bookingId) {
+          this.router.navigate(['/bookings', bookingId]);
         }
       });
-  }
-
-  private loadBookers() {
-    this.loading.set(true);
-    this.bookerService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (bookers) => {
-        this.dataSource.data = bookers;
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
   }
 }

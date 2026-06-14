@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
@@ -23,7 +23,6 @@ import { Booking, BookingService } from './booking.service';
   imports: [
     DatePipe,
     DecimalPipe,
-    RouterLink,
     FormsModule,
     MatTableModule,
     MatPaginatorModule,
@@ -41,9 +40,9 @@ import { Booking, BookingService } from './booking.service';
   template: `
     <div class="header">
       <h1>{{ 'bookings.title' | translate }}</h1>
-      <a mat-raised-button color="primary" routerLink="new">
+      <button mat-raised-button color="primary" (click)="navigateToNew()">
         <mat-icon>add</mat-icon> {{ 'bookings.newBooking' | translate }}
-      </a>
+      </button>
     </div>
 
     <mat-form-field appearance="outline" class="filter-field">
@@ -92,9 +91,7 @@ import { Booking, BookingService } from './booking.service';
         <table mat-table [dataSource]="dataSource" matSort class="full-width booking-table">
           <ng-container matColumnDef="bookingNumber">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'bookings.bookingNumber' | translate }}</th>
-            <td mat-cell *matCellDef="let row">
-              <a [routerLink]="row.bookingId" class="booking-link">{{ row.bookingNumber }}</a>
-            </td>
+            <td mat-cell *matCellDef="let row">{{ row.bookingNumber }}</td>
           </ng-container>
 
           <ng-container matColumnDef="fromDate">
@@ -121,18 +118,11 @@ import { Booking, BookingService } from './booking.service';
             <td mat-cell *matCellDef="let row">&euro; {{ row.totalSum | number:'1.2-2' }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-            <td mat-cell *matCellDef="let row">
-              <a mat-icon-button [routerLink]="row.bookingId" color="primary">
-                <mat-icon>edit</mat-icon>
-              </a>
-            </td>
-          </ng-container>
-
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+              [class.alt-row]="i % 2 === 1"
+              class="clickable-row"
+              (click)="onBookingClick(row)"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
@@ -193,13 +183,11 @@ import { Booking, BookingService } from './booking.service';
     .alt-row {
       background-color: #fafafa;
     }
-    .booking-link {
-      color: #1976d2;
-      text-decoration: none;
-      font-weight: 500;
+    .clickable-row {
+      cursor: pointer;
     }
-    .booking-link:hover {
-      text-decoration: underline;
+    .clickable-row:hover {
+      background-color: #e3f2fd;
     }
     .status-badge {
       display: inline-block;
@@ -229,9 +217,10 @@ import { Booking, BookingService } from './booking.service';
 })
 export class BookingListComponent implements OnInit {
   private bookingService = inject(BookingService);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
-  displayedColumns = ['bookingNumber', 'fromDate', 'untilDate', 'statusName', 'totalSum', 'actions'];
+  displayedColumns = ['bookingNumber', 'fromDate', 'untilDate', 'statusName', 'totalSum'];
   dataSource = new MatTableDataSource<Booking>();
   loading = signal(true);
 
@@ -312,6 +301,14 @@ export class BookingListComponent implements OnInit {
       this.searchInput.nativeElement.value = '';
     }
     this.dataSource.data = this.allBookings;
+  }
+
+  onBookingClick(booking: Booking) {
+    this.router.navigate(['/bookings', booking.bookingId]);
+  }
+
+  navigateToNew() {
+    this.router.navigate(['/bookings', 'new']);
   }
 
   private toDateString(date: Date): string {
