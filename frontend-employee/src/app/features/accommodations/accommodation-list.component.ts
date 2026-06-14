@@ -189,7 +189,7 @@ export class AccommodationListComponent implements OnInit {
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
 
-  canEdit = this.authService.hasRole('ADMIN') || this.authService.hasRole('MANAGER');
+  canEdit = this.authService.hasAuthority('ACCOMMODATION_CREATE');
 
   allViews = signal<AccommodationView[]>([]);
   filtered = signal<AccommodationView[]>([]);

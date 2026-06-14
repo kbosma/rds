@@ -131,8 +131,8 @@ interface BookingMolliePaymentLink {
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="status-badge" [attr.data-status]="row.status?.toLowerCase()">
-                {{ row.status }}
+              <span class="status-badge" [attr.data-status]="paymentStatusMap()[row.molliePaymentId]">
+                {{ paymentStatusMap()[row.molliePaymentId] }}
               </span>
             </td>
           </ng-container>
@@ -383,6 +383,7 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   expandedPaymentId = signal<string | null>(null);
   statusEntries = signal<MolliePaymentStatusEntry[]>([]);
   statusEntriesLoading = signal(false);
+  paymentStatusMap = signal<Record<string, string>>({});
 
   displayedColumns = ['molliePaymentExternalId', 'bookingNumber', 'createdAt', 'description', 'method', 'amount', 'status', 'expand'];
 
@@ -390,11 +391,12 @@ export class MolliePaymentsOverviewComponent implements OnInit {
     this.filteredPayments().reduce((sum, p) => sum + (p.amount ?? 0), 0)
   );
 
-  paidAmount = computed(() =>
-    this.filteredPayments()
-      .filter((p) => p.status?.toLowerCase() === 'paid')
-      .reduce((sum, p) => sum + (p.amount ?? 0), 0)
-  );
+  paidAmount = computed(() => {
+    const statusMap = this.paymentStatusMap();
+    return this.filteredPayments()
+      .filter((p) => statusMap[p.molliePaymentId] === 'paid')
+      .reduce((sum, p) => sum + (p.amount ?? 0), 0);
+  });
 
   openAmount = computed(() => this.totalAmount() - this.paidAmount());
 
@@ -403,10 +405,11 @@ export class MolliePaymentsOverviewComponent implements OnInit {
     let result = this.payments();
     if (term) {
       const bnMap = this.bookingNumberMap();
+      const statusMap = this.paymentStatusMap();
       result = result.filter((p) =>
         (p.molliePaymentExternalId ?? '').toLowerCase().includes(term) ||
         (p.description ?? '').toLowerCase().includes(term) ||
-        (p.status ?? '').toLowerCase().includes(term) ||
+        (statusMap[p.molliePaymentId] ?? '').includes(term) ||
         (p.method ?? '').toLowerCase().includes(term) ||
         (bnMap.get(p.molliePaymentId) ?? '').toLowerCase().includes(term)
       );
@@ -452,6 +455,7 @@ export class MolliePaymentsOverviewComponent implements OnInit {
         }
         this.bookingNumberMap.set(bnMap);
         this.loading.set(false);
+        this.loadPaymentStatuses(payments);
       },
       error: () => this.loading.set(false),
     });
@@ -487,6 +491,28 @@ export class MolliePaymentsOverviewComponent implements OnInit {
         error: () => {
           this.statusEntries.set([]);
           this.statusEntriesLoading.set(false);
+        },
+      });
+  }
+
+  private loadPaymentStatuses(payments: MolliePayment[]) {
+    if (payments.length === 0) return;
+
+    const statusRequests = payments.map(p =>
+      this.molliePaymentService.getStatusEntries(p.molliePaymentId)
+    );
+
+    forkJoin(statusRequests)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (allEntries) => {
+          const map: Record<string, string> = {};
+          allEntries.forEach((entries, i) => {
+            if (entries.length > 0) {
+              map[payments[i].molliePaymentId] = entries[entries.length - 1].status?.toLowerCase() ?? '';
+            }
+          });
+          this.paymentStatusMap.set(map);
         },
       });
   }

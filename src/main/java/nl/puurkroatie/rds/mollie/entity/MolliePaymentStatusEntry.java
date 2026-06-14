@@ -14,6 +14,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import nl.puurkroatie.rds.common.Default;
 
 import java.time.LocalDateTime;
@@ -30,6 +33,7 @@ public class MolliePaymentStatusEntry {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mollie_payment_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private MolliePayment molliePayment;
 
     @Enumerated(EnumType.STRING)

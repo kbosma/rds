@@ -55,13 +55,12 @@ class PersonControllerTest extends AbstractAuthControllerTest {
         }
     }
 
-    // Test 13: MANAGER: POST /api/persons binnen eigen organisatie — 201
+    // Test 13: MANAGER: POST /api/persons — uses TenantContext org, 201
     @Test
     void manager_createPerson_ownOrganization_returns201() throws Exception {
         String token = managerToken();
 
-        String personJson = "{\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Medewerker\"," +
-                "\"organizationId\":\"" + ORG_TECHPARTNER_ID + "\"}";
+        String personJson = "{\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Medewerker\"}";
 
         mockMvc.perform(post("/api/persons")
                         .header("Authorization", "Bearer " + token)
@@ -72,9 +71,9 @@ class PersonControllerTest extends AbstractAuthControllerTest {
                 .andExpect(jsonPath("$.organizationId").value(ORG_TECHPARTNER_ID.toString()));
     }
 
-    // Test 14: MANAGER: POST /api/persons in andere organisatie — 403
+    // Test 14: MANAGER: POST /api/persons met foreign orgId — orgId wordt genegeerd, 201 met eigen org
     @Test
-    void manager_createPerson_otherOrganization_returns403() throws Exception {
+    void manager_createPerson_orgIdIgnored_createsInOwnOrg() throws Exception {
         String token = managerToken();
 
         String personJson = "{\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Medewerker\"," +
@@ -84,7 +83,8 @@ class PersonControllerTest extends AbstractAuthControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(personJson))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.organizationId").value(ORG_TECHPARTNER_ID.toString()));
     }
 
     // Test 15: EMPLOYEE: GET /api/persons — alleen eigen person (1 resultaat)
@@ -126,8 +126,7 @@ class PersonControllerTest extends AbstractAuthControllerTest {
     void employee_createPerson_returns403() throws Exception {
         String token = employeeToken();
 
-        String personJson = "{\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Medewerker\"," +
-                "\"organizationId\":\"" + ORG_PUURKROATIE_ID + "\"}";
+        String personJson = "{\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Medewerker\"}";
 
         mockMvc.perform(post("/api/persons")
                         .header("Authorization", "Bearer " + token)
@@ -136,15 +135,27 @@ class PersonControllerTest extends AbstractAuthControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // Test 19: EMPLOYEE: PUT /api/persons/{eigen-id} — 403 (geen PERSON_WRITE)
+    // Test 19: EMPLOYEE: PUT /api/persons/{eigen-id} — 200
     @Test
-    void employee_updatePerson_returns403() throws Exception {
+    void employee_updateOwnPerson_returns200() throws Exception {
         String token = employeeToken();
 
-        String personJson = "{\"firstname\":\"Maria\",\"prefix\":null,\"lastname\":\"Jansen\"," +
-                "\"organizationId\":\"" + ORG_PUURKROATIE_ID + "\"}";
+        String personJson = "{\"firstname\":\"Maria\",\"prefix\":null,\"lastname\":\"Jansen\"}";
 
         mockMvc.perform(put("/api/persons/" + EMPLOYEE_PERSON_ID)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(personJson))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void employee_updateOtherPerson_returns403() throws Exception {
+        String token = employeeToken();
+
+        String personJson = "{\"firstname\":\"Jan\",\"prefix\":\"van\",\"lastname\":\"Bergen\"}";
+
+        mockMvc.perform(put("/api/persons/" + ADMIN_PERSON_ID)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(personJson))

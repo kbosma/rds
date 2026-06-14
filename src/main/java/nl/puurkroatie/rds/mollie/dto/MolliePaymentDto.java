@@ -14,7 +14,6 @@ public class MolliePaymentDto {
 
     private UUID molliePaymentId;
     private String molliePaymentExternalId;
-    private String status;
     private MolliePaymentMethod method;
     @NotNull
     private BigDecimal amount;
@@ -33,10 +32,9 @@ public class MolliePaymentDto {
 
     @Default
     @JsonCreator
-    public MolliePaymentDto(UUID molliePaymentId, String molliePaymentExternalId, String status, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public MolliePaymentDto(UUID molliePaymentId, String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.molliePaymentId = molliePaymentId;
         this.molliePaymentExternalId = molliePaymentExternalId;
-        this.status = status;
         this.method = method;
         this.amount = amount;
         this.currency = currency;
@@ -49,9 +47,8 @@ public class MolliePaymentDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public MolliePaymentDto(String molliePaymentExternalId, String status, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public MolliePaymentDto(String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.molliePaymentExternalId = molliePaymentExternalId;
-        this.status = status;
         this.method = method;
         this.amount = amount;
         this.currency = currency;
@@ -70,10 +67,6 @@ public class MolliePaymentDto {
 
     public String getMolliePaymentExternalId() {
         return molliePaymentExternalId;
-    }
-
-    public String getStatus() {
-        return status;
     }
 
     public MolliePaymentMethod getMethod() {

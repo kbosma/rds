@@ -1,7 +1,6 @@
 export interface MolliePayment {
   molliePaymentId: string;
   molliePaymentExternalId: string;
-  status: string;
   method: string | null;
   amount: number;
   currency: string;

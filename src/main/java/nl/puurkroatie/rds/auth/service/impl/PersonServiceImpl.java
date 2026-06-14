@@ -38,26 +38,41 @@ public class PersonServiceImpl implements PersonService {
         if (isEmployee()) {
             throw new AccessDeniedException("Access denied: employees cannot create persons");
         }
-        if (!isAdmin()) {
-            verifyOrganization(dto.getOrganizationId());
+        UUID organizationId;
+        if (isAdmin()) {
+            if (dto.getOrganizationId() == null) {
+                throw new IllegalArgumentException("organizationId is required for admin");
+            }
+            organizationId = dto.getOrganizationId();
+        } else {
+            organizationId = TenantContext.getOrganizationId();
         }
-        Person entity = toEntity(dto);
+        Person entity = toEntity(dto, organizationId);
         Person saved = personRepository.save(entity);
         return personMapper.toDto(saved);
     }
 
     @Override
     public PersonDto update(UUID id, PersonDto dto) {
-        if (isEmployee()) {
-            throw new AccessDeniedException("Access denied: employees cannot update persons");
-        }
         Person existing = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
-        if (!isAdmin()) {
+        if (isEmployee()) {
+            UUID ownPersonId = accountRepository.findById(TenantContext.getAccountId())
+                    .map(account -> account.getPerson().getPersoonId())
+                    .orElseThrow(() -> new AccessDeniedException("Access denied"));
+            if (!ownPersonId.equals(id)) {
+                throw new AccessDeniedException("Access denied: employees can only update their own person");
+            }
+        } else if (!isAdmin()) {
             verifyOrganization(existing.getOrganization().getOrganizationId());
-            verifyOrganization(dto.getOrganizationId());
         }
-        Person entity = toEntity(id, dto);
+        Person entity = new Person(
+                id,
+                dto.getFirstname(),
+                dto.getPrefix(),
+                dto.getLastname(),
+                existing.getOrganization()
+        );
         Person saved = personRepository.save(entity);
         return personMapper.toDto(saved);
     }
@@ -121,9 +136,9 @@ public class PersonServiceImpl implements PersonService {
         }
     }
 
-    private Person toEntity(PersonDto dto) {
-        Organization organization = organizationRepository.findById(dto.getOrganizationId())
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + dto.getOrganizationId()));
+    private Person toEntity(PersonDto dto, UUID organizationId) {
+        Organization organization = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + organizationId));
         return new Person(
                 dto.getFirstname(),
                 dto.getPrefix(),
@@ -132,15 +147,4 @@ public class PersonServiceImpl implements PersonService {
         );
     }
 
-    private Person toEntity(UUID id, PersonDto dto) {
-        Organization organization = organizationRepository.findById(dto.getOrganizationId())
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + dto.getOrganizationId()));
-        return new Person(
-                id,
-                dto.getFirstname(),
-                dto.getPrefix(),
-                dto.getLastname(),
-                organization
-        );
-    }
 }

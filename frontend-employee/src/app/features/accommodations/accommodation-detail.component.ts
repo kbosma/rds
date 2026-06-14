@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,8 +16,10 @@ import { forkJoin, switchMap } from 'rxjs';
 import { AccommodationService } from './accommodation.service';
 import { AddressService } from './address.service';
 import { AccommodationAddressService } from './accommodation-address.service';
+import { AccommodationSupplierService } from './accommodation-supplier.service';
+import { SupplierService } from '../suppliers/supplier.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { Accommodation, Address, AccommodationAddress } from '../../shared/models';
+import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../shared/models';
 
 @Component({
   selector: 'app-accommodation-detail',
@@ -82,9 +84,75 @@ import { Accommodation, Address, AccommodationAddress } from '../../shared/model
         </mat-card-content>
       </mat-card>
 
+      <!-- Suppliers section (only for existing accommodations) -->
+      @if (!isNew()) {
+        <mat-card class="detail-card section-card">
+          <mat-card-header>
+            <mat-card-title>{{ 'accommodations.suppliers' | translate }}</mat-card-title>
+            @if (canEditAddresses && !showSupplierSelect()) {
+              <button mat-stroked-button color="primary" class="card-header-btn"
+                      (click)="startAddSupplier()">
+                <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+              </button>
+            }
+          </mat-card-header>
+          <mat-card-content>
+            @if (showSupplierSelect()) {
+              <div class="address-form-container">
+                <h4 class="form-subtitle">{{ 'accommodations.addSupplier' | translate }}</h4>
+                <div class="row">
+                  <mat-form-field appearance="outline" class="flex-3">
+                    <mat-label>{{ 'accommodations.selectSupplier' | translate }}</mat-label>
+                    <mat-select [formControl]="supplierSelectControl">
+                      @for (sup of availableSuppliers(); track sup.supplierId) {
+                        <mat-option [value]="sup.supplierId">{{ sup.name }} ({{ sup.key }})</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="actions">
+                  <button mat-button type="button" (click)="cancelSupplierSelect()"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+                  <button mat-raised-button color="primary" type="button"
+                          (click)="onLinkSupplier()"
+                          [disabled]="!supplierSelectControl.value">
+                    <mat-icon>link</mat-icon> {{ 'accommodations.linkSupplier' | translate }}
+                  </button>
+                </div>
+              </div>
+              <mat-divider class="form-divider"></mat-divider>
+            }
+
+            @if (linkedSuppliers().length > 0) {
+              @for (sup of linkedSuppliers(); track sup.supplierId) {
+                <div class="address-card">
+                  <div class="address-card-header">
+                    <div class="address-info">
+                      <span class="role-badge supplier-badge">{{ sup.key }}</span>
+                      <div class="address-line">{{ sup.name }}</div>
+                    </div>
+                    @if (canEditAddresses) {
+                      <div class="address-actions">
+                        <a mat-icon-button color="primary" [routerLink]="'/suppliers/' + sup.supplierId">
+                          <mat-icon>open_in_new</mat-icon>
+                        </a>
+                        <button mat-icon-button color="warn" (click)="unlinkSupplier(sup)">
+                          <mat-icon>link_off</mat-icon>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            } @else if (!showSupplierSelect()) {
+              <p class="empty-text">{{ 'accommodations.noSuppliersLinked' | translate }}</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
       <!-- Addresses section (only for existing accommodations) -->
       @if (!isNew()) {
-        <mat-card class="detail-card addresses-card">
+        <mat-card class="detail-card section-card">
           <mat-card-header>
             <mat-card-title>{{ 'accommodations.addresses' | translate }}</mat-card-title>
             @if (canEditAddresses && !showAddressForm()) {
@@ -220,7 +288,7 @@ import { Accommodation, Address, AccommodationAddress } from '../../shared/model
     .card-header-btn {
       margin-left: auto;
     }
-    .addresses-card {
+    .section-card {
       margin-top: 24px;
     }
     .full-width { width: 100%; }
@@ -281,6 +349,10 @@ import { Accommodation, Address, AccommodationAddress } from '../../shared/model
       text-transform: uppercase;
       width: fit-content;
     }
+    .supplier-badge {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
     .address-line {
       font-size: 14px;
       color: #333;
@@ -308,10 +380,12 @@ export class AccommodationDetailComponent implements OnInit {
   private accommodationService = inject(AccommodationService);
   private addressService = inject(AddressService);
   private accommodationAddressService = inject(AccommodationAddressService);
+  private accommodationSupplierService = inject(AccommodationSupplierService);
+  private supplierService = inject(SupplierService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
 
-  canEditAddresses = this.authService.hasRole('ADMIN') || this.authService.hasRole('MANAGER');
+  canEditAddresses = this.authService.hasAuthority('ACCOMMODATION_UPDATE');
 
   isNew = signal(true);
   loading = signal(false);
@@ -323,7 +397,15 @@ export class AccommodationDetailComponent implements OnInit {
   showAddressForm = signal(false);
   editingAddressId = signal<string | null>(null);
 
+  // Supplier linking
+  linkedSuppliers = signal<Supplier[]>([]);
+  allSuppliers = signal<Supplier[]>([]);
+  availableSuppliers = signal<Supplier[]>([]);
+  showSupplierSelect = signal(false);
+  supplierSelectControl = new FormControl<string | null>(null);
+
   private accommodationId: string | null = null;
+  private accSupplierLinks: AccommodationSupplier[] = [];
 
   accommodationForm = this.fb.group({
     key: ['', Validators.required],
@@ -355,14 +437,17 @@ export class AccommodationDetailComponent implements OnInit {
       accommodation: this.accommodationService.getById(id),
       accAddresses: this.accommodationAddressService.getAll(),
       allAddresses: this.addressService.getAll(),
+      accSuppliers: this.accommodationSupplierService.getAll(),
+      allSuppliers: this.supplierService.getAll(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ accommodation, accAddresses, allAddresses }) => {
+      next: ({ accommodation, accAddresses, allAddresses, accSuppliers, allSuppliers }) => {
         this.currentName.set(accommodation.name);
         this.accommodationForm.patchValue({
           key: accommodation.key,
           name: accommodation.name,
         });
 
+        // Addresses
         const linkedAddressIds = accAddresses
           .filter(aa => aa.accommodationId === id)
           .map(aa => aa.addressId);
@@ -374,6 +459,11 @@ export class AccommodationDetailComponent implements OnInit {
             .filter((a): a is Address => !!a)
         );
 
+        // Suppliers
+        this.allSuppliers.set(allSuppliers);
+        this.accSupplierLinks = accSuppliers;
+        this.updateLinkedSuppliers(accSuppliers, allSuppliers, id);
+
         this.loading.set(false);
       },
       error: () => {
@@ -382,6 +472,24 @@ export class AccommodationDetailComponent implements OnInit {
         this.router.navigate(['/accommodations']);
       },
     });
+  }
+
+  private updateLinkedSuppliers(accSuppliers: AccommodationSupplier[], allSuppliers: Supplier[], accommodationId: string) {
+    const linkedSupplierIds = new Set(
+      accSuppliers
+        .filter(as => as.accommodationId === accommodationId)
+        .map(as => as.supplierId)
+    );
+
+    const supplierMap = new Map(allSuppliers.map(s => [s.supplierId, s]));
+    this.linkedSuppliers.set(
+      [...linkedSupplierIds]
+        .map(sid => supplierMap.get(sid))
+        .filter((s): s is Supplier => !!s)
+    );
+    this.availableSuppliers.set(
+      allSuppliers.filter(s => !linkedSupplierIds.has(s.supplierId))
+    );
   }
 
   onSaveAccommodation() {
@@ -420,6 +528,69 @@ export class AccommodationDetailComponent implements OnInit {
           },
         });
     }
+  }
+
+  // --- Supplier linking ---
+
+  startAddSupplier() {
+    this.supplierSelectControl.reset();
+    this.showSupplierSelect.set(true);
+  }
+
+  cancelSupplierSelect() {
+    this.showSupplierSelect.set(false);
+    this.supplierSelectControl.reset();
+  }
+
+  onLinkSupplier() {
+    const supplierId = this.supplierSelectControl.value;
+    if (!supplierId || !this.accommodationId) return;
+
+    this.accommodationSupplierService.create({
+      accommodationId: this.accommodationId,
+      supplierId,
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.cancelSupplierSelect();
+        this.snackBar.open(this.translate.instant('accommodations.supplierLinked'), this.translate.instant('common.close'), { duration: 3000 });
+        this.reloadSuppliers();
+      },
+      error: () => {
+        this.snackBar.open(this.translate.instant('accommodations.supplierLinkError'), this.translate.instant('common.close'), { duration: 5000 });
+      },
+    });
+  }
+
+  unlinkSupplier(supplier: Supplier) {
+    if (!this.accommodationId) return;
+    if (!confirm(this.translate.instant('accommodations.unlinkSupplierConfirm', { name: supplier.name }))) return;
+
+    this.accommodationSupplierService.delete(this.accommodationId, supplier.supplierId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snackBar.open(this.translate.instant('accommodations.supplierUnlinked'), this.translate.instant('common.close'), { duration: 3000 });
+          this.reloadSuppliers();
+        },
+        error: () => {
+          this.snackBar.open(this.translate.instant('accommodations.supplierUnlinkError'), this.translate.instant('common.close'), { duration: 5000 });
+        },
+      });
+  }
+
+  private reloadSuppliers() {
+    if (!this.accommodationId) return;
+
+    forkJoin({
+      accSuppliers: this.accommodationSupplierService.getAll(),
+      allSuppliers: this.supplierService.getAll(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ accSuppliers, allSuppliers }) => {
+        this.allSuppliers.set(allSuppliers);
+        this.accSupplierLinks = accSuppliers;
+        this.updateLinkedSuppliers(accSuppliers, allSuppliers, this.accommodationId!);
+      },
+    });
   }
 
   // --- Address management ---
@@ -466,7 +637,6 @@ export class AccommodationDetailComponent implements OnInit {
     };
 
     if (this.editingAddressId()) {
-      // Update existing address
       this.addressService.update(this.editingAddressId()!, payload)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -482,7 +652,6 @@ export class AccommodationDetailComponent implements OnInit {
           },
         });
     } else {
-      // Create new address + link
       this.addressService.create(payload).pipe(
         switchMap((addr) =>
           this.accommodationAddressService.create({
@@ -510,7 +679,6 @@ export class AccommodationDetailComponent implements OnInit {
     if (!this.accommodationId) return;
     if (!confirm(this.translate.instant('accommodations.deleteAddressConfirm'))) return;
 
-    // Delete the link first, then the address
     this.accommodationAddressService.delete(this.accommodationId, address.addressId).pipe(
       switchMap(() => this.addressService.delete(address.addressId)),
       takeUntilDestroyed(this.destroyRef),

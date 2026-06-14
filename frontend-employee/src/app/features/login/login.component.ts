@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { ChangePasswordDialogComponent } from '../profile/change-password-dialog.component';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +22,7 @@ import { AuthService } from '../../core/auth/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatDialogModule,
     MatIconModule,
     MatProgressSpinnerModule,
     TranslateModule,
@@ -187,6 +190,7 @@ export class LoginComponent {
   auth = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private dialog = inject(MatDialog);
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
 
@@ -216,7 +220,7 @@ export class LoginComponent {
       next: () => {
         this.loading.set(false);
         if (!this.auth.requiresTotp()) {
-          this.router.navigate(['/dashboard']);
+          this.handlePostLogin();
         }
       },
       error: (err) => {
@@ -234,7 +238,7 @@ export class LoginComponent {
     this.auth.loginWithTotp(totpCode!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.handlePostLogin();
       },
       error: (err) => {
         this.loading.set(false);
@@ -251,7 +255,7 @@ export class LoginComponent {
     this.auth.loginWithRecovery(recoveryCode!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.handlePostLogin();
       },
       error: (err) => {
         this.loading.set(false);
@@ -259,6 +263,20 @@ export class LoginComponent {
         this.error.set(detail || this.translate.instant('auth.recoveryError'));
       },
     });
+  }
+
+  private handlePostLogin() {
+    if (this.auth.mustChangePassword()) {
+      const dialogRef = this.dialog.open(ChangePasswordDialogComponent, {
+        width: '450px',
+        disableClose: true,
+      });
+      dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+        this.router.navigate(['/dashboard']);
+      });
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   onBack() {

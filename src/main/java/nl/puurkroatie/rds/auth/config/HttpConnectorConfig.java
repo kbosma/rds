@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HttpConnectorConfig {
 
-    @Bean
-    public JettyServerCustomizer httpConnectorCustomizer() {
-        return server -> {
-            ServerConnector connector = new ServerConnector(server);
-            connector.setPort(8082);
-            server.addConnector(connector);
-        };
-    }
+//    @Bean
+//    public JettyServerCustomizer httpConnectorCustomizer() {
+//        return server -> {
+//            ServerConnector connector = new ServerConnector(server);
+//            connector.setPort(8082);
+//            server.addConnector(connector);
+//        };
+//    }
 }

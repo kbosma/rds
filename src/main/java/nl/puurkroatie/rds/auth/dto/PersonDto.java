@@ -18,7 +18,6 @@ public class PersonDto {
     @NotNull
     @Size(max = 255)
     private String lastname;
-    @NotNull
     private UUID organizationId;
     private LocalDateTime createdAt;
     private UUID createdBy;

@@ -34,9 +34,9 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
 
     @Override
     public OrganizationThemeDto create(OrganizationThemeDto dto) {
-        verifyOrganization(dto.getOrganizationId());
-        var organization = organizationRepository.findById(dto.getOrganizationId())
-                .orElseThrow(() -> new EntityNotFoundException("Organization not found with id: " + dto.getOrganizationId()));
+        UUID organizationId = TenantContext.getOrganizationId();
+        var organization = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with id: " + organizationId));
         OrganizationTheme entity = new OrganizationTheme(organization, dto.getPrimaryColor(), dto.getAccentColor(), dto.getLogoUrl(), dto.getCardTitleColor());
         return organizationThemeMapper.toDto(organizationThemeRepository.save(entity));
     }

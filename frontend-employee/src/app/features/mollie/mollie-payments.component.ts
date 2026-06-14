@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
+import { forkJoin } from 'rxjs';
 import { MolliePaymentService } from './mollie-payment.service';
 import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 
@@ -105,8 +106,8 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="status-badge" [attr.data-status]="row.status">
-                {{ 'payments.status_' + row.status | translate }}
+              <span class="status-badge" [attr.data-status]="paymentStatusMap()[row.molliePaymentId]">
+                {{ 'payments.status_' + paymentStatusMap()[row.molliePaymentId] | translate }}
               </span>
             </td>
           </ng-container>
@@ -376,6 +377,7 @@ export class MolliePaymentsComponent implements OnInit {
   expandedPaymentId = signal<string | null>(null);
   statusEntries = signal<MolliePaymentStatusEntry[]>([]);
   statusEntriesLoading = signal(false);
+  paymentStatusMap = signal<Record<string, string>>({});
 
   displayedColumns = ['molliePaymentExternalId', 'createdAt', 'description', 'method', 'amount', 'status', 'expand'];
 
@@ -385,14 +387,9 @@ export class MolliePaymentsComponent implements OnInit {
     this.molliePaymentService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (payments) => {
         this.payments.set(payments);
-        const total = payments.reduce((sum, p) => sum + (p.amount ?? 0), 0);
-        const paid = payments
-          .filter((p) => p.status === 'paid')
-          .reduce((sum, p) => sum + (p.amount ?? 0), 0);
-        this.totalAmount.set(total);
-        this.paidAmount.set(paid);
-        this.openAmount.set(total - paid);
+        this.totalAmount.set(payments.reduce((sum, p) => sum + (p.amount ?? 0), 0));
         this.loading.set(false);
+        this.loadPaymentStatuses(payments);
       },
       error: () => this.loading.set(false),
     });
@@ -417,6 +414,34 @@ export class MolliePaymentsComponent implements OnInit {
         error: () => {
           this.statusEntries.set([]);
           this.statusEntriesLoading.set(false);
+        },
+      });
+  }
+
+  private loadPaymentStatuses(payments: MolliePayment[]) {
+    if (payments.length === 0) return;
+
+    const statusRequests = payments.map(p =>
+      this.molliePaymentService.getStatusEntries(p.molliePaymentId)
+    );
+
+    forkJoin(statusRequests)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (allEntries) => {
+          const map: Record<string, string> = {};
+          allEntries.forEach((entries, i) => {
+            if (entries.length > 0) {
+              map[payments[i].molliePaymentId] = entries[entries.length - 1].status?.toLowerCase() ?? '';
+            }
+          });
+          this.paymentStatusMap.set(map);
+
+          const paid = payments
+            .filter(p => map[p.molliePaymentId] === 'paid')
+            .reduce((sum, p) => sum + (p.amount ?? 0), 0);
+          this.paidAmount.set(paid);
+          this.openAmount.set(this.totalAmount() - paid);
         },
       });
   }

@@ -108,16 +108,16 @@ class AuthControllerTest extends AbstractAuthControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // Test 8: Change password door MANAGER — 403 (alleen EMPLOYEE)
+    // Test 8: Change password door MANAGER — 200 (MANAGER mag wachtwoord wijzigen)
     @Test
-    void changePassword_manager_returns403() throws Exception {
+    void changePassword_manager_returns200() throws Exception {
         String token = managerToken();
 
         mockMvc.perform(put("/api/auth/change-password")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currentPassword\":\"password123\",\"newPassword\":\"nieuwwachtwoord456\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     // Test 9: Change password zonder authenticatie — 401

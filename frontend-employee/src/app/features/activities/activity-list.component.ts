@@ -100,7 +100,7 @@ export class ActivityListComponent implements OnInit {
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
 
-  canEdit = this.authService.hasRole('ADMIN') || this.authService.hasRole('MANAGER');
+  canEdit = this.authService.hasAuthority('ACTIVITY_CREATE');
   displayedColumns = ['name', 'activityType', 'description', 'actions'];
 
   allActivities = signal<Activity[]>([]);

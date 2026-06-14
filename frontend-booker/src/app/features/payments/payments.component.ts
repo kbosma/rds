@@ -83,8 +83,8 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models/mol
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
               <td mat-cell *matCellDef="let p">
-                <span class="status-badge" [class]="'status-' + p.status">
-                  {{ statusLabel(p.status) }}
+                <span class="status-badge" [class]="'status-' + currentStatus(p.molliePaymentId)">
+                  {{ statusLabel(currentStatus(p.molliePaymentId)) }}
                 </span>
               </td>
             </ng-container>
@@ -324,7 +324,7 @@ export class PaymentsComponent implements OnInit {
 
   paidAmount = computed(() =>
     this.payments()
-      .filter((p) => p.status === 'paid')
+      .filter((p) => this.currentStatus(p.molliePaymentId) === 'paid')
       .reduce((sum, p) => sum + p.amount, 0)
   );
 
@@ -347,8 +347,14 @@ export class PaymentsComponent implements OnInit {
     return key ? this.translateService.instant(key) : status;
   }
 
+  currentStatus(molliePaymentId: string): string {
+    const entries = this.statusEntriesForPayment(molliePaymentId);
+    if (entries.length === 0) return '';
+    return entries[entries.length - 1].status?.toLowerCase() ?? '';
+  }
+
   isPayable(payment: MolliePayment): boolean {
-    const status = payment.status?.toLowerCase();
+    const status = this.currentStatus(payment.molliePaymentId);
     return status === 'open' || status === 'failed' || status === 'expired';
   }
 

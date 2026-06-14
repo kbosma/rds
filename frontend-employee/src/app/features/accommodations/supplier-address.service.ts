@@ -10,4 +10,12 @@ export class SupplierAddressService {
   getAll() {
     return this.api.getAll<SupplierAddress>(this.endpoint);
   }
+
+  create(link: SupplierAddress) {
+    return this.api.create<SupplierAddress>(this.endpoint, link);
+  }
+
+  delete(supplierId: string, addressId: string) {
+    return this.api.delete(this.endpoint, `${supplierId}/${addressId}`);
+  }
 }

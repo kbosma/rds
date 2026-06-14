@@ -58,13 +58,17 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
         if (!isAdmin()) {
             verifyOrganization(existing.getPerson().getOrganization().getOrganizationId());
-            Person newPerson = personRepository.findById(dto.getPersonId())
-                    .orElseThrow(() -> new RuntimeException("Person not found with id: " + dto.getPersonId()));
-            verifyOrganization(newPerson.getOrganization().getOrganizationId());
         }
-        Account entity = toEntity(id, dto);
-        Account saved = accountRepository.save(entity);
-        return accountMapper.toDto(saved);
+        accountRepository.updateAccount(
+                id,
+                dto.getUserName(),
+                dto.getLocked(),
+                dto.getMustChangePassword(),
+                TenantContext.getAccountId()
+        );
+        return accountRepository.findById(id)
+                .map(accountMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Account not found after update"));
     }
 
     @Override
@@ -165,17 +169,4 @@ public class AccountServiceImpl implements AccountService {
         );
     }
 
-    private Account toEntity(UUID id, AccountDto dto) {
-        Person person = personRepository.findById(dto.getPersonId())
-                .orElseThrow(() -> new RuntimeException("Person not found with id: " + dto.getPersonId()));
-        return new Account(
-                id,
-                dto.getPassword(),
-                dto.getUserName(),
-                person,
-                dto.getLocked(),
-                dto.getMustChangePassword(),
-                dto.getExpiresAt()
-        );
-    }
 }

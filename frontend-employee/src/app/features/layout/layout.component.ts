@@ -15,8 +15,7 @@ interface NavItem {
   labelKey: string;
   route: string;
   icon: string;
-  authority?: string;
-  roles?: string[];
+  authority?: string | string[];
   sectionKey?: string;
 }
 
@@ -166,34 +165,34 @@ export class LayoutComponent {
 
   private allNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', route: '/dashboard', icon: 'dashboard' },
-    { labelKey: 'nav.bookings', route: '/bookings', icon: 'book_online', authority: 'BOOKING_READ', roles: ['MANAGER', 'EMPLOYEE'] },
-    { labelKey: 'nav.bookers', route: '/bookers', icon: 'person', authority: 'BOOKING_READ', roles: ['MANAGER', 'EMPLOYEE'] },
-    { labelKey: 'nav.documents', route: '/documents', icon: 'description', authority: 'BOOKING_READ', roles: ['MANAGER', 'EMPLOYEE'] },
-    { labelKey: 'nav.templates', route: '/templates', icon: 'insert_drive_file', authority: 'TEMPLATE_READ', roles: ['MANAGER', 'EMPLOYEE'] },
-    { labelKey: 'nav.payments', route: '/payments', icon: 'payment', authority: 'PAYMENT_READ', roles: ['MANAGER', 'EMPLOYEE'] },
-    { labelKey: 'nav.organizations', route: '/admin/organizations', icon: 'corporate_fare', authority: 'ORGANIZATION_READ', roles: ['ADMIN'], sectionKey: 'nav.admin' },
-    { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', authority: 'PERSON_READ', roles: ['ADMIN'] },
-    { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: 'ACCOUNT_READ', roles: ['ADMIN'] },
-    { labelKey: 'nav.roles', route: '/admin/roles', icon: 'admin_panel_settings', authority: 'ROLE_READ', roles: ['ADMIN'] },
-    { labelKey: 'nav.authorities', route: '/admin/authorities', icon: 'security', authority: 'AUTHORITY_READ', roles: ['ADMIN'] },
-    { labelKey: 'nav.accommodations', route: '/accommodations', icon: 'hotel', authority: 'ACCOMMODATION_READ', roles: ['MANAGER'], sectionKey: 'nav.admin' },
-    { labelKey: 'nav.suppliers', route: '/suppliers', icon: 'business', authority: 'SUPPLIER_READ', roles: ['MANAGER'] },
-    { labelKey: 'nav.activities', route: '/activities', icon: 'local_activity', authority: 'ACTIVITY_READ', roles: ['MANAGER'] },
-    { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', authority: 'PERSON_READ', roles: ['MANAGER'] },
-    { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: 'ACCOUNT_READ', roles: ['MANAGER'] },
-    { labelKey: 'nav.theme', route: '/admin/theme', icon: 'palette', authority: 'ORGANIZATION_THEME_READ', roles: ['MANAGER'] },
-    { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', authority: 'PERSON_UPDATE', roles: ['EMPLOYEE'], sectionKey: 'nav.admin' },
-    { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', authority: 'ACCOUNT_UPDATE', roles: ['EMPLOYEE'] },
-    { labelKey: 'nav.totpSettings', route: '/totp-settings', icon: 'security', roles: ['EMPLOYEE', 'MANAGER'] },
+    { labelKey: 'nav.bookings', route: '/bookings', icon: 'book_online', authority: 'BOOKING_READ' },
+    { labelKey: 'nav.bookers', route: '/bookers', icon: 'person', authority: 'BOOKING_READ' },
+    { labelKey: 'nav.documents', route: '/documents', icon: 'description', authority: 'DOCUMENT_READ' },
+    { labelKey: 'nav.payments', route: '/payments', icon: 'payment', authority: 'PAYMENT_READ' },
+    { labelKey: 'nav.organizations', route: '/admin/organizations', icon: 'corporate_fare', authority: 'ORGANIZATION_READ', sectionKey: 'nav.admin' },
+    { labelKey: 'nav.accommodations', route: '/accommodations', icon: 'hotel', authority: ['ACCOMMODATION_CREATE', 'ACCOMMODATION_UPDATE', 'ACCOMMODATION_DELETE'], sectionKey: 'nav.bookingAdmin' },
+    { labelKey: 'nav.suppliers', route: '/suppliers', icon: 'business', authority: ['SUPPLIER_CREATE', 'SUPPLIER_UPDATE', 'SUPPLIER_DELETE'] },
+    { labelKey: 'nav.activities', route: '/activities', icon: 'local_activity', authority: ['ACTIVITY_CREATE', 'ACTIVITY_UPDATE', 'ACTIVITY_DELETE'] },
+    { labelKey: 'nav.templates', route: '/templates', icon: 'insert_drive_file', authority: ['TEMPLATE_CREATE', 'TEMPLATE_UPDATE', 'TEMPLATE_DELETE'] },
+    { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', authority: ['PERSON_CREATE', 'PERSON_DELETE'] },
+    { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: ['ACCOUNT_CREATE', 'ACCOUNT_DELETE'] },
+    { labelKey: 'nav.roles', route: '/admin/roles', icon: 'admin_panel_settings', authority: ['ROLE_CREATE', 'ROLE_UPDATE', 'ROLE_DELETE'] },
+    { labelKey: 'nav.authorities', route: '/admin/authorities', icon: 'security', authority: ['AUTHORITY_CREATE', 'AUTHORITY_UPDATE', 'AUTHORITY_DELETE'] },
+    { labelKey: 'nav.theme', route: '/admin/theme', icon: 'palette', authority: ['ORGANIZATION_THEME_UPDATE'] },
+    { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', authority: 'PERSON_UPDATE', sectionKey: 'nav.myAdmin' },
+    { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', authority: 'ACCOUNT_UPDATE' },
+    { labelKey: 'nav.totpSettings', route: '/totp-settings', icon: 'security' },
   ];
 
   visibleNavItems = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return [];
     return this.allNavItems.filter((item) => {
-      if (item.authority && !user.authorities.includes(item.authority)) return false;
-      if (item.roles && !item.roles.some((role) => user.roles.includes(role))) return false;
-      return true;
+      if (!item.authority) return true;
+      if (Array.isArray(item.authority)) {
+        return item.authority.some((a) => user.authorities.includes(a));
+      }
+      return user.authorities.includes(item.authority);
     });
   });
 

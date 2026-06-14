@@ -58,9 +58,9 @@ export const routes: Routes = [
       },
       {
         path: 'suppliers',
-        loadComponent: () =>
-          import('./features/suppliers/supplier-list.component').then(
-            (m) => m.SupplierListComponent
+        loadChildren: () =>
+          import('./features/suppliers/supplier.routes').then(
+            (m) => m.supplierRoutes
           ),
       },
       {

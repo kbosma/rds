@@ -12,6 +12,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.math.BigDecimal;
@@ -29,10 +32,12 @@ public class BookingActivity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "activity_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Activity activity;
 
     @Column(name = "from_date")

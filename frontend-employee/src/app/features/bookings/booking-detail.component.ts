@@ -21,8 +21,10 @@ import { BookingLineDialogComponent, BookingLineDialogData } from './booking-lin
 import { BookingActivityDialogComponent, BookingActivityDialogData } from './booking-activity-dialog.component';
 import { BookingEditDialogComponent, BookingEditDialogData } from './booking-edit-dialog.component';
 import { BookerDialogComponent, BookerDialogData } from '../bookers/booker-dialog.component';
+import { BookerSelectDialogComponent } from '../bookers/booker-select-dialog.component';
 import { BookerService } from '../bookers/booker.service';
 import { TravelerService } from '../travelers/traveler.service';
+import { TravelerDialogComponent, TravelerDialogData } from '../travelers/traveler-dialog.component';
 import { MolliePaymentService } from '../mollie/mollie-payment.service';
 import { DocumentService } from '../documents/document.service';
 import { DocumentUploadDialogComponent, DocumentUploadDialogData } from '../documents/document-upload-dialog.component';
@@ -118,12 +120,26 @@ interface BookingMolliePaymentLink {
         <mat-card class="detail-card">
           <mat-card-header>
             <mat-card-title>{{ 'bookings.mainBooker' | translate }}</mat-card-title>
-            @if (booker() && authService.hasAuthority('BOOKING_UPDATE')) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
-                      (click)="openBookerDialog()">
-                <mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}
-              </button>
-            }
+            <span class="card-header-actions">
+              @if (booker() && authService.hasAuthority('BOOKING_UPDATE')) {
+                <button mat-stroked-button color="primary"
+                        (click)="openBookerDialog()">
+                  <mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}
+                </button>
+              }
+              @if (booker() && authService.hasAuthority('BOOKING_DELETE')) {
+                <button mat-stroked-button color="warn"
+                        (click)="removeBooker()">
+                  <mat-icon>delete</mat-icon> {{ 'common.delete' | translate }}
+                </button>
+              }
+              @if (!booker() && !isNew() && authService.hasAuthority('BOOKING_CREATE')) {
+                <button mat-stroked-button color="primary"
+                        (click)="openBookerSelectDialog()">
+                  <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+                </button>
+              }
+            </span>
           </mat-card-header>
           <mat-card-content>
             @if (booker()) {
@@ -209,9 +225,12 @@ interface BookingMolliePaymentLink {
         <mat-card class="detail-card">
           <mat-card-header>
             <mat-card-title>{{ 'bookings.travelers' | translate }}</mat-card-title>
-            <button mat-stroked-button color="primary" class="card-header-btn">
-              <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
-            </button>
+            @if (authService.hasAuthority('BOOKING_CREATE')) {
+              <button mat-stroked-button color="primary" class="card-header-btn"
+                      (click)="openTravelerDialog()">
+                <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+              </button>
+            }
           </mat-card-header>
           <mat-card-content>
             @if (travelers().length > 0) {
@@ -227,8 +246,12 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
                   <td mat-cell *matCellDef="let t">
-                    <button mat-icon-button color="primary"><mat-icon>edit</mat-icon></button>
-                    <button mat-icon-button color="warn"><mat-icon>delete</mat-icon></button>
+                    @if (authService.hasAuthority('BOOKING_UPDATE')) {
+                      <button mat-icon-button color="primary" (click)="openTravelerDialog(t)"><mat-icon>edit</mat-icon></button>
+                    }
+                    @if (authService.hasAuthority('BOOKING_DELETE')) {
+                      <button mat-icon-button color="warn" (click)="deleteTraveler(t)"><mat-icon>delete</mat-icon></button>
+                    }
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="travelerColumns"></tr>
@@ -296,7 +319,7 @@ interface BookingMolliePaymentLink {
         <mat-card class="middle-card">
           <mat-card-header>
             <mat-card-title>{{ 'documents.title' | translate }}</mat-card-title>
-            @if (authService.hasAuthority('BOOKING_CREATE')) {
+            @if (authService.hasAuthority('DOCUMENT_CREATE')) {
               <button mat-stroked-button color="primary" class="card-header-btn"
                       (click)="openDocumentUploadDialog()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
@@ -322,12 +345,16 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
                   <td mat-cell *matCellDef="let d">
-                    <button mat-icon-button color="primary" (click)="viewDocument(d)">
-                      <mat-icon>visibility</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="deleteDocument(d)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
+                    @if (authService.hasAuthority('DOCUMENT_READ')) {
+                      <button mat-icon-button color="primary" (click)="viewDocument(d)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                    }
+                    @if (authService.hasAuthority('DOCUMENT_DELETE')) {
+                      <button mat-icon-button color="warn" (click)="deleteDocument(d)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="documentColumns"></tr>
@@ -404,7 +431,7 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="status">
                   <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
                   <td mat-cell *matCellDef="let p">
-                    <span class="status-badge" [attr.data-status]="p.status">{{ 'payments.status_' + p.status | translate }}</span>
+                    <span class="status-badge" [attr.data-status]="currentPaymentStatus(p.molliePaymentId)">{{ 'payments.status_' + currentPaymentStatus(p.molliePaymentId) | translate }}</span>
                   </td>
                 </ng-container>
 
@@ -545,6 +572,11 @@ interface BookingMolliePaymentLink {
       align-items: center;
     }
     .card-header-btn {
+      margin-left: auto;
+    }
+    .card-header-actions {
+      display: flex;
+      gap: 8px;
       margin-left: auto;
     }
     .full-width { width: 100%; }
@@ -855,6 +887,7 @@ export class BookingDetailComponent implements OnInit {
   statusEntriesLoading = signal(false);
   showNewStatusForm = signal(false);
   creatingStatusEntry = signal(false);
+  paymentStatusMap = signal<Record<string, string>>({});
 
   // Booking Activities
   bookingActivities = signal<BookingActivity[]>([]);
@@ -874,8 +907,12 @@ export class BookingDetailComponent implements OnInit {
     { value: 'expired', labelKey: 'payments.status_expired' },
   ];
 
+  currentPaymentStatus(molliePaymentId: string): string {
+    return this.paymentStatusMap()[molliePaymentId] ?? '';
+  }
+
   canManageStatusEntries(): boolean {
-    return this.authService.hasRole('ADMIN') || this.authService.hasRole('MANAGER');
+    return this.authService.hasAuthority('PAYMENT_UPDATE');
   }
 
   ngOnInit() {
@@ -947,7 +984,6 @@ export class BookingDetailComponent implements OnInit {
       description: description!,
       amount: amount!,
       currency: 'EUR',
-      status: 'open',
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (payment) => {
         this.http.post<BookingMolliePaymentLink>(
@@ -1044,6 +1080,91 @@ export class BookingDetailComponent implements OnInit {
               next: (booker) => this.booker.set(booker),
             });
         }
+      });
+  }
+
+  removeBooker() {
+    if (!this.bookingId || !this.booker()) return;
+    if (!confirm(this.translate.instant('bookings.removeBookerConfirm'))) return;
+
+    this.bookingService.update(this.bookingId, { bookerId: null as unknown as string })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.booker.set(null);
+          this.snackBar.open(this.translate.instant('bookings.bookerRemoved'), this.translate.instant('common.close'), { duration: 3000 });
+        },
+        error: () => {
+          this.snackBar.open(this.translate.instant('bookings.bookerRemoveError'), this.translate.instant('common.close'), { duration: 5000 });
+        },
+      });
+  }
+
+  openBookerSelectDialog() {
+    if (!this.bookingId) return;
+
+    this.dialog.open(BookerSelectDialogComponent, { width: '500px' })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((selectedBookerId: string | undefined) => {
+        if (selectedBookerId) {
+          this.bookingService.update(this.bookingId!, { bookerId: selectedBookerId })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                this.bookerService.getById(selectedBookerId)
+                  .pipe(takeUntilDestroyed(this.destroyRef))
+                  .subscribe({
+                    next: (booker) => this.booker.set(booker),
+                  });
+                this.snackBar.open(this.translate.instant('bookings.bookerLinked'), this.translate.instant('common.close'), { duration: 3000 });
+              },
+              error: () => {
+                this.snackBar.open(this.translate.instant('bookings.bookerLinkError'), this.translate.instant('common.close'), { duration: 5000 });
+              },
+            });
+        }
+      });
+  }
+
+  openTravelerDialog(traveler?: Traveler) {
+    if (!this.bookingId) return;
+    const data: TravelerDialogData = { bookingId: this.bookingId, traveler };
+    this.dialog.open(TravelerDialogComponent, { data, width: '500px' })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.reloadTravelers();
+        }
+      });
+  }
+
+  deleteTraveler(traveler: Traveler) {
+    const name = `${traveler.firstname} ${traveler.prefix ?? ''} ${traveler.lastname}`.replace(/\s+/g, ' ').trim();
+    if (!confirm(this.translate.instant('bookings.deleteConfirm', { name }))) return;
+
+    this.travelerService.delete(traveler.travelerId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snackBar.open(this.translate.instant('travelers.removed'), this.translate.instant('common.close'), { duration: 3000 });
+          this.reloadTravelers();
+        },
+        error: () => {
+          this.snackBar.open(this.translate.instant('travelers.removeError'), this.translate.instant('common.close'), { duration: 5000 });
+        },
+      });
+  }
+
+  private reloadTravelers() {
+    if (!this.bookingId) return;
+    this.travelerService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (travelers) => {
+          this.travelers.set(travelers.filter((t) => t.bookingId === this.bookingId));
+        },
       });
   }
 
@@ -1202,6 +1323,7 @@ export class BookingDetailComponent implements OnInit {
             next: (payments) => {
               this.payments.set(payments);
               this.paymentsLoading.set(false);
+              this.loadPaymentStatuses(payments);
             },
             error: () => {
               this.payments.set([]);
@@ -1227,6 +1349,27 @@ export class BookingDetailComponent implements OnInit {
       });
   }
 
+  private loadPaymentStatuses(payments: MolliePayment[]) {
+    const statusRequests = payments.map(p =>
+      this.molliePaymentService.getStatusEntries(p.molliePaymentId)
+    );
+    if (statusRequests.length === 0) return;
+
+    forkJoin(statusRequests)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (allEntries) => {
+          const map: Record<string, string> = {};
+          allEntries.forEach((entries, i) => {
+            if (entries.length > 0) {
+              map[payments[i].molliePaymentId] = entries[entries.length - 1].status?.toLowerCase() ?? '';
+            }
+          });
+          this.paymentStatusMap.set(map);
+        },
+      });
+  }
+
   private loadStatusEntries(molliePaymentId: string) {
     this.statusEntriesLoading.set(true);
     this.molliePaymentService.getStatusEntries(molliePaymentId)
@@ -1235,6 +1378,10 @@ export class BookingDetailComponent implements OnInit {
         next: (entries) => {
           this.statusEntries.set(entries);
           this.statusEntriesLoading.set(false);
+          if (entries.length > 0) {
+            const latest = entries[entries.length - 1].status?.toLowerCase() ?? '';
+            this.paymentStatusMap.update(map => ({ ...map, [molliePaymentId]: latest }));
+          }
         },
         error: () => {
           this.statusEntries.set([]);

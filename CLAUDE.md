@@ -41,6 +41,7 @@ DTO:
 - JWT-based authenticatie
 - Multi-tenant (organization-based)
 - RBAC via roles + authorities
+- In frontends worden componenten wel/niet getoond op basis van Authorities. Nooit op basis van Roles.
 
 Rules:
 - Elke tenant-entity bevat `organizationId`
@@ -120,6 +121,8 @@ Test:
     - TRAVELLER
     - ACCOMMODATION
     - SUPPLIER
+    - DOCUMENT
+    - PAYMENT
 
 - Elke booking-entity:
     - tenantOrganization
@@ -147,6 +150,7 @@ Gebruik ALLEEN indien nodig:
 - Domain details → docs/domain.md
 - Mollie payments → docs/mollie.md
 - API voorbeelden → docs/api-examples.md
+- Datamodel → docs/database-model.md
 
 ---
 

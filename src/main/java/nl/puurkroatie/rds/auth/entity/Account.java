@@ -12,6 +12,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -40,6 +42,7 @@ public class Account {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Person person;
 
     @Column(name = "locked", nullable = false)
@@ -105,6 +108,9 @@ public class Account {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.createdBy = TenantContext.getAccountId();
+        if (this.locked == null) {
+            this.locked = false;
+        }
         if (this.mustChangePassword == null) {
             this.mustChangePassword = false;
         }

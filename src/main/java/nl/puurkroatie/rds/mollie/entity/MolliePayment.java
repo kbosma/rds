@@ -30,10 +30,6 @@ public class MolliePayment {
     @Column(name = "mollie_payment_external_id")
     private String molliePaymentExternalId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private MolliePaymentStatus status;
-
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
@@ -68,10 +64,9 @@ public class MolliePayment {
     protected MolliePayment() {
     }
 
-    public MolliePayment(UUID molliePaymentId, String molliePaymentExternalId, MolliePaymentStatus status, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl) {
+    public MolliePayment(UUID molliePaymentId, String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl) {
         this.molliePaymentId = molliePaymentId;
         this.molliePaymentExternalId = molliePaymentExternalId;
-        this.status = status;
         this.method = method;
         this.amount = amount;
         this.currency = currency;
@@ -80,9 +75,8 @@ public class MolliePayment {
     }
 
     @Default
-    public MolliePayment(String molliePaymentExternalId, MolliePaymentStatus status, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl) {
+    public MolliePayment(String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl) {
         this.molliePaymentExternalId = molliePaymentExternalId;
-        this.status = status;
         this.method = method;
         this.amount = amount;
         this.currency = currency;
@@ -94,9 +88,8 @@ public class MolliePayment {
      * Constructor for creating a MolliePayment with explicit tenantOrganization,
      * used when TenantContext is not available (e.g., booker portal context).
      */
-    public MolliePayment(String molliePaymentExternalId, MolliePaymentStatus status, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, UUID tenantOrganization) {
+    public MolliePayment(String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, UUID tenantOrganization) {
         this.molliePaymentExternalId = molliePaymentExternalId;
-        this.status = status;
         this.method = method;
         this.amount = amount;
         this.currency = currency;
@@ -112,7 +105,6 @@ public class MolliePayment {
         if (this.tenantOrganization == null) {
             this.tenantOrganization = TenantContext.getOrganizationId();
         }
-        this.status = MolliePaymentStatus.OPEN;
     }
 
     @PreUpdate
@@ -127,10 +119,6 @@ public class MolliePayment {
 
     public String getMolliePaymentExternalId() {
         return molliePaymentExternalId;
-    }
-
-    public MolliePaymentStatus getStatus() {
-        return status;
     }
 
     public MolliePaymentMethod getMethod() {

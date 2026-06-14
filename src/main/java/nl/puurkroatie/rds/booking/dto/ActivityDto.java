@@ -24,7 +24,6 @@ public class ActivityDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public ActivityDto(UUID activityId, String name, String description, String activityType,
                        LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt,
                        UUID modifiedBy, UUID tenantOrganization) {
@@ -39,9 +38,11 @@ public class ActivityDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public ActivityDto(String name, String description, String activityType,
+    @JsonCreator
+    public ActivityDto(UUID activityId, String name, String description, String activityType,
                        LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt,
-                       UUID modifiedBy, UUID tenantOrganization) {
+                       UUID modifiedBy) {
+        this.activityId = activityId;
         this.name = name;
         this.description = description;
         this.activityType = activityType;
@@ -49,7 +50,6 @@ public class ActivityDto {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getActivityId() {

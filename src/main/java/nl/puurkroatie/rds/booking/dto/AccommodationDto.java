@@ -24,7 +24,6 @@ public class AccommodationDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public AccommodationDto(UUID accommodationId, String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.accommodationId = accommodationId;
         this.key = key;
@@ -36,14 +35,15 @@ public class AccommodationDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public AccommodationDto(String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public AccommodationDto(UUID accommodationId, String key, String name, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.accommodationId = accommodationId;
         this.key = key;
         this.name = name;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getAccommodationId() {

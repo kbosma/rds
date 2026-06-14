@@ -22,4 +22,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     @Modifying
     @Query("UPDATE Account a SET a.totpSecret = :totpSecret, a.totpEnabled = :totpEnabled, a.totpVerified = :totpVerified, a.recoveryCodes = :recoveryCodes WHERE a.accountId = :accountId")
     void updateTotp(UUID accountId, String totpSecret, Boolean totpEnabled, Boolean totpVerified, String recoveryCodes);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Account a SET a.userName = :userName, a.locked = :locked, a.mustChangePassword = :mustChangePassword, a.modifiedAt = CURRENT_TIMESTAMP, a.modifiedBy = :modifiedBy WHERE a.accountId = :accountId")
+    void updateAccount(UUID accountId, String userName, Boolean locked, Boolean mustChangePassword, UUID modifiedBy);
 }

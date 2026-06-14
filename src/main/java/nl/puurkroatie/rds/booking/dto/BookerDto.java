@@ -35,7 +35,6 @@ public class BookerDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
         this.firstname = firstname;
@@ -54,7 +53,9 @@ public class BookerDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public BookerDto(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.bookerId = bookerId;
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -68,7 +69,6 @@ public class BookerDto {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getBookerId() {

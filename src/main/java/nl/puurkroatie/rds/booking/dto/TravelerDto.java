@@ -31,7 +31,6 @@ public class TravelerDto {
     private UUID tenantOrganization;
 
     @Default
-    @JsonCreator
     public TravelerDto(UUID travelerId, UUID bookingId, String firstname, String prefix, String lastname, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.travelerId = travelerId;
         this.bookingId = bookingId;
@@ -48,7 +47,9 @@ public class TravelerDto {
         this.tenantOrganization = tenantOrganization;
     }
 
-    public TravelerDto(UUID bookingId, String firstname, String prefix, String lastname, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    @JsonCreator
+    public TravelerDto(UUID travelerId, UUID bookingId, String firstname, String prefix, String lastname, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+        this.travelerId = travelerId;
         this.bookingId = bookingId;
         this.firstname = firstname;
         this.prefix = prefix;
@@ -60,7 +61,6 @@ public class TravelerDto {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
-        this.tenantOrganization = tenantOrganization;
     }
 
     public UUID getTravelerId() {

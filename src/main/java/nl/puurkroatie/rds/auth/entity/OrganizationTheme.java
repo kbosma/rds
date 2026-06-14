@@ -12,6 +12,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.common.Default;
 
@@ -29,6 +32,7 @@ public class OrganizationTheme {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false, unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Organization organization;
 
     @Column(name = "primary_color", nullable = false, length = 7)

@@ -7,6 +7,8 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "booker_address")
@@ -16,11 +18,13 @@ public class BookerAddress {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booker_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booker booker;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Address address;
 
     protected BookerAddress() {

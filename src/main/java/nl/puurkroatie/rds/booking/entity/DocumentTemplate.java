@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -30,8 +29,7 @@ public class DocumentTemplate {
     @Column(name = "description")
     private String description;
 
-    @Lob
-    @Column(name = "template_data")
+    @Column(name = "template_data", columnDefinition = "bytea")
     private byte[] templateData;
 
     @Column(name = "created_at", nullable = false, updatable = false)

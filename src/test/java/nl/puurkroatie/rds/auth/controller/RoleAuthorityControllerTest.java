@@ -38,8 +38,8 @@ class RoleAuthorityControllerTest extends AbstractAuthControllerTest {
     void manager_createRoleAuthority_returns403() throws Exception {
         String token = managerToken();
 
-        String roleAuthorityJson = "{\"role\":{\"roleId\":\"" + ROLE_MANAGER_ID + "\"}," +
-                "\"authority\":{\"authorityId\":\"d1000000-0000-0000-0000-000000000002\"}}";
+        String roleAuthorityJson = "{\"roleId\":\"" + ROLE_MANAGER_ID + "\"," +
+                "\"authorityId\":\"d1000000-0000-0000-0000-000000000002\"}";
 
         mockMvc.perform(post("/api/role-authorities")
                         .header("Authorization", "Bearer " + token)

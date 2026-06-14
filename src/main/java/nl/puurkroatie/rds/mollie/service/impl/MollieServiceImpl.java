@@ -40,10 +40,8 @@ public class MollieServiceImpl implements MollieService {
 
     @Override
     public MolliePaymentDto create(MolliePaymentDto dto) {
-        MolliePaymentStatus status = dto.getStatus() != null ? MolliePaymentStatus.fromValue(dto.getStatus()) : null;
         MolliePayment entity = new MolliePayment(
                 dto.getMolliePaymentExternalId(),
-                status,
                 dto.getMethod(),
                 dto.getAmount(),
                 dto.getCurrency(),
@@ -60,11 +58,9 @@ public class MollieServiceImpl implements MollieService {
         MolliePayment existing = molliePaymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
-        MolliePaymentStatus status = dto.getStatus() != null ? MolliePaymentStatus.fromValue(dto.getStatus()) : null;
         MolliePayment entity = new MolliePayment(
                 id,
                 dto.getMolliePaymentExternalId(),
-                status,
                 dto.getMethod(),
                 dto.getAmount(),
                 dto.getCurrency(),
@@ -116,11 +112,8 @@ public class MollieServiceImpl implements MollieService {
             String currency = response.getAmount() != null ? response.getAmount().getCurrency() : null;
             String checkoutUrl = response.getLinks() != null && response.getLinks().getCheckout() != null ? response.getLinks().getCheckout().getHref() : null;
 
-            MolliePaymentStatus status = response.getStatus() != null ? MolliePaymentStatus.fromValue(response.getStatus()) : null;
-
             MolliePayment entity = new MolliePayment(
                     response.getId(),
-                    status,
                     null,
                     amount,
                     currency,
@@ -144,11 +137,9 @@ public class MollieServiceImpl implements MollieService {
         if (response != null) {
             molliePaymentRepository.findByMolliePaymentExternalId(request.getId())
                     .ifPresent(existing -> {
-                        MolliePaymentStatus status = response.getStatus() != null ? MolliePaymentStatus.fromValue(response.getStatus()) : null;
                         MolliePayment updated = new MolliePayment(
                                 existing.getMolliePaymentId(),
                                 existing.getMolliePaymentExternalId(),
-                                status,
                                 existing.getMethod(),
                                 existing.getAmount(),
                                 existing.getCurrency(),
@@ -156,6 +147,7 @@ public class MollieServiceImpl implements MollieService {
                                 existing.getCheckoutUrl()
                         );
                         molliePaymentRepository.save(updated);
+                        MolliePaymentStatus status = response.getStatus() != null ? MolliePaymentStatus.fromValue(response.getStatus()) : null;
                         if (status != null) {
                             statusEntryService.createStatusFromWebhook(existing.getMolliePaymentId(), status);
                         }

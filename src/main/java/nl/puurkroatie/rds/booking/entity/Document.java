@@ -7,11 +7,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import nl.puurkroatie.rds.auth.security.TenantContext;
 
@@ -29,6 +31,7 @@ public class Document {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booking booking;
 
     @Column(name = "displayname", nullable = false)
@@ -37,8 +40,7 @@ public class Document {
     @Column(name = "mime_type")
     private String mimeType;
 
-    @Lob
-    @Column(name = "document")
+    @Column(name = "document", columnDefinition = "bytea")
     private byte[] document;
 
     @Column(name = "created_at", nullable = false, updatable = false)

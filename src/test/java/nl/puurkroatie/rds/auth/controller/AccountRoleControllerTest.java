@@ -39,8 +39,8 @@ class AccountRoleControllerTest extends AbstractAuthControllerTest {
         String token = managerToken();
 
         // Koppel manager's account aan EMPLOYEE role (extra role toewijzing)
-        String accountRoleJson = "{\"account\":{\"accountId\":\"" + MANAGER_ACCOUNT_ID + "\"}," +
-                "\"role\":{\"roleId\":\"" + ROLE_EMPLOYEE_ID + "\"}}";
+        String accountRoleJson = "{\"accountId\":\"" + MANAGER_ACCOUNT_ID + "\"," +
+                "\"roleId\":\"" + ROLE_EMPLOYEE_ID + "\"}";
 
         mockMvc.perform(post("/api/account-roles")
                         .header("Authorization", "Bearer " + token)
