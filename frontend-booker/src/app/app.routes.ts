@@ -45,6 +45,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'accommodations',
+        loadComponent: () =>
+          import('./features/accommodations/accommodations.component').then(
+            (m) => m.AccommodationsComponent
+          ),
+      },
+      {
         path: 'activities',
         loadComponent: () =>
           import('./features/activities/activities.component').then(

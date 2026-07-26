@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivityService } from '../activities/activity.service';
 import { BookingActivityService } from './booking-activity.service';
 import { Activity, BookingActivity } from '../../shared/models';
@@ -32,7 +32,7 @@ export interface BookingActivityDialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h2 mat-dialog-title>{{ isEdit ? ('bookingActivity.editTitle' | translate) : ('bookingActivity.addTitle' | translate) }}</h2>

@@ -4,7 +4,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 
 interface Document {
@@ -16,7 +16,7 @@ interface Document {
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [DatePipe, MatTableModule, MatIconModule, MatProgressSpinnerModule, MatCardModule, TranslateModule],
+  imports: [DatePipe, MatTableModule, MatIconModule, MatProgressSpinnerModule, MatCardModule, TranslatePipe],
   template: `
     <h1>{{ 'documents.title' | translate }}</h1>
 

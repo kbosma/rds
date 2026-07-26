@@ -4,7 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
 
@@ -19,7 +19,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     MatButtonModule,
     MatIconModule,
     MatTabsModule,
-    TranslateModule,
+    TranslatePipe,
     LanguageSwitcherComponent,
   ],
   template: `
@@ -42,6 +42,9 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       </a>
       <a mat-button routerLink="/documents" routerLinkActive="active-tab">
         <mat-icon>description</mat-icon> {{ 'nav.documents' | translate }}
+      </a>
+      <a mat-button routerLink="/accommodations" routerLinkActive="active-tab">
+        <mat-icon>hotel</mat-icon> {{ 'nav.accommodations' | translate }}
       </a>
       <a mat-button routerLink="/activities" routerLinkActive="active-tab">
         <mat-icon>local_activity</mat-icon> {{ 'nav.activities' | translate }}

@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Booking, BookingService } from './booking.service';
 import { BookingLineService } from './booking-line.service';
 import { BookingActivityService } from './booking-activity.service';
@@ -60,7 +60,7 @@ interface BookingMolliePaymentLink {
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <a routerLink="/bookings" class="back-link">

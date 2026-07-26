@@ -3,7 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Accommodation, Supplier, Address } from '../../shared/models';
 
 export interface AccommodationDetailData {
@@ -21,7 +21,7 @@ export interface AccommodationDetailData {
     MatButtonModule,
     MatIconModule,
     MatDividerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h2 mat-dialog-title>

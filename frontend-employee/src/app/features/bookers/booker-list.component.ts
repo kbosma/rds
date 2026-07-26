@@ -12,7 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BookerService } from './booker.service';
 import { BookingSelectDialogComponent, BookingSelectDialogData } from './booking-select-dialog.component';
 import { BookingService } from '../bookings/booking.service';
@@ -32,7 +32,7 @@ import { Booker, Booking } from '../../shared/models';
     MatIconModule,
     MatProgressSpinnerModule,
     MatDialogModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="header">

@@ -11,4 +11,6 @@ public interface BookingLineRepository extends JpaRepository<BookingLine, UUID> 
     List<BookingLine> findByTenantOrganization(UUID tenantOrganization);
 
     List<BookingLine> findByBookingBookingId(UUID bookingId);
+
+    List<BookingLine> findByBookingBookingIdOrderByFromDateAsc(UUID bookingId);
 }

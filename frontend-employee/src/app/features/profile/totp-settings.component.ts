@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { TotpSetupDialogComponent } from './totp-setup-dialog.component';
 import { TotpDisableDialogComponent } from './totp-disable-dialog.component';
@@ -19,7 +19,7 @@ import { Account } from '../../shared/models';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <mat-card>

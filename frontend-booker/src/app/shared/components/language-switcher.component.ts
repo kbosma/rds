@@ -12,7 +12,7 @@ import { LanguageService } from '../../core/i18n/language.service';
     <button mat-icon-button (click)="lang.toggleLanguage()" [attr.aria-label]="'Switch language'">
       <mat-icon>language</mat-icon>
     </button>
-    <span class="lang-label">{{ lang.currentLang | uppercase }}</span>
+    <span class="lang-label">{{ lang.currentLang() | uppercase }}</span>
   `,
   styles: [`
     :host {

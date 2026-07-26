@@ -14,7 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Booking, BookingService } from './booking.service';
 
 @Component({
@@ -35,7 +35,7 @@ import { Booking, BookingService } from './booking.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatSelectModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="header">

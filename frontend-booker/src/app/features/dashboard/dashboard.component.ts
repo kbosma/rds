@@ -2,13 +2,13 @@ import { Component, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, RouterLink, TranslateModule],
+  imports: [MatCardModule, MatIconModule, RouterLink, TranslatePipe],
   template: `
     <h1>{{ 'dashboard.title' | translate }}</h1>
 

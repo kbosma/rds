@@ -22,6 +22,7 @@
     "overview": "Overzicht",
     "itinerary": "Reisschema",
     "documents": "Documenten",
+    "accommodations": "Accommodaties",
     "activities": "Activiteiten",
     "payments": "Betalingen",
     "logout": "Uitloggen"
@@ -58,6 +59,8 @@
     "title": "Reisschema",
     "subtitle": "Uw volledige reisplanning op een rij",
     "noItems": "Er zijn nog geen items in uw reisschema.",
+    "accommodation": "Accommodatie",
+    "activity": "Activiteit",
     "period": "Periode",
     "accommodations": "Accommodaties",
     "activities": "Activiteiten",
@@ -70,6 +73,13 @@
     "type_excursie": "Excursie",
     "type_ticket": "Ticket",
     "type_transfer": "Transfer"
+  },
+  "accommodations": {
+    "title": "Accommodaties",
+    "noAccommodations": "Er zijn geen accommodaties gevonden voor uw boeking.",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "nights": "nachten"
   },
   "activities": {
     "title": "Activiteiten",

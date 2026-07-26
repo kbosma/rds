@@ -1,13 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-employee-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, TranslateModule],
+  imports: [MatCardModule, MatIconModule, TranslatePipe],
   template: `
     <div class="welcome-card">
       <mat-card>

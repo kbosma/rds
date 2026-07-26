@@ -6,6 +6,9 @@ server:
   shutdown: graceful
   max-http-request-header-size: 16KB
 
+  servlet:
+    context-path: /rds
+    
   ssl:
     enabled: false
 #    key-store: /Users/kees/Code/rds/rds-platform.p12

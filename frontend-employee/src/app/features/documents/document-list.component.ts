@@ -10,7 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { DocumentService } from './document.service';
 import { BookingService } from '../bookings/booking.service';
@@ -30,7 +30,7 @@ import { Document } from '../../shared/models';
     MatInputModule,
     MatSortModule,
     MatPaginatorModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h1>{{ 'documents.title' | translate }}</h1>

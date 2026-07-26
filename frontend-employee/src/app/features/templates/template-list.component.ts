@@ -10,7 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TemplateService } from './template.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { DocumentTemplate } from '../../shared/models';
@@ -30,7 +30,7 @@ import { TemplateDialogComponent } from './template-dialog.component';
     MatDividerModule,
     MatDialogModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="header">
