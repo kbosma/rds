@@ -20,7 +20,7 @@
 
 ## Frontend (Angular)
 
-- Angular 19 standalone components
+- Angular 22 standalone components
 - RxJS + async pipe
 - Services voor API communicatie
 - Reactive forms

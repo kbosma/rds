@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-traveler-list',
   standalone: true,
-  imports: [MatIconModule, TranslateModule],
+  imports: [MatIconModule, TranslatePipe],
   template: `
     <h1>{{ 'travelers.title' | translate }}</h1>
     <p class="placeholder">{{ 'common.placeholderPage' | translate }}</p>

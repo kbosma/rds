@@ -7,7 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { BookingService } from '../bookings/booking.service';
 import { BookingLineService } from '../bookings/booking-line.service';
@@ -24,7 +24,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="welcome-card">

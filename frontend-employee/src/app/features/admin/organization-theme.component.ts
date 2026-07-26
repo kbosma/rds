@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ThemeService } from './theme.service';
 import { OrganizationTheme } from '../../shared/models';
 
@@ -21,7 +21,7 @@ import { OrganizationTheme } from '../../shared/models';
     MatButtonModule,
     MatIconModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h1>{{ 'theme.title' | translate }}</h1>

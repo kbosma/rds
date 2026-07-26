@@ -7,7 +7,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { MolliePaymentService } from './mollie-payment.service';
 import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
@@ -24,7 +24,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="breadcrumb">

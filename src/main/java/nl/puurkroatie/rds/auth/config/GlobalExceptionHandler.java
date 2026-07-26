@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -67,6 +68,16 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "No handler found for " + ex.getHttpMethod() + " " + ex.getRequestURL(),
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(RuntimeException.class)

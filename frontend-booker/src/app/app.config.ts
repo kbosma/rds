@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     { provide: LOCALE_ID, useValue: 'nl' },
     provideTranslateService({
-      defaultLanguage: 'nl',
+      lang: 'nl',
     }),
     provideTranslateHttpLoader({
       prefix: './i18n/',

@@ -1,8 +1,7 @@
 package nl.puurkroatie.rds.bookerportal.controller;
 
+import nl.puurkroatie.rds.bookerportal.dto.BookerPortalAccommodationDto;
 import nl.puurkroatie.rds.bookerportal.security.BookerContext;
-import nl.puurkroatie.rds.booking.dto.BookingLineDto;
-import nl.puurkroatie.rds.booking.mapper.BookingLineMapper;
 import nl.puurkroatie.rds.booking.repository.BookingLineRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,20 +17,25 @@ import java.util.UUID;
 public class BookerPortalBookingLineController {
 
     private final BookingLineRepository bookingLineRepository;
-    private final BookingLineMapper bookingLineMapper;
 
-    public BookerPortalBookingLineController(BookingLineRepository bookingLineRepository,
-                                              BookingLineMapper bookingLineMapper) {
+    public BookerPortalBookingLineController(BookingLineRepository bookingLineRepository) {
         this.bookingLineRepository = bookingLineRepository;
-        this.bookingLineMapper = bookingLineMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('BOOKER_PORTAL_READ')")
-    public ResponseEntity<List<BookingLineDto>> findAll() {
+    public ResponseEntity<List<BookerPortalAccommodationDto>> findAll() {
         UUID bookingId = BookerContext.getBookingId();
-        List<BookingLineDto> lines = bookingLineRepository.findByBookingBookingId(bookingId).stream()
-                .map(bookingLineMapper::toDto)
+        List<BookerPortalAccommodationDto> lines = bookingLineRepository
+                .findByBookingBookingIdOrderByFromDateAsc(bookingId)
+                .stream()
+                .map(bl -> new BookerPortalAccommodationDto(
+                        bl.getBookingLineId(),
+                        bl.getAccommodation().getName(),
+                        bl.getSupplier().getName(),
+                        bl.getFromDate(),
+                        bl.getUntilDate()
+                ))
                 .toList();
         return ResponseEntity.ok(lines);
     }

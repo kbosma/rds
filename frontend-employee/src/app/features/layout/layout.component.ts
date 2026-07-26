@@ -6,7 +6,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../admin/theme.service';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
@@ -32,7 +32,7 @@ interface NavItem {
     MatIconModule,
     MatButtonModule,
     MatDividerModule,
-    TranslateModule,
+    TranslatePipe,
     LanguageSwitcherComponent,
   ],
   template: `

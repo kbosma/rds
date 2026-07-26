@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PaymentService } from './payment.service';
 import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models/mollie-payment.model';
 
@@ -20,7 +20,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models/mol
     MatButtonModule,
     MatProgressSpinnerModule,
     MatCardModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h1>{{ 'payments.title' | translate }}</h1>

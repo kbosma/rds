@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_DATE_LOCALE, useValue: 'nl-NL' },
     { provide: MAT_DATE_FORMATS, useValue: DD_MM_YYYY_FORMATS },
     provideTranslateService({
-      defaultLanguage: 'nl',
+      lang: 'nl',
     }),
     provideTranslateHttpLoader({
       prefix: './i18n/',

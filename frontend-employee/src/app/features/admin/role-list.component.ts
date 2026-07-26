@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { RoleService } from './role.service';
 import { Role } from '../../shared/models';
 
@@ -27,7 +27,7 @@ import { Role } from '../../shared/models';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="header">

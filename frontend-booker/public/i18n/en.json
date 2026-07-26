@@ -22,6 +22,7 @@
     "overview": "Overview",
     "itinerary": "Itinerary",
     "documents": "Documents",
+    "accommodations": "Accommodations",
     "activities": "Activities",
     "payments": "Payments",
     "logout": "Log out"
@@ -58,6 +59,8 @@
     "title": "Itinerary",
     "subtitle": "Your complete travel schedule at a glance",
     "noItems": "There are no items in your itinerary yet.",
+    "accommodation": "Accommodation",
+    "activity": "Activity",
     "period": "Period",
     "accommodations": "Accommodations",
     "activities": "Activities",
@@ -70,6 +73,13 @@
     "type_excursie": "Excursion",
     "type_ticket": "Ticket",
     "type_transfer": "Transfer"
+  },
+  "accommodations": {
+    "title": "Accommodations",
+    "noAccommodations": "No accommodations found for your booking.",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "nights": "nights"
   },
   "activities": {
     "title": "Activities",

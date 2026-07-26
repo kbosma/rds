@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AccommodationService } from '../accommodations/accommodation.service';
 import { AccommodationSupplierService } from '../accommodations/accommodation-supplier.service';
@@ -41,7 +41,7 @@ interface DateWarning {
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h2 mat-dialog-title>{{ isEdit ? ('bookingLine.editTitle' | translate) : ('bookingLine.addTitle' | translate) }}</h2>

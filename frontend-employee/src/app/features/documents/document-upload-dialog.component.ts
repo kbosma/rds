@@ -10,7 +10,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DocumentService } from './document.service';
 import { TemplateService } from '../templates/template.service';
 import { DocumentTemplate } from '../../shared/models';
@@ -47,7 +47,7 @@ export interface DocumentUploadDialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <h2 mat-dialog-title>{{ 'documents.dialogTitle' | translate }}</h2>

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({ providedIn: 'root' })
@@ -9,17 +9,14 @@ export class LanguageService {
   private readonly DEFAULT_LANG = 'nl';
   private readonly SUPPORTED_LANGS = ['nl', 'en'];
 
+  currentLang = computed(() => this.translate.currentLang() ?? this.DEFAULT_LANG);
+
   init(): void {
     this.translate.addLangs(this.SUPPORTED_LANGS);
-    this.translate.setDefaultLang(this.DEFAULT_LANG);
 
     const stored = localStorage.getItem(this.STORAGE_KEY);
     const lang = stored && this.SUPPORTED_LANGS.includes(stored) ? stored : this.DEFAULT_LANG;
     this.translate.use(lang);
-  }
-
-  get currentLang(): string {
-    return this.translate.currentLang || this.DEFAULT_LANG;
   }
 
   switchLanguage(lang: string): void {
@@ -30,7 +27,7 @@ export class LanguageService {
   }
 
   toggleLanguage(): void {
-    const next = this.currentLang === 'nl' ? 'en' : 'nl';
+    const next = this.currentLang() === 'nl' ? 'en' : 'nl';
     this.switchLanguage(next);
   }
 }

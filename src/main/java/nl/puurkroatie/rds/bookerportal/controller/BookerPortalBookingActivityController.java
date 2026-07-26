@@ -1,8 +1,7 @@
 package nl.puurkroatie.rds.bookerportal.controller;
 
+import nl.puurkroatie.rds.bookerportal.dto.BookerPortalActivityDto;
 import nl.puurkroatie.rds.bookerportal.security.BookerContext;
-import nl.puurkroatie.rds.booking.dto.BookingActivityDto;
-import nl.puurkroatie.rds.booking.mapper.BookingActivityMapper;
 import nl.puurkroatie.rds.booking.repository.BookingActivityRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,20 +17,27 @@ import java.util.UUID;
 public class BookerPortalBookingActivityController {
 
     private final BookingActivityRepository bookingActivityRepository;
-    private final BookingActivityMapper bookingActivityMapper;
 
-    public BookerPortalBookingActivityController(BookingActivityRepository bookingActivityRepository,
-                                                 BookingActivityMapper bookingActivityMapper) {
+    public BookerPortalBookingActivityController(BookingActivityRepository bookingActivityRepository) {
         this.bookingActivityRepository = bookingActivityRepository;
-        this.bookingActivityMapper = bookingActivityMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('BOOKER_PORTAL_READ')")
-    public ResponseEntity<List<BookingActivityDto>> findAll() {
+    public ResponseEntity<List<BookerPortalActivityDto>> findAll() {
         UUID bookingId = BookerContext.getBookingId();
-        List<BookingActivityDto> activities = bookingActivityRepository.findByBookingBookingId(bookingId).stream()
-                .map(bookingActivityMapper::toDto)
+        List<BookerPortalActivityDto> activities = bookingActivityRepository
+                .findByBookingBookingIdOrderByFromDateAsc(bookingId)
+                .stream()
+                .map(ba -> new BookerPortalActivityDto(
+                        ba.getBookingActivityId(),
+                        ba.getActivity().getName(),
+                        ba.getActivity().getDescription(),
+                        ba.getFromDate(),
+                        ba.getUntilDate(),
+                        ba.getMeetingPoint(),
+                        ba.getActivity().getActivityType().name()
+                ))
                 .toList();
         return ResponseEntity.ok(activities);
     }

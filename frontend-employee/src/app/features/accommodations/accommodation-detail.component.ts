@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { forkJoin, switchMap } from 'rxjs';
 import { AccommodationService } from './accommodation.service';
 import { AddressService } from './address.service';
@@ -36,7 +36,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
     MatSnackBarModule,
     MatDividerModule,
     MatSelectModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <a routerLink="/accommodations" class="back-link">

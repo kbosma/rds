@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SupplierService } from './supplier.service';
 import { SupplierAddressService } from '../accommodations/supplier-address.service';
 import { AddressService } from '../accommodations/address.service';
@@ -37,7 +37,7 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatDividerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="header">

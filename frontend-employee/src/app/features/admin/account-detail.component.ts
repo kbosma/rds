@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AccountService } from './account.service';
 import { PersonService } from './person.service';
@@ -40,7 +40,7 @@ interface PersonOption {
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <a routerLink="/admin/accounts" class="back-link">

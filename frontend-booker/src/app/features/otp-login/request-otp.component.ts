@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BookerAuthService } from '../../core/auth/booker-auth.service';
 
 @Component({
@@ -21,7 +21,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="login-wrapper">

@@ -4,7 +4,7 @@ import { forkJoin } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { OrganizationService } from '../admin/organization.service';
 import { PersonService } from '../admin/person.service';
@@ -22,7 +22,7 @@ interface OrgOverview {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule, TranslateModule],
+  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule, TranslatePipe],
   template: `
     <div class="welcome-card">
       <mat-card>

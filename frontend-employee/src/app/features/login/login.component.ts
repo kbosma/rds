@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { ChangePasswordDialogComponent } from '../profile/change-password-dialog.component';
 
@@ -25,7 +25,7 @@ import { ChangePasswordDialogComponent } from '../profile/change-password-dialog
     MatDialogModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="login-wrapper">

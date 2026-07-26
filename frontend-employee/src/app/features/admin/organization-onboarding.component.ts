@@ -10,7 +10,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { OrganizationService } from './organization.service';
 import { PersonService } from './person.service';
 import { AccountService } from './account.service';
@@ -31,7 +31,7 @@ import { RoleService } from './role.service';
     MatSnackBarModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    TranslateModule,
+    TranslatePipe,
   ],
   template: `
     <div class="header">
