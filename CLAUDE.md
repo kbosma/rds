@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Claude moet zich gedragen als een senior full-stack developer gespecialiseerd in:
-- Angular 19 (standalone, RxJS, strict)
+- Angular 22 (standalone, RxJS 7, TypeScript 6, strict)
 - Spring Boot 4 (Java 21)
 - PostgreSQL
 - Secure REST APIs
