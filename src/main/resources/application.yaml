@@ -24,8 +24,7 @@ server:
 
     accesslog:
       enabled: true
-      directory: /opt/rds/log
-      filename: access.log
+      filename: /opt/rds/log/access.log
       file-date-format: .yyyy-MM-dd
       retention-period: 30
       append: true
@@ -64,5 +63,5 @@ app:
     urls:
       webhook: http://217.63.23.31:8082/api/mollie/payments/webhook
       redirect: http://178.104.163.88:5003/payments
-#      webhook: http://178.104.163.88/api/mollie/payments/webhook
-#      redirect: https://rds.kbtg/booker/payments
+      # webhook: http://178.104.163.88/api/mollie/payments/webhook
+      # redirect: https://software.kbtg/booker/payments
