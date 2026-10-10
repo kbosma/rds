@@ -61,7 +61,6 @@ app:
         base: https://api.mollie.com/v2/payments
     key: Bearer test_GpPHhs7SHk73fAyMyaJUFUKJQdxDD5
     urls:
-      webhook: http://217.63.23.31:8082/api/mollie/payments/webhook
-      redirect: http://178.104.163.88:5003/payments
-      # webhook: http://178.104.163.88/api/mollie/payments/webhook
+      webhook: http://178.104.163.88/api/mollie/payments/webhook
+      # redirect: http://178.104.163.88:5003/payments
       # redirect: https://software.kbtg/booker/payments
