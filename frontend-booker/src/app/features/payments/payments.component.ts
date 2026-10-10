@@ -1,4 +1,6 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { timer, switchMap, tap, takeWhile, take } from 'rxjs';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -298,6 +300,12 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models/mol
 export class PaymentsComponent implements OnInit {
   private paymentService = inject(PaymentService);
   private translateService = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
+
+  // Statussen waarop we niet langer hoeven te wachten (einde van de betaling).
+  private static readonly TERMINAL_STATUSES = ['paid', 'failed', 'canceled', 'expired'];
+  private static readonly POLL_INTERVAL_MS = 2500;
+  private static readonly MAX_POLLS = 13; // ~30s
 
   payments = signal<MolliePayment[]>([]);
   loading = signal(true);
@@ -339,7 +347,7 @@ export class PaymentsComponent implements OnInit {
       error: () => this.loading.set(false),
     });
 
-    this.loadStatusEntries();
+    this.startStatusPolling();
   }
 
   statusLabel(status: string): string {
@@ -386,17 +394,38 @@ export class PaymentsComponent implements OnInit {
     return this.statusEntries().filter(e => e.molliePaymentId === molliePaymentId);
   }
 
-  private loadStatusEntries() {
+  /**
+   * Haalt de status-entries op en blijft kort pollen, zodat een statuswijziging
+   * die via de (asynchrone) Mollie-webhook server-side binnenkomt vanzelf in de
+   * UI verschijnt — zonder handmatige refresh. Stopt zodra alle betalingen een
+   * eindstatus hebben, na MAX_POLLS pogingen, of bij het verlaten van de pagina.
+   */
+  private startStatusPolling() {
     this.statusEntriesLoading.set(true);
-    this.paymentService.getStatusEntries().subscribe({
-      next: (entries) => {
-        this.statusEntries.set(entries);
-        this.statusEntriesLoading.set(false);
-      },
-      error: () => {
-        this.statusEntries.set([]);
-        this.statusEntriesLoading.set(false);
-      },
-    });
+    timer(0, PaymentsComponent.POLL_INTERVAL_MS)
+      .pipe(
+        switchMap(() => this.paymentService.getStatusEntries()),
+        tap((entries) => {
+          this.statusEntries.set(entries);
+          this.statusEntriesLoading.set(false);
+        }),
+        takeWhile(() => !this.allPaymentsTerminal(), true),
+        take(PaymentsComponent.MAX_POLLS),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        error: () => {
+          this.statusEntries.set([]);
+          this.statusEntriesLoading.set(false);
+        },
+      });
+  }
+
+  private allPaymentsTerminal(): boolean {
+    const payments = this.payments();
+    if (payments.length === 0) return false; // betalingen nog niet geladen → blijf pollen
+    return payments.every((p) =>
+      PaymentsComponent.TERMINAL_STATUSES.includes(this.currentStatus(p.molliePaymentId)),
+    );
   }
 }

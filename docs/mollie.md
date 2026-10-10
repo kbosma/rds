@@ -10,9 +10,64 @@
 
 ## Flow
 
-1. create payment (Mollie API)
-2. sla op in DB
-3. webhook update status
+Kort: `create payment (Mollie API)` → `sla op in DB` → `booker betaalt op Mollie` → `webhook werkt status bij`.
+
+### Twee id's (niet verwarren!)
+
+| Id | Wat | Waar gebruikt |
+|---|---|---|
+| `molliePaymentId` | **Onze** interne UUID (bijv. `20dc1a1b-…`) | pad van de pay-call, koppeltabel `BookingMolliePayment`, DB primary key |
+| `tr_xxx` = `molliePaymentExternalId` | **Mollie's** payment-id (`tr_` = transaction) | door Mollie aangemaakt, gebruikt in de webhook + status-GET |
+
+### Sequence-diagram
+
+```mermaid
+sequenceDiagram
+    actor B as Booker (browser)
+    participant BE as Backend (/rds)
+    participant M as Mollie
+
+    B->>BE: POST /api/booker-portal/payments/pay/{molliePaymentId}
+    Note right of B: booker-JWT, onze interne UUID
+
+    BE->>M: POST /v2/payments<br/>amount "70.00", redirectUrl, webhookUrl
+    Note right of BE: header Authorization: Bearer [key]
+    M-->>BE: 201 Created<br/>id = tr_xxx, status = open, _links.checkout.href
+    Note over BE: sla op: molliePaymentExternalId = tr_xxx,<br/>checkoutUrl = _links.checkout.href (zelfde URL, onze naam)
+
+    BE-->>B: 200 OK { checkoutUrl }
+    B->>M: GET checkoutUrl (volledige pagina-navigatie)
+    Note over B,M: booker betaalt — test: kies "Paid"
+
+    par Redirect (browser-facing)
+        M-->>B: GET redirectUrl (…/booker/payments)
+        Note over B: app herlaadt de betaal-pagina<br/>bevat GEEN tr_xxx
+    and Webhook (server-to-server)
+        M->>BE: POST /rds/api/mollie/payments/webhook<br/>body: id=tr_xxx
+        BE->>M: GET /v2/payments/tr_xxx
+        M-->>BE: status = paid
+        Note over BE: findByExternalId(tr_xxx)<br/>→ MolliePaymentStatusEntry(PAID)
+        BE-->>M: 200 OK (Mollie stopt met retryen)
+    end
+
+    B->>BE: GET /api/booker-portal/payments/status-entries
+    BE-->>B: PAID → toont "Betaald"
+```
+
+### Toelichting per stap
+
+1. **pay-call** — de booker klikt "Betalen"; de app stuurt **onze** `molliePaymentId` (UUID) naar de backend.
+2. **create at Mollie** — de backend bouwt het bedrag als string met exact 2 decimalen (`"70.00"`) en stuurt `redirectUrl` + `webhookUrl` mee.
+3. **tr_xxx ontstaat hier** — Mollie maakt de payment aan en geeft `id = tr_xxx` terug. Die bewaren we als `molliePaymentExternalId`. De betaalpagina-URL komt uit `_links.checkout.href` en slaan we op als `checkoutUrl` — **zelfde URL, onze veldnaam**.
+4. **checkoutUrl terug naar de app.**
+5. **navigatie naar Mollie** — `window.location = checkoutUrl`; de booker betaalt op de Mollie-checkoutpagina.
+6. **na betaling splitst het in twee onafhankelijke sporen:**
+    - **Redirect (browser-facing):** Mollie stuurt de browser terug naar `redirectUrl`. Bevat **geen** `tr_xxx`; de app herlaadt enkel de lijst. Mag intern/IP zijn.
+    - **Webhook (server-to-server):** Mollie POST't `id=tr_xxx` naar `webhookUrl`. Moet **publiek bereikbaar** zijn en via NGINX op `/rds/api/mollie/payments/webhook` uitkomen.
+7. **status ophalen** — de webhook-body bevat alleen de id (geen status). De backend haalt de **echte** status apart op via `GET /v2/payments/tr_xxx`, zoekt ons record via `tr_xxx` en schrijft een `MolliePaymentStatusEntry(PAID)` weg.
+8. **app leest de status** — de booker-portal haalt de status-entries op en toont "Betaald". De **enige** statusbron is de webhook, niet de redirect.
+
+> **Let op:** redirect ≠ webhook. De redirect is browser-facing (mag een intern/IP-adres zijn), de webhook wordt door Mollie's servers op het internet aangeroepen en moet dus publiek bereikbaar zijn — inclusief de `/rds` context-path in NGINX.
 
 [//]: # (Flow 1: EMPLOYEE maakt betaling aan &#40;frontend-employee&#41;)
 

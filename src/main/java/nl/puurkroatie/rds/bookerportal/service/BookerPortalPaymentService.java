@@ -12,16 +12,23 @@ import nl.puurkroatie.rds.mollie.mapper.MolliePaymentMapper;
 import nl.puurkroatie.rds.mollie.mapper.MolliePaymentStatusEntryMapper;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentRepository;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
+import java.math.RoundingMode;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @Transactional
 public class BookerPortalPaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookerPortalPaymentService.class);
 
     private final BookingMolliePaymentRepository bookingMolliePaymentRepository;
     private final MolliePaymentMapper molliePaymentMapper;
@@ -78,19 +85,37 @@ public class BookerPortalPaymentService {
                 .orElseThrow(() -> new RuntimeException("MolliePayment not found: " + molliePaymentId));
 
         // Build Mollie API request from existing payment data
-        String effectiveRedirectUrl = redirectUrl != null ? redirectUrl : mollieConfig.getUrls().getRedirect();
+        // Prefer the environment-configured redirect (e.g. a public IP in application-rds-tst.yaml);
+        // fall back to the browser-derived URL only when no redirect is configured.
+        String configuredRedirect = mollieConfig.getUrls().getRedirect();
+        String effectiveRedirectUrl = (configuredRedirect != null && !configuredRedirect.isBlank())
+                ? configuredRedirect
+                : redirectUrl;
+
+        // Mollie requires amount.value as a string with exactly the currency's decimal count (EUR -> "70.00")
+        int fractionDigits = Currency.getInstance(payment.getCurrency()).getDefaultFractionDigits();
+        String amountValue = payment.getAmount().setScale(fractionDigits, RoundingMode.HALF_UP).toPlainString();
+
         PaymentRequestDto request = new PaymentRequestDto(
-                new PaymentRequestDto.Amount(payment.getCurrency(), payment.getAmount().toPlainString()),
+                new PaymentRequestDto.Amount(payment.getCurrency(), amountValue),
                 payment.getDescription(),
                 effectiveRedirectUrl,
                 mollieConfig.getUrls().getWebhook(),
                 null
         );
 
-        PaymentResponseDto response = mollieRestClient.post()
-                .body(request)
-                .retrieve()
-                .body(PaymentResponseDto.class);
+        PaymentResponseDto response;
+        try {
+            response = mollieRestClient.post()
+                    .body(request)
+                    .retrieve()
+                    .body(PaymentResponseDto.class);
+        } catch (RestClientResponseException ex) {
+            log.error("Mollie payment creation failed ({}). redirectUrl={}, webhookUrl={}, Mollie response: {}",
+                    ex.getStatusCode(), effectiveRedirectUrl, mollieConfig.getUrls().getWebhook(),
+                    ex.getResponseBodyAsString(), ex);
+            throw ex;
+        }
 
         if (response != null && response.getId() != null) {
             String checkoutUrl = response.getLinks() != null && response.getLinks().getCheckout() != null

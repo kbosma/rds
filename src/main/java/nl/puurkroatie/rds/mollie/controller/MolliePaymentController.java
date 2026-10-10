@@ -9,7 +9,9 @@ import nl.puurkroatie.rds.mollie.service.MollieService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +27,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/mollie/payments")
+@Validated
 public class MolliePaymentController {
 
     private final MollieService mollieService;
@@ -76,7 +79,9 @@ public class MolliePaymentController {
     }
 
     @PostMapping("/webhook")
-    public ResponseEntity<Void> handleWebhook(@RequestParam("id") String id) {
+    public ResponseEntity<Void> handleWebhook(
+            @RequestParam("id")
+            @Pattern(regexp = "tr_[A-Za-z0-9]+", message = "Invalid Mollie payment id") String id) {
         mollieService.updatePaymentFromMollie(new PaymentStatusRequestDto(id));
         return ResponseEntity.ok().build();
     }
