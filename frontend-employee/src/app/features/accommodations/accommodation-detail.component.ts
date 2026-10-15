@@ -12,6 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { forkJoin, switchMap } from 'rxjs';
 import { AccommodationService } from './accommodation.service';
 import { AddressService } from './address.service';
@@ -19,6 +20,8 @@ import { AccommodationAddressService } from './accommodation-address.service';
 import { AccommodationSupplierService } from './accommodation-supplier.service';
 import { SupplierService } from '../suppliers/supplier.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { QuickCreateDialogComponent, QuickCreateResult } from '../../shared/components/quick-create-dialog.component';
 import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../shared/models';
 
 @Component({
@@ -111,6 +114,11 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                   </mat-form-field>
                 </div>
                 <div class="actions">
+                  @if (canCreateSupplier) {
+                    <button mat-button type="button" class="new-supplier-btn" (click)="createSupplier()">
+                      <mat-icon>add</mat-icon> {{ 'accommodations.newSupplier' | translate }}
+                    </button>
+                  }
                   <button mat-button type="button" (click)="cancelSupplierSelect()"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
                   <button mat-raised-button color="primary" type="button"
                           (click)="onLinkSupplier()"
@@ -384,8 +392,11 @@ export class AccommodationDetailComponent implements OnInit {
   private supplierService = inject(SupplierService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
+  private dialog = inject(MatDialog);
 
   canEditAddresses = this.authService.hasAuthority('ACCOMMODATION_UPDATE');
+  canCreateSupplier = this.authService.hasAuthority('SUPPLIER_CREATE');
 
   isNew = signal(true);
   loading = signal(false);
@@ -561,9 +572,33 @@ export class AccommodationDetailComponent implements OnInit {
     });
   }
 
-  unlinkSupplier(supplier: Supplier) {
+  /** Maakt een nieuwe leverancier aan en koppelt die meteen aan deze accommodatie. */
+  createSupplier() {
     if (!this.accommodationId) return;
-    if (!confirm(this.translate.instant('accommodations.unlinkSupplierConfirm', { name: supplier.name }))) return;
+    const accommodationId = this.accommodationId;
+    this.dialog.open(QuickCreateDialogComponent, { width: '420px', data: { titleKey: 'suppliers.newTitle' } })
+      .afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result?: QuickCreateResult) => {
+        if (!result) return;
+        this.supplierService.create(result).pipe(
+          switchMap(created => this.accommodationSupplierService.create({ accommodationId, supplierId: created.supplierId })),
+          takeUntilDestroyed(this.destroyRef),
+        ).subscribe({
+          next: () => {
+            this.cancelSupplierSelect();
+            this.snackBar.open(this.translate.instant('accommodations.supplierCreatedAndLinked'), this.translate.instant('common.close'), { duration: 3000 });
+            this.reloadSuppliers();
+          },
+          error: () => {
+            this.snackBar.open(this.translate.instant('accommodations.supplierLinkError'), this.translate.instant('common.close'), { duration: 5000 });
+            this.reloadSuppliers();
+          },
+        });
+      });
+  }
+
+  async unlinkSupplier(supplier: Supplier) {
+    if (!this.accommodationId) return;
+    if (!await this.confirmService.confirm(this.translate.instant('accommodations.unlinkSupplierConfirm', { name: supplier.name }))) return;
 
     this.accommodationSupplierService.delete(this.accommodationId, supplier.supplierId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -675,9 +710,9 @@ export class AccommodationDetailComponent implements OnInit {
     }
   }
 
-  deleteAddress(address: Address) {
+  async deleteAddress(address: Address) {
     if (!this.accommodationId) return;
-    if (!confirm(this.translate.instant('accommodations.deleteAddressConfirm'))) return;
+    if (!await this.confirmService.confirmDelete(this.translate.instant('accommodations.deleteAddressConfirm'))) return;
 
     this.accommodationAddressService.delete(this.accommodationId, address.addressId).pipe(
       switchMap(() => this.addressService.delete(address.addressId)),

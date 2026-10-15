@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { forkJoin } from 'rxjs';
 import { AccountService } from './account.service';
 import { PersonService } from './person.service';
@@ -96,15 +97,17 @@ interface PersonOption {
             </div>
 
             <div class="actions">
-              <a mat-button routerLink="/admin/accounts"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</a>
-              <button mat-raised-button color="primary" type="submit"
-                      [disabled]="saving() || form.invalid || (!isNew() && !form.dirty)">
-                @if (saving()) {
-                  <mat-spinner diameter="20"></mat-spinner>
-                } @else {
-                  <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
-                }
-              </button>
+              <a mat-button routerLink="/admin/accounts"><mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
+              @if (!readOnly()) {
+                <button mat-raised-button color="primary" type="submit"
+                        [disabled]="saving() || form.invalid || (!isNew() && !form.dirty)">
+                  @if (saving()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
+                  }
+                </button>
+              }
             </div>
           </form>
         </mat-card-content>
@@ -117,7 +120,7 @@ interface PersonOption {
           </mat-card-header>
           <mat-card-content>
             <!-- Add role -->
-            @if (availableRoles().length > 0) {
+            @if (!readOnly() && availableRoles().length > 0) {
               <div class="add-junction-row">
                 <mat-form-field appearance="outline" class="flex-1">
                   <mat-label>{{ 'accounts.addRole' | translate }}</mat-label>
@@ -146,9 +149,11 @@ interface PersonOption {
                     <mat-icon>security</mat-icon>
                     <span>{{ ar.role.description }}</span>
                   </div>
-                  <button mat-icon-button color="warn" (click)="removeRole(ar)">
-                    <mat-icon>remove_circle</mat-icon>
-                  </button>
+                  @if (!readOnly()) {
+                    <button mat-icon-button color="warn" (click)="removeRole(ar)">
+                      <mat-icon>remove_circle</mat-icon>
+                    </button>
+                  }
                 </div>
               }
             } @else {
@@ -252,8 +257,11 @@ export class AccountDetailComponent implements OnInit {
   private roleService = inject(RoleService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
 
   isNew = signal(true);
+  /** Alleen inzien: geopend met ?readonly=true (inzien-icoon in de lijst). */
+  readOnly = signal(false);
   loading = signal(false);
   saving = signal(false);
   addingRole = signal(false);
@@ -281,6 +289,10 @@ export class AccountDetailComponent implements OnInit {
     if (id) {
       this.isNew.set(false);
       this.accountId = id;
+      if (this.route.snapshot.queryParamMap.get('readonly') === 'true') {
+        this.readOnly.set(true);
+        this.form.disable();
+      }
       this.form.get('password')!.clearValidators();
       this.form.get('password')!.updateValueAndValidity();
       this.form.get('personId')!.clearValidators();
@@ -353,7 +365,7 @@ export class AccountDetailComponent implements OnInit {
   }
 
   onSave() {
-    if (this.form.invalid) return;
+    if (this.readOnly() || this.form.invalid) return;
     this.saving.set(true);
 
     const { userName, password, personId, locked, mustChangePassword } = this.form.value;
@@ -424,9 +436,9 @@ export class AccountDetailComponent implements OnInit {
       });
   }
 
-  removeRole(ar: AccountRole) {
+  async removeRole(ar: AccountRole) {
     if (!this.accountId) return;
-    if (!confirm(this.translate.instant('accounts.removeRoleConfirm', { role: ar.role.description }))) return;
+    if (!await this.confirmService.confirm(this.translate.instant('accounts.removeRoleConfirm', { role: ar.role.description }))) return;
 
     this.accountRoleService.delete(this.accountId, ar.role.roleId)
       .pipe(takeUntilDestroyed(this.destroyRef))

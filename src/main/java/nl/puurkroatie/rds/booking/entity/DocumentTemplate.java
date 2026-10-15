@@ -32,6 +32,10 @@ public class DocumentTemplate {
     @Column(name = "template_data", columnDefinition = "bytea")
     private byte[] templateData;
 
+    // Alleen gevuld bij een template die in de editor is gemaakt (zie V8); een geüploade .docx heeft dit niet.
+    @Column(name = "source_html", columnDefinition = "text")
+    private String sourceHtml;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,16 +55,41 @@ public class DocumentTemplate {
     }
 
     public DocumentTemplate(UUID documentTemplateId, String name, String description, byte[] templateData) {
+        this(documentTemplateId, name, description, templateData, null);
+    }
+
+    public DocumentTemplate(UUID documentTemplateId, String name, String description, byte[] templateData, String sourceHtml) {
         this.documentTemplateId = documentTemplateId;
         this.name = name;
         this.description = description;
         this.templateData = templateData;
+        this.sourceHtml = sourceHtml;
     }
 
     public DocumentTemplate(String name, String description, byte[] templateData) {
+        this(name, description, templateData, null);
+    }
+
+    public DocumentTemplate(String name, String description, byte[] templateData, String sourceHtml) {
         this.name = name;
         this.description = description;
         this.templateData = templateData;
+        this.sourceHtml = sourceHtml;
+    }
+
+    // Update-constructor: neemt tenant en audit (createdAt/createdBy) over van de
+    // bestaande entity, zodat een update die updatable=false velden niet op null
+    // zet (en een navolgende tenant-check niet breekt).
+    public DocumentTemplate(UUID documentTemplateId, String name, String description, byte[] templateData,
+                            String sourceHtml, LocalDateTime createdAt, UUID createdBy, UUID tenantOrganization) {
+        this.documentTemplateId = documentTemplateId;
+        this.name = name;
+        this.description = description;
+        this.templateData = templateData;
+        this.sourceHtml = sourceHtml;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
@@ -90,6 +119,10 @@ public class DocumentTemplate {
 
     public byte[] getTemplateData() {
         return templateData;
+    }
+
+    public String getSourceHtml() {
+        return sourceHtml;
     }
 
     public LocalDateTime getCreatedAt() {

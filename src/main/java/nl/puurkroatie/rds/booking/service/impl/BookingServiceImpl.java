@@ -8,6 +8,7 @@ import nl.puurkroatie.rds.booking.entity.BookingStatus;
 import nl.puurkroatie.rds.booking.mapper.BookingMapper;
 import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
+import nl.puurkroatie.rds.booking.service.DeletionGuard;
 import nl.puurkroatie.rds.booking.service.BookingNumberGenerator;
 import nl.puurkroatie.rds.booking.service.BookingService;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,11 +28,14 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
     private final BookingNumberGenerator bookingNumberGenerator;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper, BookingNumberGenerator bookingNumberGenerator) {
+    private final DeletionGuard deletionGuard;
+
+    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper, BookingNumberGenerator bookingNumberGenerator, DeletionGuard deletionGuard) {
         this.bookingRepository = bookingRepository;
         this.bookerRepository = bookerRepository;
         this.bookingMapper = bookingMapper;
         this.bookingNumberGenerator = bookingNumberGenerator;
+        this.deletionGuard = deletionGuard;
     }
 
     @Override
@@ -57,6 +61,7 @@ public class BookingServiceImpl implements BookingService {
         Booking existing = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
+        deletionGuard.verifyBookingDeletable(id);
         bookingRepository.deleteById(id);
     }
 

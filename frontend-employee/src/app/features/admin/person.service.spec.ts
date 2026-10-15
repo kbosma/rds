@@ -13,7 +13,7 @@ describe('PersonService', () => {
     firstname: 'Jan',
     prefix: 'van',
     lastname: 'Bergen',
-    organization: 'Puurkroatie',
+    organizationId: 'org-1',
     createdAt: '2026-01-01T10:00:00',
     createdBy: 'user-1',
     modifiedAt: '2026-01-01T10:00:00',

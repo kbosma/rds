@@ -10,11 +10,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { PersonService } from './person.service';
 import { OrganizationService } from './organization.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Person } from '../../shared/models';
 
 interface PersonRow extends Person {
@@ -40,6 +42,7 @@ interface OrgChip {
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    RowActionsComponent,
     TranslatePipe,
   ],
   template: `
@@ -57,7 +60,7 @@ interface OrgChip {
         <input matInput (keyup)="applyFilter($event)" [placeholder]="'persons.searchPlaceholder' | translate" />
       </mat-form-field>
 
-      @if (isAdmin) {
+      @if (canSeeOrganizations) {
         <div class="filter-chips">
           @for (chip of orgChips(); track chip.value) {
             <button mat-stroked-button
@@ -98,14 +101,10 @@ interface OrgChip {
           </ng-container>
 
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-            <td mat-cell *matCellDef="let row">
-              <button mat-icon-button color="primary" (click)="navigateToEdit(row)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deletePerson(row)">
-                <mat-icon>delete</mat-icon>
-              </button>
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="actions-cell">
+              <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
+                               (view)="viewPerson(row)" (edit)="navigateToEdit(row)" (remove)="deletePerson(row)" />
             </td>
           </ng-container>
 
@@ -170,6 +169,8 @@ interface OrgChip {
     .full-width {
       width: 100%;
     }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
     .alt-row {
       background-color: #fafafa;
     }
@@ -193,9 +194,14 @@ export class PersonListComponent implements OnInit {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
 
-  isAdmin = this.authService.hasRole('ADMIN');
-  displayedColumns = this.isAdmin
+  canView = this.authService.hasAuthority('PERSON_READ');
+  canEdit = this.authService.hasAuthority('PERSON_UPDATE');
+  canDelete = this.authService.hasAuthority('PERSON_DELETE');
+  /** Organisaties tonen/kiezen: alleen wie ze mag zien (ORGANIZATION_READ), niet op basis van een rol. */
+  canSeeOrganizations = this.authService.hasAuthority('ORGANIZATION_READ');
+  displayedColumns = this.canSeeOrganizations
     ? ['firstname', 'prefix', 'lastname', 'organization', 'actions']
     : ['firstname', 'prefix', 'lastname', 'actions'];
   dataSource = new MatTableDataSource<PersonRow>();
@@ -215,12 +221,12 @@ export class PersonListComponent implements OnInit {
   private loadData() {
     forkJoin({
       persons: this.personService.getAll(),
-      organizations: this.isAdmin ? this.organizationService.getAll() : of([]),
+      organizations: this.canSeeOrganizations ? this.organizationService.getAll() : of([]),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ persons, organizations }) => {
         const orgMap = new Map(organizations.map(o => [o.organizationId, o.name]));
 
-        if (this.isAdmin) {
+        if (this.canSeeOrganizations) {
           this.orgChips.set([
             { labelKey: 'persons.allOrganizations', value: 'ALL' },
             ...organizations.map(o => ({ label: o.name, value: o.organizationId })),
@@ -260,14 +266,18 @@ export class PersonListComponent implements OnInit {
     this.router.navigate(['/admin/persons/new']);
   }
 
+  viewPerson(person: PersonRow) {
+    this.router.navigate(['/admin/persons', person.persoonId], { queryParams: { readonly: 'true' } });
+  }
+
   navigateToEdit(person: PersonRow) {
     this.router.navigate(['/admin/persons', person.persoonId]);
   }
 
-  deletePerson(person: PersonRow) {
+  async deletePerson(person: PersonRow) {
     const name = `${person.firstname} ${person.prefix ? person.prefix + ' ' : ''}${person.lastname}`;
     const message = this.translate.instant('persons.deleteConfirm', { name });
-    if (!confirm(message)) return;
+    if (!await this.confirmService.confirmDelete(message)) return;
 
     this.personService.delete(person.persoonId).subscribe({
       next: () => {

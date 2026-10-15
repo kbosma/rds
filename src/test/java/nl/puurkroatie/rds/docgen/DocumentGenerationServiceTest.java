@@ -15,6 +15,10 @@ import nl.puurkroatie.rds.docgen.context.BookingContext;
 import nl.puurkroatie.rds.docgen.context.BookingActivityContext;
 import nl.puurkroatie.rds.docgen.context.BookingLineContext;
 import nl.puurkroatie.rds.docgen.context.SupplierContext;
+import nl.puurkroatie.rds.docgen.service.FreemarkerHardening;
+import nl.puurkroatie.rds.docgen.service.TemplateModels;
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import nl.puurkroatie.rds.docgen.context.TravelerContext;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +33,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -47,7 +52,7 @@ class DocumentGenerationServiceTest {
     void generatePdfFromTemplateAll() throws Exception {
         byte[] templateBytes = loadTemplate();
         BookingContext bookingContext = buildTestBookingContext();
-        byte[] pdfBytes = renderDocument(templateBytes, bookingContext, true);
+        byte[] pdfBytes = renderDocument(templateBytes, TemplateModels.toModel(bookingContext), true);
 
         assertNotNull(pdfBytes);
         assertTrue(pdfBytes.length > 0, "Generated PDF should not be empty");
@@ -59,24 +64,50 @@ class DocumentGenerationServiceTest {
     void generateDocxFromTemplateAll() throws Exception {
         byte[] templateBytes = loadTemplate();
         BookingContext bookingContext = buildTestBookingContext();
-        byte[] docxBytes = renderDocument(templateBytes, bookingContext, false);
+        byte[] docxBytes = renderDocument(templateBytes, TemplateModels.toModel(bookingContext), false);
 
         assertNotNull(docxBytes);
         assertTrue(docxBytes.length > 0, "Generated DOCX should not be empty");
     }
 
-    private byte[] renderDocument(byte[] templateData, BookingContext bookingContext, boolean toPdf) throws Exception {
+    /**
+     * De platte map moet de echte template EXACT zo renderen als het oude bean-model deed
+     * (lussen, tabellen, getalnotatie, datums). Anders breekt het omzetten bestaande
+     * templates.
+     */
+    @Test
+    void plainMapModelRendersTheRealTemplateIdenticallyToTheBeanModel() throws Exception {
+        byte[] templateBytes = loadTemplate();
+        BookingContext bookingContext = buildTestBookingContext();
+
+        String withBean = extractText(renderDocument(templateBytes, bookingContext, false));
+        String withMap = extractText(renderDocument(templateBytes, TemplateModels.toModel(bookingContext), false));
+
+        assertTrue(withBean.contains(bookingContext.getBookingNumber()), "sanity: boekingsnummer moet in de uitvoer staan");
+        assertEquals(withBean, withMap);
+    }
+
+    private String extractText(byte[] docx) throws Exception {
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docx));
+             XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
+            return extractor.getText();
+        }
+    }
+
+    private byte[] renderDocument(byte[] templateData, Object model, boolean toPdf) throws Exception {
         try (ByteArrayInputStream templateStream = new ByteArrayInputStream(templateData);
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             IXDocReport report = XDocReportRegistry.getRegistry().loadReport(
                     templateStream, TemplateEngineKind.Freemarker);
+            // Zoals in de service: de (door gebruikers geüploade) template draait afgeschermd.
+            FreemarkerHardening.harden(report);
 
             FieldsMetadata metadata = report.createFieldsMetadata();
             metadata.load("booking", BookingContext.class);
 
             IContext context = report.createContext();
-            context.put("booking", bookingContext);
+            context.put("booking", model);
 
             if (toPdf) {
                 Options options = Options.getTo(ConverterTypeTo.PDF).via(ConverterTypeVia.XWPF);

@@ -54,8 +54,8 @@ export interface TravelerDialogData {
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'travelers.gender' | translate }}</mat-label>
           <mat-select formControlName="gender">
-            <mat-option value="M">{{ 'common.male' | translate }}</mat-option>
-            <mat-option value="F">{{ 'common.female' | translate }}</mat-option>
+            <mat-option value="man">{{ 'travelers.genderMale' | translate }}</mat-option>
+            <mat-option value="vrouw">{{ 'travelers.genderFemale' | translate }}</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">

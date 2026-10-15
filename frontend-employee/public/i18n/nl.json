@@ -2,6 +2,8 @@
   "common": {
     "save": "Opslaan",
     "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "continue": "Doorgaan",
     "close": "Sluiten",
     "delete": "Verwijderen",
     "edit": "Bewerken",
@@ -32,7 +34,13 @@
     "newPayment": "Nieuwe betaling",
     "back": "Terug",
     "switchLanguage": "Taal wisselen",
-    "select": "Selecteren"
+    "select": "Selecteren",
+    "view": "Inzien",
+    "deleteConfirmItem": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
+    "deleted": "Verwijderd",
+    "deleteError": "Verwijderen is mislukt",
+    "saveError": "Opslaan is mislukt",
+    "deleteBlocked": "Kan niet verwijderd worden: er hangen documenten of betalingen aan. Die blijven bewaard als geschiedenis."
   },
   "app": {
     "title": "RDS",
@@ -43,6 +51,7 @@
     "dashboard": "Dashboard",
     "bookings": "Boekingen",
     "bookers": "Boekers",
+    "prospects": "Prospects",
     "travelers": "Reizigers",
     "accommodations": "Accommodaties",
     "suppliers": "Leveranciers",
@@ -57,6 +66,7 @@
     "changePassword": "Wachtwoord",
     "totpSettings": "2FA Instellingen",
     "templates": "Templates",
+    "emailTemplates": "E-mailtemplates",
     "theme": "Huisstijl",
     "admin": "BEHEER",
     "bookingAdmin": "ORGANISATIE BEHEER",
@@ -108,6 +118,12 @@
     "bookingNumber": "Boekingnummer",
     "noBookingsFound": "Geen boekingen gevonden.",
     "newBookingTitle": "Nieuwe boeking",
+    "conceptNotice": "Concept — nog niet opgeslagen. De boeking wordt pas aangemaakt zodra je iets toevoegt.",
+    "createConceptConfirm": "Hiermee wordt een definitieve boeking aangemaakt en krijgt deze een boekingnummer. Doorgaan?",
+    "ongoingBookingWarning": "Deze boeker heeft al een lopende (niet-afgeronde) boeking. Mogelijk is de verkeerde boeker gekozen. Toch doorgaan?",
+    "created": "Boeking aangemaakt",
+    "createError": "Fout bij aanmaken boeking",
+    "selectBookerFirst": "Kies eerst een boeker om een boeking te starten.",
     "editBookingTitle": "Boeking bewerken",
     "bookingDetails": "Boekinggegevens",
     "fromDateComputed": "Van datum (berekend)",
@@ -154,7 +170,10 @@
     "status_boeking": "Boeking",
     "status_voorschot": "Voorschot",
     "status_betaald": "Betaald",
-    "status_afgerond": "Afgerond"
+    "status_afgerond": "Afgerond",
+    "sendEmail": "E-mail versturen",
+    "deleteCascadeWarning": "Alle bijbehorende reizigers, boekingsregels, activiteiten, documenten en betalingskoppelingen worden ook verwijderd.",
+    "viewBookingTitle": "Boeking inzien"
   },
   "bookingLine": {
     "editTitle": "Accommodatie bewerken",
@@ -169,7 +188,11 @@
     "overlapWarning": "{{name1}} overlapt met {{name2}}",
     "gapWarning": "Geen accommodatie van {{from}} tot {{until}}",
     "saveAnyway": "Toch opslaan",
-    "adjustDates": "Aanpassen"
+    "adjustDates": "Aanpassen",
+    "newAccommodation": "Nieuwe accommodatie",
+    "newSupplier": "Nieuwe leverancier",
+    "noSupplierLinked": "Aan deze accommodatie is nog geen leverancier gekoppeld: kies er een of maak er een aan. De koppeling wordt bij opslaan vastgelegd.",
+    "createError": "Fout bij aanmaken"
   },
   "accounts": {
     "title": "Accounts",
@@ -207,6 +230,125 @@
     "roleRemoveError": "Fout bij verwijderen rol",
     "removeRoleConfirm": "Weet je zeker dat je de rol \"{{role}}\" wilt verwijderen?"
   },
+  "emailTemplates": {
+    "title": "E-mailtemplates",
+    "new": "Nieuw template",
+    "editTitle": "E-mailtemplate bewerken",
+    "newTitle": "E-mailtemplate aanmaken",
+    "saved": "Template opgeslagen",
+    "saveError": "Fout bij opslaan template",
+    "deleteConfirm": "Weet je zeker dat je template '{{name}}' wilt verwijderen?",
+    "removed": "Template verwijderd",
+    "removeError": "Fout bij verwijderen template",
+    "name": "Naam",
+    "subject": "Onderwerp",
+    "bodyHtml": "HTML-body",
+    "noTemplatesFound": "Geen e-mailtemplates gevonden.",
+    "placeholdersHint": "Gebruik ${prospect.firstname}, ${prospect.fullName}, enz.",
+    "preview": "Voorbeeld",
+    "previewTitle": "Voorbeeld",
+    "selectProspect": "Kies een prospect",
+    "render": "Genereer voorbeeld",
+    "renderError": "Fout bij genereren voorbeeld",
+    "saveFirst": "Sla het template eerst op om een voorbeeld te maken.",
+    "send": "Verstuur",
+    "sendConfirm": "Weet je zeker dat je deze e-mail naar {{name}} wilt versturen?",
+    "sent": "E-mail verzonden naar {{to}}",
+    "sendError": "Fout bij versturen e-mail",
+    "sendEmailTitle": "E-mail versturen",
+    "selectTemplate": "Kies een template",
+    "forProspect": "Prospect / boeker",
+    "forBooking": "Boeking",
+    "selectBooking": "Kies een boeking",
+    "noBookingsFound": "Geen boekingen gevonden.",
+    "sendConfirmBooking": "E-mail versturen naar de hoofdboeker van boeking {{number}}?"
+  },
+  "templateEditor": {
+    "font": "Lettertype",
+    "fontDefault": "Lettertype",
+    "size": "Grootte",
+    "sizeDefault": "Grootte",
+    "bold": "Vet",
+    "italic": "Cursief",
+    "underline": "Onderstrepen",
+    "bullets": "Opsomming",
+    "numbered": "Genummerde lijst",
+    "table": "Tabel",
+    "tableInsert": "Tabel invoegen",
+    "tableAddCol": "Kolom toevoegen",
+    "tableAddRow": "Rij toevoegen",
+    "tableDelCol": "Kolom verwijderen",
+    "tableDelRow": "Rij verwijderen",
+    "tableDelete": "Tabel verwijderen",
+    "variables": "Variabelen",
+    "variablesHint": "Sleep naar de tekst of klik om in te voegen.",
+    "tabVariables": "Variabelen",
+    "tabImages": "Afbeeldingen",
+    "image": "Afbeelding invoegen",
+    "imageInvalidType": "Alleen PNG-, JPEG-, GIF- of WebP-afbeeldingen zijn toegestaan.",
+    "imageTooLarge": "De afbeelding is te groot (maximaal 2 MB).",
+    "imageUploadError": "Uploaden van de afbeelding is mislukt.",
+    "repeatTable": "Herhaalde tabel",
+    "repeatTravelers": "Reizigers",
+    "repeatBookingLines": "Accommodaties",
+    "repeatActivities": "Activiteiten",
+    "repeatOff": "Herhaling uitzetten",
+    "repeatHint": "Herhaalde tabel: de laatste rij wordt herhaald voor elk item.",
+    "groups": {
+      "prospect": "Ontvanger",
+      "booking": "Boeking",
+      "bookingOnlyHint": "Boeking-velden werken alleen als de mail voor een boeking wordt verstuurd.",
+      "mainBooker": "Hoofdboeker"
+    },
+    "images": {
+      "hint": "Sleep een afbeelding de tekst in, of klik om in te voegen.",
+      "upload": "Uploaden",
+      "uploaded": "Afbeelding geüpload",
+      "empty": "Nog geen afbeeldingen. Upload er een.",
+      "loadError": "Afbeeldingen laden is mislukt.",
+      "retry": "Opnieuw",
+      "unnamed": "afbeelding",
+      "deleteConfirm": "Afbeelding '{{name}}' verwijderen? Mails die al verstuurd zijn tonen dit plaatje daarna niet meer.",
+      "deleted": "Afbeelding verwijderd",
+      "deleteError": "Verwijderen van de afbeelding is mislukt.",
+      "inUseError": "De afbeelding wordt nog gebruikt in een template en kan niet worden verwijderd.",
+      "lockedInUse": "in gebruik in een template, niet te verwijderen",
+      "lockedInEditor": "staat in de tekst die je nu bewerkt, niet te verwijderen"
+    },
+    "vars": {
+      "firstname": "Voornaam",
+      "prefix": "Tussenvoegsel",
+      "lastname": "Achternaam",
+      "fullName": "Volledige naam",
+      "callsign": "Roepnaam",
+      "telephone": "Telefoon",
+      "emailaddress": "E-mailadres",
+      "gender": "Geslacht",
+      "birthdate": "Geboortedatum",
+      "initials": "Initialen",
+      "bookingNumber": "Boekingsnummer",
+      "bookingStatus": "Status",
+      "fromDate": "Van",
+      "untilDate": "Tot",
+      "totalSum": "Totaalbedrag",
+      "price": "Prijs",
+      "totalPrice": "Totaalprijs",
+      "accommodationName": "Accommodatie",
+      "supplierName": "Leverancier",
+      "activityName": "Activiteit",
+      "meetingPoint": "Ontmoetingspunt"
+    }
+  },
+  "prospects": {
+    "title": "Prospects",
+    "register": "Registreer prospect",
+    "registerTitle": "Prospect registreren",
+    "registered": "Prospect geregistreerd",
+    "registerError": "Fout bij registreren prospect",
+    "noProspectsFound": "Geen prospects gevonden.",
+    "makeBooker": "Maak boeker",
+    "promoted": "Prospect is nu een boeker"
+  },
   "bookers": {
     "title": "Boekers",
     "searchPlaceholder": "Zoek op naam, e-mail of telefoon...",
@@ -226,7 +368,10 @@
     "selectTitle": "Hoofdboeker selecteren",
     "selectBooker": "Selecteer een boeker",
     "selectBooking": "Selecteer een boeking",
-    "multipleBookingsFor": "Er zijn meerdere boekingen voor {{name}}:"
+    "multipleBookingsFor": "Er zijn meerdere boekingen voor {{name}}:",
+    "newBookingForBooker": "Nieuwe boeking voor deze boeker",
+    "newTitle": "Nieuwe booker",
+    "newBooker": "Nieuwe boeker"
   },
   "accommodations": {
     "title": "Accommodaties",
@@ -280,7 +425,13 @@
     "supplierLinkError": "Fout bij koppelen leverancier",
     "unlinkSupplierConfirm": "Weet je zeker dat je \"{{name}}\" wilt ontkoppelen?",
     "supplierUnlinked": "Leverancier ontkoppeld",
-    "supplierUnlinkError": "Fout bij ontkoppelen leverancier"
+    "supplierUnlinkError": "Fout bij ontkoppelen leverancier",
+    "supplier": "Leverancier",
+    "address": "Adres",
+    "noAccommodationsFound": "Geen accommodaties gevonden.",
+    "deleteCascadeWarning": "Boekingsregels die naar deze accommodatie verwijzen worden ook verwijderd.",
+    "newSupplier": "Nieuwe leverancier",
+    "supplierCreatedAndLinked": "Leverancier aangemaakt en gekoppeld"
   },
   "payments": {
     "title": "Betalingen",
@@ -301,7 +452,9 @@
     "status_paid": "Betaald",
     "status_failed": "Mislukt",
     "status_canceled": "Geannuleerd",
-    "status_expired": "Verlopen"
+    "status_expired": "Verlopen",
+    "viewTitle": "Betaling",
+    "editTitle": "Betaling bewerken"
   },
   "organizations": {
     "title": "Organisaties",
@@ -321,7 +474,10 @@
     "created": "Organisatie aangemaakt",
     "createError": "Fout bij aanmaken organisatie",
     "notFound": "Organisatie niet gevonden",
-    "noPersonsLinked": "Geen personen gekoppeld aan deze organisatie."
+    "noPersonsLinked": "Geen personen gekoppeld aan deze organisatie.",
+    "emailFrom": "Afzender-e-mailadres",
+    "emailFromHint": "Afzenderadres voor e-mails naar prospects en bookers.",
+    "emailFromInvalid": "Voer een geldig e-mailadres in."
   },
   "persons": {
     "title": "Personen",
@@ -398,7 +554,9 @@
     "authorityAssignError": "Fout bij toewijzen authority",
     "authorityRemoved": "Authority verwijderd",
     "authorityRemoveError": "Fout bij verwijderen authority",
-    "removeAuthorityConfirm": "Weet je zeker dat je de authority \"{{authority}}\" wilt verwijderen?"
+    "removeAuthorityConfirm": "Weet je zeker dat je de authority \"{{authority}}\" wilt verwijderen?",
+    "authorities": "Authorities",
+    "selectAuthority": "Authority kiezen"
   },
   "authorities": {
     "title": "Authorities",
@@ -490,7 +648,13 @@
     "accommodationLinkError": "Fout bij koppelen accommodatie",
     "unlinkAccommodationConfirm": "Weet je zeker dat je \"{{name}}\" wilt ontkoppelen?",
     "accommodationUnlinked": "Accommodatie ontkoppeld",
-    "accommodationUnlinkError": "Fout bij ontkoppelen accommodatie"
+    "accommodationUnlinkError": "Fout bij ontkoppelen accommodatie",
+    "viewTitle": "Leverancier",
+    "noSuppliersFound": "Geen leveranciers gevonden.",
+    "address": "Adres",
+    "deleteCascadeWarning": "Boekingsregels die naar deze leverancier verwijzen worden ook verwijderd.",
+    "newAccommodation": "Nieuwe accommodatie",
+    "accommodationCreatedAndLinked": "Accommodatie aangemaakt en gekoppeld"
   },
   "documents": {
     "title": "Documenten",
@@ -520,7 +684,12 @@
     "chooseFile": "Kies bestand",
     "invalidMimeType": "Ongeldig bestandstype. Alleen PDF-bestanden zijn toegestaan.",
     "fetchError": "Fout bij ophalen van URL",
-    "displaynamePlaceholder": "Documentnaam"
+    "displaynamePlaceholder": "Documentnaam",
+    "viewTitle": "Document",
+    "editTitle": "Document hernoemen",
+    "mimeType": "Type",
+    "download": "Downloaden",
+    "downloadError": "Downloaden is mislukt"
   },
   "templates": {
     "title": "Templates",
@@ -538,7 +707,18 @@
     "chooseFile": "Kies bestand",
     "dropzoneText": "Sleep een .docx bestand hierheen",
     "dropzoneHint": "of klik op 'Kies bestand'",
-    "invalidFileType": "Ongeldig bestandstype. Alleen .docx bestanden zijn toegestaan."
+    "invalidFileType": "Ongeldig bestandstype. Alleen .docx bestanden zijn toegestaan.",
+    "mode": "Soort template",
+    "modeUpload": "Word-bestand uploaden",
+    "modeEditor": "In de editor maken",
+    "editorHint": "Maak de template hier; bij het opslaan wordt er een Word-document (.docx) van gemaakt. Een herhaalde tabel herhaalt de laatste rij voor elk item.",
+    "switchWarning": "Let op: als je dit opslaat vanuit de editor, wordt het geüploade Word-bestand vervangen door wat je hier maakt.",
+    "viewTitle": "Template",
+    "download": "Downloaden",
+    "downloadError": "Downloaden is mislukt",
+    "type": "Soort",
+    "typeEditor": "Editor",
+    "typeUpload": "Geüpload bestand"
   },
   "totp": {
     "setupTitle": "Twee-factor authenticatie instellen",
@@ -567,7 +747,8 @@
     "transfer": "Transfer",
     "noActivitiesFound": "Geen activiteiten gevonden.",
     "saveError": "Fout bij opslaan activiteit",
-    "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?"
+    "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
+    "deleteCascadeWarning": "Boekingsactiviteiten die naar deze activiteit verwijzen worden ook verwijderd."
   },
   "bookingActivity": {
     "title": "Activiteiten",
@@ -595,5 +776,18 @@
     "previewCardBody": "Dit is hoe de kaart-titel eruitziet in de applicatie.",
     "saved": "Huisstijl opgeslagen",
     "saveError": "Fout bij opslaan huisstijl"
+  },
+  "addressEditor": {
+    "title": "Adressen",
+    "new": "Nieuw adres",
+    "edit": "Adres bewerken",
+    "empty": "Nog geen adressen.",
+    "deleteConfirm": "Weet je zeker dat je dit adres wilt verwijderen?",
+    "added": "Adres toegevoegd",
+    "saved": "Adres opgeslagen",
+    "removed": "Adres verwijderd",
+    "addError": "Fout bij toevoegen adres",
+    "saveError": "Fout bij opslaan adres",
+    "removeError": "Fout bij verwijderen adres"
   }
 }

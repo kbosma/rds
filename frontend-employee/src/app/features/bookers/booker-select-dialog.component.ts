@@ -1,6 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,6 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BookerService } from './booker.service';
 import { Booker } from '../../shared/models';
+import { AuthService } from '../../core/auth/auth.service';
+import { BookerDialogComponent } from './booker-dialog.component';
 
 @Component({
   selector: 'app-booker-select-dialog',
@@ -17,6 +20,7 @@ import { Booker } from '../../shared/models';
     MatDialogModule,
     MatListModule,
     MatButtonModule,
+    MatIconModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
@@ -42,6 +46,11 @@ import { Booker } from '../../shared/models';
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
+      @if (canCreate) {
+        <button mat-stroked-button color="primary" class="new-booker-btn" (click)="createNew()">
+          <mat-icon>add</mat-icon> {{ 'bookers.newBooker' | translate }}
+        </button>
+      }
       <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
     </mat-dialog-actions>
   `,
@@ -51,6 +60,8 @@ export class BookerSelectDialogComponent implements OnInit {
   private bookerService = inject(BookerService);
   private dialogRef = inject(MatDialogRef<BookerSelectDialogComponent>);
   private destroyRef = inject(DestroyRef);
+  private dialog = inject(MatDialog);
+  readonly canCreate = inject(AuthService).hasAuthority('BOOKING_CREATE');
 
   loading = signal(true);
   private allBookers: Booker[] = [];
@@ -78,5 +89,18 @@ export class BookerSelectDialogComponent implements OnInit {
 
   select(bookerId: string) {
     this.dialogRef.close(bookerId);
+  }
+
+  /** Maakt een nieuwe boeker aan en kiest die meteen. */
+  createNew() {
+    this.dialog.open(BookerDialogComponent, {
+      width: '760px',
+      maxWidth: '95vw',
+      data: { readOnly: false },
+    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((created?: Booker | boolean) => {
+      if (created && typeof created === 'object') {
+        this.select(created.bookerId);
+      }
+    });
   }
 }

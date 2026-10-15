@@ -12,10 +12,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TranslatePipe } from '@ngx-translate/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BookerService } from './booker.service';
-import { BookingSelectDialogComponent, BookingSelectDialogData } from './booking-select-dialog.component';
+import { BookerDialogComponent, BookerDialogData } from './booker-dialog.component';
 import { BookingService } from '../bookings/booking.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { ConfirmService } from '../../shared/services/confirm.service';
+import { deleteErrorKey } from '../../shared/utils/delete-error';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Booker, Booking } from '../../shared/models';
 
 @Component({
@@ -32,6 +38,9 @@ import { Booker, Booking } from '../../shared/models';
     MatIconModule,
     MatProgressSpinnerModule,
     MatDialogModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    RowActionsComponent,
     TranslatePipe,
   ],
   template: `
@@ -74,11 +83,26 @@ import { Booker, Booking } from '../../shared/models';
             <td mat-cell *matCellDef="let row">{{ row.birthdate | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="actions-cell">
+              <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
+                               (view)="viewBooker(row)" (edit)="editBooker(row)" (remove)="deleteBooker(row)">
+                @if (canCreateBooking) {
+                  <button type="button" mat-icon-button color="primary" class="action-new-booking"
+                          [matTooltip]="'bookers.newBookingForBooker' | translate"
+                          [attr.aria-label]="'bookers.newBookingForBooker' | translate"
+                          (click)="createBookingForBooker(row)">
+                    <mat-icon>post_add</mat-icon>
+                  </button>
+                }
+              </app-row-actions>
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"
-              class="clickable-row"
-              (click)="onBookerClick(row)"></tr>
+              [class.alt-row]="i % 2 === 1"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
@@ -121,12 +145,8 @@ import { Booker, Booking } from '../../shared/models';
     .email-link {
       color: #1976d2;
     }
-    .clickable-row {
-      cursor: pointer;
-    }
-    .clickable-row:hover {
-      background-color: #e3f2fd;
-    }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
     .no-data {
       text-align: center;
       padding: 24px;
@@ -144,9 +164,18 @@ export class BookerListComponent implements OnInit {
   private bookingService = inject(BookingService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
+  private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
+  private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
   private destroyRef = inject(DestroyRef);
 
-  displayedColumns = ['name', 'emailaddress', 'telephone', 'birthdate'];
+  canCreateBooking = this.authService.hasAuthority('BOOKING_CREATE');
+  canView = this.authService.hasAuthority('BOOKING_READ');
+  canEdit = this.authService.hasAuthority('BOOKING_UPDATE');
+  canDelete = this.authService.hasAuthority('BOOKING_DELETE');
+
+  displayedColumns = ['name', 'emailaddress', 'telephone', 'birthdate', 'actions'];
   dataSource = new MatTableDataSource<Booker>();
   loading = signal(true);
   private allBookings: Booking[] = [];
@@ -161,7 +190,8 @@ export class BookerListComponent implements OnInit {
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ bookers, bookings }) => {
         this.allBookings = bookings;
-        this.dataSource.data = bookers;
+        // Prospects horen in de prospects-lijst, niet onder de boekers.
+        this.dataSource.data = bookers.filter(b => b.status !== 'prospect');
         this.dataSource.sortingDataAccessor = (item, property) => {
           if (property === 'name') {
             return `${item.firstname} ${item.prefix} ${item.lastname}`.trim();
@@ -187,27 +217,56 @@ export class BookerListComponent implements OnInit {
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
-  onBookerClick(booker: Booker) {
-    const bookings = this.allBookings.filter(b => b.bookerId === booker.bookerId);
+  /**
+   * Start een nieuwe boeking voor deze booker: opent het concept-scherm met de
+   * booker als voorgevulde hoofdboeker. De echte boeking wordt pas aangemaakt bij
+   * de eerste actie daar. Waarschuwt eerst als de booker al een lopende boeking heeft.
+   */
+  async createBookingForBooker(booker: Booker) {
+    const hasOngoing = this.allBookings.some(
+      b => b.bookerId === booker.bookerId && b.bookingStatus !== 'afgerond');
+    if (hasOngoing && !await this.confirmService.confirm(this.translate.instant('bookings.ongoingBookingWarning'))) return;
+    this.router.navigate(['/bookings', 'new'], { queryParams: { bookerId: booker.bookerId } });
+  }
 
-    if (bookings.length === 0) {
-      return;
-    }
+  viewBooker(booker: Booker) {
+    const data: BookerDialogData = { booker, readOnly: true };
+    this.dialog.open(BookerDialogComponent, { data, width: '760px', maxWidth: '95vw' });
+  }
 
-    if (bookings.length === 1) {
-      this.router.navigate(['/bookings', bookings[0].bookingId]);
-      return;
-    }
-
-    const bookerName = `${booker.firstname} ${booker.prefix ?? ''} ${booker.lastname}`.replace(/\s+/g, ' ').trim();
-    const data: BookingSelectDialogData = { bookerName, bookings };
-    this.dialog.open(BookingSelectDialogComponent, { data, width: '500px' })
+  editBooker(booker: Booker) {
+    const data: BookerDialogData = { booker, readOnly: false };
+    this.dialog.open(BookerDialogComponent, { data, width: '760px', maxWidth: '95vw' })
       .afterClosed()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((bookingId: string | undefined) => {
-        if (bookingId) {
-          this.router.navigate(['/bookings', bookingId]);
-        }
+      .subscribe((saved) => {
+        if (saved) this.reloadBookers();
       });
+  }
+
+  async deleteBooker(booker: Booker) {
+    const name = `${booker.firstname} ${booker.prefix ?? ''} ${booker.lastname}`.replace(/\s+/g, ' ').trim();
+    if (!await this.confirmService.confirmDelete(this.translate.instant('common.deleteConfirmItem', { name }))) return;
+    this.bookerService.delete(booker.bookerId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.dataSource.data = this.dataSource.data.filter(b => b.bookerId !== booker.bookerId);
+          this.notify('common.deleted');
+        },
+        error: (err) => this.notify(deleteErrorKey(err)),
+      });
+  }
+
+  private reloadBookers() {
+    this.bookerService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((bookers) => {
+        this.dataSource.data = bookers.filter(b => b.status !== 'prospect');
+      });
+  }
+
+  private notify(messageKey: string) {
+    this.snackBar.open(this.translate.instant(messageKey), this.translate.instant('common.close'), { duration: 3000 });
   }
 }

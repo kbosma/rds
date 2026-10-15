@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { RoleService } from './role.service';
 import { Role } from '../../shared/models';
 
@@ -136,6 +137,7 @@ export class RoleListComponent implements OnInit {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
 
   displayedColumns = ['description', 'actions'];
   dataSource = new MatTableDataSource<Role>();
@@ -171,9 +173,9 @@ export class RoleListComponent implements OnInit {
     this.router.navigate(['/admin/roles', role.roleId]);
   }
 
-  deleteRole(role: Role) {
+  async deleteRole(role: Role) {
     const message = this.translate.instant('roles.deleteConfirm', { name: role.description });
-    if (!confirm(message)) return;
+    if (!await this.confirmService.confirmDelete(message)) return;
 
     this.roleService.delete(role.roleId).subscribe({
       next: () => {

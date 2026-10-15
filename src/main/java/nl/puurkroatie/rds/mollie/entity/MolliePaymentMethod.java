@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.mollie.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import nl.puurkroatie.rds.common.EnumValues;
 
 public enum MolliePaymentMethod {
 
@@ -16,6 +17,6 @@ public enum MolliePaymentMethod {
 
     @JsonCreator
     public static MolliePaymentMethod fromValue(String value) {
-        return valueOf(value.toUpperCase());
+        return EnumValues.parse(MolliePaymentMethod.class, value);
     }
 }

@@ -17,6 +17,9 @@ public class DocumentTemplateDto {
     @Size(max = 1000)
     private String description;
     private byte[] templateData;
+    // Alleen voor templates uit de editor: de HTML waaruit het .docx bij opslaan wordt gemaakt.
+    @Size(max = 500_000)
+    private String sourceHtml;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -24,11 +27,12 @@ public class DocumentTemplateDto {
     private UUID tenantOrganization;
 
     @Default
-    public DocumentTemplateDto(UUID documentTemplateId, String name, String description, byte[] templateData, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public DocumentTemplateDto(UUID documentTemplateId, String name, String description, byte[] templateData, String sourceHtml, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.documentTemplateId = documentTemplateId;
         this.name = name;
         this.description = description;
         this.templateData = templateData;
+        this.sourceHtml = sourceHtml;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -37,11 +41,12 @@ public class DocumentTemplateDto {
     }
 
     @JsonCreator
-    public DocumentTemplateDto(UUID documentTemplateId, String name, String description, byte[] templateData, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public DocumentTemplateDto(UUID documentTemplateId, String name, String description, byte[] templateData, String sourceHtml, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.documentTemplateId = documentTemplateId;
         this.name = name;
         this.description = description;
         this.templateData = templateData;
+        this.sourceHtml = sourceHtml;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -62,6 +67,10 @@ public class DocumentTemplateDto {
 
     public byte[] getTemplateData() {
         return templateData;
+    }
+
+    public String getSourceHtml() {
+        return sourceHtml;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -44,6 +44,39 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  # Upload-limieten (o.a. afbeeldingen in e-mailtemplates). De standaard van Spring is
+  # 1MB; houd max-file-size gelijk aan app.email.image.max-bytes hieronder.
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
+
+  # SMTP voor het versturen van e-mails (Slice 3). Lokaal bewust leeg: zonder
+  # 'host' valt de applicatie terug op een log-only mailer (niets wordt echt
+  # verstuurd). Op test/productie via env-vars invullen (SPRING_MAIL_HOST enz.).
+  # Uitleg per property:
+#  mail:
+#    # Hostnaam/IP van de SMTP-relay. ZODRA deze gezet is, verstuurt de app echt
+#    # (SmtpEmailSender i.p.v. de log-only mailer). Leeg = niets wordt verstuurd.
+#    host: smtp.example.com
+#    # TCP-poort van de SMTP-server: 587 = STARTTLS (gangbaar), 465 = SMTPS/SSL,
+#    # 25 = onversleuteld (meestal geblokkeerd/afgeraden).
+#    port: 587
+#    # Inlognaam bij de SMTP-relay (vaak het volledige e-mailadres of een API-user).
+#    username: relay-user
+#    # Wachtwoord/API-sleutel bij username. Op test/prod via env-var, niet hardcoden.
+#    password: changeit
+#    # Extra JavaMail-instellingen (worden 1-op-1 doorgegeven aan de mail-sessie):
+#    properties:
+#      # Authenticatie aanzetten: stuur username/password mee bij verbinden.
+#      mail.smtp.auth: true
+#      # Verbinding na connect upgraden naar TLS (hoort bij poort 587).
+#      mail.smtp.starttls.enable: true
+#      # Optioneel: time-outs (ms) zodat een trage relay de request niet laat hangen.
+#      # mail.smtp.connectiontimeout: 5000
+#      # mail.smtp.timeout: 5000
+#      # mail.smtp.writetimeout: 5000
+
 app:
   jwt:
     secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgSldUIHNpZ25pbmcgMjU2Yml0
@@ -54,6 +87,19 @@ app:
   otp:
     expiry-minutes: 10
     max-active-per-email: 3
+
+  email:
+    # Publiek bereikbare basis-URL van de API (tot en met /api). Hiermee worden de
+    # relatieve afbeelding-paden in e-mail-HTML bij het VERSTUREN absoluut gemaakt:
+    # een ontvanger kan alleen een publiek adres laden. Net als de Mollie-webhook
+    # staat de standaard op de remote server; lokaal heeft dit alleen effect bij echt
+    # versturen (de preview gebruikt het relatieve pad en werkt dus overal).
+    # Deze URL moet in NGINX openstaan voor /api/public/email-images/{uuid}.
+    public-api-base-url: http://178.104.163.88/api
+    image:
+      # Maximale grootte van een geüploade afbeelding (bytes). Gelijk houden aan
+      # spring.servlet.multipart.max-file-size.
+      max-bytes: 2097152
 
   mollie:
     api:

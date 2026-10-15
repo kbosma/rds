@@ -1,7 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit.
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
+
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -11,7 +13,7 @@ Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorge
 - **Naamgeving**: snake_case in database, camelCase in Java
 - **Multi-tenancy**: Entiteiten met `tenant_organization` kolom worden gefilterd op organisatie via `TenantContext`
 - **Audit fields**: `created_at`, `created_by`, `modified_at`, `modified_by` — automatisch gezet via `@PrePersist`/`@PreUpdate`
-- **Enums**: Opgeslagen als `STRING` (`@Enumerated(EnumType.STRING)`), JSON-serialisatie in lowercase via `@JsonValue`/`@JsonCreator`
+- **Enums**: Opgeslagen als `STRING` (`@Enumerated(EnumType.STRING)`), JSON-serialisatie in lowercase via `@JsonValue`/`@JsonCreator` (parsing via `EnumValues.parse`, hoofdletterongevoelig, foutmelding met toegestane waarden). In het template-model (documenten/e-mail) is een enum de hoofdletter-naam
 - **Relaties**: Altijd `FetchType.LAZY`
 - **Composite keys**: Aparte `@IdClass` klassen die `Serializable` implementeren met `equals()`/`hashCode()`
 
@@ -27,7 +29,8 @@ Tenant/organisatie. Dit IS de tenant — heeft zelf geen `tenant_organization`.
 |-------|------|-------------|--------------|
 | organization_id | UUID | PK, auto-generated | |
 | name | VARCHAR | NOT NULL | Naam organisatie |
-| mollie_key | VARCHAR | | Mollie API key |
+| mollie_key | VARCHAR | | Mollie API key per organisatie. **Wordt nog niet gebruikt** voor API-aanroepen (zie [open-items.md](open-items.md)) |
+| email_from | VARCHAR(255) | | Afzenderadres (`From`) voor e-mails van deze organisatie (V6) |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
 | modified_at | TIMESTAMP | | |
@@ -45,7 +48,25 @@ Tenant/organisatie. Dit IS de tenant — heeft zelf geen `tenant_organization`.
 **Frontend bestanden:**
 - Model: `frontend-employee/src/app/shared/models/organization.model.ts`
 - Service: `frontend-employee/src/app/features/admin/organization.service.ts`
-- Component: `frontend-employee/src/app/features/admin/organization-list.component.ts` *(placeholder)*
+- Components: `frontend-employee/src/app/features/admin/organization-list.component.ts`, `organization-detail.component.ts`, `organization-onboarding.component.ts` (wizard: organisatie → persoon → account → rol)
+
+---
+
+### organization_theme
+
+Huisstijl per organisatie (één rij per organisatie). De UI gebruikt de kleuren als CSS-variabelen (`--theme-primary`, `--theme-accent`, `--theme-card-title`).
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| organization_theme_id | UUID | PK | |
+| organization_id | UUID | FK → organization, NOT NULL, **UNIQUE** | Organisatie |
+| primary_color | VARCHAR(7) | NOT NULL | bv. `#1976d2` |
+| accent_color | VARCHAR(7) | NOT NULL | |
+| logo_url | VARCHAR(500) | | |
+| card_title_color | VARCHAR(7) | | |
+| created_at / created_by / modified_at / modified_by | | | audit |
+
+**Bestanden:** `auth/entity/OrganizationTheme.java`, `auth/controller/OrganizationThemeController.java` (`GET /api/organization-themes/my-theme` voor de eigen organisatie); frontend `features/admin/organization-theme.component.ts`, `theme.service.ts`.
 
 ---
 
@@ -286,6 +307,7 @@ Boeker/opdrachtgever. Multi-tenant.
 | gender | VARCHAR | enum Gender | Geslacht |
 | birthdate | DATE | | Geboortedatum |
 | initials | VARCHAR | | Initialen |
+| status | VARCHAR | NOT NULL | enum `BookerStatus` (V4) |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
@@ -293,6 +315,8 @@ Boeker/opdrachtgever. Multi-tenant.
 | modified_by | UUID | | |
 
 **Enum Gender:** `MAN`, `VROUW`, `ANDERS`
+
+**Enum BookerStatus:** `PROSPECT` (potentiële klant, nog geen boeking), `ACTIVE` (reguliere boeker). Een prospect is dus **geen aparte tabel** maar een Booker met status `PROSPECT`; bestaande bookers zijn bij V4 `ACTIVE` geworden. `GET /api/bookers?status=prospect` filtert.
 
 **Backend bestanden:**
 - Entity: `booking/entity/Booker.java`
@@ -544,6 +568,7 @@ Documenttemplate (DOCX) voor het genereren van documenten met XDocReport. Multi-
 | name | VARCHAR | NOT NULL | Naam |
 | description | VARCHAR | | Omschrijving |
 | template_data | BYTEA | @Lob | DOCX template (binair) |
+| source_html | TEXT | nullable | Alleen bij een template uit de editor: de HTML waaruit `template_data` bij het opslaan is gebouwd (zie [templates.md](templates.md)); `NULL` bij een geüploade .docx. Migratie `V8__document_template_source_html.sql` |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
@@ -888,18 +913,56 @@ One-Time Password voor booker portal authenticatie. Geen tenant-filtering.
 
 ---
 
+## E-mail Module
+
+### email_template
+
+E-mailtemplate (onderwerp + HTML-body), per organisatie. FreeMarker-placeholders `${prospect.*}` en `${booking.*}` (zie [email.md](email.md), [templates.md](templates.md)). Multi-tenant. Migratie V5.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| email_template_id | UUID | PK | |
+| name | VARCHAR(255) | NOT NULL | |
+| description | VARCHAR(255) | | |
+| subject | VARCHAR(255) | NOT NULL | platte tekst, mag placeholders bevatten |
+| body_html | TEXT | | HTML uit de WYSIWYG-editor (afbeeldingen als relatief pad `/api/public/email-images/{uuid}`) |
+| tenant_organization, created_*, modified_* | | | zoals overal |
+
+**Bestanden:** `email/entity/EmailTemplate.java`, `email/service/EmailTemplateService(+impl)`, `email/service/EmailRenderService(+impl)`, `email/service/EmailSendService(+impl)`, `email/controller/EmailTemplateController.java`; frontend `features/email-templates/*`.
+
+---
+
+### email_image
+
+Afbeelding voor templates (e-mail **en** Word-templates; de naam is historisch). Bytes in de database; een afbeelding is onveranderlijk (nieuwe versie = nieuwe rij). Migratie V7.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| email_image_id | UUID | PK | tevens de onraadbare sleutel in de publieke URL |
+| original_filename | VARCHAR(255) | | alleen informatief |
+| content_type | VARCHAR(100) | NOT NULL | uit de **bytes** bepaald (PNG, JPEG, GIF, WebP) |
+| size_bytes | BIGINT | NOT NULL | maximaal 2 MB |
+| data | BYTEA | NOT NULL | |
+| tenant_organization | UUID | NOT NULL, index | herkomst/opruimen; niet gebruikt bij publiek uitleveren |
+| created_at / created_by | | | audit |
+
+**Bestanden:** `email/entity/EmailImage.java`, `email/service/EmailImageService(+impl)`, `ImageTypes`, `EmailImageUrlResolver`, `TemplateImages`; `email/controller/EmailImageController.java` (beheer) en `PublicEmailImageController.java` (publiek, GET); frontend `shared/template-editor/*`.
+
+---
+
 ## Enums Overzicht
 
 | Enum | Waarden | Gebruikt in |
 |------|---------|-------------|
 | BookingStatus | AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, AFGEROND | booking.booking_status |
 | Gender | MAN, VROUW, ANDERS | booker.gender, traveler.gender |
+| BookerStatus | PROSPECT, ACTIVE | booker.status |
 | AddressRole | WOON, FACTUUR, ACCOMMODATIE, LEVERANCIER | address.addressrole |
 | ActivityType | TOUR, EXCURSIE, TICKET, TRANSFER | activity.activity_type |
 | MolliePaymentStatus | OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED | mollie_payment.status, mollie_payment_status_entry.status |
 | MolliePaymentMethod | IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY | mollie_payment.method |
 
-Alle enums worden als `STRING` opgeslagen in de database en serialiseren naar lowercase in JSON.
+Alle enums worden als `STRING` (naam in hoofdletters) opgeslagen en serialiseren naar lowercase in JSON (`@JsonValue toValue()`); invoer wordt hoofdletterongevoelig geparsed (`EnumValues.parse`). In het template-model voor documenten en e-mail is een enum de hoofdletter-naam.
 
 ---
 
@@ -921,7 +984,11 @@ Accommodation ──< AccommodationAddress >── Address
 Accommodation ──< AccommodationSupplier >── Supplier
 Supplier ──< SupplierAddress >── Address
 
-DocumentTemplate (standalone, multi-tenant)
+Organization ── OrganizationTheme (1:1)
+DocumentTemplate (standalone, multi-tenant; optioneel source_html voor de editor)
+EmailTemplate (standalone, multi-tenant)
+EmailImage (standalone, multi-tenant; verwezen vanuit HTML als pad, geen FK)
+Otp (standalone, geen tenant: booker-portal-login)
 ```
 
 Legenda: `──<` = one-to-many, `──` = one-to-one, `>──` = many-to-one

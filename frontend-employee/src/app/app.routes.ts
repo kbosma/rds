@@ -36,6 +36,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'prospects',
+        loadComponent: () =>
+          import('./features/prospects/prospect-list.component').then(
+            (m) => m.ProspectListComponent
+          ),
+      },
+      {
         path: 'travelers',
         loadComponent: () =>
           import('./features/travelers/traveler-list.component').then(
@@ -75,6 +82,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/templates/template-list.component').then(
             (m) => m.TemplateListComponent
+          ),
+      },
+      {
+        path: 'email-templates',
+        loadComponent: () =>
+          import('./features/email-templates/email-template-list.component').then(
+            (m) => m.EmailTemplateListComponent
           ),
       },
       {

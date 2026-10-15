@@ -23,7 +23,6 @@ describe('MolliePaymentService', () => {
   const mock: MolliePayment = {
     molliePaymentId: 'mp-1',
     molliePaymentExternalId: 'tr_test001',
-    status: 'paid',
     method: 'ideal',
     amount: 2450,
     currency: 'EUR',
@@ -71,7 +70,7 @@ describe('MolliePaymentService', () => {
   });
 
   it('update() should delegate to ApiService', () => {
-    const data: Partial<MolliePayment> = { status: 'paid' };
+    const data: Partial<MolliePayment> = { description: 'Updated' };
     apiSpy.update.and.returnValue(of(mock));
     service.update('mp-1', data).subscribe();
     expect(apiSpy.update).toHaveBeenCalledWith('mollie/payments', 'mp-1', data);

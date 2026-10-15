@@ -30,6 +30,9 @@ public class Organization {
     @Column(name = "mollie_key")
     private String mollieKey;
 
+    @Column(name = "email_from")
+    private String emailFrom;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -45,16 +48,24 @@ public class Organization {
     protected Organization() {
     }
 
-    public Organization(UUID organizationId, String name, String mollieKey) {
+    // Update-constructor: neemt audit (createdAt/createdBy) over van de bestaande
+    // entity, zodat een update die updatable=false velden niet op null zet in de
+    // in-memory entity (en dus in de response).
+    public Organization(UUID organizationId, String name, String mollieKey, String emailFrom,
+                        LocalDateTime createdAt, UUID createdBy) {
         this.organizationId = organizationId;
         this.name = name;
         this.mollieKey = mollieKey;
+        this.emailFrom = emailFrom;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
     }
 
     @Default
-    public Organization(String name, String mollieKey) {
+    public Organization(String name, String mollieKey, String emailFrom) {
         this.name = name;
         this.mollieKey = mollieKey;
+        this.emailFrom = emailFrom;
     }
 
     @PrePersist
@@ -79,6 +90,10 @@ public class Organization {
 
     public String getMollieKey() {
         return mollieKey;
+    }
+
+    public String getEmailFrom() {
+        return emailFrom;
     }
 
     public LocalDateTime getCreatedAt() {

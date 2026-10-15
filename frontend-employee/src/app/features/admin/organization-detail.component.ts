@@ -55,6 +55,15 @@ import { Organization, Person } from '../../shared/models';
               <input matInput formControlName="name" />
             </mat-form-field>
 
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'organizations.emailFrom' | translate }}</mat-label>
+              <input matInput type="email" formControlName="emailFrom" placeholder="noreply@example.com" />
+              <mat-hint>{{ 'organizations.emailFromHint' | translate }}</mat-hint>
+              @if (form.controls.emailFrom.hasError('email')) {
+                <mat-error>{{ 'organizations.emailFromInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
             <div class="actions">
               <a mat-button routerLink="/admin/organizations"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</a>
               <button mat-raised-button color="primary" type="submit"
@@ -177,6 +186,7 @@ export class OrganizationDetailComponent implements OnInit {
 
   form = this.fb.group({
     name: ['', Validators.required],
+    emailFrom: ['', Validators.email],
   });
 
   ngOnInit() {
@@ -196,7 +206,7 @@ export class OrganizationDetailComponent implements OnInit {
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ organization, persons }) => {
         this.currentName.set(organization.name);
-        this.form.patchValue({ name: organization.name });
+        this.form.patchValue({ name: organization.name, emailFrom: organization.emailFrom ?? '' });
         this.persons.set(persons.filter(p => p.organizationId === id));
         this.loading.set(false);
       },
@@ -212,7 +222,10 @@ export class OrganizationDetailComponent implements OnInit {
     if (this.form.invalid) return;
     this.saving.set(true);
 
-    const payload: Partial<Organization> = { name: this.form.value.name! };
+    const payload: Partial<Organization> = {
+      name: this.form.value.name!,
+      emailFrom: this.form.value.emailFrom?.trim() || undefined,
+    };
 
     if (this.isNew()) {
       this.organizationService.create(payload)

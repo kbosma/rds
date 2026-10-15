@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface BookerMapper {
 
     @Mapping(target = "gender", expression = "java(entity.getGender() != null ? entity.getGender().toValue() : null)")
+    @Mapping(target = "status", expression = "java(entity.getStatus() != null ? entity.getStatus().toValue() : null)")
     BookerDto toDto(Booker entity);
 }

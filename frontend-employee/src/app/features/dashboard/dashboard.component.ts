@@ -18,14 +18,20 @@ import { EmployeeDashboardComponent } from './employee-dashboard.component';
     }
   `,
 })
+/**
+ * Kiest het dashboard op basis van authorities (nooit rollen):
+ *  - beheerdashboard: wie organisaties mag zien (ORGANIZATION_READ; systeembeheer);
+ *  - managerdashboard: wie accounts mag aanmaken (ACCOUNT_CREATE; beheert de gebruikers van de organisatie);
+ *  - anders het dashboard voor medewerkers.
+ */
 export class DashboardComponent {
   private auth = inject(AuthService);
 
   isAdmin(): boolean {
-    return this.auth.hasRole('ADMIN');
+    return this.auth.hasAuthority('ORGANIZATION_READ');
   }
 
   isManager(): boolean {
-    return this.auth.hasRole('MANAGER');
+    return !this.isAdmin() && this.auth.hasAuthority('ACCOUNT_CREATE');
   }
 }

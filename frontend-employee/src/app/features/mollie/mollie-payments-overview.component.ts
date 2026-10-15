@@ -11,11 +11,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { MolliePaymentService } from './mollie-payment.service';
 import { BookingService } from '../bookings/booking.service';
-import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { AuthService } from '../../core/auth/auth.service';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
+import { MolliePaymentViewDialogComponent } from './mollie-payment-view-dialog.component';
+import { MolliePaymentEditDialogComponent } from './mollie-payment-edit-dialog.component';
+import { MolliePayment } from '../../shared/models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
@@ -40,6 +45,8 @@ interface BookingMolliePaymentLink {
     MatInputModule,
     MatSortModule,
     MatPaginatorModule,
+    MatDialogModule,
+    RowActionsComponent,
     TranslatePipe,
   ],
   template: `
@@ -89,7 +96,7 @@ interface BookingMolliePaymentLink {
       </div>
     } @else {
       <div class="table-container">
-        <table mat-table [dataSource]="pagedPayments()" matSort (matSortChange)="onSort($event)" multiTemplateDataRows class="full-width">
+        <table mat-table [dataSource]="pagedPayments()" matSort (matSortChange)="onSort($event)" class="full-width">
           <ng-container matColumnDef="molliePaymentExternalId">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'payments.mollieId' | translate }}</th>
             <td mat-cell *matCellDef="let row">
@@ -137,59 +144,19 @@ interface BookingMolliePaymentLink {
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="expand">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let row">
-              <button mat-icon-button (click)="toggleRow(row); $event.stopPropagation()">
-                <mat-icon>{{ expandedPaymentId() === row.molliePaymentId ? 'expand_less' : 'expand_more' }}</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="expandedDetail">
-            <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length">
-              @if (expandedPaymentId() === row.molliePaymentId) {
-                <div class="status-history">
-                  <h4>{{ 'payments.statusHistory' | translate }}</h4>
-                  @if (statusEntriesLoading()) {
-                    <mat-spinner diameter="24"></mat-spinner>
-                  } @else {
-                    <table class="history-table">
-                      <thead>
-                        <tr>
-                          <th>{{ 'common.status' | translate }}</th>
-                          <th>{{ 'common.date' | translate }}</th>
-                          <th>{{ 'bookings.by' | translate }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (entry of statusEntries(); track entry.molliePaymentStatusEntryId) {
-                          <tr>
-                            <td>
-                              <span class="status-badge" [attr.data-status]="entry.status">{{ entry.status }}</span>
-                            </td>
-                            <td>{{ entry.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
-                            <td>{{ entry.createdBy ?? ('common.system' | translate) }}</td>
-                          </tr>
-                        }
-                        @if (statusEntries().length === 0) {
-                          <tr><td colspan="3" class="no-data">{{ 'payments.noStatusHistory' | translate }}</td></tr>
-                        }
-                      </tbody>
-                    </table>
-                  }
-                </div>
-              }
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="actions-cell">
+              <!-- Betalingen zijn geschiedenis: geen verwijderen. Bewerken kan alleen zolang de betaling
+                   nog niet bij Mollie is aangemaakt. -->
+              <app-row-actions [canView]="canView" [canEdit]="canEditPayment(row)" [canDelete]="false"
+                               (view)="viewPayment(row)" (edit)="editPayment(row)" />
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"
-              (click)="toggleRow(row)"
-              class="clickable-row"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
-              class="detail-row"></tr>
+              [class.alt-row]="i % 2 === 1"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
@@ -269,15 +236,8 @@ interface BookingMolliePaymentLink {
     .alt-row {
       background-color: #fafafa;
     }
-    .clickable-row {
-      cursor: pointer;
-    }
-    .clickable-row:hover {
-      background-color: #f0f0f0;
-    }
-    .detail-row {
-      height: 0;
-    }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
     .mollie-id {
       color: #1976d2;
       font-family: monospace;
@@ -322,32 +282,6 @@ interface BookingMolliePaymentLink {
       background-color: #efebe9;
       color: #4e342e;
     }
-    .status-history {
-      padding: 16px 24px;
-      background: #fafafa;
-    }
-    .status-history h4 {
-      margin: 0 0 12px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #555;
-    }
-    .history-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .history-table th {
-      text-align: left;
-      padding: 6px 12px;
-      border-bottom: 1px solid #ddd;
-      color: #888;
-      font-weight: 500;
-    }
-    .history-table td {
-      padding: 6px 12px;
-      border-bottom: 1px solid #eee;
-    }
     .no-data {
       text-align: center;
       padding: 24px;
@@ -369,6 +303,11 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   private molliePaymentService = inject(MolliePaymentService);
   private bookingService = inject(BookingService);
   private http = inject(HttpClient);
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+
+  canView = this.authService.hasAuthority('PAYMENT_READ');
+  private canUpdate = this.authService.hasAuthority('PAYMENT_UPDATE');
   private destroyRef = inject(DestroyRef);
 
   payments = signal<MolliePayment[]>([]);
@@ -380,12 +319,9 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   sortActive = signal('createdAt');
   sortDirection = signal<'asc' | 'desc' | ''>('desc');
 
-  expandedPaymentId = signal<string | null>(null);
-  statusEntries = signal<MolliePaymentStatusEntry[]>([]);
-  statusEntriesLoading = signal(false);
   paymentStatusMap = signal<Record<string, string>>({});
 
-  displayedColumns = ['molliePaymentExternalId', 'bookingNumber', 'createdAt', 'description', 'method', 'amount', 'status', 'expand'];
+  displayedColumns = ['molliePaymentExternalId', 'bookingNumber', 'createdAt', 'description', 'method', 'amount', 'status', 'actions'];
 
   totalAmount = computed(() =>
     this.filteredPayments().reduce((sum, p) => sum + (p.amount ?? 0), 0)
@@ -472,26 +408,28 @@ export class MolliePaymentsOverviewComponent implements OnInit {
     this.pageSize.set(event.pageSize);
   }
 
-  toggleRow(payment: MolliePayment) {
-    if (this.expandedPaymentId() === payment.molliePaymentId) {
-      this.expandedPaymentId.set(null);
-      this.statusEntries.set([]);
-      return;
-    }
+  /** Bewerken mag alleen zolang de betaling nog niet bij Mollie bestaat (nog geen Mollie-id). */
+  canEditPayment(payment: MolliePayment): boolean {
+    return this.canUpdate && !payment.molliePaymentExternalId;
+  }
 
-    this.expandedPaymentId.set(payment.molliePaymentId);
-    this.statusEntriesLoading.set(true);
-    this.molliePaymentService.getStatusEntries(payment.molliePaymentId)
+  viewPayment(payment: MolliePayment) {
+    this.dialog.open(MolliePaymentViewDialogComponent, {
+      data: { payment, bookingNumber: this.bookingNumberMap().get(payment.molliePaymentId) },
+      width: '560px',
+    });
+  }
+
+  editPayment(payment: MolliePayment) {
+    if (!this.canEditPayment(payment)) return;
+    this.dialog.open(MolliePaymentEditDialogComponent, { data: { payment }, width: '440px' })
+      .afterClosed()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (entries) => {
-          this.statusEntries.set(entries);
-          this.statusEntriesLoading.set(false);
-        },
-        error: () => {
-          this.statusEntries.set([]);
-          this.statusEntriesLoading.set(false);
-        },
+      .subscribe((saved) => {
+        if (!saved) return;
+        this.molliePaymentService.getAll()
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((payments) => this.payments.set(payments));
       });
   }
 

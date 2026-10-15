@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { OrganizationService } from './organization.service';
 import { Organization } from '../../shared/models';
 
@@ -152,6 +153,7 @@ export class OrganizationListComponent implements OnInit {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
 
   displayedColumns = ['name', 'createdAt', 'actions'];
   dataSource = new MatTableDataSource<Organization>();
@@ -195,9 +197,9 @@ export class OrganizationListComponent implements OnInit {
     this.router.navigate(['/admin/organizations', org.organizationId]);
   }
 
-  deleteOrganization(org: Organization) {
+  async deleteOrganization(org: Organization) {
     const message = this.translate.instant('organizations.deleteConfirm', { name: org.name });
-    if (!confirm(message)) return;
+    if (!await this.confirmService.confirmDelete(message)) return;
 
     this.organizationService.delete(org.organizationId).subscribe({
       next: () => {

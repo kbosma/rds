@@ -69,7 +69,7 @@ import { Person, Organization, Account } from '../../shared/models';
               </mat-form-field>
             </div>
 
-            @if (isAdmin) {
+            @if (canSeeOrganizations) {
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'persons.organization' | translate }}</mat-label>
                 <mat-select formControlName="organizationId">
@@ -81,15 +81,17 @@ import { Person, Organization, Account } from '../../shared/models';
             }
 
             <div class="actions">
-              <a mat-button routerLink="/admin/persons"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</a>
-              <button mat-raised-button color="primary" type="submit"
-                      [disabled]="saving() || form.invalid">
-                @if (saving()) {
-                  <mat-spinner diameter="20"></mat-spinner>
-                } @else {
-                  <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
-                }
-              </button>
+              <a mat-button routerLink="/admin/persons"><mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
+              @if (!readOnly()) {
+                <button mat-raised-button color="primary" type="submit"
+                        [disabled]="saving() || form.invalid">
+                  @if (saving()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
+                  }
+                </button>
+              }
             </div>
           </form>
         </mat-card-content>
@@ -218,9 +220,12 @@ export class PersonDetailComponent implements OnInit {
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
 
-  isAdmin = this.authService.hasRole('ADMIN');
+  /** Organisaties tonen/kiezen: alleen wie ze mag zien (ORGANIZATION_READ), niet op basis van een rol. */
+  canSeeOrganizations = this.authService.hasAuthority('ORGANIZATION_READ');
 
   isNew = signal(true);
+  /** Alleen inzien: geopend met ?readonly=true (inzien-icoon in de lijst). */
+  readOnly = signal(false);
   loading = signal(false);
   saving = signal(false);
   currentName = signal('');
@@ -238,7 +243,7 @@ export class PersonDetailComponent implements OnInit {
 
   ngOnInit() {
     // MANAGER: auto-set organizationId to own org
-    if (!this.isAdmin) {
+    if (!this.canSeeOrganizations) {
       const orgId = this.authService.currentUser()?.organizationId || '';
       this.form.patchValue({ organizationId: orgId });
     }
@@ -247,9 +252,13 @@ export class PersonDetailComponent implements OnInit {
     if (id) {
       this.isNew.set(false);
       this.personId = id;
+      if (this.route.snapshot.queryParamMap.get('readonly') === 'true') {
+        this.readOnly.set(true);
+        this.form.disable();
+      }
       this.loading.set(true);
       this.loadPerson(id);
-    } else if (this.isAdmin) {
+    } else if (this.canSeeOrganizations) {
       this.loading.set(true);
       this.organizationService.getAll()
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -268,7 +277,7 @@ export class PersonDetailComponent implements OnInit {
       person: this.personService.getById(id),
       accounts: this.accountService.getAll() as any,
     };
-    if (this.isAdmin) {
+    if (this.canSeeOrganizations) {
       sources['organizations'] = this.organizationService.getAll() as any;
     }
 
@@ -278,7 +287,7 @@ export class PersonDetailComponent implements OnInit {
         const accounts: Account[] = result.accounts;
         const name = `${person.firstname} ${person.prefix ? person.prefix + ' ' : ''}${person.lastname}`;
         this.currentName.set(name);
-        if (this.isAdmin && result.organizations) {
+        if (this.canSeeOrganizations && result.organizations) {
           this.organizations.set(result.organizations);
         }
         this.accounts.set(accounts.filter(a => a.personId === id));
@@ -299,7 +308,7 @@ export class PersonDetailComponent implements OnInit {
   }
 
   onSave() {
-    if (this.form.invalid) return;
+    if (this.readOnly() || this.form.invalid) return;
     this.saving.set(true);
 
     const { firstname, prefix, lastname, organizationId } = this.form.value;

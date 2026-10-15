@@ -15,6 +15,7 @@ public class OrganizationDto {
     @Size(max = 255)
     private String name;
     private String mollieKey;
+    private String emailFrom;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -22,19 +23,21 @@ public class OrganizationDto {
 
     @Default
     @JsonCreator
-    public OrganizationDto(UUID organizationId, String name, String mollieKey, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public OrganizationDto(UUID organizationId, String name, String mollieKey, String emailFrom, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.organizationId = organizationId;
         this.name = name;
         this.mollieKey = mollieKey;
+        this.emailFrom = emailFrom;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
     }
 
-    public OrganizationDto(String name, String mollieKey, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public OrganizationDto(String name, String mollieKey, String emailFrom, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.name = name;
         this.mollieKey = mollieKey;
+        this.emailFrom = emailFrom;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -51,6 +54,10 @@ public class OrganizationDto {
 
     public String getMollieKey() {
         return mollieKey;
+    }
+
+    public String getEmailFrom() {
+        return emailFrom;
     }
 
     public LocalDateTime getCreatedAt() {

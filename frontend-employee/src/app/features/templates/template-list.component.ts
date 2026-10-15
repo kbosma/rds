@@ -1,18 +1,21 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { TemplateService } from './template.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { DocumentTemplate } from '../../shared/models';
 import { TemplateDialogComponent } from './template-dialog.component';
 
@@ -21,13 +24,15 @@ import { TemplateDialogComponent } from './template-dialog.component';
   standalone: true,
   imports: [
     DatePipe,
-    MatCardModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatTooltipModule,
+    RowActionsComponent,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDividerModule,
     MatDialogModule,
     MatSnackBarModule,
     TranslatePipe,
@@ -35,8 +40,8 @@ import { TemplateDialogComponent } from './template-dialog.component';
   template: `
     <div class="header">
       <h1>{{ 'templates.title' | translate }}</h1>
-      @if (canEdit) {
-        <button mat-raised-button color="primary" (click)="openDialog()">
+      @if (canCreate) {
+        <button mat-raised-button color="primary" class="new-btn" (click)="openDialog()">
           <mat-icon>add</mat-icon> {{ 'templates.newTemplate' | translate }}
         </button>
       }
@@ -53,40 +58,66 @@ import { TemplateDialogComponent } from './template-dialog.component';
         <mat-spinner diameter="40"></mat-spinner>
       </div>
     } @else {
-      @if (filtered().length === 0) {
-        <p class="no-data">{{ 'templates.noTemplatesFound' | translate }}</p>
-      } @else {
-        <div class="card-grid">
-          @for (tpl of filtered(); track tpl.documentTemplateId) {
-            <mat-card class="template-card">
-              <mat-card-content>
-                <h3 class="tpl-name">{{ tpl.name }}</h3>
-                @if (tpl.description) {
-                  <p class="tpl-desc">{{ tpl.description }}</p>
-                }
-                <mat-divider></mat-divider>
-                <div class="tpl-detail">
-                  <mat-icon>calendar_today</mat-icon>
-                  <span>{{ 'templates.createdAt' | translate }}: {{ tpl.createdAt | date:'dd-MM-yyyy HH:mm' }}</span>
-                </div>
-              </mat-card-content>
-              <mat-card-actions align="end">
-                <button mat-button color="primary" (click)="download(tpl)">
-                  <mat-icon>download</mat-icon> {{ 'common.details' | translate }}
-                </button>
-                @if (canEdit) {
-                  <button mat-button color="primary" (click)="openDialog(tpl)">
-                    <mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}
+      <div class="table-container">
+        <table mat-table [dataSource]="paged()" class="full-width">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.name' | translate }}</th>
+            <td mat-cell *matCellDef="let tpl">{{ tpl.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.description' | translate }}</th>
+            <td mat-cell *matCellDef="let tpl">{{ tpl.description }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>{{ 'templates.type' | translate }}</th>
+            <td mat-cell *matCellDef="let tpl">
+              {{ (tpl.sourceHtml != null ? 'templates.typeEditor' : 'templates.typeUpload') | translate }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>{{ 'templates.createdAt' | translate }}</th>
+            <td mat-cell *matCellDef="let tpl">{{ tpl.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let tpl" class="actions-cell">
+              <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
+                               (view)="viewTemplate(tpl)" (edit)="openDialog(tpl)" (remove)="confirmDelete(tpl)">
+                @if (canView) {
+                  <button type="button" mat-icon-button color="primary" class="action-download"
+                          [matTooltip]="'templates.download' | translate"
+                          [attr.aria-label]="'templates.download' | translate"
+                          (click)="download(tpl)">
+                    <mat-icon>download</mat-icon>
                   </button>
-                  <button mat-button color="warn" (click)="confirmDelete(tpl)">
-                    <mat-icon>delete</mat-icon> {{ 'common.delete' | translate }}
-                  </button>
                 }
-              </mat-card-actions>
-            </mat-card>
-          }
-        </div>
-      }
+              </app-row-actions>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
+              [class.alt-row]="i % 2 === 1"></tr>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              {{ 'templates.noTemplatesFound' | translate }}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <mat-paginator
+        [length]="filtered().length"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 25, 50]"
+        (page)="onPage($event)"
+        showFirstLastButtons>
+      </mat-paginator>
     }
   `,
   styles: [`
@@ -104,59 +135,21 @@ import { TemplateDialogComponent } from './template-dialog.component';
     .filter-field {
       width: 100%;
     }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-    .template-card {
-      border-radius: 12px;
+    .table-container {
+      background: white;
+      border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
-    .tpl-name {
-      font-size: 18px;
-      font-weight: 500;
-      margin: 8px 0 4px;
-    }
-    .tpl-desc {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 12px;
-    }
-    .tpl-detail {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-      color: #666;
-      font-size: 14px;
-    }
-    .tpl-detail mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: #888;
-    }
-    .no-data {
-      color: #888;
-      font-size: 14px;
-      text-align: center;
-      padding: 40px;
-    }
+    .full-width { width: 100%; }
+    .alt-row { background-color: #fafafa; }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
+    .no-data { text-align: center; padding: 24px; color: #888; }
     .loading {
       display: flex;
       justify-content: center;
       padding: 40px;
-    }
-    @media (max-width: 1200px) {
-      .card-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    @media (max-width: 800px) {
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
     }
   `],
 })
@@ -166,13 +159,25 @@ export class TemplateListComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
 
-  canEdit = this.authService.hasAuthority('TEMPLATE_CREATE');
+  canCreate = this.authService.hasAuthority('TEMPLATE_CREATE');
+  canView = this.authService.hasAuthority('TEMPLATE_READ');
+  canEdit = this.authService.hasAuthority('TEMPLATE_UPDATE');
+  canDelete = this.authService.hasAuthority('TEMPLATE_DELETE');
+
+  displayedColumns = ['name', 'description', 'type', 'createdAt', 'actions'];
+  pageIndex = signal(0);
+  pageSize = signal(25);
 
   allTemplates = signal<DocumentTemplate[]>([]);
   filtered = signal<DocumentTemplate[]>([]);
   loading = signal(true);
+  paged = computed(() => {
+    const start = this.pageIndex() * this.pageSize();
+    return this.filtered().slice(start, start + this.pageSize());
+  });
 
   ngOnInit() {
     this.loadTemplates();
@@ -180,6 +185,7 @@ export class TemplateListComponent implements OnInit {
 
   applyFilter(event: Event) {
     const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.pageIndex.set(0);
     if (!value) {
       this.filtered.set(this.allTemplates());
     } else {
@@ -192,10 +198,25 @@ export class TemplateListComponent implements OnInit {
     }
   }
 
+  onPage(event: PageEvent) {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+  }
+
+  viewTemplate(template: DocumentTemplate) {
+    this.dialog.open(TemplateDialogComponent, {
+      data: { template, readOnly: true },
+      width: template.sourceHtml != null ? '980px' : '500px',
+      maxWidth: '95vw',
+    });
+  }
+
   openDialog(template?: DocumentTemplate) {
     const dialogRef = this.dialog.open(TemplateDialogComponent, {
       data: { template },
-      width: '500px',
+      // een template uit de editor heeft meer ruimte nodig dan het uploadformulier
+      width: template?.sourceHtml != null ? '980px' : '500px',
+      maxWidth: '95vw',
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
@@ -217,9 +238,9 @@ export class TemplateListComponent implements OnInit {
     });
   }
 
-  confirmDelete(template: DocumentTemplate) {
+  async confirmDelete(template: DocumentTemplate) {
     const message = this.translate.instant('templates.deleteConfirm', { name: template.name });
-    if (!confirm(message)) return;
+    if (!await this.confirmService.confirmDelete(message)) return;
 
     this.templateService.delete(template.documentTemplateId).subscribe({
       next: () => {
