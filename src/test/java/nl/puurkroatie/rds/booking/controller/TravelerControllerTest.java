@@ -80,6 +80,26 @@ class TravelerControllerTest extends AbstractBookingControllerTest {
                 .andExpect(jsonPath("$.tenantOrganization").value(ORG_TECHPARTNER_ID.toString()));
     }
 
+    // MANAGER: POST /api/travelers met een ongeldige gender — 400 met een leesbare melding
+    // (regressie: de frontend stuurde "F" -> kale "No enum constant ...Gender.F").
+    @Test
+    void manager_createTraveler_invalidGender_returns400WithAllowedValues() throws Exception {
+        String token = managerToken();
+
+        String json = "{\"bookingId\":\"" + BOOKING_TP_4 + "\"," +
+                "\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Reiziger\"," +
+                "\"gender\":\"F\"," +
+                "\"birthdate\":\"2010-05-15\",\"initials\":\"T.\"}";
+
+        mockMvc.perform(post("/api/travelers")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid value 'F' for Gender. Allowed values: man, vrouw, anders"));
+    }
+
     // MANAGER: DELETE /api/travelers/{id} andere org — 403
     @Test
     void manager_deleteTraveler_otherOrganization_returns403() throws Exception {

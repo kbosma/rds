@@ -168,4 +168,64 @@ class BookerControllerTest extends AbstractBookingControllerTest {
         mockMvc.perform(get("/api/bookers"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // EMPLOYEE: POST /api/bookers met status=prospect — 201 + status prospect
+    @Test
+    void employee_createProspect_returns201WithProspectStatus() throws Exception {
+        String token = employeeToken();
+
+        String json = "{\"firstname\":\"Pros\",\"lastname\":\"Pect\"," +
+                "\"emailaddress\":\"prospect@example.com\",\"status\":\"prospect\"}";
+
+        mockMvc.perform(post("/api/bookers")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("prospect"))
+                .andExpect(jsonPath("$.tenantOrganization").value(ORG_PUURKROATIE_ID.toString()));
+    }
+
+    // EMPLOYEE: POST /api/bookers zonder status — default active
+    @Test
+    void employee_createBooker_defaultsToActiveStatus() throws Exception {
+        String token = employeeToken();
+
+        String json = "{\"firstname\":\"Act\",\"lastname\":\"Ive\"," +
+                "\"emailaddress\":\"active@example.com\"}";
+
+        mockMvc.perform(post("/api/bookers")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("active"));
+    }
+
+    // EMPLOYEE: GET /api/bookers?status=prospect — alleen prospects
+    @Test
+    void employee_findAllFilteredByProspect_returnsOnlyProspects() throws Exception {
+        String token = employeeToken();
+
+        String json = "{\"firstname\":\"Filter\",\"lastname\":\"Pros\"," +
+                "\"emailaddress\":\"filter-prospect@example.com\",\"status\":\"prospect\"}";
+        mockMvc.perform(post("/api/bookers")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated());
+
+        String response = mockMvc.perform(get("/api/bookers")
+                        .param("status", "prospect")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode bookers = objectMapper.readTree(response);
+        assert bookers.size() >= 1 : "Expected at least one prospect";
+        for (JsonNode booker : bookers) {
+            assert booker.get("status").asText().equals("prospect")
+                    : "Filter status=prospect should only return prospects";
+        }
+    }
 }

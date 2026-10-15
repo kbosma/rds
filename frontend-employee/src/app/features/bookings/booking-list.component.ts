@@ -1,5 +1,6 @@
 import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,8 +15,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Booking, BookingService } from './booking.service';
+import { BookerSelectDialogComponent } from '../bookers/booker-select-dialog.component';
+import { ConfirmService } from '../../shared/services/confirm.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { deleteErrorKey } from '../../shared/utils/delete-error';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
 
 @Component({
   selector: 'app-booking-list',
@@ -35,6 +43,9 @@ import { Booking, BookingService } from './booking.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatSelectModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    RowActionsComponent,
     TranslatePipe,
   ],
   template: `
@@ -118,11 +129,17 @@ import { Booking, BookingService } from './booking.service';
             <td mat-cell *matCellDef="let row">&euro; {{ row.totalSum | number:'1.2-2' }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="actions-cell">
+              <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
+                               (view)="viewBooking(row)" (edit)="editBooking(row)" (remove)="deleteBooking(row)" />
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"
-              class="clickable-row"
-              (click)="onBookingClick(row)"></tr>
+              [class.alt-row]="i % 2 === 1"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
@@ -183,12 +200,8 @@ import { Booking, BookingService } from './booking.service';
     .alt-row {
       background-color: #fafafa;
     }
-    .clickable-row {
-      cursor: pointer;
-    }
-    .clickable-row:hover {
-      background-color: #e3f2fd;
-    }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
     .status-badge {
       display: inline-block;
       padding: 2px 10px;
@@ -218,9 +231,18 @@ import { Booking, BookingService } from './booking.service';
 export class BookingListComponent implements OnInit {
   private bookingService = inject(BookingService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
+  private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
 
-  displayedColumns = ['bookingNumber', 'fromDate', 'untilDate', 'statusName', 'totalSum'];
+  canView = this.authService.hasAuthority('BOOKING_READ');
+  canEdit = this.authService.hasAuthority('BOOKING_UPDATE');
+  canDelete = this.authService.hasAuthority('BOOKING_DELETE');
+
+  displayedColumns = ['bookingNumber', 'fromDate', 'untilDate', 'statusName', 'totalSum', 'actions'];
   dataSource = new MatTableDataSource<Booking>();
   loading = signal(true);
 
@@ -303,12 +325,45 @@ export class BookingListComponent implements OnInit {
     this.dataSource.data = this.allBookings;
   }
 
-  onBookingClick(booking: Booking) {
+  /** Inzien: het boekingdetail alleen-lezen (geen wijzig-knoppen). */
+  viewBooking(booking: Booking) {
+    this.router.navigate(['/bookings', booking.bookingId], { queryParams: { readonly: 'true' } });
+  }
+
+  editBooking(booking: Booking) {
     this.router.navigate(['/bookings', booking.bookingId]);
   }
 
-  navigateToNew() {
-    this.router.navigate(['/bookings', 'new']);
+  /**
+   * Verwijdert de boeking. Let op: de database verwijdert reizigers, boekingsregels, -activiteiten,
+   * documenten en betalingskoppelingen mee; de bevestiging zegt dat expliciet.
+   */
+  async deleteBooking(booking: Booking) {
+    const message = this.translate.instant('common.deleteConfirmItem', { name: booking.bookingNumber })
+      + ' ' + this.translate.instant('bookings.deleteCascadeWarning');
+    if (!await this.confirmService.confirmDelete(message)) return;
+
+    this.bookingService.delete(booking.bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.allBookings = this.allBookings.filter(b => b.bookingId !== booking.bookingId);
+          this.dataSource.data = this.dataSource.data.filter(b => b.bookingId !== booking.bookingId);
+          this.snackBar.open(this.translate.instant('common.deleted'), this.translate.instant('common.close'), { duration: 3000 });
+        },
+        error: (err) => this.snackBar.open(this.translate.instant(deleteErrorKey(err)), this.translate.instant('common.close'), { duration: 6000 }),
+      });
+  }
+
+  async navigateToNew() {
+    // Een boeking begint altijd bij een hoofdboeker: kies die eerst.
+    const bookerId = await firstValueFrom(
+      this.dialog.open(BookerSelectDialogComponent, { width: '500px' }).afterClosed());
+    if (!bookerId) return;
+    const hasOngoing = this.allBookings.some(
+      b => b.bookerId === bookerId && b.bookingStatus !== 'afgerond');
+    if (hasOngoing && !await this.confirmService.confirm(this.translate.instant('bookings.ongoingBookingWarning'))) return;
+    this.router.navigate(['/bookings', 'new'], { queryParams: { bookerId } });
   }
 
   private toDateString(date: Date): string {

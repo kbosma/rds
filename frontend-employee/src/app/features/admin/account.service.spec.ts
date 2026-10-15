@@ -11,9 +11,10 @@ describe('AccountService', () => {
   const mock: Account = {
     accountId: 'acc-1',
     userName: 'jan.vanbergen',
-    person: 'Jan van Bergen',
+    personId: 'p-1',
     locked: false,
     mustChangePassword: false,
+    totpEnabled: false,
     expiresAt: '2027-01-01T00:00:00',
     createdAt: '2026-01-01T10:00:00',
     createdBy: 'user-1',

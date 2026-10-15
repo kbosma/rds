@@ -17,6 +17,6 @@ describe('OrganizationListComponent', () => {
   });
 
   it('should show placeholder text', () => {
-    expect(fixture.nativeElement.textContent).toContain('binnenkort beschikbaar');
+    expect(fixture.nativeElement.textContent).toContain('Organisaties');
   });
 });

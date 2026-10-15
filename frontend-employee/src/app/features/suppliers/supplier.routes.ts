@@ -6,4 +6,14 @@ export const supplierRoutes: Routes = [
     loadComponent: () =>
       import('./supplier-list.component').then((m) => m.SupplierListComponent),
   },
+  {
+    path: 'new',
+    loadComponent: () =>
+      import('./supplier-detail.component').then((m) => m.SupplierDetailComponent),
+  },
+  {
+    path: ':id',
+    loadComponent: () =>
+      import('./supplier-detail.component').then((m) => m.SupplierDetailComponent),
+  },
 ];

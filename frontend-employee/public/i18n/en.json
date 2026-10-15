@@ -2,6 +2,8 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel",
+    "confirm": "Confirm",
+    "continue": "Continue",
     "close": "Close",
     "delete": "Delete",
     "edit": "Edit",
@@ -32,7 +34,13 @@
     "newPayment": "New payment",
     "back": "Back",
     "switchLanguage": "Switch language",
-    "select": "Select"
+    "select": "Select",
+    "view": "View",
+    "deleteConfirmItem": "Are you sure you want to delete \"{{name}}\"?",
+    "deleted": "Deleted",
+    "deleteError": "Deleting failed",
+    "saveError": "Saving failed",
+    "deleteBlocked": "Cannot be deleted: documents or payments are linked to it. They are kept as history."
   },
   "app": {
     "title": "RDS",
@@ -43,6 +51,7 @@
     "dashboard": "Dashboard",
     "bookings": "Bookings",
     "bookers": "Bookers",
+    "prospects": "Prospects",
     "travelers": "Travelers",
     "accommodations": "Accommodations",
     "suppliers": "Suppliers",
@@ -57,6 +66,7 @@
     "changePassword": "Password",
     "totpSettings": "2FA Settings",
     "templates": "Templates",
+    "emailTemplates": "Email templates",
     "theme": "Brand Style",
     "admin": "ADMIN",
     "bookingAdmin": "ORGANIZATION ADMIN",
@@ -108,6 +118,12 @@
     "bookingNumber": "Booking number",
     "noBookingsFound": "No bookings found.",
     "newBookingTitle": "New booking",
+    "conceptNotice": "Draft — not saved yet. The booking is created as soon as you add something.",
+    "createConceptConfirm": "This will create a definitive booking and assign it a booking number. Continue?",
+    "ongoingBookingWarning": "This booker already has an ongoing (unfinished) booking. You may have selected the wrong booker. Continue anyway?",
+    "created": "Booking created",
+    "createError": "Error creating booking",
+    "selectBookerFirst": "Select a booker first to start a booking.",
     "editBookingTitle": "Edit booking",
     "bookingDetails": "Booking details",
     "fromDateComputed": "From date (calculated)",
@@ -154,7 +170,10 @@
     "status_boeking": "Booking",
     "status_voorschot": "Advance",
     "status_betaald": "Paid",
-    "status_afgerond": "Completed"
+    "status_afgerond": "Completed",
+    "sendEmail": "Send email",
+    "deleteCascadeWarning": "All related travelers, booking lines, activities, documents and payment links are deleted too.",
+    "viewBookingTitle": "View booking"
   },
   "bookingLine": {
     "editTitle": "Edit accommodation",
@@ -169,7 +188,11 @@
     "overlapWarning": "{{name1}} overlaps with {{name2}}",
     "gapWarning": "No accommodation from {{from}} to {{until}}",
     "saveAnyway": "Save anyway",
-    "adjustDates": "Adjust dates"
+    "adjustDates": "Adjust dates",
+    "newAccommodation": "New accommodation",
+    "newSupplier": "New supplier",
+    "noSupplierLinked": "This accommodation has no supplier yet: pick one or create one. The link is saved together with the line.",
+    "createError": "Error creating"
   },
   "accounts": {
     "title": "Accounts",
@@ -207,6 +230,125 @@
     "roleRemoveError": "Error removing role",
     "removeRoleConfirm": "Are you sure you want to remove the role \"{{role}}\"?"
   },
+  "emailTemplates": {
+    "title": "Email templates",
+    "new": "New template",
+    "editTitle": "Edit email template",
+    "newTitle": "New email template",
+    "saved": "Template saved",
+    "saveError": "Error saving template",
+    "deleteConfirm": "Are you sure you want to delete template '{{name}}'?",
+    "removed": "Template deleted",
+    "removeError": "Error deleting template",
+    "name": "Name",
+    "subject": "Subject",
+    "bodyHtml": "HTML body",
+    "noTemplatesFound": "No email templates found.",
+    "placeholdersHint": "Use ${prospect.firstname}, ${prospect.fullName}, etc.",
+    "preview": "Preview",
+    "previewTitle": "Preview",
+    "selectProspect": "Select a prospect",
+    "render": "Generate preview",
+    "renderError": "Error generating preview",
+    "saveFirst": "Save the template first to generate a preview.",
+    "send": "Send",
+    "sendConfirm": "Are you sure you want to send this email to {{name}}?",
+    "sent": "Email sent to {{to}}",
+    "sendError": "Error sending email",
+    "sendEmailTitle": "Send email",
+    "selectTemplate": "Choose a template",
+    "forProspect": "Prospect / booker",
+    "forBooking": "Booking",
+    "selectBooking": "Choose a booking",
+    "noBookingsFound": "No bookings found.",
+    "sendConfirmBooking": "Send the email to the main booker of booking {{number}}?"
+  },
+  "templateEditor": {
+    "font": "Font",
+    "fontDefault": "Font",
+    "size": "Size",
+    "sizeDefault": "Size",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "bullets": "Bulleted list",
+    "numbered": "Numbered list",
+    "table": "Table",
+    "tableInsert": "Insert table",
+    "tableAddCol": "Add column",
+    "tableAddRow": "Add row",
+    "tableDelCol": "Delete column",
+    "tableDelRow": "Delete row",
+    "tableDelete": "Delete table",
+    "variables": "Variables",
+    "variablesHint": "Drag into the text or click to insert.",
+    "tabVariables": "Variables",
+    "tabImages": "Images",
+    "image": "Insert image",
+    "imageInvalidType": "Only PNG, JPEG, GIF or WebP images are allowed.",
+    "imageTooLarge": "The image is too large (maximum 2 MB).",
+    "imageUploadError": "Uploading the image failed.",
+    "repeatTable": "Repeated table",
+    "repeatTravelers": "Travelers",
+    "repeatBookingLines": "Accommodations",
+    "repeatActivities": "Activities",
+    "repeatOff": "Turn off repeating",
+    "repeatHint": "Repeated table: the last row is repeated for every item.",
+    "groups": {
+      "prospect": "Recipient",
+      "booking": "Booking",
+      "bookingOnlyHint": "Booking fields only work when the email is sent for a booking.",
+      "mainBooker": "Main booker"
+    },
+    "images": {
+      "hint": "Drag an image into the text, or click to insert it.",
+      "upload": "Upload",
+      "uploaded": "Image uploaded",
+      "empty": "No images yet. Upload one.",
+      "loadError": "Loading the images failed.",
+      "retry": "Retry",
+      "unnamed": "image",
+      "deleteConfirm": "Delete image '{{name}}'? Emails that were already sent will no longer show this picture.",
+      "deleted": "Image deleted",
+      "deleteError": "Deleting the image failed.",
+      "inUseError": "The image is still used in a template and cannot be deleted.",
+      "lockedInUse": "used in a template, cannot be deleted",
+      "lockedInEditor": "is in the text you are editing, cannot be deleted"
+    },
+    "vars": {
+      "firstname": "First name",
+      "prefix": "Prefix",
+      "lastname": "Last name",
+      "fullName": "Full name",
+      "callsign": "Call sign",
+      "telephone": "Phone",
+      "emailaddress": "Email address",
+      "gender": "Gender",
+      "birthdate": "Date of birth",
+      "initials": "Initials",
+      "bookingNumber": "Booking number",
+      "bookingStatus": "Status",
+      "fromDate": "From",
+      "untilDate": "Until",
+      "totalSum": "Total amount",
+      "price": "Price",
+      "totalPrice": "Total price",
+      "accommodationName": "Accommodation",
+      "supplierName": "Supplier",
+      "activityName": "Activity",
+      "meetingPoint": "Meeting point"
+    }
+  },
+  "prospects": {
+    "title": "Prospects",
+    "register": "Register prospect",
+    "registerTitle": "Register prospect",
+    "registered": "Prospect registered",
+    "registerError": "Error registering prospect",
+    "noProspectsFound": "No prospects found.",
+    "makeBooker": "Make booker",
+    "promoted": "Prospect is now a booker"
+  },
   "bookers": {
     "title": "Bookers",
     "searchPlaceholder": "Search by name, email or phone...",
@@ -226,7 +368,10 @@
     "selectTitle": "Select main booker",
     "selectBooker": "Select a booker",
     "selectBooking": "Select a booking",
-    "multipleBookingsFor": "There are multiple bookings for {{name}}:"
+    "multipleBookingsFor": "There are multiple bookings for {{name}}:",
+    "newBookingForBooker": "New booking for this booker",
+    "newTitle": "New booker",
+    "newBooker": "New booker"
   },
   "accommodations": {
     "title": "Accommodations",
@@ -280,7 +425,13 @@
     "supplierLinkError": "Error linking supplier",
     "unlinkSupplierConfirm": "Are you sure you want to unlink \"{{name}}\"?",
     "supplierUnlinked": "Supplier unlinked",
-    "supplierUnlinkError": "Error unlinking supplier"
+    "supplierUnlinkError": "Error unlinking supplier",
+    "supplier": "Supplier",
+    "address": "Address",
+    "noAccommodationsFound": "No accommodations found.",
+    "deleteCascadeWarning": "Booking lines that refer to this accommodation are deleted too.",
+    "newSupplier": "New supplier",
+    "supplierCreatedAndLinked": "Supplier created and linked"
   },
   "payments": {
     "title": "Payments",
@@ -301,7 +452,9 @@
     "status_paid": "Paid",
     "status_failed": "Failed",
     "status_canceled": "Canceled",
-    "status_expired": "Expired"
+    "status_expired": "Expired",
+    "viewTitle": "Payment",
+    "editTitle": "Edit payment"
   },
   "organizations": {
     "title": "Organizations",
@@ -321,7 +474,10 @@
     "created": "Organization created",
     "createError": "Error creating organization",
     "notFound": "Organization not found",
-    "noPersonsLinked": "No persons linked to this organization."
+    "noPersonsLinked": "No persons linked to this organization.",
+    "emailFrom": "Sender email address",
+    "emailFromHint": "Sender address for emails to prospects and bookers.",
+    "emailFromInvalid": "Enter a valid email address."
   },
   "persons": {
     "title": "Persons",
@@ -398,7 +554,9 @@
     "authorityAssignError": "Error assigning authority",
     "authorityRemoved": "Authority removed",
     "authorityRemoveError": "Error removing authority",
-    "removeAuthorityConfirm": "Are you sure you want to remove the authority \"{{authority}}\"?"
+    "removeAuthorityConfirm": "Are you sure you want to remove the authority \"{{authority}}\"?",
+    "authorities": "Authorities",
+    "selectAuthority": "Select an authority"
   },
   "authorities": {
     "title": "Authorities",
@@ -490,7 +648,13 @@
     "accommodationLinkError": "Error linking accommodation",
     "unlinkAccommodationConfirm": "Are you sure you want to unlink \"{{name}}\"?",
     "accommodationUnlinked": "Accommodation unlinked",
-    "accommodationUnlinkError": "Error unlinking accommodation"
+    "accommodationUnlinkError": "Error unlinking accommodation",
+    "viewTitle": "Supplier",
+    "noSuppliersFound": "No suppliers found.",
+    "address": "Address",
+    "deleteCascadeWarning": "Booking lines that refer to this supplier are deleted too.",
+    "newAccommodation": "New accommodation",
+    "accommodationCreatedAndLinked": "Accommodation created and linked"
   },
   "documents": {
     "title": "Documents",
@@ -520,7 +684,12 @@
     "chooseFile": "Choose file",
     "invalidMimeType": "Invalid file type. Only PDF files are allowed.",
     "fetchError": "Error fetching URL",
-    "displaynamePlaceholder": "Document name"
+    "displaynamePlaceholder": "Document name",
+    "viewTitle": "Document",
+    "editTitle": "Rename document",
+    "mimeType": "Type",
+    "download": "Download",
+    "downloadError": "Download failed"
   },
   "templates": {
     "title": "Templates",
@@ -538,7 +707,18 @@
     "chooseFile": "Choose file",
     "dropzoneText": "Drop a .docx file here",
     "dropzoneHint": "or click 'Choose file'",
-    "invalidFileType": "Invalid file type. Only .docx files are allowed."
+    "invalidFileType": "Invalid file type. Only .docx files are allowed.",
+    "mode": "Template type",
+    "modeUpload": "Upload a Word file",
+    "modeEditor": "Create in the editor",
+    "editorHint": "Create the template here; saving turns it into a Word document (.docx). A repeated table repeats its last row for every item.",
+    "switchWarning": "Note: saving from the editor replaces the uploaded Word file with what you create here.",
+    "viewTitle": "Template",
+    "download": "Download",
+    "downloadError": "Download failed",
+    "type": "Type",
+    "typeEditor": "Editor",
+    "typeUpload": "Uploaded file"
   },
   "totp": {
     "setupTitle": "Set up two-factor authentication",
@@ -567,7 +747,8 @@
     "transfer": "Transfer",
     "noActivitiesFound": "No activities found.",
     "saveError": "Error saving activity",
-    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?"
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+    "deleteCascadeWarning": "Booking activities that refer to this activity are deleted too."
   },
   "bookingActivity": {
     "title": "Activities",
@@ -595,5 +776,18 @@
     "previewCardBody": "This is how the card title looks in the application.",
     "saved": "Brand style saved",
     "saveError": "Error saving brand style"
+  },
+  "addressEditor": {
+    "title": "Addresses",
+    "new": "New address",
+    "edit": "Edit address",
+    "empty": "No addresses yet.",
+    "deleteConfirm": "Are you sure you want to delete this address?",
+    "added": "Address added",
+    "saved": "Address saved",
+    "removed": "Address deleted",
+    "addError": "Adding the address failed",
+    "saveError": "Saving the address failed",
+    "removeError": "Deleting the address failed"
   }
 }

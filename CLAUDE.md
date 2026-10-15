@@ -149,8 +149,13 @@ Gebruik ALLEEN indien nodig:
 - Security details → docs/security.md
 - Domain details → docs/domain.md
 - Mollie payments → docs/mollie.md
+- E-mail (templates & versturen) → docs/email.md
+- Templates (gedeelde editor, Word-templates, herhaalde tabellen) → docs/templates.md
 - API voorbeelden → docs/api-examples.md
 - Datamodel → docs/database-model.md
+- Werkafspraken (taal, git, tests, grenzen, data-/API-regels) → docs/working-agreements.md
+- Bouwen, testen, deployen → docs/build-test-deploy.md
+- Index van alle documentatie (start hier in een nieuwe sessie) → docs/README.md
 
 ---
 

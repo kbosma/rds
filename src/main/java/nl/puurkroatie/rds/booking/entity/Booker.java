@@ -55,6 +55,10 @@ public class Booker {
     @Column(name = "initials")
     private String initials;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private BookerStatus status;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -86,7 +90,7 @@ public class Booker {
         this.initials = initials;
     }
 
-    public Booker(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials) {
+    public Booker(String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, BookerStatus status) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
@@ -96,9 +100,10 @@ public class Booker {
         this.gender = gender;
         this.birthdate = birthdate;
         this.initials = initials;
+        this.status = status;
     }
 
-    public Booker(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, UUID tenantOrganization) {
+    public Booker(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, Gender gender, LocalDate birthdate, String initials, BookerStatus status, LocalDateTime createdAt, UUID createdBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
         this.firstname = firstname;
         this.prefix = prefix;
@@ -109,6 +114,7 @@ public class Booker {
         this.gender = gender;
         this.birthdate = birthdate;
         this.initials = initials;
+        this.status = status;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.tenantOrganization = tenantOrganization;
@@ -165,6 +171,10 @@ public class Booker {
 
     public String getInitials() {
         return initials;
+    }
+
+    public BookerStatus getStatus() {
+        return status;
     }
 
     public LocalDateTime getCreatedAt() {

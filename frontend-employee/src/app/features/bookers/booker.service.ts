@@ -11,6 +11,10 @@ export class BookerService {
     return this.api.getAll<Booker>(this.endpoint);
   }
 
+  getByStatus(status: string) {
+    return this.api.getAll<Booker>(this.endpoint, { status });
+  }
+
   getById(id: string) {
     return this.api.getById<Booker>(this.endpoint, id);
   }

@@ -1,49 +1,50 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDividerModule } from '@angular/material/divider';
+import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
+import { deleteErrorKey } from '../../shared/utils/delete-error';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { SupplierService } from './supplier.service';
 import { SupplierAddressService } from '../accommodations/supplier-address.service';
 import { AddressService } from '../accommodations/address.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { Supplier, Address, SupplierAddress } from '../../shared/models';
+import { Supplier, Address } from '../../shared/models';
 
 export interface SupplierView {
   supplier: Supplier;
   addressLine: string | null;
 }
 
-const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
-
 @Component({
   selector: 'app-supplier-list',
   standalone: true,
   imports: [
-    RouterLink,
-    MatCardModule,
+    MatTableModule,
+    MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatDividerModule,
+    RowActionsComponent,
     TranslatePipe,
   ],
   template: `
     <div class="header">
       <h1>{{ 'suppliers.title' | translate }}</h1>
       @if (canCreate) {
-        <button mat-raised-button color="primary" routerLink="/suppliers/new">
+        <button mat-raised-button color="primary" class="new-btn" (click)="newSupplier()">
           <mat-icon>add</mat-icon> {{ 'suppliers.newSupplier' | translate }}
         </button>
       }
@@ -60,28 +61,51 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
         <mat-spinner diameter="40"></mat-spinner>
       </div>
     } @else {
-      <div class="card-grid">
-        @for (view of filtered(); track view.supplier.supplierId; let i = $index) {
-          <mat-card class="supplier-card">
-            <div class="accent-bar" [style.background-color]="getAccentColor(i)"></div>
-            <mat-card-content>
-              <h3 class="sup-name">{{ view.supplier.name }}</h3>
-              <span class="sup-code">{{ view.supplier.key }}</span>
-              <mat-divider></mat-divider>
-              <div class="sup-detail">
-                <mat-icon>location_on</mat-icon>
-                <span>{{ view.addressLine || ('suppliers.noAddress' | translate) }}</span>
-              </div>
-            </mat-card-content>
-            <mat-card-actions align="end">
-              <a mat-button color="primary" [routerLink]="'/suppliers/' + view.supplier.supplierId"><mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}</a>
-              @if (canDelete) {
-                <button mat-button color="warn" (click)="deleteSupplier(view.supplier)"><mat-icon>delete</mat-icon> {{ 'common.delete' | translate }}</button>
-              }
-            </mat-card-actions>
-          </mat-card>
-        }
+      <div class="table-container">
+        <table mat-table [dataSource]="paged()" class="full-width">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.name' | translate }}</th>
+            <td mat-cell *matCellDef="let view">{{ view.supplier.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="key">
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.code' | translate }}</th>
+            <td mat-cell *matCellDef="let view">{{ view.supplier.key }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="address">
+            <th mat-header-cell *matHeaderCellDef>{{ 'suppliers.address' | translate }}</th>
+            <td mat-cell *matCellDef="let view">{{ view.addressLine || ('suppliers.noAddress' | translate) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let view" class="actions-cell">
+              <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
+                               (view)="viewSupplier(view.supplier)" (edit)="editSupplier(view.supplier)"
+                               (remove)="deleteSupplier(view.supplier)" />
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
+              [class.alt-row]="i % 2 === 1"></tr>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              {{ 'suppliers.noSuppliersFound' | translate }}
+            </td>
+          </tr>
+        </table>
       </div>
+
+      <mat-paginator
+        [length]="filtered().length"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 25, 50]"
+        (page)="onPage($event)"
+        showFirstLastButtons>
+      </mat-paginator>
 
       <p class="count-text">{{ 'suppliers.countFound' | translate: { count: filtered().length } }}</p>
     }
@@ -101,47 +125,19 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
     .filter-field {
       width: 100%;
     }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-    .supplier-card {
-      border-radius: 12px;
+    .table-container {
+      background: white;
+      border-radius: 8px;
       overflow: hidden;
-      position: relative;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
-    .accent-bar {
-      height: 6px;
-      width: 100%;
-    }
-    .sup-name {
-      font-size: 18px;
-      font-weight: 500;
-      margin: 8px 0 4px;
-    }
-    .sup-code {
-      font-size: 13px;
-      color: #888;
-      display: block;
-      margin-bottom: 12px;
-    }
-    .sup-detail {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-      color: #666;
-      font-size: 14px;
-    }
-    .sup-detail mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: #888;
-    }
+    .full-width { width: 100%; }
+    .alt-row { background-color: #fafafa; }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
+    .no-data { text-align: center; padding: 24px; color: #888; }
     .count-text {
-      margin-top: 16px;
+      text-align: center;
       color: #888;
       font-size: 14px;
     }
@@ -149,16 +145,6 @@ const ACCENT_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00838f'];
       display: flex;
       justify-content: center;
       padding: 40px;
-    }
-    @media (max-width: 1200px) {
-      .card-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    @media (max-width: 800px) {
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
     }
   `],
 })
@@ -169,14 +155,25 @@ export class SupplierListComponent implements OnInit {
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   canCreate = this.authService.hasAuthority('SUPPLIER_CREATE');
+  canView = this.authService.hasAuthority('SUPPLIER_READ');
+  canEdit = this.authService.hasAuthority('SUPPLIER_UPDATE');
   canDelete = this.authService.hasAuthority('SUPPLIER_DELETE');
 
+  displayedColumns = ['name', 'key', 'address', 'actions'];
   allViews = signal<SupplierView[]>([]);
   filtered = signal<SupplierView[]>([]);
   loading = signal(true);
+  pageIndex = signal(0);
+  pageSize = signal(25);
+  paged = computed(() => {
+    const start = this.pageIndex() * this.pageSize();
+    return this.filtered().slice(start, start + this.pageSize());
+  });
 
   ngOnInit() {
     this.loadSuppliers();
@@ -224,6 +221,7 @@ export class SupplierListComponent implements OnInit {
 
   applyFilter(event: Event) {
     const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.pageIndex.set(0);
     if (!value) {
       this.filtered.set(this.allViews());
     } else {
@@ -236,12 +234,28 @@ export class SupplierListComponent implements OnInit {
     }
   }
 
-  getAccentColor(index: number): string {
-    return ACCENT_COLORS[index % ACCENT_COLORS.length];
+  onPage(event: PageEvent) {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
   }
 
-  deleteSupplier(supplier: Supplier) {
-    if (!confirm(this.translate.instant('suppliers.deleteConfirm', { name: supplier.name }))) return;
+  newSupplier() {
+    this.router.navigate(['/suppliers', 'new']);
+  }
+
+  /** Inzien: de detailpagina alleen-lezen. */
+  viewSupplier(supplier: Supplier) {
+    this.router.navigate(['/suppliers', supplier.supplierId], { queryParams: { readonly: 'true' } });
+  }
+
+  editSupplier(supplier: Supplier) {
+    this.router.navigate(['/suppliers', supplier.supplierId]);
+  }
+
+  async deleteSupplier(supplier: Supplier) {
+    const message = this.translate.instant('suppliers.deleteConfirm', { name: supplier.name })
+      + ' ' + this.translate.instant('suppliers.deleteCascadeWarning');
+    if (!await this.confirmService.confirmDelete(message)) return;
 
     this.supplierService.delete(supplier.supplierId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -250,8 +264,9 @@ export class SupplierListComponent implements OnInit {
           this.snackBar.open(this.translate.instant('suppliers.removed'), this.translate.instant('common.close'), { duration: 3000 });
           this.loadSuppliers();
         },
-        error: () => {
-          this.snackBar.open(this.translate.instant('suppliers.removeError'), this.translate.instant('common.close'), { duration: 5000 });
+        error: (err) => {
+          const key = deleteErrorKey(err) === 'common.deleteBlocked' ? 'common.deleteBlocked' : 'suppliers.removeError';
+          this.snackBar.open(this.translate.instant(key), this.translate.instant('common.close'), { duration: 6000 });
         },
       });
   }

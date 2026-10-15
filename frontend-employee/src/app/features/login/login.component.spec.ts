@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -12,7 +13,13 @@ describe('LoginComponent', () => {
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('AuthService', ['login']);
+    authSpy = jasmine.createSpyObj('AuthService', ['login'], {
+      requiresTotp: signal(false),
+      requiresTotpSetup: signal(false),
+      mustChangePassword: signal(false),
+      pendingTempToken: signal(null),
+      currentUser: () => null,
+    });
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
@@ -44,6 +51,7 @@ describe('LoginComponent', () => {
   it('should call AuthService.login and navigate on success', fakeAsync(() => {
     authSpy.login.and.returnValue(of({
       token: 'tok', accountId: 'a', organizationId: 'o', mustChangePassword: false,
+      requiresTotp: false, requiresTotpSetup: false, tempToken: null,
     }));
 
     component.loginForm.setValue({ userName: 'jan', password: 'pass' });

@@ -1,6 +1,7 @@
 export * from './booking.model';
 export * from './auth.model';
 export * from './booker.model';
+export * from './booker-address.model';
 export * from './traveler.model';
 export * from './accommodation.model';
 export * from './supplier.model';
@@ -20,5 +21,7 @@ export * from './role-authority.model';
 export * from './organization-theme.model';
 export * from './document.model';
 export * from './document-template.model';
+export * from './email-template.model';
+export * from './template-image.model';
 export * from './activity.model';
 export * from './booking-activity.model';

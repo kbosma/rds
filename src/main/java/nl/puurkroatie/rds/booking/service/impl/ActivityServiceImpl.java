@@ -6,6 +6,7 @@ import nl.puurkroatie.rds.booking.entity.Activity;
 import nl.puurkroatie.rds.booking.entity.ActivityType;
 import nl.puurkroatie.rds.booking.mapper.ActivityMapper;
 import nl.puurkroatie.rds.booking.repository.ActivityRepository;
+import nl.puurkroatie.rds.booking.service.DeletionGuard;
 import nl.puurkroatie.rds.booking.service.ActivityService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,12 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
     private final ActivityMapper activityMapper;
 
-    public ActivityServiceImpl(ActivityRepository activityRepository, ActivityMapper activityMapper) {
+    private final DeletionGuard deletionGuard;
+
+    public ActivityServiceImpl(ActivityRepository activityRepository, ActivityMapper activityMapper, DeletionGuard deletionGuard) {
         this.activityRepository = activityRepository;
         this.activityMapper = activityMapper;
+        this.deletionGuard = deletionGuard;
     }
 
     @Override
@@ -53,6 +57,7 @@ public class ActivityServiceImpl implements ActivityService {
         Activity existing = activityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activity not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
+        deletionGuard.verifyActivityDeletable(id);
         activityRepository.deleteById(id);
     }
 

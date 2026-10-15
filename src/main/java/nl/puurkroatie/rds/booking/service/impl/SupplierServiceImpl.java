@@ -5,6 +5,8 @@ import nl.puurkroatie.rds.booking.dto.SupplierDto;
 import nl.puurkroatie.rds.booking.entity.Supplier;
 import nl.puurkroatie.rds.booking.mapper.SupplierMapper;
 import nl.puurkroatie.rds.booking.repository.SupplierRepository;
+import nl.puurkroatie.rds.booking.service.AddressCleanup;
+import nl.puurkroatie.rds.booking.service.DeletionGuard;
 import nl.puurkroatie.rds.booking.service.SupplierService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -21,9 +23,14 @@ public class SupplierServiceImpl implements SupplierService {
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
 
-    public SupplierServiceImpl(SupplierRepository supplierRepository, SupplierMapper supplierMapper) {
+    private final DeletionGuard deletionGuard;
+    private final AddressCleanup addressCleanup;
+
+    public SupplierServiceImpl(SupplierRepository supplierRepository, SupplierMapper supplierMapper, DeletionGuard deletionGuard, AddressCleanup addressCleanup) {
         this.supplierRepository = supplierRepository;
         this.supplierMapper = supplierMapper;
+        this.deletionGuard = deletionGuard;
+        this.addressCleanup = addressCleanup;
     }
 
     @Override
@@ -51,7 +58,10 @@ public class SupplierServiceImpl implements SupplierService {
         Supplier existing = supplierRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
+        deletionGuard.verifySupplierDeletable(id);
+        List<UUID> addressIds = addressCleanup.ofSupplier(id);
         supplierRepository.deleteById(id);
+        addressCleanup.deleteIfUnused(addressIds);
     }
 
     @Override

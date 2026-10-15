@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -10,12 +10,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { AccommodationService } from '../accommodations/accommodation.service';
 import { AccommodationSupplierService } from '../accommodations/accommodation-supplier.service';
 import { SupplierService } from '../suppliers/supplier.service';
 import { BookingLineService } from './booking-line.service';
 import { Accommodation, Supplier, AccommodationSupplier, BookingLine } from '../../shared/models';
+import { AuthService } from '../../core/auth/auth.service';
+import { QuickCreateDialogComponent, QuickCreateResult } from '../../shared/components/quick-create-dialog.component';
 
 export interface BookingLineDialogData {
   bookingId: string;
@@ -61,9 +63,14 @@ interface DateWarning {
                 }
               </mat-select>
             </mat-form-field>
+            @if (canCreateAccommodation) {
+              <button mat-button type="button" class="new-accommodation-btn" (click)="createAccommodation()">
+                <mat-icon>add</mat-icon> {{ 'bookingLine.newAccommodation' | translate }}
+              </button>
+            }
 
-            <!-- Supplier: auto-resolved, only show select when multiple -->
-            @if (resolvedSuppliers().length > 1) {
+            <!-- Supplier: auto-resolved, only show select when multiple or when none is linked yet -->
+            @if (resolvedSuppliers().length > 1 || unlinked()) {
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'bookingLine.supplier' | translate }}</mat-label>
                 <mat-select formControlName="supplierId">
@@ -72,6 +79,14 @@ interface DateWarning {
                   }
                 </mat-select>
               </mat-form-field>
+              @if (unlinked()) {
+                <p class="hint">{{ 'bookingLine.noSupplierLinked' | translate }}</p>
+                @if (canCreateSupplier) {
+                  <button mat-button type="button" class="new-supplier-btn" (click)="createSupplier()">
+                    <mat-icon>add</mat-icon> {{ 'bookingLine.newSupplier' | translate }}
+                  </button>
+                }
+              }
             } @else if (resolvedSupplierName()) {
               <div class="resolved-field">
                 <span class="resolved-label">{{ 'bookingLine.supplier' | translate }}</span>
@@ -162,6 +177,7 @@ interface DateWarning {
       gap: 16px;
     }
     .flex-1 { flex: 1; }
+    .hint { font-size: 13px; color: #888; margin: 0 0 8px; }
     .loading {
       display: flex;
       justify-content: center;
@@ -228,6 +244,11 @@ export class BookingLineDialogComponent implements OnInit {
   private accommodationSupplierService = inject(AccommodationSupplierService);
   private bookingLineService = inject(BookingLineService);
   private translate = inject(TranslateService);
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+
+  readonly canCreateAccommodation = this.authService.hasAuthority('ACCOMMODATION_CREATE');
+  readonly canCreateSupplier = this.authService.hasAuthority('SUPPLIER_CREATE');
 
   isEdit = !!this.data.bookingLine;
   editAccommodationName = this.data.bookingLine?.accommodationName ?? '';
@@ -238,6 +259,8 @@ export class BookingLineDialogComponent implements OnInit {
   private accSupplierLinks = signal<AccommodationSupplier[]>([]);
   resolvedSuppliers = signal<Supplier[]>([]);
   resolvedSupplierName = signal<string | null>(null);
+  /** De gekozen accommodatie heeft nog geen leverancier: de gebruiker kiest of maakt er een, en de koppeling volgt bij opslaan. */
+  unlinked = signal(false);
   loadingData = signal(true);
   saving = signal(false);
   warnings = signal<DateWarning[]>([]);
@@ -282,6 +305,7 @@ export class BookingLineDialogComponent implements OnInit {
     this.form.get('supplierId')!.setValue('');
     this.resolvedSuppliers.set([]);
     this.resolvedSupplierName.set(null);
+    this.unlinked.set(false);
 
     if (!accId) return;
 
@@ -298,7 +322,42 @@ export class BookingLineDialogComponent implements OnInit {
     } else if (matched.length > 1) {
       this.resolvedSuppliers.set(matched);
       this.resolvedSupplierName.set(null);
+    } else {
+      this.unlinked.set(true);
+      this.resolvedSuppliers.set(this.allSuppliers());
     }
+  }
+
+  /** Maakt een accommodatie aan vanuit de keuzelijst en kiest die meteen. */
+  createAccommodation() {
+    this.dialog.open(QuickCreateDialogComponent, { width: '420px', data: { titleKey: 'accommodations.newTitle' } })
+      .afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result?: QuickCreateResult) => {
+        if (!result) return;
+        this.accommodationService.create(result).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: (created) => {
+            this.accommodations.update(list => [...list, created]);
+            this.form.get('accommodationId')!.setValue(created.accommodationId);
+            this.onAccommodationChange();
+          },
+          error: () => this.snackBar.open(this.translate.instant('bookingLine.createError'), this.translate.instant('common.close'), { duration: 5000 }),
+        });
+      });
+  }
+
+  /** Maakt een leverancier aan vanuit de keuzelijst en kiest die meteen voor de gekozen accommodatie. */
+  createSupplier() {
+    this.dialog.open(QuickCreateDialogComponent, { width: '420px', data: { titleKey: 'suppliers.newTitle' } })
+      .afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result?: QuickCreateResult) => {
+        if (!result) return;
+        this.supplierService.create(result).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: (created) => {
+            this.allSuppliers.update(list => [...list, created]);
+            this.resolvedSuppliers.update(list => [...list, created]);
+            this.form.get('supplierId')!.setValue(created.supplierId);
+          },
+          error: () => this.snackBar.open(this.translate.instant('bookingLine.createError'), this.translate.instant('common.close'), { duration: 5000 }),
+        });
+      });
   }
 
   resetWarnings() {
@@ -402,14 +461,21 @@ export class BookingLineDialogComponent implements OnInit {
         },
       });
     } else {
-      this.bookingLineService.create({
-        bookingId: this.data.bookingId,
-        accommodationId: raw.accommodationId!,
-        supplierId: raw.supplierId!,
-        fromDate: raw.fromDate!,
-        untilDate: raw.untilDate!,
-        price: raw.price!,
-      }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      // Een accommodatie zonder gekoppelde leverancier: leg de koppeling vast, zodat de leverancier de volgende keer vanzelf volgt.
+      const link$: Observable<unknown> = this.unlinked() && this.authService.hasAuthority('ACCOMMODATION_CREATE')
+        ? this.accommodationSupplierService.create({ accommodationId: raw.accommodationId!, supplierId: raw.supplierId! })
+        : of(null);
+      link$.pipe(
+        switchMap(() => this.bookingLineService.create({
+          bookingId: this.data.bookingId,
+          accommodationId: raw.accommodationId!,
+          supplierId: raw.supplierId!,
+          fromDate: raw.fromDate!,
+          untilDate: raw.untilDate!,
+          price: raw.price!,
+        })),
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe({
         next: () => {
           this.saving.set(false);
           this.dialogRef.close(true);

@@ -28,6 +28,7 @@ public class BookerDto {
     private String gender;
     private LocalDate birthdate;
     private String initials;
+    private String status;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -35,7 +36,7 @@ public class BookerDto {
     private UUID tenantOrganization;
 
     @Default
-    public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, String status, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookerId = bookerId;
         this.firstname = firstname;
         this.prefix = prefix;
@@ -46,6 +47,7 @@ public class BookerDto {
         this.gender = gender;
         this.birthdate = birthdate;
         this.initials = initials;
+        this.status = status;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -54,7 +56,7 @@ public class BookerDto {
     }
 
     @JsonCreator
-    public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public BookerDto(UUID bookerId, String firstname, String prefix, String lastname, String callsign, String telephone, String emailaddress, String gender, LocalDate birthdate, String initials, String status, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.bookerId = bookerId;
         this.firstname = firstname;
         this.prefix = prefix;
@@ -65,6 +67,7 @@ public class BookerDto {
         this.gender = gender;
         this.birthdate = birthdate;
         this.initials = initials;
+        this.status = status;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -109,6 +112,10 @@ public class BookerDto {
 
     public String getInitials() {
         return initials;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     public LocalDateTime getCreatedAt() {

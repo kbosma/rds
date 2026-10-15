@@ -3,11 +3,13 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { BookingDetailComponent } from './booking-detail.component';
 import { BookingService } from './booking.service';
 import { BookingLineService } from './booking-line.service';
 import { BookerService } from '../bookers/booker.service';
 import { TravelerService } from '../travelers/traveler.service';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { Booking, Booker, Traveler, BookingLine } from '../../shared/models';
 
 describe('BookingDetailComponent', () => {
@@ -19,8 +21,11 @@ describe('BookingDetailComponent', () => {
   let travelerServiceSpy: jasmine.SpyObj<TravelerService>;
   let router: Router;
   let snackBarSpy: jasmine.SpyObj<MatSnackBar>;
+  let confirmServiceSpy: jasmine.SpyObj<ConfirmService>;
 
   let routeId: string;
+  let queryBookerId: string | null;
+  let queryReadonly: string | null;
 
   const mockBooking: Booking = {
     bookingId: 'b-1', bookerId: 'bk-1', bookingNumber: 'BK-2026-001',
@@ -32,7 +37,7 @@ describe('BookingDetailComponent', () => {
   const mockBooker: Booker = {
     bookerId: 'bk-1', firstname: 'Klaas', prefix: 'van', lastname: 'Houten',
     callsign: 'Klaas', telephone: '0612345678', emailaddress: 'klaas@example.com',
-    gender: 'man', birthdate: '1985-03-15', initials: 'K.',
+    gender: 'man', birthdate: '1985-03-15', initials: 'K.', status: 'active',
     createdAt: '', createdBy: '', modifiedAt: '', modifiedBy: '', tenantOrganization: '',
   };
 
@@ -46,6 +51,7 @@ describe('BookingDetailComponent', () => {
 
   const mockLines: BookingLine[] = [
     {
+      bookingLineId: 'bl-1',
       bookingId: 'b-1', accommodationId: 'a-1', supplierId: 's-1',
       accommodationName: 'Dubrovnik Suite', supplierName: 'Hotel Adriatic',
       fromDate: '2026-07-01', untilDate: '2026-07-08', price: 1400,
@@ -55,12 +61,17 @@ describe('BookingDetailComponent', () => {
 
   beforeEach(async () => {
     routeId = 'b-1';
+    queryBookerId = null;
+    queryReadonly = null;
 
     bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll', 'getById', 'create', 'update', 'delete']);
     bookingLineServiceSpy = jasmine.createSpyObj('BookingLineService', ['getByBookingId']);
     bookerServiceSpy = jasmine.createSpyObj('BookerService', ['getById']);
     travelerServiceSpy = jasmine.createSpyObj('TravelerService', ['getAll']);
     snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+    confirmServiceSpy = jasmine.createSpyObj('ConfirmService', ['confirm', 'confirmDelete']);
+    confirmServiceSpy.confirm.and.returnValue(Promise.resolve(true));
+    confirmServiceSpy.confirmDelete.and.returnValue(Promise.resolve(true));
 
     bookingServiceSpy.getById.and.returnValue(of(mockBooking));
     bookingServiceSpy.update.and.returnValue(of(mockBooking));
@@ -77,7 +88,8 @@ describe('BookingDetailComponent', () => {
         { provide: BookerService, useValue: bookerServiceSpy },
         { provide: TravelerService, useValue: travelerServiceSpy },
         { provide: MatSnackBar, useValue: snackBarSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => routeId } } } },
+        { provide: ConfirmService, useValue: confirmServiceSpy },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => routeId }, queryParamMap: { get: (k: string) => (k === 'readonly' ? queryReadonly : queryBookerId) } } } },
       ],
     }).compileComponents();
 
@@ -117,38 +129,42 @@ describe('BookingDetailComponent', () => {
     expect(component.bookingLines().length).toBe(1);
   }));
 
-  it('should set isNew for new booking route', fakeAsync(() => {
+  it('should set concept mode (isNew) for a new booking route with a prefilled booker', fakeAsync(() => {
     routeId = 'new';
+    queryBookerId = 'bk-1';
     createComponent();
     fixture.detectChanges();
     tick();
 
     expect(component.isNew()).toBe(true);
+    // concept: geen boeking geladen, wel de voorgevulde hoofdboeker
     expect(bookingServiceSpy.getById).not.toHaveBeenCalled();
+    expect(bookerServiceSpy.getById).toHaveBeenCalledWith('bk-1');
   }));
 
-  it('should call update on save for existing booking', fakeAsync(() => {
+  it('should redirect to the overview for /new without a booker', fakeAsync(() => {
+    routeId = 'new';
+    queryBookerId = null;
     createComponent();
     fixture.detectChanges();
     tick();
 
-    expect(component.isNew()).toBe(false);
-    component.onSave();
-    flush();
-
-    expect(bookingServiceSpy.update).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/bookings']);
   }));
 
-  it('should handle save error gracefully', fakeAsync(() => {
-    bookingServiceSpy.update.and.returnValue(throwError(() => new Error('fail')));
+  // De unified onSave()/saving() is weg-gerefactord; opslaan gebeurt nu via gerichte
+  // acties. We dekken dat af met removeBooker(), die via bookingService.update persisteert.
+  it('should persist booker removal via bookingService.update', fakeAsync(() => {
     createComponent();
     fixture.detectChanges();
     tick();
 
-    component.onSave();
-    flush();
+    // removeBooker() vraagt bevestiging via ConfirmService (mock geeft true)
+    component.removeBooker();
+    tick();
 
-    expect(component.saving()).toBe(false);
+    expect(bookingServiceSpy.update).toHaveBeenCalledWith('b-1', { bookerId: null as unknown as string });
+    expect(component.booker()).toBeNull();
   }));
 
   it('should navigate back on load error', fakeAsync(() => {
@@ -159,4 +175,99 @@ describe('BookingDetailComponent', () => {
 
     expect(router.navigate).toHaveBeenCalledWith(['/bookings']);
   }));
+
+  it('should open the e-mail dialog for this booking (main booker is the recipient)', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open');
+
+    component.openEmailDialog();
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    const config = openSpy.calls.mostRecent().args[1] as { data: { booking?: { bookingId: string; bookingNumber: string }; template?: unknown } };
+    expect(config.data.booking).toEqual({ bookingId: 'b-1', bookingNumber: 'BK-2026-001' });
+    expect(config.data.template).toBeUndefined(); // de gebruiker kiest de template in de dialoog
+  }));
+
+  it('should not open the e-mail dialog for a concept booking that is not saved yet', fakeAsync(() => {
+    routeId = 'new';
+    queryBookerId = 'bk-1';
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open');
+
+    component.openEmailDialog();
+
+    expect(openSpy).not.toHaveBeenCalled();
+  }));
+
+  describe('alleen inzien (?readonly=true)', () => {
+    it('is standaard uit', fakeAsync(() => {
+      createComponent();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.readOnly()).toBe(false);
+    }));
+
+    it('zet de modus aan voor een bestaande boeking', fakeAsync(() => {
+      queryReadonly = 'true';
+      createComponent();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.readOnly()).toBe(true);
+    }));
+
+    it('geen enkele wijzigende actie is dan toegestaan, ook niet met alle authorities', fakeAsync(() => {
+      queryReadonly = 'true';
+      createComponent();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.can('BOOKING_UPDATE')).toBe(false);
+      expect(component.can('BOOKING_DELETE')).toBe(false);
+      expect(component.can('DOCUMENT_CREATE')).toBe(false);
+      expect(component.can('EMAIL_SEND')).toBe(false);
+      expect(component.canManageStatusEntries()).toBe(false);
+    }));
+
+    it('verbergt in de DOM alle wijzig- en toevoeg-knoppen', fakeAsync(() => {
+      queryReadonly = 'true';
+      createComponent();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelectorAll('button.card-header-btn').length).toBe(0);
+      const icons = Array.from(el.querySelectorAll('button mat-icon')).map(i => i.textContent?.trim());
+      expect(icons).not.toContain('edit');
+      expect(icons).not.toContain('delete');
+      expect(icons).not.toContain('add');
+    }));
+
+    it('gebruikt een andere titel', fakeAsync(() => {
+      queryReadonly = 'true';
+      createComponent();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Boeking inzien');
+    }));
+
+    it('zonder readonly werkt can() gewoon met de authority van de gebruiker', fakeAsync(() => {
+      createComponent();
+      fixture.detectChanges();
+      tick();
+      const hasAuthority = spyOn(component.authService, 'hasAuthority').and.callFake((a: string) => a === 'BOOKING_UPDATE');
+
+      expect(component.can('BOOKING_UPDATE')).toBe(true);
+      expect(component.can('BOOKING_DELETE')).toBe(false);
+      expect(hasAuthority).toHaveBeenCalled();
+    }));
+  });
 });

@@ -4,6 +4,7 @@ import nl.puurkroatie.rds.auth.dto.OrganizationDto;
 import nl.puurkroatie.rds.auth.entity.Organization;
 import nl.puurkroatie.rds.auth.mapper.OrganizationMapper;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
+import nl.puurkroatie.rds.auth.service.OrganizationDeletionGuard;
 import nl.puurkroatie.rds.auth.service.OrganizationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +19,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final OrganizationMapper organizationMapper;
+    private final OrganizationDeletionGuard deletionGuard;
 
-    public OrganizationServiceImpl(OrganizationRepository organizationRepository, OrganizationMapper organizationMapper) {
+    public OrganizationServiceImpl(OrganizationRepository organizationRepository, OrganizationMapper organizationMapper, OrganizationDeletionGuard deletionGuard) {
         this.organizationRepository = organizationRepository;
         this.organizationMapper = organizationMapper;
+        this.deletionGuard = deletionGuard;
     }
 
     @Override
@@ -33,10 +36,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     public OrganizationDto update(UUID id, OrganizationDto dto) {
-        if (!organizationRepository.findById(id).isPresent()) {
-            throw new RuntimeException("Organization not found with id: " + id);
-        }
-        Organization entity = organizationMapper.toEntity(id, dto);
+        Organization existing = organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + id));
+        Organization entity = organizationMapper.toEntity(id, dto, existing);
         Organization saved = organizationRepository.save(entity);
         return organizationMapper.toDto(saved);
     }
@@ -46,6 +48,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (!organizationRepository.existsById(id)) {
             throw new RuntimeException("Organization not found with id: " + id);
         }
+        deletionGuard.verifyDeletable(id);
         organizationRepository.deleteById(id);
     }
 

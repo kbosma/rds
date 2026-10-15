@@ -1,10 +1,12 @@
 package nl.puurkroatie.rds.auth.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,5 +60,24 @@ class OrganizationControllerTest extends AbstractAuthControllerTest {
     void unauthenticated_findAll_returns401() throws Exception {
         mockMvc.perform(get("/api/organizations"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // Regressie: het organisatie-formulier stuurt bij een update alleen name +
+    // emailFrom (geen mollieKey). Dat mag de bestaande mollie-key niet wissen,
+    // terwijl emailFrom wel wordt gezet.
+    @Test
+    void admin_update_preservesMollieKeyAndSetsEmailFrom() throws Exception {
+        String token = adminToken();
+
+        String json = "{\"name\":\"Puurkroatie\",\"emailFrom\":\"info@puurkroatie.nl\"}";
+        mockMvc.perform(put("/api/organizations/" + ORG_PUURKROATIE_ID)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailFrom").value("info@puurkroatie.nl"))
+                .andExpect(jsonPath("$.mollieKey").value("test_GpPHhs7SHk73fAyMyaJUFUKJQdxDD5"))
+                // audit blijft behouden in de response (niet null na update)
+                .andExpect(jsonPath("$.createdAt").value("2026-01-01T09:00:00"));
     }
 }

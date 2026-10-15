@@ -13,13 +13,13 @@ describe('MolliePaymentsComponent', () => {
 
   const mockPayments: MolliePayment[] = [
     {
-      molliePaymentId: 'mp-1', molliePaymentExternalId: 'tr_001', status: 'paid',
+      molliePaymentId: 'mp-1', molliePaymentExternalId: 'tr_001',
       method: 'ideal', amount: 2450, currency: 'EUR', description: 'Betaling 1',
       checkoutUrl: '', createdAt: '2026-04-11T10:00:00', createdBy: 'u-1',
       modifiedAt: '2026-04-11T10:00:00', modifiedBy: 'u-1', tenantOrganization: 'o-1',
     },
     {
-      molliePaymentId: 'mp-2', molliePaymentExternalId: 'tr_002', status: 'open',
+      molliePaymentId: 'mp-2', molliePaymentExternalId: 'tr_002',
       method: null, amount: 1875.50, currency: 'EUR', description: 'Betaling 2',
       checkoutUrl: 'https://checkout', createdAt: '2026-04-16T09:00:00', createdBy: 'u-1',
       modifiedAt: '2026-04-16T09:00:00', modifiedBy: 'u-1', tenantOrganization: 'o-1',
@@ -27,8 +27,15 @@ describe('MolliePaymentsComponent', () => {
   ];
 
   beforeEach(async () => {
-    serviceSpy = jasmine.createSpyObj('MolliePaymentService', ['getAll']);
+    serviceSpy = jasmine.createSpyObj('MolliePaymentService', ['getAll', 'getStatusEntries']);
     serviceSpy.getAll.and.returnValue(of(mockPayments));
+    // mp-1 betaald (2450), mp-2 open (1875.50) → paid=2450, open=1875.50
+    serviceSpy.getStatusEntries.and.callFake((id: string) =>
+      of([{
+        molliePaymentStatusEntryId: 'se-' + id, molliePaymentId: id,
+        status: id === 'mp-1' ? 'paid' : 'open',
+        createdAt: '2026-04-11T10:00:00', createdBy: null, modifiedAt: null, modifiedBy: null,
+      }]));
 
     await TestBed.configureTestingModule({
       imports: [MolliePaymentsComponent, NoopAnimationsModule],
@@ -62,10 +69,16 @@ describe('MolliePaymentsComponent', () => {
     tick();
     fixture.detectChanges();
 
-    const rows = fixture.nativeElement.querySelectorAll('tr.mat-mdc-row');
-    expect(rows.length).toBe(2);
-    expect(rows[0].textContent).toContain('tr_001');
-    expect(rows[0].textContent).toContain('Betaling 1');
+    // Eén hoofd-datarij per betaling (detailrijen hebben class 'detail-row' en tellen niet mee)
+    const dataRows = fixture.nativeElement.querySelectorAll('tr.clickable-row');
+    expect(dataRows.length).toBe(2);
+
+    // en beide betalingen tonen hun gegevens
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('tr_001');
+    expect(text).toContain('Betaling 1');
+    expect(text).toContain('tr_002');
+    expect(text).toContain('Betaling 2');
   }));
 
   it('should handle errors gracefully', fakeAsync(() => {

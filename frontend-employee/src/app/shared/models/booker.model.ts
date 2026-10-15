@@ -9,6 +9,7 @@ export interface Booker {
   gender: string;
   birthdate: string;
   initials: string;
+  status: string;
   createdAt: string;
   createdBy: string;
   modifiedAt: string;

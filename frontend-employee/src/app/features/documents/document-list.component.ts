@@ -10,10 +10,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { DocumentService } from './document.service';
 import { BookingService } from '../bookings/booking.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
+import { DocumentViewDialogComponent } from './document-view-dialog.component';
+import { DocumentEditDialogComponent } from './document-edit-dialog.component';
 import { Document } from '../../shared/models';
 
 @Component({
@@ -30,6 +35,8 @@ import { Document } from '../../shared/models';
     MatInputModule,
     MatSortModule,
     MatPaginatorModule,
+    MatDialogModule,
+    RowActionsComponent,
     TranslatePipe,
   ],
   template: `
@@ -75,6 +82,15 @@ import { Document } from '../../shared/models';
             <td mat-cell *matCellDef="let row">{{ row.modifiedAt | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="actions-cell">
+              <!-- Documenten zijn geschiedenis: geen verwijderen. -->
+              <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="false"
+                               (view)="viewDocument(row)" (edit)="editDocument(row)" />
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
               [class.alt-row]="i % 2 === 1"></tr>
@@ -115,6 +131,8 @@ import { Document } from '../../shared/models';
     .full-width {
       width: 100%;
     }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; }
     .alt-row {
       background-color: #fafafa;
     }
@@ -149,6 +167,11 @@ export class DocumentListComponent implements OnInit {
   private documentService = inject(DocumentService);
   private bookingService = inject(BookingService);
   private destroyRef = inject(DestroyRef);
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+
+  canView = this.authService.hasAuthority('DOCUMENT_READ');
+  canEdit = this.authService.hasAuthority('DOCUMENT_UPDATE');
 
   documents = signal<Document[]>([]);
   bookingNumberMap = signal<Map<string, string>>(new Map());
@@ -159,7 +182,7 @@ export class DocumentListComponent implements OnInit {
   sortActive = signal('createdAt');
   sortDirection = signal<'asc' | 'desc' | ''>('desc');
 
-  displayedColumns = ['displayname', 'bookingNumber', 'createdAt', 'modifiedAt'];
+  displayedColumns = ['displayname', 'bookingNumber', 'createdAt', 'modifiedAt', 'actions'];
 
   filteredDocuments = computed(() => {
     const term = this.searchTerm().toLowerCase();
@@ -212,6 +235,25 @@ export class DocumentListComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  viewDocument(doc: Document) {
+    this.dialog.open(DocumentViewDialogComponent, {
+      data: { document: doc, bookingNumber: this.bookingNumberMap().get(doc.bookingId) },
+      width: '520px',
+    });
+  }
+
+  editDocument(doc: Document) {
+    this.dialog.open(DocumentEditDialogComponent, { data: { document: doc }, width: '480px' })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((saved) => {
+        if (!saved) return;
+        this.documentService.getAll()
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((documents) => this.documents.set(documents));
+      });
   }
 
   onSort(sort: Sort) {

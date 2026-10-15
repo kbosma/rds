@@ -1,62 +1,61 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterModule } from '@angular/router';
-import { of } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
-import { BookingService } from '../bookings/booking.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { Booking } from '../../shared/models';
 
+/*
+ * DashboardComponent is een pure delegator: op basis van AUTHORITIES (nooit rollen) toont het het admin-,
+ * manager- of employee-dashboard. We testen hier de delegatie-logica.
+ */
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
-  let fixture: ComponentFixture<DashboardComponent>;
-  let bookingServiceSpy: jasmine.SpyObj<BookingService>;
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let authSpy: jasmine.SpyObj<AuthService>;
 
-  const mockBookings: Booking[] = [
-    {
-      bookingId: 'b-1', bookerId: 'bk-1', bookingNumber: 'BK-2026-001',
-      bookingStatus: 'aanvraag', fromDate: '2026-07-01', untilDate: '2026-07-14',
-      totalSum: 2450, tenantOrganization: 'o-1', createdAt: '2026-04-10T09:00:00',
-      createdBy: 'u-1', modifiedAt: '2026-04-10T09:00:00', modifiedBy: 'u-1',
-    },
-    {
-      bookingId: 'b-2', bookerId: 'bk-2', bookingNumber: 'BK-2026-002',
-      bookingStatus: 'offerte', fromDate: '2026-08-15', untilDate: '2026-08-22',
-      totalSum: 1875.50, tenantOrganization: 'o-1', createdAt: '2026-04-12T10:30:00',
-      createdBy: 'u-1', modifiedAt: '2026-04-12T10:30:00', modifiedBy: 'u-1',
-    },
-  ];
+  // Wat de seed-rollen aan relevante authorities hebben (zie security.md)
+  const ADMIN = ['ORGANIZATION_READ', 'ACCOUNT_CREATE', 'PERSON_CREATE'];
+  const MANAGER = ['ACCOUNT_CREATE', 'BOOKING_READ', 'PAYMENT_READ'];
+  const EMPLOYEE = ['BOOKING_READ', 'PAYMENT_READ'];
 
-  beforeEach(async () => {
-    bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll']);
-    bookingServiceSpy.getAll.and.returnValue(of(mockBookings));
-
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['currentUser'], {
-      currentUser: () => ({ accountId: 'u-1', organizationId: 'o-1', roles: ['ADMIN'], authorities: [] }),
-    });
+  async function setup(authorities: string[]) {
+    authSpy = jasmine.createSpyObj('AuthService', ['hasAuthority', 'hasRole']);
+    authSpy.hasAuthority.and.callFake((a: string) => authorities.includes(a));
 
     await TestBed.configureTestingModule({
-      imports: [DashboardComponent, NoopAnimationsModule, RouterModule.forRoot([])],
-      providers: [
-        { provide: BookingService, useValue: bookingServiceSpy },
-        { provide: AuthService, useValue: authServiceSpy },
-      ],
+      imports: [DashboardComponent],
+      providers: [{ provide: AuthService, useValue: authSpy }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DashboardComponent);
-    component = fixture.componentInstance;
-  });
+    // Geen detectChanges: we toetsen de delegatie-logica zonder de
+    // sub-dashboards (met hun eigen dependencies) te renderen.
+    component = TestBed.createComponent(DashboardComponent).componentInstance;
+  }
 
-  it('should create', () => {
+  it('should create', async () => {
+    await setup(EMPLOYEE);
     expect(component).toBeTruthy();
   });
 
-  it('should load bookings on init', fakeAsync(() => {
-    fixture.detectChanges();
-    tick();
+  it('should delegate to the admin dashboard for whoever may see organizations (ORGANIZATION_READ)', async () => {
+    await setup(ADMIN);
+    expect(component.isAdmin()).toBe(true);
+    expect(component.isManager()).toBe(false); // ook al mag een beheerder accounts aanmaken
+  });
 
-    expect(bookingServiceSpy.getAll).toHaveBeenCalled();
-    expect(component.loading()).toBe(false);
-  }));
+  it('should delegate to the manager dashboard for whoever may create accounts (ACCOUNT_CREATE)', async () => {
+    await setup(MANAGER);
+    expect(component.isAdmin()).toBe(false);
+    expect(component.isManager()).toBe(true);
+  });
+
+  it('should fall back to the employee dashboard otherwise', async () => {
+    await setup(EMPLOYEE);
+    expect(component.isAdmin()).toBe(false);
+    expect(component.isManager()).toBe(false);
+  });
+
+  it('never looks at roles', async () => {
+    await setup(MANAGER);
+    component.isAdmin();
+    component.isManager();
+    expect(authSpy.hasRole).not.toHaveBeenCalled();
+  });
 });

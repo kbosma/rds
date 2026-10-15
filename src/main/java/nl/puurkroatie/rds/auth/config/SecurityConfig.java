@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 
 @Configuration
@@ -37,6 +38,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login/recovery").permitAll()
                         .requestMatchers("/api/booker-auth/**").permitAll()
                         .requestMatchers("/api/mollie/payments/webhook").permitAll()
+                        // E-mailafbeeldingen: de mailclient van een ontvanger heeft geen JWT. Alleen GET,
+                        // en alleen dit ene pad (zie PublicEmailImageController).
+                        .requestMatchers(HttpMethod.GET, "/api/public/email-images/*").permitAll()
                         .requestMatchers("/monitoring/**").permitAll()
                         .requestMatchers("/api/booker-portal/**").authenticated()
                         .requestMatchers("/api/**").authenticated()

@@ -1,87 +1,84 @@
-# Booker Portal (OTP-authenticatie)
+# Booker-portal (klanten, OTP-login)
 
-## Overzicht
+Externe klanten (bookers) loggen **zonder wachtwoord** in met een eenmalige code (OTP). Ze krijgen een beperkt JWT dat alleen toegang geeft tot de data van **hun eigen boeking** via `/api/booker-portal/**`. De frontend is `frontend-booker` (zie [frontend.md](frontend.md)).
 
-Bookers (externe klanten) authenticeren via OTP (One-Time Password) per e-mail, niet via wachtwoord. Na verificatie krijgen ze een beperkt JWT token dat alleen toegang geeft tot hun eigen boekingsdata via `/api/booker-portal/` endpoints.
+## Loginflow
 
-## Authenticatie-flow
+```mermaid
+sequenceDiagram
+    actor K as Klant (frontend-booker)
+    participant BE as Backend
+    participant DB as PostgreSQL
+    K->>BE: POST /api/booker-auth/request-otp { emailaddress, bookingNumber }
+    BE->>DB: boeking zoeken op bookingNumber + e-mailadres van de hoofdboeker
+    alt combinatie bestaat en er zijn < max actieve OTP's
+        BE->>DB: Otp (6 cijfers, verloopt na 10 min)
+        BE->>BE: OtpEmailService.sendOtp(...)  (nu: alleen loggen!)
+    end
+    BE-->>K: altijd 200 (voorkomt dat je kunt raden welke combinaties bestaan)
+    K->>BE: POST /api/booker-auth/verify-otp { emailaddress, bookingNumber, code }
+    BE->>DB: Otp zoeken (niet verified), verloop controleren, markeren als verified
+    BE-->>K: { token (type=BOOKER), bookerId, bookingId }
+```
 
-1. Booker stuurt `POST /api/booker-auth/request-otp` met `{ "emailaddress": "...", "bookingNumber": "..." }`
-2. Systeem zoekt booker op combinatie e-mailadres + bookingNumber. Retourneert altijd 200 (voorkomt enumeration)
-3. Als combinatie bestaat: genereert 6-cijferige OTP, slaat op in OTP-tabel, logt code naar console (stub)
-4. Booker stuurt `POST /api/booker-auth/verify-otp` met `{ "emailaddress": "...", "bookingNumber": "...", "code": "123456" }`
-5. Na succesvolle verificatie: retourneert JWT met `type=BOOKER`, `sub=bookerId`, `bookingId=...`
+- De code is 6 cijfers (`SecureRandom`, 100000–999999). Instellingen: `app.otp.expiry-minutes` (10), `app.otp.max-active-per-email` (3).
+- **De OTP-mail wordt nog niet echt verstuurd**: `OtpEmailService.sendOtp` logt de code. Zie [open-items.md](open-items.md) (ook daar: verlopen OTP's tellen mee voor het maximum).
+- NGINX beperkt `/api/booker-auth/` tot een lage frequentie tegen raden.
 
-## JWT-structuur
+## Token en context
 
-| Claim | Medewerker (EMPLOYEE) | Booker (BOOKER) |
+| Claim | Medewerker | Booker |
 |---|---|---|
-| sub | accountId | bookerId |
-| type | EMPLOYEE | BOOKER |
-| org | organizationId | — |
-| bookingId | — | UUID van de boeking |
-| authorities | [...] | — |
-| roles | [...] | — |
-| expiry | 5 minuten | 1 uur |
+| `sub` | accountId | bookerId |
+| `type` | `EMPLOYEE` | `BOOKER` |
+| `bookingId` | – | de boeking |
+| `org`, `authorities`, `roles` | ja | nee |
+| Levensduur | `app.jwt.expiration-ms` (1 uur) | `app.jwt.booker-expiration-ms` (1 uur) |
 
-Tokens zonder `type` claim worden als EMPLOYEE behandeld (backwards compatible).
+`JwtAuthenticationFilter` zet bij `type=BOOKER` de `BookerContext` (ThreadLocal, parallel aan `TenantContext`): `getBookerId()`, `getBookingId()`, `isBooker()`; opgeruimd in dezelfde `finally`. Een `BOOKER`-token krijgt vast de authorities `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE` (die staan niet in de rol-tabel).
 
-## BookerContext (ThreadLocal)
+## Endpoints
 
-Analoog aan `TenantContext`, gevuld door `JwtAuthenticationFilter` bij `type=BOOKER`:
-
-- `BookerContext.getBookerId()` — UUID van de ingelogde booker
-- `BookerContext.getBookingId()` — UUID van de specifieke boeking
-- `BookerContext.isBooker()` — `true` als de huidige sessie een booker-sessie is
-- Wordt opgeruimd in hetzelfde `finally`-blok als TenantContext
-
-## Booker Portal Endpoints
-
-| Endpoint | Method | Authority | Beschrijving |
+| Methode | Pad | Authority | Omschrijving |
 |---|---|---|---|
-| `/api/booker-auth/request-otp` | POST | permitAll | OTP aanvragen |
-| `/api/booker-auth/verify-otp` | POST | permitAll | OTP verifiëren, ontvangt JWT |
-| `/api/booker-portal/documents` | GET | BOOKER_PORTAL_READ | Documenten van de boeking |
-| `/api/booker-portal/documents/{id}` | GET | BOOKER_PORTAL_READ | Specifiek document |
-| `/api/booker-portal/payments` | GET | BOOKER_PORTAL_READ | Betalingen van de boeking |
-| `/api/booker-portal/payments/create` | POST | BOOKER_PORTAL_WRITE | Betaling aanmaken bij Mollie, koppelen aan booking, retourneert checkout URL |
+| POST | `/api/booker-auth/request-otp` | publiek | OTP aanvragen |
+| POST | `/api/booker-auth/verify-otp` | publiek | OTP verifiëren → JWT |
+| GET | `/api/booker-portal/itinerary` | `BOOKER_PORTAL_READ` | reisschema van de boeking |
+| GET | `/api/booker-portal/booking-lines` | `BOOKER_PORTAL_READ` | boekingsregels (verblijven) |
+| GET | `/api/booker-portal/booking-activities` | `BOOKER_PORTAL_READ` | boekingsactiviteiten |
+| GET | `/api/booker-portal/accommodations` | `BOOKER_PORTAL_READ` | accommodaties van de boeking |
+| GET | `/api/booker-portal/activities` | `BOOKER_PORTAL_READ` | activiteiten van de boeking |
+| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | documenten van de boeking |
+| GET | `/api/booker-portal/documents/{id}` | `BOOKER_PORTAL_READ` | één document (alleen van de eigen boeking) |
+| GET | `/api/booker-portal/payments` | `BOOKER_PORTAL_READ` | betalingen van de boeking |
+| GET | `/api/booker-portal/payments/status-entries` | `BOOKER_PORTAL_READ` | statushistorie (de klant ziet "Betaald" zodra de webhook binnen is) |
+| POST | `/api/booker-portal/payments/pay/{molliePaymentId}` | `BOOKER_PORTAL_UPDATE` | betaling bij Mollie starten → `checkoutUrl` |
 
-## OTP-configuratie (`application.yaml`)
+Ontwerpregels: alle antwoorden zijn **eigen, minimale DTO's** (geen entities of brede DTO's) en elke query is gebonden aan het `bookingId` uit de `BookerContext`; een `molliePaymentId` van een andere boeking wordt geweigerd. De betaalflow staat in [mollie.md](mollie.md).
 
-```yaml
-app:
-  jwt:
-    booker-expiration-ms: 3600000  # 1 uur
-  otp:
-    expiry-minutes: 10
-    max-active-per-email: 3
-```
-
-### Package-structuur
+## Package-structuur
 
 ```
-nl.puurkroatie.rds.bookerportal.entity          — Otp
-nl.puurkroatie.rds.bookerportal.dto             — OtpRequestDto, OtpVerifyDto, BookerLoginResponseDto
-nl.puurkroatie.rds.bookerportal.repository      — OtpRepository
-nl.puurkroatie.rds.bookerportal.service         — BookerAuthService, OtpEmailService
-nl.puurkroatie.rds.bookerportal.controller      — BookerAuthController, BookerPortalDocumentController
-nl.puurkroatie.rds.bookerportal.security        — BookerContext
+bookerportal.entity      Otp
+bookerportal.dto         OtpRequestDto, OtpVerifyDto, BookerLoginResponseDto, BookerPortalAccommodationDto, BookerPortalActivityDto, ItineraryItemDto
+bookerportal.repository  OtpRepository
+bookerportal.service     BookerAuthService, OtpEmailService, BookerPortalPaymentService
+bookerportal.controller  BookerAuthController, BookerPortal{Accommodations,Activities,BookingActivity,BookingLine,Document,Itinerary,Payment}Controller
+bookerportal.security    BookerContext
 ```
 
-## Testen via curl
+## Testen met curl
 
 ```bash
-# OTP aanvragen
-curl -k -X POST https://localhost:8666/api/booker-auth/request-otp \
+# lokaal draait de backend zonder TLS op 127.0.0.1:8666, context-path /rds
+curl -X POST http://localhost:8666/rds/api/booker-auth/request-otp \
   -H "Content-Type: application/json" \
   -d '{"emailaddress":"klaas@example.com","bookingNumber":"BK-2026-001"}'
-
-# OTP code aflezen uit console-log, dan verifiëren
-curl -k -X POST https://localhost:8666/api/booker-auth/verify-otp \
+# de code staat in het backend-log (OtpEmailService)
+curl -X POST http://localhost:8666/rds/api/booker-auth/verify-otp \
   -H "Content-Type: application/json" \
   -d '{"emailaddress":"klaas@example.com","bookingNumber":"BK-2026-001","code":"<code>"}'
-
-# Booker-portal documenten opvragen
-curl -k https://localhost:8666/api/booker-portal/documents \
-  -H "Authorization: Bearer <booker-token>"
+curl http://localhost:8666/rds/api/booker-portal/documents -H "Authorization: Bearer <booker-token>"
 ```
+
+(De seed-boekingen hebben andere nummers dan `BK-2026-001`; kijk in `V2__initial_data.sql` of in de UI.)

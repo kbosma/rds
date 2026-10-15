@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.booking.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import nl.puurkroatie.rds.common.EnumValues;
 
 public enum BookingStatus {
 
@@ -14,6 +15,6 @@ public enum BookingStatus {
 
     @JsonCreator
     public static BookingStatus fromValue(String value) {
-        return valueOf(value.toUpperCase());
+        return EnumValues.parse(BookingStatus.class, value);
     }
 }

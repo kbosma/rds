@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { AuthorityService } from './authority.service';
 import { Authority } from '../../shared/models';
 
@@ -136,6 +137,7 @@ export class AuthorityListComponent implements OnInit {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private confirmService = inject(ConfirmService);
 
   displayedColumns = ['description', 'actions'];
   dataSource = new MatTableDataSource<Authority>();
@@ -171,9 +173,9 @@ export class AuthorityListComponent implements OnInit {
     this.router.navigate(['/admin/authorities', authority.authorityId]);
   }
 
-  deleteAuthority(authority: Authority) {
+  async deleteAuthority(authority: Authority) {
     const message = this.translate.instant('authorities.deleteConfirm', { name: authority.description });
-    if (!confirm(message)) return;
+    if (!await this.confirmService.confirmDelete(message)) return;
 
     this.authorityService.delete(authority.authorityId).subscribe({
       next: () => {

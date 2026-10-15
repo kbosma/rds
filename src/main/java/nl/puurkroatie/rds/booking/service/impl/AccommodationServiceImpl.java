@@ -5,6 +5,8 @@ import nl.puurkroatie.rds.booking.dto.AccommodationDto;
 import nl.puurkroatie.rds.booking.entity.Accommodation;
 import nl.puurkroatie.rds.booking.mapper.AccommodationMapper;
 import nl.puurkroatie.rds.booking.repository.AccommodationRepository;
+import nl.puurkroatie.rds.booking.service.AddressCleanup;
+import nl.puurkroatie.rds.booking.service.DeletionGuard;
 import nl.puurkroatie.rds.booking.service.AccommodationService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -21,9 +23,14 @@ public class AccommodationServiceImpl implements AccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AccommodationMapper accommodationMapper;
 
-    public AccommodationServiceImpl(AccommodationRepository accommodationRepository, AccommodationMapper accommodationMapper) {
+    private final DeletionGuard deletionGuard;
+    private final AddressCleanup addressCleanup;
+
+    public AccommodationServiceImpl(AccommodationRepository accommodationRepository, AccommodationMapper accommodationMapper, DeletionGuard deletionGuard, AddressCleanup addressCleanup) {
         this.accommodationRepository = accommodationRepository;
         this.accommodationMapper = accommodationMapper;
+        this.deletionGuard = deletionGuard;
+        this.addressCleanup = addressCleanup;
     }
 
     @Override
@@ -51,7 +58,10 @@ public class AccommodationServiceImpl implements AccommodationService {
         Accommodation existing = accommodationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Accommodation not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
+        deletionGuard.verifyAccommodationDeletable(id);
+        List<UUID> addressIds = addressCleanup.ofAccommodation(id);
         accommodationRepository.deleteById(id);
+        addressCleanup.deleteIfUnused(addressIds);
     }
 
     @Override

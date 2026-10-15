@@ -10,41 +10,28 @@ import fr.opensagres.xdocreport.template.TemplateEngineKind;
 import fr.opensagres.xdocreport.template.formatter.FieldsMetadata;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
-import nl.puurkroatie.rds.booking.entity.AccommodationAddress;
 import nl.puurkroatie.rds.booking.entity.Booking;
-import nl.puurkroatie.rds.booking.entity.BookerAddress;
-import nl.puurkroatie.rds.booking.entity.BookingLine;
 import nl.puurkroatie.rds.booking.entity.Document;
-import nl.puurkroatie.rds.booking.entity.SupplierAddress;
 import nl.puurkroatie.rds.booking.mapper.DocumentMapper;
-import nl.puurkroatie.rds.booking.repository.AccommodationAddressRepository;
-import nl.puurkroatie.rds.booking.repository.BookerAddressRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.booking.repository.DocumentRepository;
-import nl.puurkroatie.rds.booking.repository.SupplierAddressRepository;
-import nl.puurkroatie.rds.docgen.context.AccommodationContext;
-import nl.puurkroatie.rds.docgen.context.AddressContext;
-import nl.puurkroatie.rds.docgen.context.BookerContext;
-import nl.puurkroatie.rds.docgen.context.BookingActivityContext;
 import nl.puurkroatie.rds.docgen.context.BookingContext;
-import nl.puurkroatie.rds.docgen.context.BookingLineContext;
-import nl.puurkroatie.rds.docgen.context.SupplierContext;
-import nl.puurkroatie.rds.docgen.context.TravelerContext;
 import nl.puurkroatie.rds.booking.entity.DocumentTemplate;
 import nl.puurkroatie.rds.booking.repository.DocumentTemplateRepository;
 import nl.puurkroatie.rds.docgen.service.DocumentGenerationService;
+import nl.puurkroatie.rds.docgen.service.BookingContextService;
+import nl.puurkroatie.rds.docgen.service.FreemarkerHardening;
+import nl.puurkroatie.rds.docgen.service.GeneratedDocumentName;
+import nl.puurkroatie.rds.docgen.service.TemplateModels;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -52,24 +39,18 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
 
     private final DocumentTemplateRepository documentTemplateRepository;
     private final BookingRepository bookingRepository;
-    private final BookerAddressRepository bookerAddressRepository;
-    private final AccommodationAddressRepository accommodationAddressRepository;
-    private final SupplierAddressRepository supplierAddressRepository;
+    private final BookingContextService bookingContextService;
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
 
     public DocumentGenerationServiceImpl(DocumentTemplateRepository documentTemplateRepository,
                                          BookingRepository bookingRepository,
-                                         BookerAddressRepository bookerAddressRepository,
-                                         AccommodationAddressRepository accommodationAddressRepository,
-                                         SupplierAddressRepository supplierAddressRepository,
+                                         BookingContextService bookingContextService,
                                          DocumentRepository documentRepository,
                                          DocumentMapper documentMapper) {
         this.documentTemplateRepository = documentTemplateRepository;
         this.bookingRepository = bookingRepository;
-        this.bookerAddressRepository = bookerAddressRepository;
-        this.accommodationAddressRepository = accommodationAddressRepository;
-        this.supplierAddressRepository = supplierAddressRepository;
+        this.bookingContextService = bookingContextService;
         this.documentRepository = documentRepository;
         this.documentMapper = documentMapper;
     }
@@ -80,17 +61,12 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
                 .orElseThrow(() -> new RuntimeException("DocumentTemplate not found with id: " + templateId));
         verifyOrganization(template.getTenantOrganization());
 
-        Booking bookingWithBookerAndTravelers = bookingRepository.findByIdWithBookerAndTravelers(bookingId)
+        // Het Document hangt aan de boeking; de gegevens voor de template komen uit de gedeelde service
+        // (die ook de organisatie van de boeking controleert).
+        Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-        verifyOrganization(bookingWithBookerAndTravelers.getTenantOrganization());
-
-        Booking bookingWithLines = bookingRepository.findByIdWithBookingLines(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-
-        Booking bookingWithActivities = bookingRepository.findByIdWithBookingActivities(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-
-        BookingContext bookingContext = buildBookingContext(bookingWithBookerAndTravelers, bookingWithLines, bookingWithActivities);
+        verifyOrganization(booking.getTenantOrganization());
+        BookingContext bookingContext = bookingContextService.forBooking(bookingId);
 
         boolean isPdf = "pdf".equalsIgnoreCase(outputFormat);
         String mimeType = isPdf
@@ -100,132 +76,12 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
 
         byte[] generatedDocument = renderDocument(template.getTemplateData(), bookingContext, isPdf);
 
-        String displayname = template.getName() + " - " + bookingWithBookerAndTravelers.getBookingNumber() + extension;
-        Document document = new Document(bookingWithBookerAndTravelers, displayname, mimeType, generatedDocument);
+        // Met datum en tijd: dezelfde template kan meermaals bij dezelfde boeking worden ingezet.
+        String displayname = GeneratedDocumentName.of(
+                template.getName(), booking.getBookingNumber(), LocalDateTime.now(), extension);
+        Document document = new Document(booking, displayname, mimeType, generatedDocument);
         Document saved = documentRepository.save(document);
         return documentMapper.toDto(saved);
-    }
-
-    private BookingContext buildBookingContext(Booking bookingWithBookerAndTravelers, Booking bookingWithLines, Booking bookingWithActivities) {
-        List<AddressContext> bookerAddresses = new ArrayList<>();
-        if (bookingWithBookerAndTravelers.getBooker() != null) {
-            bookerAddresses = bookerAddressRepository.findByBookerBookerId(
-                    bookingWithBookerAndTravelers.getBooker().getBookerId()
-            ).stream()
-                    .map(ba -> toAddressContext(ba.getAddress()))
-                    .toList();
-        }
-
-        BookerContext bookerContext = null;
-        if (bookingWithBookerAndTravelers.getBooker() != null) {
-            var booker = bookingWithBookerAndTravelers.getBooker();
-            bookerContext = new BookerContext(
-                    booker.getFirstname(),
-                    booker.getPrefix(),
-                    booker.getLastname(),
-                    booker.getCallsign(),
-                    booker.getTelephone(),
-                    booker.getEmailaddress(),
-                    booker.getGender() != null ? booker.getGender().name() : null,
-                    booker.getBirthdate(),
-                    booker.getInitials(),
-                    bookerAddresses
-            );
-        }
-
-        List<TravelerContext> travelerContexts = bookingWithBookerAndTravelers.getTravelers().stream()
-                .map(t -> new TravelerContext(
-                        t.getFirstname(),
-                        t.getPrefix(),
-                        t.getLastname(),
-                        t.getGender() != null ? t.getGender().name() : null,
-                        t.getBirthdate(),
-                        t.getInitials()
-                ))
-                .toList();
-
-        List<UUID> accommodationIds = bookingWithLines.getBookingLines().stream()
-                .map(bl -> bl.getAccommodation().getAccommodationId())
-                .distinct()
-                .toList();
-        List<UUID> supplierIds = bookingWithLines.getBookingLines().stream()
-                .map(bl -> bl.getSupplier().getSupplierId())
-                .distinct()
-                .toList();
-
-        Map<UUID, List<AddressContext>> accommodationAddressMap = new HashMap<>();
-        if (!accommodationIds.isEmpty()) {
-            accommodationAddressRepository.findByAccommodationAccommodationIdIn(accommodationIds)
-                    .forEach(aa -> accommodationAddressMap
-                            .computeIfAbsent(aa.getAccommodation().getAccommodationId(), k -> new ArrayList<>())
-                            .add(toAddressContext(aa.getAddress())));
-        }
-
-        Map<UUID, List<AddressContext>> supplierAddressMap = new HashMap<>();
-        if (!supplierIds.isEmpty()) {
-            supplierAddressRepository.findBySupplierSupplierIdIn(supplierIds)
-                    .forEach(sa -> supplierAddressMap
-                            .computeIfAbsent(sa.getSupplier().getSupplierId(), k -> new ArrayList<>())
-                            .add(toAddressContext(sa.getAddress())));
-        }
-
-        List<BookingLineContext> bookingLineContexts = bookingWithLines.getBookingLines().stream()
-                .map(bl -> {
-                    var acc = bl.getAccommodation();
-                    var sup = bl.getSupplier();
-                    return new BookingLineContext(
-                            bl.getFromDate(),
-                            bl.getUntilDate(),
-                            bl.getPrice(),
-                            new AccommodationContext(
-                                    acc.getKey(),
-                                    acc.getName(),
-                                    accommodationAddressMap.getOrDefault(acc.getAccommodationId(), List.of())
-                            ),
-                            new SupplierContext(
-                                    sup.getKey(),
-                                    sup.getName(),
-                                    supplierAddressMap.getOrDefault(sup.getSupplierId(), List.of())
-                            )
-                    );
-                })
-                .toList();
-
-        List<BookingActivityContext> bookingActivityContexts = bookingWithActivities.getBookingActivities().stream()
-                .map(ba -> new BookingActivityContext(
-                        ba.getActivity().getName(),
-                        ba.getActivity().getActivityType() != null ? ba.getActivity().getActivityType().toValue() : null,
-                        ba.getFromDate(),
-                        ba.getUntilDate(),
-                        ba.getMeetingPoint(),
-                        ba.getTotalPrice()
-                ))
-                .toList();
-
-        return new BookingContext(
-                bookingWithBookerAndTravelers.getBookingNumber(),
-                bookingWithBookerAndTravelers.getBookingStatus() != null
-                        ? bookingWithBookerAndTravelers.getBookingStatus().name() : null,
-                bookingWithLines.getFromDate(),
-                bookingWithLines.getUntilDate(),
-                bookingWithLines.getTotalSum(),
-                bookerContext,
-                travelerContexts,
-                bookingLineContexts,
-                bookingActivityContexts
-        );
-    }
-
-    private AddressContext toAddressContext(nl.puurkroatie.rds.booking.entity.Address address) {
-        return new AddressContext(
-                address.getStreet(),
-                address.getHousenumber(),
-                address.getHousenumberAddition(),
-                address.getPostalcode(),
-                address.getCity(),
-                address.getCountry(),
-                address.getAddressrole() != null ? address.getAddressrole().name() : null
-        );
     }
 
     private byte[] renderDocument(byte[] templateData, BookingContext bookingContext, boolean toPdf) {
@@ -234,12 +90,15 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
 
             IXDocReport report = XDocReportRegistry.getRegistry().loadReport(
                     templateStream, TemplateEngineKind.Freemarker);
+            // De template is door een gebruiker geüpload (niet-vertrouwd): ?new/?api dichtzetten.
+            FreemarkerHardening.harden(report);
 
             FieldsMetadata metadata = report.createFieldsMetadata();
             metadata.load("booking", BookingContext.class);
 
             IContext context = report.createContext();
-            context.put("booking", bookingContext);
+            // Platte map i.p.v. bean: een (niet-vertrouwde) template kan zo niet via reflectie bij Java-klassen.
+            context.put("booking", TemplateModels.toModel(bookingContext));
 
             if (toPdf) {
                 Options options = Options.getTo(ConverterTypeTo.PDF).via(ConverterTypeVia.XWPF);

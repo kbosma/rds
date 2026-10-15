@@ -125,14 +125,29 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // MANAGER: DELETE /api/bookings/{id} eigen org — 204
+    // MANAGER: DELETE /api/bookings/{id} eigen org — 204 (zolang er geen documenten of betalingen aan hangen)
     @Test
     void manager_deleteBooking_ownOrganization_returns204() throws Exception {
         String token = managerToken();
+        String created = mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String id = objectMapper.readTree(created).get("bookingId").asText();
 
-        mockMvc.perform(delete("/api/bookings/" + BOOKING_TP_4)
+        mockMvc.perform(delete("/api/bookings/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
+    }
+
+    // Een boeking met documenten en betalingen (geschiedenis) mag niet verwijderd worden — 409
+    @Test
+    void manager_deleteBooking_withDocumentsAndPayments_returns409() throws Exception {
+        mockMvc.perform(delete("/api/bookings/" + BOOKING_TP_4)
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isConflict());
     }
 
     // MANAGER: DELETE /api/bookings/{id} andere org — 403
@@ -234,14 +249,29 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // EMPLOYEE: DELETE /api/bookings/{id} eigen org — 204
+    // EMPLOYEE: DELETE /api/bookings/{id} eigen org — 204 (zolang er geen documenten of betalingen aan hangen)
     @Test
     void employee_deleteBooking_ownOrganization_returns204() throws Exception {
         String token = employeeToken();
+        String created = mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_PK_1 + "\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String id = objectMapper.readTree(created).get("bookingId").asText();
 
-        mockMvc.perform(delete("/api/bookings/" + BOOKING_PK_2)
+        mockMvc.perform(delete("/api/bookings/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
+    }
+
+    // EMPLOYEE: een boeking met documenten/betalingen mag ook niet weg — 409
+    @Test
+    void employee_deleteBooking_withDocumentsAndPayments_returns409() throws Exception {
+        mockMvc.perform(delete("/api/bookings/" + BOOKING_PK_2)
+                        .header("Authorization", "Bearer " + employeeToken()))
+                .andExpect(status().isConflict());
     }
 
     // EMPLOYEE: DELETE /api/bookings/{id} andere org — 403

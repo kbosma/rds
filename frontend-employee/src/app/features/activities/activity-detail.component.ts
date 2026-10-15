@@ -64,16 +64,18 @@ import { Activity } from '../../shared/models';
 
             <div class="actions">
               <button mat-button type="button" routerLink="/activities">
-                <mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}
+                <mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}
               </button>
-              <button mat-raised-button color="primary" type="submit"
-                      [disabled]="saving() || form.invalid">
-                @if (saving()) {
-                  <mat-spinner diameter="20"></mat-spinner>
-                } @else {
-                  <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
-                }
-              </button>
+              @if (!readOnly()) {
+                <button mat-raised-button color="primary" type="submit"
+                        [disabled]="saving() || form.invalid">
+                  @if (saving()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
+                  }
+                </button>
+              }
             </div>
           </form>
         </mat-card-content>
@@ -113,6 +115,8 @@ export class ActivityDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   isNew = signal(true);
+  /** Alleen inzien: geopend met ?readonly=true (vanuit het inzien-icoon in de lijst). */
+  readOnly = signal(false);
   loading = signal(false);
   saving = signal(false);
   private activityId: string | null = null;
@@ -135,6 +139,10 @@ export class ActivityDetailComponent implements OnInit {
     if (id && id !== 'new') {
       this.isNew.set(false);
       this.activityId = id;
+      if (this.route.snapshot.queryParamMap.get('readonly') === 'true') {
+        this.readOnly.set(true);
+        this.form.disable();
+      }
       this.loading.set(true);
       this.activityService.getById(id)
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -156,7 +164,7 @@ export class ActivityDetailComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.readOnly() || this.form.invalid) return;
     this.saving.set(true);
 
     const raw = this.form.getRawValue();

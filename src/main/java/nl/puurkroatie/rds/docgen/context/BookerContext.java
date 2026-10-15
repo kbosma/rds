@@ -68,4 +68,19 @@ public class BookerContext {
     public List<AddressContext> getAddresses() {
         return addresses;
     }
+
+    /**
+     * Volledige weergavenaam: "Jan de Vries" (voornaam, tussenvoegsel, achternaam; lege delen vervallen).
+     * Beschikbaar voor templates als {@code fullName}.
+     */
+    public String getFullName() {
+        StringBuilder sb = new StringBuilder();
+        for (String part : new String[]{firstname, prefix, lastname}) {
+            if (part != null && !part.isBlank()) {
+                if (!sb.isEmpty()) sb.append(' ');
+                sb.append(part);
+            }
+        }
+        return sb.toString();
+    }
 }

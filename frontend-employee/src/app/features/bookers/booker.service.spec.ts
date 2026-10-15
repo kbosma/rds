@@ -43,6 +43,7 @@ describe('BookerService', () => {
     gender: 'man',
     birthdate: '1985-03-15',
     initials: 'K.',
+    status: 'active',
     createdAt: '2026-01-01T10:00:00',
     createdBy: 'user-1',
     modifiedAt: '2026-01-01T10:00:00',
@@ -93,6 +94,16 @@ describe('BookerService', () => {
   // =================================================================
   // TEST 2: getById() geeft het id correct door
   // =================================================================
+  it('getByStatus() should call ApiService.getAll with "bookers" and a status param', () => {
+    apiSpy.getAll.and.returnValue(of([mockBooker]));
+
+    service.getByStatus('prospect').subscribe((result) => {
+      expect(result).toEqual([mockBooker]);
+    });
+
+    expect(apiSpy.getAll).toHaveBeenCalledWith('bookers', { status: 'prospect' });
+  });
+
   it('getById() should pass the id to ApiService', () => {
     apiSpy.getById.and.returnValue(of(mockBooker));
 
