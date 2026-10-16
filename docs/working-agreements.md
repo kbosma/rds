@@ -19,7 +19,7 @@ Afspraken die in eerdere sessies zijn gemaakt of gecorrigeerd. `CLAUDE.md` (repo
 - **Productiecode niet aanpassen om een test te laten slagen.** Klopt de test niet, pas de test aan; is de code fout, herstel de code en zeg dat.
 - Nieuw gedrag krijgt tests (unit + waar het een endpoint betreft een MockMvc-integratietest); denk aan ADMIN/MANAGER/EMPLOYEE/ongeauthenticeerd en aan een andere organisatie.
 - MapStruct moet via de Maven-configuratie werken (niet met een afwijkende JDK).
-- De lokale **Postgres.app** laat processen vanuit de Claude-app niet toe (trust-authenticatie geweigerd). Daarom draait de integratiesuite in een **wegwerp-PostgreSQL** (poort 55432, wachtwoord-authenticatie), die na afloop wordt opgeruimd; recept in [build-test-deploy.md](build-test-deploy.md). De gebruiker mag ook gevraagd worden de suite zelf te draaien.
+- De backend-tests draaien op een **eigen tijdelijke embedded PostgreSQL** (zie [build-test-deploy.md](build-test-deploy.md)); ze hebben geen lokale database nodig en raken de `rdsdb` niet. Tests mogen dus ook vanuit de Claude-app gedraaid worden (`./mvnw test`).
 - **Editor-stubs:** de Java-editor van de gebruiker kan na een bestandswijziging eigen `.class`-bestanden in `target/` schrijven ("Unresolved compilation problem" / `NoClassDefFoundError`). Wacht enkele seconden, verwijder die stubs en draai opnieuw. De Maven-build zelf gebruikt `javac` en is correct.
 
 ## Kwaliteitsregels voor wijzigingen

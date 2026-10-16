@@ -26,7 +26,7 @@
 | Betalingen, webhook, Mollie-flow? | [mollie.md](mollie.md) |
 | E-mailtemplates, versturen, SMTP, afbeeldingen in mail? | [email.md](email.md) |
 | Gedeelde template-editor, Word-templates (.docx), herhaalde tabellen? | [templates.md](templates.md) |
-| Bouwen, testen (ook met wegwerp-database), deployen, poorten? | [build-test-deploy.md](build-test-deploy.md) |
+| Bouwen, testen (met embedded PostgreSQL), deployen, poorten? | [build-test-deploy.md](build-test-deploy.md) |
 | Waarom is iets zo ontworpen? Wat hebben we geleerd? | [design-decisions.md](design-decisions.md) |
 | Wat is nog niet af of risicovol? | [open-items.md](open-items.md) |
 | Afspraken met de gebruiker (taal, git, tests, grenzen)? | [working-agreements.md](working-agreements.md) |
@@ -43,7 +43,7 @@
 | Rollen | `ADMIN` (systeembeheer), `MANAGER` (eigen organisatie, volledig), `EMPLOYEE` (eigen organisatie, beperkt) |
 | Templating | FreeMarker, afgeschermd; één model voor e-mail én Word (zie [templates.md](templates.md)) |
 | Betalingen | Mollie (webhook via NGINX op het publieke IP) |
-| Tests (stand 15-10-2026) | backend 609 (JUnit 5/Mockito/MockMvc), employee-frontend 501 specs (Jasmine/Karma, Firefox headless) |
+| Tests (stand 15-10-2026) | backend 611 (JUnit 5/Mockito/MockMvc), employee-frontend 501 specs (Jasmine/Karma, Firefox headless) |
 | Datum van deze documentatie | laatst bijgewerkt 15-10-2026 |
 
 ## Over deze map

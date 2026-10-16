@@ -1,0 +1,1 @@
+org.springframework.context.ApplicationContextInitializer=nl.puurkroatie.rds.support.EmbeddedPostgresInitializer

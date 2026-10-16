@@ -39,7 +39,6 @@ Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het na
 | 20 | M | **`frontend-booker` is vrijwel niet getest** | 1 spec-bestand voor 7 schermen en de OTP-flow. |
 | 21 | M | **29 van 63 componenten in `frontend-employee` hebben geen spec** | o.a. boekingsregel-/activiteit-/bewerk-dialogen, organisatie-onboarding, rol-/authority-/accountdetails, profiel/TOTP-dialogen, accommodatie- en activiteitdetails, document-upload, de detailpagina's van persoon en account. 10 van 29 services hebben geen spec. |
 | 22 | M | Geen test van volledige UI-flows (e2e) | Alles is unit-/MockMvc-niveau; de editor-in-een-browser is alleen met Karma getest. |
-| 23 | L | Wegwerp-database is een handmatig recept | Zie [build-test-deploy.md](build-test-deploy.md); een Testcontainers-opzet zou dit overbodig maken (vereist Docker). |
 | 24 | L | Geen CI-pipeline in de repository | Bouwen/testen/deployen gaat via lokale scripts. |
 
 ## Documentatie en repo-hygiëne (buiten `docs/`)
