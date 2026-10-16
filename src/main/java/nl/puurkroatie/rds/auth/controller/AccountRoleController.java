@@ -1,7 +1,7 @@
 package nl.puurkroatie.rds.auth.controller;
 
 import nl.puurkroatie.rds.auth.dto.AccountRoleDto;
-import nl.puurkroatie.rds.auth.entity.AccountRole;
+import nl.puurkroatie.rds.auth.dto.AccountRoleResponseDto;
 import nl.puurkroatie.rds.auth.service.AccountRoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +30,13 @@ public class AccountRoleController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('ACCOUNTROLE_READ')")
-    public List<AccountRole> findAll() {
+    public List<AccountRoleResponseDto> findAll() {
         return accountRoleService.findAll();
     }
 
     @GetMapping("/{accountId}/{roleId}")
     @PreAuthorize("hasAuthority('ACCOUNTROLE_READ')")
-    public ResponseEntity<AccountRole> findById(@PathVariable UUID accountId, @PathVariable UUID roleId) {
+    public ResponseEntity<AccountRoleResponseDto> findById(@PathVariable UUID accountId, @PathVariable UUID roleId) {
         return accountRoleService.findById(accountId, roleId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -44,8 +44,8 @@ public class AccountRoleController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ACCOUNTROLE_CREATE')")
-    public ResponseEntity<AccountRole> create(@RequestBody @Valid AccountRoleDto dto) {
-        AccountRole saved = accountRoleService.create(dto.getAccountId(), dto.getRoleId());
+    public ResponseEntity<AccountRoleResponseDto> create(@RequestBody @Valid AccountRoleDto dto) {
+        AccountRoleResponseDto saved = accountRoleService.create(dto.getAccountId(), dto.getRoleId());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 

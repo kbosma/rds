@@ -1,7 +1,7 @@
 package nl.puurkroatie.rds.auth.controller;
 
 import nl.puurkroatie.rds.auth.dto.RoleAuthorityDto;
-import nl.puurkroatie.rds.auth.entity.RoleAuthority;
+import nl.puurkroatie.rds.auth.dto.RoleAuthorityResponseDto;
 import nl.puurkroatie.rds.auth.service.RoleAuthorityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +30,13 @@ public class RoleAuthorityController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLEAUTHORITY_READ')")
-    public List<RoleAuthority> findAll() {
+    public List<RoleAuthorityResponseDto> findAll() {
         return roleAuthorityService.findAll();
     }
 
     @GetMapping("/{roleId}/{authorityId}")
     @PreAuthorize("hasAuthority('ROLEAUTHORITY_READ')")
-    public ResponseEntity<RoleAuthority> findById(@PathVariable UUID roleId, @PathVariable UUID authorityId) {
+    public ResponseEntity<RoleAuthorityResponseDto> findById(@PathVariable UUID roleId, @PathVariable UUID authorityId) {
         return roleAuthorityService.findById(roleId, authorityId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -44,8 +44,8 @@ public class RoleAuthorityController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLEAUTHORITY_CREATE')")
-    public ResponseEntity<RoleAuthority> create(@RequestBody @Valid RoleAuthorityDto dto) {
-        RoleAuthority saved = roleAuthorityService.create(dto.getRoleId(), dto.getAuthorityId());
+    public ResponseEntity<RoleAuthorityResponseDto> create(@RequestBody @Valid RoleAuthorityDto dto) {
+        RoleAuthorityResponseDto saved = roleAuthorityService.create(dto.getRoleId(), dto.getAuthorityId());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
