@@ -142,13 +142,13 @@ import { Document } from '../../shared/models';
       gap: 8px;
     }
     .doc-icon {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-size: 20px;
       width: 20px;
       height: 20px;
     }
     .booking-number {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-weight: 500;
     }
     .no-data {

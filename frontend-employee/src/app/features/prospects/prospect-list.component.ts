@@ -124,7 +124,7 @@ import { Booker } from '../../shared/models';
     }
     .full-width { width: 100%; }
     .alt-row { background-color: #fafafa; }
-    .email-link { color: #1976d2; }
+    .email-link { color: var(--theme-primary); }
     .actions-header { text-align: right; }
     .actions-cell { width: 1%; }
     .no-data { text-align: center; padding: 24px; color: #888; }

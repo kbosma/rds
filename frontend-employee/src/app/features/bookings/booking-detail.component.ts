@@ -574,7 +574,7 @@ interface BookingMolliePaymentLink {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      color: #1976d2;
+      color: var(--theme-primary);
       text-decoration: none;
       font-size: 14px;
       margin-bottom: 8px;
@@ -645,7 +645,7 @@ interface BookingMolliePaymentLink {
       font-size: 14px;
     }
     .info-value.email {
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .info-value.total {
       font-weight: 600;
@@ -697,7 +697,7 @@ interface BookingMolliePaymentLink {
       gap: 8px;
     }
     .doc-icon {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-size: 20px;
       width: 20px;
       height: 20px;
@@ -718,7 +718,7 @@ interface BookingMolliePaymentLink {
       gap: 8px;
     }
     .accommodation-icon {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-size: 20px;
       width: 20px;
       height: 20px;

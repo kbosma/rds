@@ -164,7 +164,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
       font-size: 48px;
       width: 48px;
       height: 48px;
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .welcome-title {
       margin: 0;
@@ -203,7 +203,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
       height: 36px;
       margin-bottom: 4px;
     }
-    .stat-icon-blue { color: #1976d2; }
+    .stat-icon-blue { color: var(--theme-primary); }
     .stat-icon-green { color: #388e3c; }
     .stat-icon-orange { color: #f57c00; }
     .stat-icon-purple { color: #7b1fa2; }
@@ -277,7 +277,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
       color: white;
     }
     .top3-booked {
-      background: linear-gradient(135deg, #1976d2, #42a5f5);
+      background: linear-gradient(135deg, var(--theme-primary), color-mix(in srgb, var(--theme-primary) 70%, white));
     }
     .top3-revenue {
       background: linear-gradient(135deg, #7b1fa2, #ab47bc);

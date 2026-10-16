@@ -273,7 +273,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      color: #1976d2;
+      color: var(--theme-primary);
       text-decoration: none;
       font-size: 14px;
       margin-bottom: 8px;

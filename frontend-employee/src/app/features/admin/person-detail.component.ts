@@ -129,7 +129,7 @@ import { Person, Organization, Account } from '../../shared/models';
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      color: #1976d2;
+      color: var(--theme-primary);
       text-decoration: none;
       font-size: 14px;
       margin-bottom: 8px;

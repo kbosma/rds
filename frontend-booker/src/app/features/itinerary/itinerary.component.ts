@@ -133,7 +133,7 @@ interface GanttRow {
     .legend { display: flex; gap: 20px; margin-bottom: 16px; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #555; }
     .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
-    .legend-dot.accommodation { background: #1976d2; }
+    .legend-dot.accommodation { background: var(--theme-primary); }
     .legend-dot.activity { background: #2e7d32; }
 
     /* Gantt wrapper */
@@ -213,7 +213,7 @@ interface GanttRow {
     }
     .gantt-bar:hover { filter: brightness(1.1); }
     .gantt-bar.accommodation {
-      background: #1976d2;
+      background: var(--theme-primary);
       color: white;
     }
     .gantt-bar.activity {
@@ -237,8 +237,8 @@ interface GanttRow {
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
       border-left: 4px solid;
     }
-    .list-item.accommodation { border-color: #1976d2; }
-    .list-item.accommodation mat-icon { color: #1976d2; }
+    .list-item.accommodation { border-color: var(--theme-primary); }
+    .list-item.accommodation mat-icon { color: var(--theme-primary); }
     .list-item.activity { border-color: #2e7d32; }
     .list-item.activity mat-icon { color: #2e7d32; }
     .list-description { font-size: 14px; font-weight: 500; margin-bottom: 2px; }

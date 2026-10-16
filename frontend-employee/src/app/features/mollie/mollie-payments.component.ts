@@ -193,7 +193,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       color: #888;
     }
     .breadcrumb-link {
-      color: #1976d2;
+      color: var(--theme-primary);
       text-decoration: none;
     }
     .breadcrumb-link:hover {
@@ -271,7 +271,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       height: 0;
     }
     .mollie-id {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-family: monospace;
       font-size: 13px;
     }

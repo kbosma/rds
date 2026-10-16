@@ -67,11 +67,11 @@ interface Accommodation {
     .loading { display: flex; justify-content: center; padding: 40px; }
     .accommodation-list { display: grid; gap: 12px; }
 
-    .acc-card { border-radius: 12px; border-left: 4px solid #1976d2; }
+    .acc-card { border-radius: 12px; border-left: 4px solid var(--theme-primary); }
     .acc-content { display: flex; align-items: flex-start; gap: 16px; padding: 8px 0; }
 
     .acc-icon-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
-    .acc-icon { font-size: 32px; width: 32px; height: 32px; color: #1976d2; }
+    .acc-icon { font-size: 32px; width: 32px; height: 32px; color: var(--theme-primary); }
     .nights-badge {
       background: #e3f2fd;
       color: #1565c0;

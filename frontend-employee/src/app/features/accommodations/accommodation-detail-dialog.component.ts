@@ -94,7 +94,7 @@ export interface AccommodationDetailData {
       font-size: 20px;
     }
     .title-icon {
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .section-label {
       font-size: 12px;
@@ -119,7 +119,7 @@ export interface AccommodationDetailData {
       font-size: 20px;
       width: 20px;
       height: 20px;
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .sub-title {
       font-size: 14px;

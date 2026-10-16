@@ -134,7 +134,7 @@ interface OrgOverview {
       width: 20px;
       height: 20px;
     }
-    .persons-icon { color: #1976d2; }
+    .persons-icon { color: var(--theme-primary); }
     .accounts-icon { color: #388e3c; }
     .org-stat-number {
       font-size: 20px;
