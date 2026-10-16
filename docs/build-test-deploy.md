@@ -4,7 +4,7 @@
 
 - JDK 21, Maven 3.9 (`./mvnw` of de eigen installatie, bv. `/Users/keesbosma/apache-maven-3.9.16/bin/mvn`)
 - Node + npm (Angular 22), een browser voor `ng test` (Firefox of Chrome)
-- PostgreSQL 17 lokaal (Postgres.app): database `rdsdb`, gebruiker/wachtwoord `rds`/`rds` op `localhost:5432` (zie `application.yaml`)
+- PostgreSQL 17 lokaal (Postgres.app): database `rdsdb`, gebruiker/wachtwoord `rds`/`rds` op `localhost:5432` (zie `application.yaml`) — **alleen nodig om de applicatie te draaien**; de tests gebruiken hun eigen database (zie *Testdatabase* hieronder)
 
 ## Lokaal draaien
 
@@ -32,35 +32,20 @@ mvn -q -DskipTests compile
 mvn -q -Dtest='NaamTest' -DfailIfNoTests=false test   # één klasse
 ```
 
-- Unit-tests (Mockito) hebben geen database nodig. De **integratietests** (`*ControllerTest`, `ApplicationTests`) starten de hele Spring-context met `@SpringBootTest` + MockMvc en draaien `@Transactional` (rollback per test) tegen de seeddata van V2. Basisklassen: `AbstractControllerTest` (organisaties, login-helpers) en `AbstractBookingControllerTest` (vaste UUID's voor boekingen, bookers, …).
-- Stand 16-10-2026: **609 tests, 0 failures** (waarvan ±50 testklassen); jsoup-, POI- en xdocreport-gedrag wordt door `HtmlToDocxConverterTest` end-to-end gedekt.
+- Unit-tests (Mockito) hebben geen database nodig. De **integratietests** (`*ControllerTest`, `ApplicationTests`) starten de hele Spring-context met `@SpringBootTest` + MockMvc en draaien `@Transactional` (rollback per test) tegen de seeddata van V2, op een **eigen tijdelijke database** (zie hieronder). Basisklassen: `AbstractControllerTest` (organisaties, login-helpers) en `AbstractBookingControllerTest` (vaste UUID's voor boekingen, bookers, …).
+- Stand 16-10-2026: **611 tests, 0 failures** (waarvan ±50 testklassen); jsoup-, POI- en xdocreport-gedrag wordt door `HtmlToDocxConverterTest` end-to-end gedekt.
 - `DeleteVerificationControllerTest` controleert voor elke resource dat een delete het record **echt** weghaalt (GET 200 → DELETE 204 → GET 404; daarna `flush()`/`clear()` omdat een MockMvc-IT in één transactie draait en de persistence-context anders een database-cascade verbergt).
 - Nieuwe migratie ⇒ nieuw bestand `V<n>__omschrijving.sql`; de volledige suite valideert het schema (`ddl-auto: validate`).
 
-### Wegwerp-database voor de volledige suite
+### Testdatabase (embedded PostgreSQL)
 
-Handig als de lokale Postgres.app geen verbindingen van de Claude-app toestaat, of om de suite zonder bijwerkingen te draaien. Alles staat in een tijdelijke map die na afloop verdwijnt.
+De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop Flyway (V1–V8, dus de seeddata uit V2). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
 
-```bash
-PGBIN=/Applications/Postgres.app/Contents/Versions/17/bin
-BASE=$(mktemp -d); LOG="$BASE/test.log"
-cleanup() { "$PGBIN/pg_ctl" -D "$BASE/data" -m fast stop >/dev/null 2>&1; rm -rf "$BASE"; }
-trap cleanup EXIT
-echo "wegwerp-wachtwoord" > "$BASE/pw"
-"$PGBIN/initdb" -D "$BASE/data" -U postgres --auth-host=scram-sha-256 --auth-local=scram-sha-256 \
-    --pwfile="$BASE/pw" -E UTF8 >/dev/null
-"$PGBIN/pg_ctl" -D "$BASE/data" -l "$BASE/server.log" \
-    -o "-p 55432 -c listen_addresses=127.0.0.1 -c unix_socket_directories=" -w start >/dev/null
-export PGPASSWORD="wegwerp-wachtwoord"
-"$PGBIN/psql" -h 127.0.0.1 -p 55432 -U postgres -q \
-    -c "CREATE ROLE rds LOGIN PASSWORD 'rds';" -c "CREATE DATABASE rdsdb OWNER rds;"
-export SPRING_DATASOURCE_URL="jdbc:postgresql://127.0.0.1:55432/rdsdb" \
-       SPRING_DATASOURCE_USERNAME=rds SPRING_DATASOURCE_PASSWORD=rds
-./mvnw test > "$LOG" 2>&1; echo "mvn exit: $?"
-grep -E "Tests run:.*Skipped: [0-9]+$|BUILD (SUCCESS|FAILURE)" "$LOG" | tail -3
-```
-
-Let op bij een eigen schijf-/map-keuze: de map moet op dezelfde machine staan en mag niet bij de repo horen. Draai dit niet tegen de echte `rdsdb`.
+- `EmbeddedPostgresInitializer` (src/test/java/…/support) zet de datasource-properties van elke Spring-testcontext; geregistreerd in `src/test/resources/META-INF/spring.factories`. Eén database per testrun, gedeeld door alle contexten. Alleen in src/test: de applicatie zelf start hier nooit mee.
+- De properties staan bovenaan: een test draait dus nooit per ongeluk tegen een echte database, ook niet als `SPRING_DATASOURCE_*` gezet is. `TestDatabaseIsolationTest` bewaakt dat.
+- **Aannames over de seeddata zijn veilig**: elke run begint met precies de data uit de migraties. Tests zijn `@Transactional` met rollback; **commit dus nooit in een test**, anders ziet een volgende test die data (draai de suite eens met `-Dsurefire.runOrder=random` om dat te controleren).
+- De eerste run downloadt de PostgreSQL-binaries (± 20 MB per platform) uit Maven Central; daarna staan ze in `~/.m2`. Ondersteund: macOS (Intel en Apple Silicon), Linux amd64, Windows amd64. De binaries zijn gepind op 17.x via `embedded-postgres-binaries.version` in de pom (productie draait PostgreSQL 17).
+- Draai je tests in een omgeving zonder internet, laat dan eerst één keer `./mvnw test` lopen met netwerk, of zet de binaries in een eigen Maven-mirror.
 
 ### Bekende kuren
 - **Editor-stubs in `target/`** ("Unresolved compilation problem"): wacht een paar seconden na het opslaan, verwijder de betrokken `.class`-bestanden en draai opnieuw; Maven zelf is correct.

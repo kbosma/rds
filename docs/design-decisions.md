@@ -89,7 +89,7 @@ Waarom iets zo is gebouwd, wat de gebruiker heeft gekozen en wat we onderweg heb
 - Een MockMvc-IT draait in één transactie: een delete + GET lijkt dan nog te slagen door de persistence-context. Gebruik `flush()` + `clear()` voordat je controleert (zie `DeleteVerificationControllerTest`).
 - `MatDialogModule` in de `imports` van een standalone component levert een eigen `MatDialog`; in een spec werkt alleen `TestBed.overrideProvider(MatDialog, …)`, niet een gewone provider.
 - Een Java-editor die tussendoor `.class`-stubs in `target/` zet veroorzaakt schijnfouten; zie [build-test-deploy.md](build-test-deploy.md).
-- De lokale Postgres.app weigert verbindingen vanuit de Claude-app; een wegwerp-database lost dat op.
+- Tests draaien op een eigen, tijdelijke embedded PostgreSQL (Zonky), niet op de lokale `rdsdb`: zo hangen ze niet af van lokale data en lost dat ook de Postgres.app-toestemming (trust-authenticatie vanuit de Claude-app) op. Gekozen boven Testcontainers omdat daar Docker voor nodig is.
 - Een geforceerde "controle op bestaan over organisaties heen" lekt informatie; foutmeldingen mogen niet verraden of iets elders bestaat.
 
 ## Nog niet besloten

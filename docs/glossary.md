@@ -35,5 +35,5 @@ Nederlandse domeintermen en hun technische vorm in code/API. Alfabetisch.
 | **Thema** | huisstijl per organisatie (kleuren, logo) | `OrganizationTheme`, `--theme-primary` |
 | **TOTP** | tijdgebonden eenmalige code (2FA) voor medewerkers, met herstelcodes | `TotpService`, `/api/auth/totp/*` |
 | **Webhook** | server-naar-server melding van Mollie over een betaalstatus | `/api/mollie/payments/webhook` |
-| **Wegwerp-database** | tijdelijke PostgreSQL voor de testsuite | [build-test-deploy.md](build-test-deploy.md) |
+| **Embedded PostgreSQL** | tijdelijke PostgreSQL die de testsuite zelf start en opruimt | [build-test-deploy.md](build-test-deploy.md) |
 | **XDocReport** | bibliotheek die een `.docx` met FreeMarker samenvoegt | `DocumentGenerationServiceImpl` |

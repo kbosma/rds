@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
+		<embedded-postgres-binaries.version>17.11.0</embedded-postgres-binaries.version>
 	</properties>
 	<dependencies>
 
@@ -162,6 +163,41 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+        <!-- E M B E D D E D   P O S T G R E S   (alleen voor tests) -->
+        <!-- Elke testrun start een eigen, tijdelijke PostgreSQL 17; de tests raken de lokale rdsdb nooit.
+             De binaries worden expliciet op 17.x gepind (productie draait PostgreSQL 17); de core-library
+             trekt anders een nieuwere hoofdversie mee. -->
+        <dependency>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-postgres</artifactId>
+            <version>2.2.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.zonky.test.postgres</groupId>
+            <artifactId>embedded-postgres-binaries-darwin-amd64</artifactId>
+            <version>${embedded-postgres-binaries.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.zonky.test.postgres</groupId>
+            <artifactId>embedded-postgres-binaries-darwin-arm64v8</artifactId>
+            <version>${embedded-postgres-binaries.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.zonky.test.postgres</groupId>
+            <artifactId>embedded-postgres-binaries-linux-amd64</artifactId>
+            <version>${embedded-postgres-binaries.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.zonky.test.postgres</groupId>
+            <artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
+            <version>${embedded-postgres-binaries.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- J A V A   M E L O D Y -->
         <dependency>
