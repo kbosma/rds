@@ -223,7 +223,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
     }
   `,
   styles: [`
-    .back-link { display: inline-flex; align-items: center; gap: 4px; color: #1976d2; text-decoration: none; font-size: 14px; margin-bottom: 8px; }
+    .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--theme-primary); text-decoration: none; font-size: 14px; margin-bottom: 8px; }
     .back-link:hover { text-decoration: underline; }
     .page-title { font-size: 22px; font-weight: 500; margin: 8px 0 24px; }
     .detail-card { border-radius: 12px; max-width: 700px; }

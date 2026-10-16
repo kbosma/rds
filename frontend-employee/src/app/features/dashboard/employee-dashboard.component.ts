@@ -34,7 +34,7 @@ import { AuthService } from '../../core/auth/auth.service';
   styles: [`
     .welcome-card { margin-bottom: 24px; }
     .welcome-content { display: flex; align-items: center; gap: 16px; padding: 8px 0; }
-    .welcome-icon { font-size: 48px; width: 48px; height: 48px; color: #1976d2; }
+    .welcome-icon { font-size: 48px; width: 48px; height: 48px; color: var(--theme-primary); }
     .welcome-title { margin: 0; font-size: 20px; font-weight: 500; }
     .welcome-detail { margin: 4px 0 0; color: #666; font-size: 14px; }
     .separator { margin: 0 8px; color: #ccc; }

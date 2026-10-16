@@ -204,7 +204,7 @@ export interface DocumentUploadDialogData {
       margin-bottom: 8px;
     }
     .dropzone.drag-over {
-      border-color: #1976d2;
+      border-color: var(--theme-primary);
       background-color: #e3f2fd;
     }
     .dropzone-icon {

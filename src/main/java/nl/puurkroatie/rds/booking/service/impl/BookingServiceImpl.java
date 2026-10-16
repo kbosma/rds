@@ -100,8 +100,10 @@ public class BookingServiceImpl implements BookingService {
         if (bookerId == null) {
             return null;
         }
-        return bookerRepository.findById(bookerId)
+        Booker booker = bookerRepository.findById(bookerId)
                 .orElseThrow(() -> new RuntimeException("Booker not found with id: " + bookerId));
+        verifyOrganization(booker.getTenantOrganization());
+        return booker;
     }
 
     private Booking toEntity(BookingDto dto, String bookingNumber) {

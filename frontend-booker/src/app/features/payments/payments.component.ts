@@ -186,7 +186,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models/mol
     .summary-card {
       border-radius: 12px;
     }
-    .summary-card.total { border-left: 4px solid #1976d2; }
+    .summary-card.total { border-left: 4px solid var(--theme-primary); }
     .summary-card.paid { border-left: 4px solid #4caf50; }
     .summary-card.open { border-left: 4px solid #ff9800; }
     .summary-content {
@@ -200,7 +200,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models/mol
       width: 28px;
       height: 28px;
     }
-    .total .summary-content mat-icon { color: #1976d2; }
+    .total .summary-content mat-icon { color: var(--theme-primary); }
     .paid .summary-content mat-icon { color: #4caf50; }
     .open .summary-content mat-icon { color: #ff9800; }
     .summary-label {

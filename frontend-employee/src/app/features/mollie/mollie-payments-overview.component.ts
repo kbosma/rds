@@ -201,7 +201,7 @@ interface BookingMolliePaymentLink {
       width: 36px;
       height: 36px;
     }
-    .total-icon { color: #1976d2; }
+    .total-icon { color: var(--theme-primary); }
     .paid-icon { color: #388e3c; }
     .open-icon { color: #f57c00; }
     .summary-label {
@@ -239,12 +239,12 @@ interface BookingMolliePaymentLink {
     .actions-header { text-align: right; }
     .actions-cell { width: 1%; }
     .mollie-id {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-family: monospace;
       font-size: 13px;
     }
     .booking-number {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-weight: 500;
     }
     .method-badge {

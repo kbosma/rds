@@ -62,6 +62,16 @@ Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onde
 - **Tenant/rol-logica zit in de backend.** De UI verbergt alleen; de server is de enige echte controle.
 - **Datums/bedragen:** datums als ISO-tekst (`jjjj-mm-dd`) tussen UI en API; `DatePipe`/`CurrencyPipe` voor weergave.
 
+### Design (compact en kleurrijk)
+
+Het gedeelde ontwerp staat in `src/styles.scss` van **beide** apps (de bestanden zijn gelijk; wijzig ze samen). Het bouwt voort op het prebuilt Material-thema `azure-blue`, maar overschrijft de Material-tokens op `html`:
+
+- **Kleur volgt de organisatie.** `--mat-sys-primary` e.d. wijzen naar `--theme-primary`; afgeleide tinten (`--ui-primary-faint/soft/hover/strong/deep`) worden met `color-mix` berekend. Gebruik die i.p.v. vaste blauwtinten. Standaard (zonder organisatiethema) is teal `#0e8f8a`.
+- **Compact:** velden 40px (tekst 14px, regelhoogte 20px, padding 10px, zodat tekst nooit wordt afgeknipt), tabelrijen en -kop 40px, knoppen 36px. Wijzig de hoogte via `--mat-form-field-container-height` en `--mat-form-field-container-vertical-padding` (samen: hoogte = regelhoogte + 2 × padding).
+- **Tabellen:** getinte, hoofdletter-kop; om-en-om gekleurde rijen en hover komen globaal uit `.mat-mdc-row`; zet dus geen eigen `alt-row`-stijl meer in componenten.
+- **Zijbalk:** donker (`--ui-primary-deep`), actief item in `--theme-primary`.
+- De uitklappijl van `mat-select` is 24px en wordt in `styles.scss` op 20px gezet, anders is een select 4px hoger dan een tekstveld.
+
 ### Lijsten met actie-iconen (inzien / bewerken / verwijderen)
 
 Alle lijsten die direct vanuit het linkermenu bereikbaar zijn gebruiken hetzelfde grid: een Material-tabel met één vaste actiekolom, gevuld door `shared/components/row-actions.component.ts` (`<app-row-actions>`). **Klikken op de hele regel doet niets**; alleen de iconen werken.

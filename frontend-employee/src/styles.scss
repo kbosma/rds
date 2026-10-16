@@ -1,14 +1,116 @@
-/* You can add global styles to this file, and also import other style files */
+/* Globale stijlen en gedeeld design (compact, kleurrijk). Zie docs/frontend.md#design. */
 
 :root {
-  --theme-primary: #1976d2;
-  --theme-accent: #ff9800;
-  --theme-card-title: #333333;
+  /* Kleuren per organisatie (ThemeService overschrijft primary/accent/card-title). */
+  --theme-primary: #0e8f8a;
+  --theme-accent: #e0a100;
+  --theme-card-title: #12303b;
+
+  /* Afgeleide kleuren: volgen altijd de organisatiekleur. */
+  --ui-text: #1f2d33;
+  --ui-text-muted: #5d7a85;
+  --ui-line: #e1ebee;
+  --ui-canvas: #f3f7f8;
+  --ui-primary-faint: color-mix(in srgb, var(--theme-primary) 8%, white);
+  --ui-primary-soft: color-mix(in srgb, var(--theme-primary) 12%, white);
+  --ui-primary-hover: color-mix(in srgb, var(--theme-primary) 18%, white);
+  --ui-primary-strong: color-mix(in srgb, var(--theme-primary) 70%, black);
+  --ui-primary-deep: color-mix(in srgb, var(--theme-primary) 30%, #08161c);
+  --ui-radius: 8px;
 }
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  color: var(--ui-text);
+  background: var(--ui-canvas);
+}
+
+/* Material volgt de organisatiekleur i.p.v. het vaste azure-blue palet. */
+html {
+  --mat-sys-primary: var(--theme-primary);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: var(--ui-primary-soft);
+  --mat-sys-on-primary-container: var(--ui-primary-strong);
+  --mat-sys-secondary-container: var(--ui-primary-soft);
+  --mat-sys-on-secondary-container: var(--ui-primary-strong);
+  --mat-sys-surface-tint: var(--theme-primary);
+
+  /* Compacte velden: 40px hoog, 14px tekst met ruime regelhoogte zodat niets afgeknipt wordt. */
+  --mat-form-field-container-height: 40px;
+  --mat-form-field-container-vertical-padding: 10px;
+  --mat-form-field-container-text-size: 14px;
+  --mat-form-field-container-text-line-height: 20px;
+  --mat-form-field-outlined-label-text-populated-size: 12px;
+  --mat-form-field-outlined-outline-color: #c8d9de;
+  --mat-form-field-outlined-hover-outline-color: var(--theme-primary);
+  --mat-form-field-outlined-container-shape: var(--ui-radius);
+  --mat-select-trigger-text-size: 14px;
+  --mat-select-trigger-text-line-height: 20px;
+  --mat-select-trigger-text-weight: 400;
+
+  /* Compacte tabellen. */
+  --mat-table-header-container-height: 40px;
+  --mat-table-row-item-container-height: 40px;
+  --mat-table-footer-container-height: 44px;
+  --mat-table-row-item-label-text-size: 14px;
+  --mat-table-row-item-outline-color: var(--ui-line);
+  --mat-table-background-color: #ffffff;
+
+  /* Compacte knoppen. */
+  --mat-button-filled-container-height: 36px;
+  --mat-button-protected-container-height: 36px;
+  --mat-button-outlined-container-height: 36px;
+  --mat-button-text-container-height: 36px;
+  --mat-button-filled-container-shape: var(--ui-radius);
+  --mat-button-protected-container-shape: var(--ui-radius);
+  --mat-button-outlined-container-shape: var(--ui-radius);
+
+  --mat-card-elevated-container-color: #ffffff;
+  --mat-card-outlined-container-color: #ffffff;
+  --mat-dialog-container-shape: 12px;
+  --mat-paginator-container-size: 44px;
+}
 
 mat-card-title, .mat-mdc-card-title {
   color: var(--theme-card-title) !important;
+}
+
+/* De uitklappijl is standaard 24px en maakt een select 4px hoger dan een tekstveld. */
+.mat-mdc-select .mat-mdc-select-arrow-wrapper {
+  height: 20px;
+}
+
+/* Kaarten: vlak met een fijne rand i.p.v. een zware schaduw. */
+.mat-mdc-card {
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 40, 48, 0.04);
+}
+
+/* Tabellen: kopregel met tint, om-en-om gekleurde rijen, duidelijke hover. */
+.mat-mdc-table {
+  border-radius: var(--ui-radius);
+  overflow: hidden;
+}
+.mat-mdc-header-row {
+  background: var(--ui-primary-soft);
+}
+.mat-mdc-header-cell {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ui-primary-strong);
+}
+.mat-mdc-table .mat-mdc-row:nth-child(even) {
+  background: var(--ui-primary-faint);
+}
+.mat-mdc-table .mat-mdc-row:hover {
+  background: var(--ui-primary-hover);
+}
+.mat-mdc-paginator {
+  background: transparent;
 }

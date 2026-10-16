@@ -60,7 +60,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
   `,
   styles: [`
     .app-toolbar {
-      background: #1976d2;
+      background: var(--theme-primary);
       color: white;
     }
     .brand {
@@ -84,7 +84,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     }
     .active-tab {
       background-color: #e3f2fd !important;
-      color: #1976d2 !important;
+      color: var(--theme-primary) !important;
     }
     .main-content {
       padding: 24px 16px;

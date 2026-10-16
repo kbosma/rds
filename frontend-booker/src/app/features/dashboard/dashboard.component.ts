@@ -80,7 +80,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
     }
     .info-card {
       border-radius: 12px;
-      border-left: 4px solid #1976d2;
+      border-left: 4px solid var(--theme-primary);
     }
     .info-content {
       display: flex;
@@ -92,7 +92,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
       font-size: 36px;
       width: 36px;
       height: 36px;
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .info-label {
       font-size: 12px;
@@ -124,7 +124,7 @@ import { BookerAuthService } from '../../core/auth/booker-auth.service';
       font-size: 36px;
       width: 36px;
       height: 36px;
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .action-title {
       font-size: 16px;

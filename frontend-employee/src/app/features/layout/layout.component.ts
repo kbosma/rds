@@ -79,52 +79,62 @@ interface NavItem {
       height: 100vh;
     }
     .sidenav {
-      width: 260px;
-      background: #fafafa;
-      border-right: 1px solid rgba(0, 0, 0, 0.08);
+      width: 240px;
+      background: var(--ui-primary-deep);
+      border-right: none;
+      border-radius: 0;
+      --mat-sidenav-container-shape: 0;
+      --mat-list-list-item-label-text-color: #d3e6ea;
+      --mat-list-list-item-leading-icon-color: #9cc3cb;
+      --mat-list-list-item-hover-label-text-color: #ffffff;
+      --mat-list-list-item-hover-leading-icon-color: #ffffff;
+      --mat-list-list-item-hover-state-layer-color: #ffffff;
+      --mat-list-list-item-hover-state-layer-opacity: 0.08;
+      --mat-list-list-item-focus-state-layer-color: #ffffff;
     }
     .sidenav-header {
-      padding: 24px 16px 16px;
+      padding: 20px 16px 14px;
       text-align: center;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     .brand-title {
       margin: 0;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
-      color: var(--theme-primary);
+      color: #ffffff;
       letter-spacing: 2px;
     }
     .brand-subtitle {
       display: block;
       font-size: 12px;
-      color: #888;
+      color: #9cc3cb;
       margin-top: 2px;
     }
     .nav-list {
-      padding-top: 8px;
+      padding: 8px;
+    }
+    .nav-list mat-divider {
+      border-top-color: rgba(255, 255, 255, 0.1);
     }
     .section-header {
-      padding: 16px 16px 4px;
+      padding: 16px 12px 4px;
       font-size: 11px;
       font-weight: 600;
-      color: #888;
+      color: #7fa9b2;
       letter-spacing: 1px;
       text-transform: uppercase;
     }
     .nav-item {
-      border-left: 4px solid transparent;
       margin: 2px 0;
+      border-radius: 8px;
+      --mat-list-list-item-one-line-container-height: 40px;
     }
     .active-item {
-      background-color: color-mix(in srgb, var(--theme-primary) 10%, white) !important;
-      border-left: 4px solid var(--theme-primary) !important;
-    }
-    .active-item mat-icon {
-      color: var(--theme-primary);
+      background-color: var(--theme-primary) !important;
+      --mat-list-list-item-label-text-color: #ffffff;
+      --mat-list-list-item-leading-icon-color: #ffffff;
     }
     .active-item span[matListItemTitle] {
-      color: var(--theme-primary);
       font-weight: 500;
     }
     .content {
@@ -148,10 +158,10 @@ interface NavItem {
       opacity: 0.9;
     }
     .main-content {
-      padding: 24px;
+      padding: 20px 24px;
       flex: 1;
       overflow: auto;
-      background: #f5f5f5;
+      background: var(--ui-canvas);
     }
   `],
 })

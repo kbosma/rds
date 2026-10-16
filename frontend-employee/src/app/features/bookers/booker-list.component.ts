@@ -143,7 +143,7 @@ import { Booker, Booking } from '../../shared/models';
       background-color: #fafafa;
     }
     .email-link {
-      color: #1976d2;
+      color: var(--theme-primary);
     }
     .actions-header { text-align: right; }
     .actions-cell { width: 1%; }

@@ -290,4 +290,24 @@ class BookingControllerTest extends AbstractBookingControllerTest {
         mockMvc.perform(get("/api/bookings"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // MANAGER: POST /api/bookings met een booker van een andere organisatie — 403
+    @Test
+    void manager_createBooking_withBookerOfOtherOrganization_returns403() throws Exception {
+        mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_PK_1 + "\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    // MANAGER: PUT /api/bookings/{id} (eigen boeking) met een booker van een andere organisatie — 403
+    @Test
+    void manager_updateBooking_withBookerOfOtherOrganization_returns403() throws Exception {
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4)
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_PK_1 + "\"}"))
+                .andExpect(status().isForbidden());
+    }
 }

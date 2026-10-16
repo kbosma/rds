@@ -135,7 +135,7 @@ import { ChangePasswordDialogComponent } from '../profile/change-password-dialog
     .app-title {
       font-size: 36px;
       font-weight: 700;
-      color: #1976d2;
+      color: var(--theme-primary);
       margin: 0;
       letter-spacing: 2px;
     }

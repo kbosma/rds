@@ -80,7 +80,7 @@ interface Document {
       gap: 8px;
     }
     .doc-name mat-icon {
-      color: #1976d2;
+      color: var(--theme-primary);
       font-size: 20px;
       width: 20px;
       height: 20px;

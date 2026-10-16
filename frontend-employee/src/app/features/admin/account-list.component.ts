@@ -181,7 +181,7 @@ interface FilterChip {
       font-size: 13px;
     }
     .active-chip {
-      background-color: #1976d2 !important;
+      background-color: var(--theme-primary) !important;
       color: white !important;
     }
     .table-container {

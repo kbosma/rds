@@ -287,4 +287,30 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
         mockMvc.perform(get("/api/documents"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // MANAGER: POST /api/documents op een boeking van een andere organisatie — 403
+    @Test
+    void manager_createDocument_forBookingOfOtherOrganization_returns403() throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
+                "\"displayname\":\"Nep-factuur\",\"document\":null}";
+
+        mockMvc.perform(post("/api/documents")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    // MANAGER: PUT eigen document verplaatsen naar een boeking van een andere organisatie — 403
+    @Test
+    void manager_updateDocument_moveToBookingOfOtherOrganization_returns403() throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
+                "\"displayname\":\"Verplaatst\",\"document\":null}";
+
+        mockMvc.perform(put("/api/documents/" + DOCUMENT_TP_4)
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
 }

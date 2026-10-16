@@ -109,5 +109,8 @@ De controle zit in de services (dus niet te omzeilen via de API) en geldt voor i
 
 - Nieuwe endpoint ⇒ `@PreAuthorize` met een bestaande of nieuwe authority (nieuwe via Flyway) en een test voor ADMIN/EMPLOYEE/MANAGER/ongeauthenticeerd.
 - Nieuwe tenant-entiteit ⇒ `tenant_organization` NOT NULL, service-controle, test dat een andere organisatie niets ziet.
+- **Verwijzingen controleren, niet alleen het object zelf.** Een `create`/`update` die een ander object via id koppelt (boeking, booker, accommodatie, …) moet ook de organisatie van díe verwijzing controleren (`verifyOrganization(...)`), anders kan een gebruiker een object van een andere tenant aan zijn eigen gegevens hangen. Zo is dat bij `BookingServiceImpl.resolveBooker`, `DocumentServiceImpl` en `TravelerServiceImpl` (`resolveBooking`).
+- **Rollen toewijzen:** rollen zijn globaal en `ADMIN` omzeilt alle tenantcontroles. Een niet-ADMIN (bv. MANAGER) mag via `/api/account-roles` alleen `EMPLOYEE` en `MANAGER` toewijzen of intrekken (`AccountRoleService.ROLES_MANAGEABLE_BY_NON_ADMIN`); anders kan een manager zichzelf ADMIN maken. Een nieuwe of aangepaste rol is dus standaard alleen door ADMIN te beheren.
+- **Nooit entities in een response.** `/api/account-roles` gaf eerder de `AccountRole`-entity terug en lekte daarmee `passwordHash`, TOTP-geheim, herstelcodes en `mollieKey`; nu `AccountRoleResponseDto` (alleen ids en rolnaam). Hetzelfde is gedaan voor `/api/role-authorities` (`RoleAuthorityResponseDto`). `NoEntityInApiTest` laat de build falen zodra een controller-methode (parameter of return, ook geneste typen) of een DTO een JPA-entity gebruikt.
 - Extern bereikbare endpoints ⇒ minimale eigen DTO's.
 - Geen wachtwoorden, sleutels of tokens loggen of in documentatie zetten.

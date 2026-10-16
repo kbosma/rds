@@ -138,8 +138,7 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
@@ -180,25 +179,16 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
       flex: 1.5;
     }
     .clear-btn {
-      margin-top: 4px;
-      height: 56px;
+      margin-top: 2px;
     }
     .table-container {
       background: white;
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--ui-line);
     }
     .full-width {
       width: 100%;
-    }
-    .booking-table th {
-      font-weight: 600;
-      color: #555;
-      font-size: 13px;
-    }
-    .alt-row {
-      background-color: #fafafa;
     }
     .actions-header { text-align: right; }
     .actions-cell { width: 1%; }

@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 class TravelerControllerTest extends AbstractBookingControllerTest {
 
@@ -182,5 +183,33 @@ class TravelerControllerTest extends AbstractBookingControllerTest {
     void unauthenticated_findAll_returns401() throws Exception {
         mockMvc.perform(get("/api/travelers"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // MANAGER: POST /api/travelers op een boeking van een andere organisatie — 403
+    @Test
+    void manager_createTraveler_forBookingOfOtherOrganization_returns403() throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
+                "\"firstname\":\"Indringer\",\"prefix\":null,\"lastname\":\"Test\"," +
+                "\"gender\":\"" + GENDER_MAN + "\"}";
+
+        mockMvc.perform(post("/api/travelers")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    // MANAGER: PUT eigen reiziger verplaatsen naar een boeking van een andere organisatie — 403
+    @Test
+    void manager_updateTraveler_moveToBookingOfOtherOrganization_returns403() throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
+                "\"firstname\":\"Verplaatst\",\"prefix\":null,\"lastname\":\"Test\"," +
+                "\"gender\":\"" + GENDER_MAN + "\"}";
+
+        mockMvc.perform(put("/api/travelers/" + TRAVELER_TP_5)
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
     }
 }

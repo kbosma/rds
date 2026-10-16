@@ -81,6 +81,14 @@ public class TravelerServiceImpl implements TravelerService {
         return TenantContext.hasRole("ADMIN");
     }
 
+    /** De boeking waaraan dit object gekoppeld wordt moet van de eigen organisatie zijn (ADMIN: alle). */
+    private Booking resolveBooking(UUID bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+        verifyOrganization(booking.getTenantOrganization());
+        return booking;
+    }
+
     private void verifyOrganization(UUID organizationId) {
         if (!isAdmin() && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
@@ -88,8 +96,7 @@ public class TravelerServiceImpl implements TravelerService {
     }
 
     private Traveler toEntity(TravelerDto dto) {
-        Booking booking = bookingRepository.findById(dto.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
+        Booking booking = resolveBooking(dto.getBookingId());
         Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Traveler(
                 booking,
@@ -103,8 +110,7 @@ public class TravelerServiceImpl implements TravelerService {
     }
 
     private Traveler toEntity(UUID id, TravelerDto dto) {
-        Booking booking = bookingRepository.findById(dto.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + dto.getBookingId()));
+        Booking booking = resolveBooking(dto.getBookingId());
         Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
         return new Traveler(
                 id,
