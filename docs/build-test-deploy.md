@@ -64,10 +64,17 @@ npx ng test --watch=false --browsers=FirefoxHeadless \
     --include='src/app/translate-test.setup.spec.ts'          # een deel (setup altijd meenemen!)
 ```
 
-- Stand 15-10-2026: **501 specs, 0 failures** in `frontend-employee`; `frontend-booker` heeft 1 spec.
+- Stand 18-10-2026: **501 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
 - `src/app/translate-test.setup.spec.ts` laadt de echte nl-vertalingen in elke spec; wie specs selecteert met `--include` moet dat bestand mee-includen, anders zie je vertaalsleutels in plaats van tekst.
 - TipTap in een test: de editor draait echt in Firefox; plak/drop-gedrag test je door de ProseMirror-handlers rechtstreeks aan te roepen (synthetische `ClipboardEvent`s dragen geen bestanden).
 - Dev-proxy en `base href`: zie [frontend.md](frontend.md).
+- **Firefox start niet ("Cannot start FirefoxHeadless")** terwijl je gewone Firefox open staat: een tweede Firefox met een eigen profiel geeft dan zijn opdracht door aan de draaiende instantie of wacht op die. Zet `MOZ_NO_REMOTE=1` zodat Karma een losse instantie start (de Firefox die je zelf open hebt blijft ongemoeid):
+
+  ```bash
+  MOZ_NO_REMOTE=1 npx ng test --watch=false --browsers=FirefoxHeadless
+  ```
+
+  Helpt dat niet en blijft elke start hangen op `org.mozilla.updater` (te zien met `ps aux | grep -i updater`), dan staat er een Firefox-update klaar die nog niet is toegepast: sluit Firefox helemaal af (⌘Q), start hem opnieuw zodat de update installeert, en draai de specs nogmaals. Op macOS bestaat het commando `timeout` niet, dus een testrun met een tijdslimiet moet je anders afbreken (bv. `pkill -f "ng test"`).
 
 ## Deployen
 
