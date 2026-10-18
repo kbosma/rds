@@ -97,6 +97,12 @@ mat-card-title, .mat-mdc-card-title {
   box-shadow: 0 1px 2px rgba(16, 40, 48, 0.04);
 }
 
+/* Kaart met een header: Material geeft de inhoud geen ruimte erboven, waardoor de eerste regel bijna tegen de titel
+   aan stond (4px). 12px extra geeft ~16px tussen titel en inhoud. */
+.mat-mdc-card-header + .mat-mdc-card-content {
+  padding-top: 12px;
+}
+
 /* Tabellen: kopregel met tint, om-en-om gekleurde rijen, duidelijke hover. */
 .mat-mdc-table {
   border-radius: var(--ui-radius);

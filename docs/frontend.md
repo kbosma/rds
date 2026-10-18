@@ -71,6 +71,7 @@ Het gedeelde ontwerp staat in `src/styles.scss` van **beide** apps (de bestanden
 - **Compact:** velden 40px (tekst 14px, regelhoogte 20px, padding 10px, zodat tekst nooit wordt afgeknipt), tabelrijen en -kop 40px, knoppen 36px. Wijzig de hoogte via `--mat-form-field-container-height` en `--mat-form-field-container-vertical-padding` (samen: hoogte = regelhoogte + 2 × padding).
 - **Tabellen:** getinte, hoofdletter-kop; om-en-om gekleurde rijen en hover komen globaal uit `.mat-mdc-row`; zet dus geen eigen `alt-row`-stijl meer in componenten.
 - **Zijbalk:** donker (`--ui-primary-deep`), actief item in `--theme-primary`.
+- **Kaarten:** de inhoud van een kaart met header krijgt `padding-top: 12px`, anders staat de eerste regel (bv. "Naam") bijna tegen de titel.
 - **Dialoog:** Material geeft de inhoud direct na de titel geen ruimte erboven, waardoor het zwevende label van het eerste veld werd afgesneden; `styles.scss` zet daar `padding-top: 8px`.
 - De uitklappijl van `mat-select` is 24px en wordt in `styles.scss` op 20px gezet, anders is een select 4px hoger dan een tekstveld.
 
