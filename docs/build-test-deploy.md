@@ -33,7 +33,7 @@ mvn -q -Dtest='NaamTest' -DfailIfNoTests=false test   # één klasse
 ```
 
 - Unit-tests (Mockito) hebben geen database nodig. De **integratietests** (`*ControllerTest`, `ApplicationTests`) starten de hele Spring-context met `@SpringBootTest` + MockMvc en draaien `@Transactional` (rollback per test) tegen de seeddata van V2, op een **eigen tijdelijke database** (zie hieronder). Basisklassen: `AbstractControllerTest` (organisaties, login-helpers) en `AbstractBookingControllerTest` (vaste UUID's voor boekingen, bookers, …).
-- Stand 16-10-2026: **641 tests, 0 failures** (waarvan ±50 testklassen); jsoup-, POI- en xdocreport-gedrag wordt door `HtmlToDocxConverterTest` end-to-end gedekt.
+- Stand 16-10-2026: **644 tests, 0 failures** (waarvan ±50 testklassen); jsoup-, POI- en xdocreport-gedrag wordt door `HtmlToDocxConverterTest` end-to-end gedekt.
 - `DeleteVerificationControllerTest` controleert voor elke resource dat een delete het record **echt** weghaalt (GET 200 → DELETE 204 → GET 404; daarna `flush()`/`clear()` omdat een MockMvc-IT in één transactie draait en de persistence-context anders een database-cascade verbergt).
 - Nieuwe migratie ⇒ nieuw bestand `V<n>__omschrijving.sql`; de volledige suite valideert het schema (`ddl-auto: validate`).
 
@@ -64,7 +64,7 @@ npx ng test --watch=false --browsers=FirefoxHeadless \
     --include='src/app/translate-test.setup.spec.ts'          # een deel (setup altijd meenemen!)
 ```
 
-- Stand 18-10-2026: **517 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
+- Stand 18-10-2026: **518 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
 - `src/app/translate-test.setup.spec.ts` laadt de echte nl-vertalingen in elke spec; wie specs selecteert met `--include` moet dat bestand mee-includen, anders zie je vertaalsleutels in plaats van tekst.
 - TipTap in een test: de editor draait echt in Firefox; plak/drop-gedrag test je door de ProseMirror-handlers rechtstreeks aan te roepen (synthetische `ClipboardEvent`s dragen geen bestanden).
 - Dev-proxy en `base href`: zie [frontend.md](frontend.md).

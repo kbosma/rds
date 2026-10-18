@@ -3,6 +3,7 @@ package nl.puurkroatie.rds.auth.config;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import nl.puurkroatie.rds.common.DeletionBlockedException;
+import nl.puurkroatie.rds.common.PaymentLockedException;
 import nl.puurkroatie.rds.email.service.EmailImageInUseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -152,6 +153,16 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(PaymentLockedException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentLocked(PaymentLockedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getMessage(),
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

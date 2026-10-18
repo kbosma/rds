@@ -466,7 +466,8 @@
     "correctionReasonHint": "Verplicht, minstens 5 tekens",
     "correctionSubmit": "Registreren",
     "correctionSaved": "Correctie geregistreerd",
-    "correctionError": "Correctie registreren is mislukt"
+    "correctionError": "Correctie registreren is mislukt",
+    "lockedError": "Deze betaling bestaat al bij Mollie en kan niet meer worden gewijzigd."
   },
   "organizations": {
     "title": "Organisaties",

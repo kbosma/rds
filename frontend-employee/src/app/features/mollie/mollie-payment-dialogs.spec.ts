@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -135,6 +136,18 @@ describe('Betalingsdialogen', () => {
 
       expect(service.update).toHaveBeenCalledOnceWith('p-1', { ...payment, description: 'Restant', amount: 99.5 });
       expect(dialogRef.close).toHaveBeenCalledWith(true);
+    });
+
+    it('toont een eigen melding als de betaling inmiddels bij Mollie bestaat (409)', async () => {
+      const { component, service, dialogRef, snack } = await setup();
+      service.update.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+      component.form.setValue({ description: 'Restant', amount: 99.5 });
+
+      component.save();
+
+      expect(dialogRef.close).not.toHaveBeenCalled();
+      expect(snack.calls.mostRecent().args[0]).toBe('Deze betaling bestaat al bij Mollie en kan niet meer worden gewijzigd.');
+      expect(component.saving()).toBeFalse();
     });
 
     it('weigert een leeg of niet-positief bedrag', async () => {

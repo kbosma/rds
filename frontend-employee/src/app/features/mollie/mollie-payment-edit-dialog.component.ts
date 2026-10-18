@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -75,9 +76,11 @@ export class MolliePaymentEditDialogComponent {
           this.saving.set(false);
           this.dialogRef.close(true);
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.saving.set(false);
-          this.snackBar.open(this.translate.instant('common.saveError'), this.translate.instant('common.close'), { duration: 4000 });
+          // 409: de betaling bestaat inmiddels bij Mollie (bv. de klant betaalde net) en kan niet meer worden gewijzigd.
+          const key = err.status === 409 ? 'payments.lockedError' : 'common.saveError';
+          this.snackBar.open(this.translate.instant(key), this.translate.instant('common.close'), { duration: 5000 });
         },
       });
   }

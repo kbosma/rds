@@ -466,7 +466,8 @@
     "correctionReasonHint": "Required, at least 5 characters",
     "correctionSubmit": "Register",
     "correctionSaved": "Correction registered",
-    "correctionError": "Registering the correction failed"
+    "correctionError": "Registering the correction failed",
+    "lockedError": "This payment already exists at Mollie and can no longer be changed."
   },
   "organizations": {
     "title": "Organizations",
