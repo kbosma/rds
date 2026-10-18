@@ -21,14 +21,14 @@ describe('Betalingsdialogen', () => {
       { molliePaymentStatusEntryId: 'e-2', molliePaymentId: 'p-1', status: 'paid', createdAt: '2026-05-02T10:00:00', createdBy: 'u', modifiedAt: null, modifiedBy: null },
     ];
 
-    async function setup(result$: ReturnType<MolliePaymentService['getStatusEntries']>) {
+    async function setup(result$: ReturnType<MolliePaymentService['getStatusEntries']>, canCorrect?: boolean) {
       const service = jasmine.createSpyObj('MolliePaymentService', ['getStatusEntries']);
       service.getStatusEntries.and.returnValue(result$);
       await TestBed.configureTestingModule({
         imports: [MolliePaymentViewDialogComponent, NoopAnimationsModule],
         providers: [
           { provide: MolliePaymentService, useValue: service },
-          { provide: MAT_DIALOG_DATA, useValue: { payment, bookingNumber: 'BK-1' } },
+          { provide: MAT_DIALOG_DATA, useValue: { payment, bookingNumber: 'BK-1', canCorrect } },
         ],
       }).compileComponents();
       const fixture = TestBed.createComponent(MolliePaymentViewDialogComponent);
@@ -47,11 +47,55 @@ describe('Betalingsdialogen', () => {
       expect(fixture.nativeElement.querySelectorAll('.history tbody tr').length).toBe(2);
     });
 
+    it('toont bij "Door" een leesbare naam, "Systeem" voor Mollie en "Onbekend" zonder bekende naam', async () => {
+      const named: MolliePaymentStatusEntry[] = [
+        { ...entries[0], molliePaymentStatusEntryId: 'e-a', createdBy: 'acc-1', createdByName: 'Maria Jansen' },
+        { ...entries[0], molliePaymentStatusEntryId: 'e-b', createdBy: null, createdByName: null },
+        { ...entries[0], molliePaymentStatusEntryId: 'e-c', createdBy: 'verwijderd-account', createdByName: null },
+      ];
+      const { fixture } = await setup(of(named));
+      fixture.detectChanges();
+
+      const door = Array.from(fixture.nativeElement.querySelectorAll('.history tbody tr'))
+        .map((tr) => ((tr as HTMLElement).querySelectorAll('td')[2] as HTMLElement).textContent?.trim());
+      expect(door).toEqual(['Maria Jansen', 'Systeem', 'Onbekend']);
+      expect(fixture.nativeElement.textContent).not.toContain('acc-1'); // nooit het id tonen
+    });
+
     it('een lege historie of een fout laat het dialoog gewoon openen', async () => {
       const { component } = await setup(throwError(() => new Error('nee')));
 
       expect(component.loading()).toBe(false);
       expect(component.entries()).toEqual([]);
+    });
+
+    it('markeert een correctie en toont de reden, bij gewone regels blijft de reden leeg', async () => {
+      const withCorrection: MolliePaymentStatusEntry[] = [
+        entries[0],
+        { ...entries[1], molliePaymentStatusEntryId: 'e-c', status: 'paid', correction: true, reason: 'Betaald per bank', createdByName: 'Pieter de Groot', createdBy: 'acc-2' },
+      ];
+      const { fixture } = await setup(of(withCorrection));
+      fixture.detectChanges();
+
+      const rows = Array.from(fixture.nativeElement.querySelectorAll('.history tbody tr')) as HTMLElement[];
+      expect(rows[0].querySelector('.correction-tag')).toBeNull();
+      expect(rows[1].querySelector('.correction-tag')?.textContent?.trim()).toBe('Correctie');
+      expect(rows[1].querySelector('.reason')?.textContent?.trim()).toBe('Betaald per bank');
+      expect(rows[0].querySelector('.reason')?.textContent?.trim()).toBe('');
+    });
+
+    it('verbergt de knop "Correctie registreren" zonder canCorrect', async () => {
+      const { fixture } = await setup(of(entries), false);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.correct-btn')).toBeNull();
+    });
+
+    it('toont de knop "Correctie registreren" met canCorrect', async () => {
+      const { fixture } = await setup(of(entries), true);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.correct-btn')).not.toBeNull();
     });
 
     it('bevat geen enkele knop om iets te wijzigen', async () => {

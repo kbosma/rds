@@ -42,6 +42,7 @@ Elke controller-methode heeft `@PreAuthorize("hasAuthority('…')")`; de volledi
 | ROLE | CRUD | R | – |
 | AUTHORITY | CRUD | R | – |
 | ROLEAUTHORITY | C R D | R | – |
+| PAYMENT_CORRECT (status van een betaling corrigeren, V10) | ✓ | ✓ | – |
 | BOOKING (boekingen, bookers, reizigers, adressen, regels, activiteiten) | – | CRUD | CRUD |
 | ACCOMMODATION, SUPPLIER, ACTIVITY | – | CRUD | R |
 | DOCUMENT | – | CRUD | CRUD |

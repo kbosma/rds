@@ -3,7 +3,7 @@
 Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -854,17 +854,19 @@ Mollie-betaling. Multi-tenant.
 
 ### mollie_payment_status_entry
 
-Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment).
+Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment). **Alleen-toevoegen:** een regel wordt nooit gewijzigd of vervangen (een trigger weigert elke `UPDATE`); een handmatige correctie door een medewerker is altijd een nieuwe regel met `correction = true` en een verplichte `reason` (V10).
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | mollie_payment_status_entry_id | UUID | PK, auto-generated | |
 | mollie_payment_id | UUID | FK → mollie_payment, NOT NULL | Betaling |
-| status | VARCHAR | NOT NULL, enum MolliePaymentStatus | Status |
+| status | VARCHAR | NOT NULL, CHECK `payment_status_entry_status_check`, enum MolliePaymentStatus | Status |
+| correction | BOOLEAN | NOT NULL, default false, immutable | true = handmatige correctie door een medewerker; false = Mollie, het systeem of de boeker |
+| reason | TEXT | immutable; verplicht (≥ 5 tekens) als `correction` | Reden van de correctie (CHECK `payment_status_entry_correction_reason_check`) |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
-| created_by | UUID | immutable | |
-| modified_at | TIMESTAMP | | |
-| modified_by | UUID | | |
+| created_by | UUID | immutable | Account van de medewerker (correctie), boeker (portal) of leeg (Mollie/systeem) |
+| modified_at | TIMESTAMP | | ongebruikt (regels worden niet gewijzigd) |
+| modified_by | UUID | | ongebruikt |
 
 **Relaties:** ManyToOne → MolliePayment
 

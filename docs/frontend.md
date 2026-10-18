@@ -75,6 +75,10 @@ Het gedeelde ontwerp staat in `src/styles.scss` van **beide** apps (de bestanden
 - **Dialoog:** Material geeft de inhoud direct na de titel geen ruimte erboven, waardoor het zwevende label van het eerste veld werd afgesneden; `styles.scss` zet daar `padding-top: 8px`.
 - De uitklappijl van `mat-select` is 24px en wordt in `styles.scss` op 20px gezet, anders is een select 4px hoger dan een tekstveld.
 
+### Betalingen in een boeking
+
+De kaart *Betalingen* in het boekingsdetail toont per betaling alleen een oog-icoon (`PAYMENT_READ`, alleen lezen) dat `MolliePaymentViewDialogComponent` opent: de gegevens en de volledige statushistorie, zonder knoppen om iets te wijzigen. Statussen komen van Mollie en worden nooit gewijzigd of verwijderd (alleen-toevoegen). Een medewerker met `PAYMENT_CORRECT` kan in dat dialoog een **correctie** registreren (`MolliePaymentCorrectionDialogComponent`: nieuwe status uit `open/paid/failed/canceled` en een verplichte reden); die verschijnt als nieuwe regel met de markering *Correctie*, naam en reden. Bij "Door" staat de leesbare naam van wie een regel aanmaakte (`createdByName` uit de backend; medewerker of boeker), "Systeem" voor Mollie en "Onbekend" als het id niet (meer) bij een naam past; nooit het ruwe id. De statusbadge (vertaald en gekleurd) komt uit `shared/components/payment-status-badge.component.ts` en wordt in het uitklapscherm en het dialoog gebruikt.
+
 ### Lijsten met actie-iconen (inzien / bewerken / verwijderen)
 
 Alle lijsten die direct vanuit het linkermenu bereikbaar zijn gebruiken hetzelfde grid: een Material-tabel met één vaste actiekolom, gevuld door `shared/components/row-actions.component.ts` (`<app-row-actions>`). **Klikken op de hele regel doet niets**; alleen de iconen werken.

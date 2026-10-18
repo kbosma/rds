@@ -63,6 +63,12 @@ Toelichting:
 `MolliePaymentMethod`: `IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY`.
 Beide: naam in de database, lowercase in JSON, hoofdletterongevoelig parsen.
 
+## Statushistorie: alleen-toevoegen en correcties
+
+De statussen van een betaling komen van Mollie (webhook). **Een regel wordt nooit gewijzigd, vervangen of (via de API) verwijderd**; er bestaan geen `PUT`/`DELETE` op statusregels en een databasetrigger weigert elke `UPDATE`. Wel kan een medewerker met `PAYMENT_CORRECT` (ADMIN en MANAGER) een **correctie** registreren, bv. als de klant per bank betaalde buiten Mollie om. Dat is altijd een **nieuwe regel** met `correction = true`, wie (`createdBy`), wanneer (`createdAt`) en een verplichte reden (minstens 5 tekens); de Mollie-regels blijven staan. De huidige status is de laatste regel.
+
+Toegestane correctiestatussen (`MolliePaymentStatusEntryServiceImpl.CORRECTION_STATUSES`): `open`, `paid`, `failed`, `canceled`. `pending`, `authorized` en `expired` bepaalt alleen Mollie. Een correctie naar de huidige status wordt geweigerd. In de UI staat de knop **Correctie registreren** in het betalingsdialoog (oog-icoon bij de betaling); het dialoog toont bron (*Correctie*), naam en reden.
+
 ## Endpoints
 
 | Methode | Pad | Authority |
@@ -71,9 +77,9 @@ Beide: naam in de database, lowercase in JSON, hoofdletterongevoelig parsen.
 | GET/PUT/DELETE | `/api/mollie/payments/{id}` | `PAYMENT_READ` / `PAYMENT_UPDATE` / `PAYMENT_DELETE` |
 | POST | `/api/mollie/payments/create-at-mollie` | `PAYMENT_CREATE` |
 | POST | `/api/mollie/payments/webhook` | publiek (gevalideerd id) |
-| GET/POST | `/api/mollie/payment-status-entries` | `PAYMENT_READ` / `PAYMENT_CREATE` |
-| PUT/DELETE | `/api/mollie/payment-status-entries/{id}` | `PAYMENT_UPDATE` / `PAYMENT_DELETE` |
-| GET | `/api/mollie/payment-status-entries/by-payment/{molliePaymentId}` | `PAYMENT_READ` |
+| GET | `/api/mollie/payment-status-entries` | `PAYMENT_READ` |
+| GET | `/api/mollie/payment-status-entries/by-payment/{molliePaymentId}` | `PAYMENT_READ` (antwoord bevat `createdByName`, `correction`, `reason`) |
+| POST | `/api/mollie/payment-status-entries/by-payment/{molliePaymentId}` | `PAYMENT_CORRECT` (ADMIN, MANAGER): handmatige correctie `{status, reason}` |
 | GET/POST | `/api/booking-mollie-payments` | `PAYMENT_READ` / `PAYMENT_CREATE` |
 | GET | `/api/booking-mollie-payments/{bookingId}` (en `/{bookingId}/{molliePaymentId}`) | `PAYMENT_READ` |
 | DELETE | `/api/booking-mollie-payments/{bookingId}/{molliePaymentId}` | `PAYMENT_DELETE` |

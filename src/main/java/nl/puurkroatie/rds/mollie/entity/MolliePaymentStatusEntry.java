@@ -40,6 +40,14 @@ public class MolliePaymentStatusEntry {
     @Column(name = "status", nullable = false)
     private MolliePaymentStatus status;
 
+    /** True bij een handmatige correctie door een medewerker; false bij een regel van Mollie of het systeem. */
+    @Column(name = "correction", nullable = false, updatable = false)
+    private boolean correction;
+
+    /** Verplicht bij een correctie: waarom de status met de hand is gezet. */
+    @Column(name = "reason", updatable = false)
+    private String reason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -69,6 +77,14 @@ public class MolliePaymentStatusEntry {
         this.createdBy = createdBy;
     }
 
+    /** Een handmatige correctie door een medewerker: altijd een NIEUWE regel, nooit een wijziging van een bestaande. */
+    public static MolliePaymentStatusEntry correction(MolliePayment molliePayment, MolliePaymentStatus status, UUID createdBy, String reason) {
+        MolliePaymentStatusEntry entry = new MolliePaymentStatusEntry(molliePayment, status, createdBy);
+        entry.correction = true;
+        entry.reason = reason;
+        return entry;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -93,6 +109,14 @@ public class MolliePaymentStatusEntry {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isCorrection() {
+        return correction;
+    }
+
+    public String getReason() {
+        return reason;
     }
 
     public UUID getCreatedBy() {

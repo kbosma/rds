@@ -10,7 +10,7 @@ import { BookingLineService } from './booking-line.service';
 import { BookerService } from '../bookers/booker.service';
 import { TravelerService } from '../travelers/traveler.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
-import { Booking, Booker, Traveler, BookingLine } from '../../shared/models';
+import { Booking, Booker, Traveler, BookingLine, MolliePayment } from '../../shared/models';
 
 describe('BookingDetailComponent', () => {
   let component: BookingDetailComponent;
@@ -190,6 +190,22 @@ describe('BookingDetailComponent', () => {
     expect(config.data.template).toBeUndefined(); // de gebruiker kiest de template in de dialoog
   }));
 
+  it('should open the read-only payment dialog with the payment and the booking number', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(false) } as never);
+    const payment = { molliePaymentId: 'p-1', description: 'Voorschot' } as MolliePayment;
+
+    component.viewPayment(payment);
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    const config = openSpy.calls.mostRecent().args[1] as { data: { payment: MolliePayment; bookingNumber: string; canCorrect: boolean } };
+    expect(config.data.payment).toBe(payment);
+    expect(config.data.bookingNumber).toBe('BK-2026-001');
+    expect(typeof config.data.canCorrect).toBe('boolean'); // alleen met PAYMENT_CORRECT (en niet alleen-lezen)
+  }));
+
   it('should not open the e-mail dialog for a concept booking that is not saved yet', fakeAsync(() => {
     routeId = 'new';
     queryBookerId = 'bk-1';
@@ -231,7 +247,6 @@ describe('BookingDetailComponent', () => {
       expect(component.can('BOOKING_DELETE')).toBe(false);
       expect(component.can('DOCUMENT_CREATE')).toBe(false);
       expect(component.can('EMAIL_SEND')).toBe(false);
-      expect(component.canManageStatusEntries()).toBe(false);
     }));
 
     it('verbergt in de DOM alle wijzig- en toevoeg-knoppen', fakeAsync(() => {

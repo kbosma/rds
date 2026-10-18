@@ -113,7 +113,7 @@ describe('MolliePaymentsOverviewComponent', () => {
 
   it('inzien opent het betalingsdialoog met boekingsnummer', fakeAsync(() => {
     load();
-    const open = spyOn(dialog(), 'open');
+    const open = spyOn(dialog(), 'open').and.returnValue({ afterClosed: () => of(false) } as never);
 
     component.viewPayment(payments[0]);
 

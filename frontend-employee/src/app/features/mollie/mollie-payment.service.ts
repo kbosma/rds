@@ -38,14 +38,16 @@ export class MolliePaymentService {
     return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries/by-payment/${molliePaymentId}`);
   }
 
-  getAllStatusEntries() {
-    return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries`);
+  /**
+   * Registreert een handmatige correctie van de status (nieuwe regel in de historie, met reden). Een bestaande
+   * regel wijzigen of verwijderen kan niet: de statushistorie is alleen-toevoegen.
+   */
+  createCorrection(molliePaymentId: string, status: string, reason: string) {
+    return this.http.post<MolliePaymentStatusEntry>(
+      `${environment.apiUrl}/mollie/payment-status-entries/by-payment/${molliePaymentId}`, { status, reason });
   }
 
-  createStatusEntry(molliePaymentId: string, status: string) {
-    return this.http.post<MolliePaymentStatusEntry>(`${environment.apiUrl}/mollie/payment-status-entries`, {
-      molliePaymentId,
-      status,
-    });
+  getAllStatusEntries() {
+    return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries`);
   }
 }

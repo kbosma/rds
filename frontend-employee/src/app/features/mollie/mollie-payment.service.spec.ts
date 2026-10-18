@@ -97,4 +97,13 @@ describe('MolliePaymentService', () => {
     expect(req.request.body).toEqual(request);
     req.flush(mock);
   });
+
+  it('createCorrection voegt een nieuwe regel toe via POST met status en reden (nooit PUT of DELETE)', () => {
+    service.createCorrection('mp-1', 'paid', 'Betaald per bank').subscribe();
+
+    const req = httpTesting.expectOne((r) => r.url.endsWith('/mollie/payment-status-entries/by-payment/mp-1'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ status: 'paid', reason: 'Betaald per bank' });
+    req.flush({});
+  });
 });

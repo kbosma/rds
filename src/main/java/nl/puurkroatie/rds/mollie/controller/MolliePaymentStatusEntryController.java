@@ -2,15 +2,14 @@ package nl.puurkroatie.rds.mollie.controller;
 
 import jakarta.validation.Valid;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
+import nl.puurkroatie.rds.mollie.dto.PaymentCorrectionRequestDto;
 import nl.puurkroatie.rds.mollie.service.MolliePaymentStatusEntryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,24 +39,16 @@ public class MolliePaymentStatusEntryController {
         return statusEntryService.findByMolliePaymentId(molliePaymentId);
     }
 
-    @PostMapping
-    @PreAuthorize("hasAuthority('PAYMENT_CREATE')")
-    public ResponseEntity<MolliePaymentStatusEntryDto> create(@RequestBody @Valid MolliePaymentStatusEntryDto dto) {
-        MolliePaymentStatusEntryDto created = statusEntryService.create(dto);
+    /**
+     * Registreert een handmatige correctie van de status van een betaling (een nieuwe regel in de historie, met de
+     * reden). Een bestaande regel wijzigen of verwijderen kan niet: de historie is alleen-toevoegen.
+     */
+    @PostMapping("/by-payment/{molliePaymentId}")
+    @PreAuthorize("hasAuthority('PAYMENT_CORRECT')")
+    public ResponseEntity<MolliePaymentStatusEntryDto> createCorrection(@PathVariable UUID molliePaymentId,
+                                                                        @RequestBody @Valid PaymentCorrectionRequestDto request) {
+        MolliePaymentStatusEntryDto created = statusEntryService.createCorrection(
+                molliePaymentId, request.getStatus(), request.getReason());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('PAYMENT_UPDATE')")
-    public ResponseEntity<MolliePaymentStatusEntryDto> update(@PathVariable UUID id, @RequestBody @Valid MolliePaymentStatusEntryDto dto) {
-        MolliePaymentStatusEntryDto updated = statusEntryService.update(id, dto);
-        return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('PAYMENT_DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        statusEntryService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }

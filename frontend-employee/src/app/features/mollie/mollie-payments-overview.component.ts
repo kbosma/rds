@@ -415,8 +415,15 @@ export class MolliePaymentsOverviewComponent implements OnInit {
 
   viewPayment(payment: MolliePayment) {
     this.dialog.open(MolliePaymentViewDialogComponent, {
-      data: { payment, bookingNumber: this.bookingNumberMap().get(payment.molliePaymentId) },
-      width: '560px',
+      data: {
+        payment,
+        bookingNumber: this.bookingNumberMap().get(payment.molliePaymentId),
+        canCorrect: this.authService.hasAuthority('PAYMENT_CORRECT'),
+      },
+      width: '640px',
+      maxWidth: '95vw',
+    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((changed) => {
+      if (changed) this.loadPaymentStatuses(this.payments()); // de status kan door een correctie veranderd zijn
     });
   }
 
