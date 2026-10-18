@@ -6,7 +6,7 @@ import nl.puurkroatie.rds.common.EnumValues;
 
 public enum BookingStatus {
 
-    AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, AFGEROND;
+    AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, OPREIS, WEERTHUIS, AFGEROND;
 
     @JsonValue
     public String toValue() {

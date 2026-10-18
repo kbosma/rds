@@ -906,6 +906,8 @@ export class BookingDetailComponent implements OnInit {
     boeking: 'bookings.status_boeking',
     voorschot: 'bookings.status_voorschot',
     betaald: 'bookings.status_betaald',
+    opreis: 'bookings.status_opreis',
+    weerthuis: 'bookings.status_weerthuis',
     afgerond: 'bookings.status_afgerond',
   };
   booker = signal<Booker | null>(null);

@@ -310,4 +310,36 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                         .content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_PK_1 + "\"}"))
                 .andExpect(status().isForbidden());
     }
+
+    // MANAGER: POST /api/bookings met de status 'opreis' — 201 en de waarde komt lowercase terug
+    @Test
+    void manager_createBooking_withStatusOpreis_returns201() throws Exception {
+        mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"opreis\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.bookingStatus").value("opreis"));
+    }
+
+    // MANAGER: POST /api/bookings met de status 'weerthuis' — 201 en de waarde komt lowercase terug
+    @Test
+    void manager_createBooking_withStatusWeerthuis_returns201() throws Exception {
+        mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"weerthuis\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.bookingStatus").value("weerthuis"));
+    }
+
+    // MANAGER: POST /api/bookings met een onbekende status — 400
+    @Test
+    void manager_createBooking_withUnknownStatus_returns400() throws Exception {
+        mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"bestaatniet\"}"))
+                .andExpect(status().isBadRequest());
+    }
 }

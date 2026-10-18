@@ -170,6 +170,8 @@
     "status_boeking": "Booking",
     "status_voorschot": "Advance",
     "status_betaald": "Paid",
+    "status_opreis": "On trip",
+    "status_weerthuis": "Back home",
     "status_afgerond": "Completed",
     "sendEmail": "Send email",
     "deleteCascadeWarning": "All related travelers, booking lines, activities, documents and payment links are deleted too.",

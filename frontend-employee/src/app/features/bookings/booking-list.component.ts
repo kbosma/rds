@@ -205,6 +205,8 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
     .status-boeking { background: #e3f2fd; color: #1565c0; }
     .status-voorschot { background: #e0f2f1; color: #00695c; }
     .status-betaald { background: #e0f2f1; color: #00695c; }
+    .status-opreis { background: #fff8e1; color: #8d6e00; }
+    .status-weerthuis { background: #e8eaf6; color: #283593; }
     .status-afgerond { background: #f3e5f5; color: #6a1b9a; }
     .no-data {
       text-align: center;
@@ -242,6 +244,8 @@ export class BookingListComponent implements OnInit {
     { value: 'boeking', labelKey: 'bookings.status_boeking' },
     { value: 'voorschot', labelKey: 'bookings.status_voorschot' },
     { value: 'betaald', labelKey: 'bookings.status_betaald' },
+    { value: 'opreis', labelKey: 'bookings.status_opreis' },
+    { value: 'weerthuis', labelKey: 'bookings.status_weerthuis' },
     { value: 'afgerond', labelKey: 'bookings.status_afgerond' },
   ];
 

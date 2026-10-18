@@ -3,7 +3,7 @@
 Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -252,7 +252,7 @@ Hoofdentiteit voor boekingen. Multi-tenant.
 | booking_id | UUID | PK, auto-generated | |
 | booker_id | UUID | FK → booker | Gekoppelde booker |
 | booking_number | VARCHAR | NOT NULL | Boekingnummer |
-| booking_status | VARCHAR | NOT NULL, enum BookingStatus | Status |
+| booking_status | VARCHAR | NOT NULL, CHECK `booking_status_check` (V9), enum BookingStatus | Status |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
@@ -270,7 +270,7 @@ Hoofdentiteit voor boekingen. Multi-tenant.
 - OneToMany ← BookingLine (mappedBy="booking")
 - OneToMany ← BookingActivity (mappedBy="booking")
 
-**Enum BookingStatus:** `AANVRAAG`, `OFFERTE`, `BOEKING`, `VOORSCHOT`, `BETAALD`, `AFGEROND`
+**Enum BookingStatus:** `AANVRAAG`, `OFFERTE`, `BOEKING`, `VOORSCHOT`, `BETAALD`, `OPREIS`, `WEERTHUIS`, `AFGEROND`. De database dwingt dezelfde lijst af met een CHECK-constraint (V9); een status toevoegen of hernoemen vraagt dus een migratie (zie de uitleg bovenin `V9__status_check_constraints.sql`) en `StatusConstraintsTest` faalt als enum en constraint uit elkaar lopen.
 
 **Backend bestanden:**
 - Entity: `booking/entity/Booking.java`
@@ -307,7 +307,7 @@ Boeker/opdrachtgever. Multi-tenant.
 | gender | VARCHAR | enum Gender | Geslacht |
 | birthdate | DATE | | Geboortedatum |
 | initials | VARCHAR | | Initialen |
-| status | VARCHAR | NOT NULL | enum `BookerStatus` (V4) |
+| status | VARCHAR | NOT NULL, CHECK `booker_status_check` (V9) | enum `BookerStatus` (V4) |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
@@ -316,7 +316,7 @@ Boeker/opdrachtgever. Multi-tenant.
 
 **Enum Gender:** `MAN`, `VROUW`, `ANDERS`
 
-**Enum BookerStatus:** `PROSPECT` (potentiële klant, nog geen boeking), `ACTIVE` (reguliere boeker). Een prospect is dus **geen aparte tabel** maar een Booker met status `PROSPECT`; bestaande bookers zijn bij V4 `ACTIVE` geworden. `GET /api/bookers?status=prospect` filtert.
+**Enum BookerStatus:** `PROSPECT` (potentiële klant, nog geen boeking), `ACTIVE` (reguliere boeker), `NIETACTIEF` (niet meer actief; de UI heeft hier nog geen keuzeveld voor, de API wel). Een prospect is dus **geen aparte tabel** maar een Booker met status `PROSPECT`; bestaande bookers zijn bij V4 `ACTIVE` geworden. `GET /api/bookers?status=prospect` filtert.
 
 **Backend bestanden:**
 - Entity: `booking/entity/Booker.java`
@@ -954,7 +954,7 @@ Afbeelding voor templates (e-mail **en** Word-templates; de naam is historisch).
 
 | Enum | Waarden | Gebruikt in |
 |------|---------|-------------|
-| BookingStatus | AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, AFGEROND | booking.booking_status |
+| BookingStatus | AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, OPREIS, WEERTHUIS, AFGEROND | booking.booking_status |
 | Gender | MAN, VROUW, ANDERS | booker.gender, traveler.gender |
 | BookerStatus | PROSPECT, ACTIVE | booker.status |
 | AddressRole | WOON, FACTUUR, ACCOMMODATIE, LEVERANCIER | address.addressrole |

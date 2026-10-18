@@ -170,6 +170,8 @@
     "status_boeking": "Boeking",
     "status_voorschot": "Voorschot",
     "status_betaald": "Betaald",
+    "status_opreis": "Op reis",
+    "status_weerthuis": "Weer thuis",
     "status_afgerond": "Afgerond",
     "sendEmail": "E-mail versturen",
     "deleteCascadeWarning": "Alle bijbehorende reizigers, boekingsregels, activiteiten, documenten en betalingskoppelingen worden ook verwijderd.",

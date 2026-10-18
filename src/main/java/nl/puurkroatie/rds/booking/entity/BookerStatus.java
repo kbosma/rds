@@ -6,7 +6,7 @@ import nl.puurkroatie.rds.common.EnumValues;
 
 public enum BookerStatus {
 
-    PROSPECT, ACTIVE;
+    PROSPECT, ACTIVE, NIETACTIEF;
 
     @JsonValue
     public String toValue() {
