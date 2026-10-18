@@ -271,7 +271,7 @@ export class TemplateDialogComponent {
   }
 
   save() {
-    if (this.readOnly || !this.canSave()) return;
+    if (this.readOnly || !this.canSave() || this.saving()) return;
 
     this.saving.set(true);
     const payload: { name: string; description: string; templateData?: number[]; sourceHtml?: string } = {

@@ -350,7 +350,7 @@ export class SupplierDetailComponent implements OnInit {
   // ----- leverancier zelf -----
 
   onSaveSupplier() {
-    if (this.readOnly() || this.supplierForm.invalid) return;
+    if (this.readOnly() || this.supplierForm.invalid || this.saving()) return;
     this.saving.set(true);
     const { key, name } = this.supplierForm.getRawValue();
     const payload: Partial<Supplier> = { key: key!, name: name! };

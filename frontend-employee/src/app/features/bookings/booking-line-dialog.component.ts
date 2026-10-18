@@ -425,7 +425,7 @@ export class BookingLineDialogComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.saving()) return;
 
     // Check warnings before saving
     if (!this.warningsShown()) {

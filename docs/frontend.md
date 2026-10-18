@@ -59,6 +59,7 @@ Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onde
 - **Meldingen:** `MatSnackBar`; foutmeldingen uit de backend (`error.error.message`) worden getoond waar ze nuttig zijn (template-render, e-mail versturen, template opslaan).
 - **Vertalingen:** elke zichtbare tekst via `translate`-pipe / `translate.instant`; sleutels in `nl.json` én `en.json`. Nieuwe sleutels altijd in beide talen. Editor-teksten staan onder `templateEditor.*`.
 - **Thema:** de organisatie bepaalt `--theme-primary`, `--theme-accent`, `--theme-card-title` (CSS-variabelen, gezet door `ThemeService`); gebruik die variabelen i.p.v. vaste kleuren.
+- **Opslaan beschermen tegen dubbel starten.** Elke opslaan-methode begint met `if (… || this.saving()) return;` (en zet `saving` bij een fout weer op `false`). Alleen de `[disabled]`-knop is niet genoeg: een tik plus klik komt binnen enkele milliseconden twee keer binnen, vóórdat Angular de knop heeft uitgeschakeld, en dat maakte een boekingsregel dubbel aan (twee rijen met 64 ms verschil). Een nieuw formulier krijgt dezelfde guard en een test die `onSubmit()` twee keer aanroept.
 - **Tenant/rol-logica zit in de backend.** De UI verbergt alleen; de server is de enige echte controle.
 - **Datums/bedragen:** datums als ISO-tekst (`jjjj-mm-dd`) tussen UI en API; `DatePipe`/`CurrencyPipe` voor weergave.
 

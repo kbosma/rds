@@ -149,6 +149,7 @@ export class RoleDetailComponent implements OnInit {
   }
 
   save() {
+    if (this.saving()) return;
     this.saving.set(true);
     const value = { description: this.form.value.description ?? undefined };
     const op = this.roleId

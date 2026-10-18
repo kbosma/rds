@@ -189,7 +189,7 @@ export class BookerDialogComponent implements OnInit {
   }
 
   private persist(extra: Partial<Booker>, successKey: string) {
-    if (this.data.readOnly || this.form.invalid) return;
+    if (this.data.readOnly || this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const raw = this.form.getRawValue();

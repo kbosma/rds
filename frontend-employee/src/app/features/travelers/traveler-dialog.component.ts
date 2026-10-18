@@ -102,6 +102,7 @@ export class TravelerDialogComponent implements OnInit {
   }
 
   save() {
+    if (this.saving()) return;
     this.saving.set(true);
     const v = this.form.value;
     const value: Partial<Traveler> = {

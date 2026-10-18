@@ -152,7 +152,7 @@ export class BookingActivityDialogComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const raw = this.form.getRawValue();
