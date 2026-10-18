@@ -3,7 +3,7 @@
 Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -854,7 +854,7 @@ Mollie-betaling. Multi-tenant.
 
 ### mollie_payment_status_entry
 
-Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment). **Alleen-toevoegen:** een regel wordt nooit gewijzigd of vervangen (een trigger weigert elke `UPDATE`); een handmatige correctie door een medewerker is altijd een nieuwe regel met `correction = true` en een verplichte `reason` (V10).
+Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment). **Alleen-toevoegen:** een regel wordt nooit gewijzigd, vervangen of verwijderd (triggers weigeren elke `UPDATE`, `DELETE` en `TRUNCATE`; V10, V11; dezelfde `DELETE`/`TRUNCATE`-triggers staan op `mollie_payment`); een handmatige correctie door een medewerker is altijd een nieuwe regel met `correction = true` en een verplichte `reason` (V10).
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|

@@ -128,16 +128,22 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // === CRUD: DELETE /api/mollie/payments/{id} ===
+    // === DELETE /api/mollie/payments/{id}: bestaat niet meer (een betaling wordt nooit verwijderd) ===
 
-    // ADMIN: geen PAYMENT_DELETE authority → 403
+    // ADMIN: een betaling verwijderen kan niet (405)
     @Test
-    void admin_delete_returns403() throws Exception {
-        String token = adminToken();
-
+    void admin_delete_returns405() throws Exception {
         mockMvc.perform(delete("/api/mollie/payments/" + PAYMENT_ID)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
+                        .header("Authorization", "Bearer " + adminToken()))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    // MANAGER: een betaling verwijderen kan ook niet (405)
+    @Test
+    void manager_delete_returns405() throws Exception {
+        mockMvc.perform(delete("/api/mollie/payments/" + PAYMENT_ID)
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isMethodNotAllowed());
     }
 
     // === POST /api/mollie/payments/create-at-mollie ===

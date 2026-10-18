@@ -36,7 +36,7 @@ describe('MolliePaymentService', () => {
   };
 
   beforeEach(() => {
-    apiSpy = jasmine.createSpyObj('ApiService', ['getAll', 'getById', 'create', 'update', 'delete']);
+    apiSpy = jasmine.createSpyObj('ApiService', ['getAll', 'getById', 'create', 'update']);
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -76,10 +76,8 @@ describe('MolliePaymentService', () => {
     expect(apiSpy.update).toHaveBeenCalledWith('mollie/payments', 'mp-1', data);
   });
 
-  it('delete() should delegate to ApiService', () => {
-    apiSpy.delete.and.returnValue(of(void 0));
-    service.delete('mp-1').subscribe();
-    expect(apiSpy.delete).toHaveBeenCalledWith('mollie/payments', 'mp-1');
+  it('heeft geen delete(): een betaling wordt nooit verwijderd', () => {
+    expect((service as unknown as { delete?: unknown }).delete).toBeUndefined();
   });
 
   it('createAtMollie() should POST directly to Mollie endpoint', () => {

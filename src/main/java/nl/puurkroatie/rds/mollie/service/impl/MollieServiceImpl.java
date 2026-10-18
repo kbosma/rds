@@ -82,14 +82,6 @@ public class MollieServiceImpl implements MollieService {
     }
 
     @Override
-    public void delete(UUID id) {
-        MolliePayment existing = molliePaymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + id));
-        verifyOrganization(existing.getTenantOrganization());
-        molliePaymentRepository.deleteById(id);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<MolliePaymentDto> findAll() {
         if (isAdmin()) {

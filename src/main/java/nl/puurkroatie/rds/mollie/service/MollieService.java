@@ -16,8 +16,6 @@ public interface MollieService {
 
     MolliePaymentDto update(UUID id, MolliePaymentDto dto);
 
-    void delete(UUID id);
-
     List<MolliePaymentDto> findAll();
 
     Optional<MolliePaymentDto> findById(UUID id);

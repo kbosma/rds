@@ -63,6 +63,10 @@ Toelichting:
 `MolliePaymentMethod`: `IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY`.
 Beide: naam in de database, lowercase in JSON, hoofdletterongevoelig parsen.
 
+## Een betaling wordt nooit verwijderd
+
+Een betaling en haar statushistorie blijven altijd bewaard, **ook als er (nog) geen Mollie-id is**. Er is geen `DELETE /api/mollie/payments/{id}` (405) en migratie V11 zet databasetriggers op `mollie_payment` en `mollie_payment_status_entry` die elke `DELETE` en `TRUNCATE` weigeren, dus ook een cascade of handmatige SQL kan de historie niet laten verdwijnen. Alleen de koppeling aan een boeking kan nog worden losgemaakt (`DELETE /api/booking-mollie-payments/…`, `PAYMENT_DELETE`); de betaling zelf en haar historie blijven dan staan.
+
 ## Levenscyclus: een betaling is eerst een aankondiging
 
 1. **Aangekondigd:** een medewerker legt een betaling vast (omschrijving, bedrag). Er is nog geen Mollie-id; de betaling bestaat alleen bij ons en mag nog worden **aangepast** (omschrijving, bedrag).
@@ -73,7 +77,7 @@ Het Mollie-id en de checkout-URL zijn van de server: een client kan ze bij `POST
 
 ## Statushistorie: alleen-toevoegen en correcties
 
-De statussen van een betaling komen van Mollie (webhook). **Een regel wordt nooit gewijzigd, vervangen of (via de API) verwijderd**; er bestaan geen `PUT`/`DELETE` op statusregels en een databasetrigger weigert elke `UPDATE`. Wel kan een medewerker met `PAYMENT_CORRECT` (ADMIN en MANAGER) een **correctie** registreren, bv. als de klant per bank betaalde buiten Mollie om. Dat is altijd een **nieuwe regel** met `correction = true`, wie (`createdBy`), wanneer (`createdAt`) en een verplichte reden (minstens 5 tekens); de Mollie-regels blijven staan. De huidige status is de laatste regel.
+De statussen van een betaling komen van Mollie (webhook). **Een regel wordt nooit gewijzigd, vervangen of verwijderd**; er bestaan geen `PUT`/`DELETE` op statusregels en databasetriggers weigeren elke `UPDATE` (V10) en elke `DELETE`/`TRUNCATE` (V11). Wel kan een medewerker met `PAYMENT_CORRECT` (ADMIN en MANAGER) een **correctie** registreren, bv. als de klant per bank betaalde buiten Mollie om. Dat is altijd een **nieuwe regel** met `correction = true`, wie (`createdBy`), wanneer (`createdAt`) en een verplichte reden (minstens 5 tekens); de Mollie-regels blijven staan. De huidige status is de laatste regel.
 
 Toegestane correctiestatussen (`MolliePaymentStatusEntryServiceImpl.CORRECTION_STATUSES`): `open`, `paid`, `failed`, `canceled`. `pending`, `authorized` en `expired` bepaalt alleen Mollie. Een correctie naar de huidige status wordt geweigerd. In de UI staat de knop **Correctie registreren** in het betalingsdialoog (oog-icoon bij de betaling); het dialoog toont bron (*Correctie*), naam en reden.
 
@@ -82,7 +86,7 @@ Toegestane correctiestatussen (`MolliePaymentStatusEntryServiceImpl.CORRECTION_S
 | Methode | Pad | Authority |
 |---|---|---|
 | GET/POST | `/api/mollie/payments` | `PAYMENT_READ` / `PAYMENT_CREATE` |
-| GET/PUT/DELETE | `/api/mollie/payments/{id}` | `PAYMENT_READ` / `PAYMENT_UPDATE` (alleen zolang er geen Mollie-id is, anders 409) / `PAYMENT_DELETE` |
+| GET/PUT | `/api/mollie/payments/{id}` | `PAYMENT_READ` / `PAYMENT_UPDATE` (alleen zolang er geen Mollie-id is, anders 409). **Geen DELETE: een betaling wordt nooit verwijderd.** |
 | POST | `/api/mollie/payments/create-at-mollie` | `PAYMENT_CREATE` |
 | POST | `/api/mollie/payments/webhook` | publiek (gevalideerd id) |
 | GET | `/api/mollie/payment-status-entries` | `PAYMENT_READ` |

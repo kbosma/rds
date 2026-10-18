@@ -12,7 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,13 +61,6 @@ public class MolliePaymentController {
     public ResponseEntity<MolliePaymentDto> update(@PathVariable UUID id, @RequestBody @Valid MolliePaymentDto dto) {
         MolliePaymentDto updated = mollieService.update(id, dto);
         return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('PAYMENT_DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        mollieService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/create-at-mollie")

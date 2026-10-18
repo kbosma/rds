@@ -91,7 +91,7 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 
 | Methode | Pad | Authority |
 |---|---|---|
-| GET, GET `/{id}`, POST, PUT `/{id}`, DELETE `/{id}` | `/api/mollie/payments` | `PAYMENT_READ/READ/CREATE/UPDATE/DELETE` |
+| GET, GET `/{id}`, POST, PUT `/{id}` (geen DELETE: betalingen worden nooit verwijderd) | `/api/mollie/payments` | `PAYMENT_READ/READ/CREATE/UPDATE` |
 | POST | `/api/mollie/payments/create-at-mollie` | `PAYMENT_CREATE` |
 | POST | `/api/mollie/payments/webhook?id=tr_…` | publiek |
 | GET, GET `/by-payment/{id}`, POST `/by-payment/{id}` (correctie) | `/api/mollie/payment-status-entries` | `PAYMENT_READ`, `PAYMENT_CORRECT` (geen PUT/DELETE: alleen-toevoegen) |
