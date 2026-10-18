@@ -32,7 +32,7 @@ export interface TravelerDialogData {
     TranslatePipe,
   ],
   template: `
-    <h2 mat-dialog-title>{{ (isNew() ? 'travelers.addTraveler' : 'travelers.editTraveler') | translate }}</h2>
+    <h2 mat-dialog-title>{{ (isNew() ? 'travelers.addTitle' : 'travelers.editTitle') | translate }}</h2>
     <mat-dialog-content>
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="full-width">
@@ -59,7 +59,7 @@ export interface TravelerDialogData {
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'travelers.birthdate' | translate }}</mat-label>
+          <mat-label>{{ 'common.birthdate' | translate }}</mat-label>
           <input matInput formControlName="birthdate" type="date" />
         </mat-form-field>
       </form>
@@ -119,7 +119,7 @@ export class TravelerDialogComponent implements OnInit {
       : this.travelerService.create(value);
     op.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.snackBar.open(this.translate.instant('common.saved'), '', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('travelers.saved'), '', { duration: 3000 });
         this.dialogRef.close(true);
       },
       error: () => {

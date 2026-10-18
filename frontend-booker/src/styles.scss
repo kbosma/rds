@@ -83,6 +83,13 @@ mat-card-title, .mat-mdc-card-title {
   height: 20px;
 }
 
+/* Dialoog: direct na de titel heeft Material geen ruimte boven de inhoud. Het zwevende label van het eerste veld
+   steekt ~8px boven het veld uit en werd door de scroll-container afgesneden. De extra klasse laat deze regel
+   winnen van de standaardregel van Material. */
+.mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content.mdc-dialog__content {
+  padding-top: 8px;
+}
+
 /* Kaarten: vlak met een fijne rand i.p.v. een zware schaduw. */
 .mat-mdc-card {
   border: 1px solid var(--ui-line);

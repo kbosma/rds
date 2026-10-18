@@ -27,7 +27,7 @@ import { AuthorityService } from './authority.service';
   template: `
     <div class="header">
       <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
-      <h1>{{ (isNew() ? 'authorities.newAuthority' : 'authorities.editAuthority') | translate }}</h1>
+      <h1>{{ (isNew() ? 'authorities.newAuthority' : 'authorities.editTitle') | translate }}</h1>
     </div>
     <mat-card>
       <mat-card-content>
