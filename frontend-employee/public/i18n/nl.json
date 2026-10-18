@@ -228,8 +228,10 @@
     "noRolesAssigned": "Geen rollen toegewezen.",
     "roleAssigned": "Rol toegewezen",
     "roleAssignError": "Fout bij toewijzen rol",
+    "roleAssignForbidden": "Je mag deze rol niet toewijzen. Alleen een beheerder kan dat.",
     "roleRemoved": "Rol verwijderd",
     "roleRemoveError": "Fout bij verwijderen rol",
+    "roleRemoveForbidden": "Je mag deze rol niet verwijderen. Alleen een beheerder kan dat.",
     "removeRoleConfirm": "Weet je zeker dat je de rol \"{{role}}\" wilt verwijderen?"
   },
   "emailTemplates": {

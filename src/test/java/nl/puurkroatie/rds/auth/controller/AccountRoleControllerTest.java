@@ -3,7 +3,9 @@ package nl.puurkroatie.rds.auth.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -143,5 +145,31 @@ class AccountRoleControllerTest extends AbstractAuthControllerTest {
 
         assert !body.contains("passwordHash") && !body.contains("totpSecret") && !body.contains("mollieKey")
                 : "Response mag geen geheimen bevatten";
+    }
+
+    // MANAGER: GET /api/account-roles/assignable-roles — alleen EMPLOYEE en MANAGER, geen ADMIN
+    @Test
+    void manager_assignableRoles_excludesAdmin() throws Exception {
+        mockMvc.perform(get("/api/account-roles/assignable-roles")
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].description", containsInAnyOrder("EMPLOYEE", "MANAGER")));
+    }
+
+    // ADMIN: GET /api/account-roles/assignable-roles — alle rollen, ook ADMIN
+    @Test
+    void admin_assignableRoles_includesAdmin() throws Exception {
+        mockMvc.perform(get("/api/account-roles/assignable-roles")
+                        .header("Authorization", "Bearer " + adminToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].description", hasItems("ADMIN", "EMPLOYEE", "MANAGER")));
+    }
+
+    // EMPLOYEE: GET /api/account-roles/assignable-roles — 403 (geen ACCOUNTROLE_READ)
+    @Test
+    void employee_assignableRoles_returns403() throws Exception {
+        mockMvc.perform(get("/api/account-roles/assignable-roles")
+                        .header("Authorization", "Bearer " + employeeToken()))
+                .andExpect(status().isForbidden());
     }
 }

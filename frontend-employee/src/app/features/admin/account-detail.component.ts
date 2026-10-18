@@ -16,8 +16,8 @@ import { ConfirmService } from '../../shared/services/confirm.service';
 import { forkJoin } from 'rxjs';
 import { AccountService } from './account.service';
 import { PersonService } from './person.service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AccountRoleService } from './account-role.service';
-import { RoleService } from './role.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Account, Person, AccountRole, Role } from '../../shared/models';
 
@@ -149,7 +149,7 @@ interface PersonOption {
                     <mat-icon>security</mat-icon>
                     <span>{{ ar.role.description }}</span>
                   </div>
-                  @if (!readOnly()) {
+                  @if (!readOnly() && canManageRole(ar)) {
                     <button mat-icon-button color="warn" (click)="removeRole(ar)">
                       <mat-icon>remove_circle</mat-icon>
                     </button>
@@ -254,7 +254,6 @@ export class AccountDetailComponent implements OnInit {
   private accountService = inject(AccountService);
   private personService = inject(PersonService);
   private accountRoleService = inject(AccountRoleService);
-  private roleService = inject(RoleService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
   private confirmService = inject(ConfirmService);
@@ -269,7 +268,8 @@ export class AccountDetailComponent implements OnInit {
   personDisplayName = signal('');
   personOptions = signal<PersonOption[]>([]);
   assignedRoles = signal<AccountRole[]>([]);
-  allRoles = signal<Role[]>([]);
+  /** Rollen die de ingelogde gebruiker mag toewijzen en intrekken; de backend bepaalt welke dat zijn. */
+  assignableRoles = signal<Role[]>([]);
   availableRoles = signal<Role[]>([]);
 
   selectedRoleId: string | null = null;
@@ -325,11 +325,11 @@ export class AccountDetailComponent implements OnInit {
       account: this.accountService.getById(id),
       persons: this.personService.getAll(),
       accountRoles: this.accountRoleService.getAll(),
-      roles: this.roleService.getAll(),
+      assignableRoles: this.accountRoleService.getAssignable(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ account, persons, accountRoles, roles }) => {
+      next: ({ account, persons, accountRoles, assignableRoles }) => {
         this.currentName.set(account.userName);
-        this.allRoles.set(roles);
+        this.assignableRoles.set(assignableRoles);
 
         // Resolve person display name
         const personMap = new Map(persons.map(p => [p.persoonId, p]));
@@ -342,7 +342,7 @@ export class AccountDetailComponent implements OnInit {
 
         const assigned = accountRoles.filter(ar => ar.account.accountId === id);
         this.assignedRoles.set(assigned);
-        this.updateAvailableRoles(assigned, roles);
+        this.updateAvailableRoles(assigned, assignableRoles);
 
         this.form.patchValue({
           userName: account.userName,
@@ -357,6 +357,11 @@ export class AccountDetailComponent implements OnInit {
         this.router.navigate(['/admin/accounts']);
       },
     });
+  }
+
+  /** Alleen rollen die de gebruiker mag beheren kunnen ook weer ingetrokken worden. */
+  canManageRole(ar: AccountRole): boolean {
+    return this.assignableRoles().some(r => r.roleId === ar.role.roleId);
   }
 
   private updateAvailableRoles(assigned: AccountRole[], allRoles: Role[]) {
@@ -425,13 +430,14 @@ export class AccountDetailComponent implements OnInit {
           this.addingRole.set(false);
           const updated = [...this.assignedRoles(), ar];
           this.assignedRoles.set(updated);
-          this.updateAvailableRoles(updated, this.allRoles());
+          this.updateAvailableRoles(updated, this.assignableRoles());
           this.selectedRoleId = null;
           this.snackBar.open(this.translate.instant('accounts.roleAssigned'), this.translate.instant('common.close'), { duration: 3000 });
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.addingRole.set(false);
-          this.snackBar.open(this.translate.instant('accounts.roleAssignError'), this.translate.instant('common.close'), { duration: 5000 });
+          const key = err.status === 403 ? 'accounts.roleAssignForbidden' : 'accounts.roleAssignError';
+          this.snackBar.open(this.translate.instant(key), this.translate.instant('common.close'), { duration: 5000 });
         },
       });
   }
@@ -446,11 +452,12 @@ export class AccountDetailComponent implements OnInit {
         next: () => {
           const updated = this.assignedRoles().filter(r => r.role.roleId !== ar.role.roleId);
           this.assignedRoles.set(updated);
-          this.updateAvailableRoles(updated, this.allRoles());
+          this.updateAvailableRoles(updated, this.assignableRoles());
           this.snackBar.open(this.translate.instant('accounts.roleRemoved'), this.translate.instant('common.close'), { duration: 3000 });
         },
-        error: () => {
-          this.snackBar.open(this.translate.instant('accounts.roleRemoveError'), this.translate.instant('common.close'), { duration: 5000 });
+        error: (err: HttpErrorResponse) => {
+          const key = err.status === 403 ? 'accounts.roleRemoveForbidden' : 'accounts.roleRemoveError';
+          this.snackBar.open(this.translate.instant(key), this.translate.instant('common.close'), { duration: 5000 });
         },
       });
   }

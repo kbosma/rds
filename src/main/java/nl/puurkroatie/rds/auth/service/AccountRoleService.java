@@ -1,11 +1,13 @@
 package nl.puurkroatie.rds.auth.service;
 
 import nl.puurkroatie.rds.auth.dto.AccountRoleResponseDto;
+import nl.puurkroatie.rds.auth.dto.RoleDto;
 import nl.puurkroatie.rds.auth.entity.Account;
 import nl.puurkroatie.rds.auth.entity.AccountRole;
 import nl.puurkroatie.rds.auth.entity.AccountRoleId;
 import nl.puurkroatie.rds.auth.entity.Role;
 import nl.puurkroatie.rds.auth.mapper.AccountRoleMapper;
+import nl.puurkroatie.rds.auth.mapper.RoleMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
 import nl.puurkroatie.rds.auth.repository.RoleRepository;
@@ -34,13 +36,15 @@ public class AccountRoleService {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final AccountRoleMapper accountRoleMapper;
+    private final RoleMapper roleMapper;
 
     public AccountRoleService(AccountRoleRepository accountRoleRepository, AccountRepository accountRepository,
-                              RoleRepository roleRepository, AccountRoleMapper accountRoleMapper) {
+                              RoleRepository roleRepository, AccountRoleMapper accountRoleMapper, RoleMapper roleMapper) {
         this.accountRoleRepository = accountRoleRepository;
         this.accountRepository = accountRepository;
         this.roleRepository = roleRepository;
         this.accountRoleMapper = accountRoleMapper;
+        this.roleMapper = roleMapper;
     }
 
     @Transactional(readOnly = true)
@@ -49,6 +53,19 @@ public class AccountRoleService {
                 ? accountRoleRepository.findAll()
                 : accountRoleRepository.findByAccountPersonOrganizationOrganizationId(TenantContext.getOrganizationId());
         return accountRoles.stream().map(accountRoleMapper::toDto).toList();
+    }
+
+    /**
+     * De rollen die de ingelogde gebruiker mag toewijzen en intrekken: ADMIN alle rollen, anderen alleen de
+     * rollen uit {@link #ROLES_MANAGEABLE_BY_NON_ADMIN}. De frontend toont alleen deze rollen, zodat de
+     * regel op één plek (hier) staat en de UI geen rolnamen hoeft te kennen.
+     */
+    @Transactional(readOnly = true)
+    public List<RoleDto> findAssignableRoles() {
+        return roleRepository.findAll().stream()
+                .filter(role -> isAdmin() || ROLES_MANAGEABLE_BY_NON_ADMIN.contains(role.getDescription()))
+                .map(roleMapper::toDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
