@@ -3,6 +3,7 @@ package nl.puurkroatie.rds.booking.service.impl;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
+import nl.puurkroatie.rds.booking.entity.BookerStatus;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.entity.BookingStatus;
 import nl.puurkroatie.rds.booking.mapper.BookingMapper;
@@ -103,7 +104,19 @@ public class BookingServiceImpl implements BookingService {
         Booker booker = bookerRepository.findById(bookerId)
                 .orElseThrow(() -> new RuntimeException("Booker not found with id: " + bookerId));
         verifyOrganization(booker.getTenantOrganization());
-        return booker;
+        return activateIfProspect(booker);
+    }
+
+    /**
+     * Een prospect (potentiële klant) met een boeking is een echte boeker: zodra een boeking voor hem wordt aangemaakt
+     * (bv. een concept-boeking die wordt vastgelegd door een accommodatie of reiziger toe te voegen) of aan hem wordt
+     * gekoppeld, wordt hij ACTIVE. Andere statussen (bv. NIETACTIEF) blijven ongemoeid.
+     */
+    private Booker activateIfProspect(Booker booker) {
+        if (booker.getStatus() != BookerStatus.PROSPECT) {
+            return booker;
+        }
+        return bookerRepository.save(booker.withStatus(BookerStatus.ACTIVE));
     }
 
     private Booking toEntity(BookingDto dto, String bookingNumber) {

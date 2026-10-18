@@ -142,6 +142,39 @@ describe('BookingDetailComponent', () => {
     expect(bookerServiceSpy.getById).toHaveBeenCalledWith('bk-1');
   }));
 
+  describe('concept-boeking voor een prospect', () => {
+    function startConcept() {
+      routeId = 'new';
+      queryBookerId = 'bk-1';
+      createComponent();
+      fixture.detectChanges();
+      tick();
+      spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(undefined) } as never);
+    }
+
+    it('laadt de boeker opnieuw zodra de boeking is vastgelegd, want de backend maakt de prospect ACTIVE', fakeAsync(() => {
+      bookerServiceSpy.getById.and.returnValues(of({ ...mockBooker, status: 'prospect' }), of({ ...mockBooker, status: 'active' }));
+      startConcept();
+      expect(component.booker()?.status).toBe('prospect');
+
+      component.openBookingLineDialog(); // legt de concept-boeking vast (na bevestiging) en opent dan het dialoog
+      tick();
+
+      expect(bookingServiceSpy.create).toHaveBeenCalledTimes(1);
+      expect(bookerServiceSpy.getById).toHaveBeenCalledTimes(2);
+      expect(component.booker()?.status).toBe('active');
+    }));
+
+    it('laadt een boeker die al actief is niet opnieuw', fakeAsync(() => {
+      startConcept(); // mockBooker is ACTIVE
+      component.openBookingLineDialog();
+      tick();
+
+      expect(bookingServiceSpy.create).toHaveBeenCalledTimes(1);
+      expect(bookerServiceSpy.getById).toHaveBeenCalledTimes(1);
+    }));
+  });
+
   it('should redirect to the overview for /new without a booker', fakeAsync(() => {
     routeId = 'new';
     queryBookerId = null;

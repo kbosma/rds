@@ -832,12 +832,25 @@ export class BookingDetailComponent implements OnInit {
       .subscribe({
         next: (created) => {
           this.applyCreatedBooking(created);
+          this.refreshBookerIfProspect();
           proceed(created.bookingId);
         },
         error: () => {
           this.snackBar.open(this.translate.instant('bookings.createError'), this.translate.instant('common.close'), { duration: 5000 });
         },
       });
+  }
+
+  /**
+   * De backend maakt een prospect ACTIVE zodra er een boeking voor hem wordt aangemaakt. Laad de boeker opnieuw,
+   * zodat het scherm niet nog de oude status (en bv. de knop "Maak boeker") toont.
+   */
+  private refreshBookerIfProspect() {
+    const booker = this.booker();
+    if (booker?.status !== 'prospect') return;
+    this.bookerService.getById(booker.bookerId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (fresh) => this.booker.set(fresh) });
   }
 
   /** Verwerkt de zojuist aangemaakte boeking: concept wordt een echte boeking. */
