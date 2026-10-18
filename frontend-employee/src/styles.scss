@@ -124,6 +124,10 @@ mat-card-title, .mat-mdc-card-title {
 .mat-mdc-table .mat-mdc-row:hover {
   background: var(--ui-primary-hover);
 }
+/* Acties-iconen in een cel (bewerken, verwijderen, ...) staan altijd naast elkaar op één regel, ook in een smalle kolom. */
+.mat-mdc-cell:has(> button[mat-icon-button]) {
+  white-space: nowrap;
+}
 .mat-mdc-paginator {
   background: transparent;
 }

@@ -79,6 +79,8 @@ Het gedeelde ontwerp staat in `src/styles.scss` van **beide** apps (de bestanden
 
 Alle lijsten die direct vanuit het linkermenu bereikbaar zijn gebruiken hetzelfde grid: een Material-tabel met één vaste actiekolom, gevuld door `shared/components/row-actions.component.ts` (`<app-row-actions>`). **Klikken op de hele regel doet niets**; alleen de iconen werken.
 
+**Ook in tabellen op een detailscherm** (accommodaties, reizigers, activiteiten, documenten van een boeking) gebruik je `<app-row-actions>` met `class="actions-cell"` op de `td` en `class="actions-header"` op de `th`, zodat de iconen altijd naast elkaar op één regel staan. Als vangnet zet `styles.scss` `white-space: nowrap` op elke tabelcel die direct een `mat-icon-button` bevat; los icoon-knoppen in een cel wrappen dus ook niet meer onder elkaar.
+
 | Lijst | Inzien (`*_READ`) | Bewerken (`*_UPDATE`) | Verwijderen (`*_DELETE`) |
 |---|---|---|---|
 | Boekingen | boekingdetail alleen-lezen (`?readonly=true`) | boekingdetail | ja, tenzij er documenten of betalingen aan hangen |

@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -55,6 +56,7 @@ interface BookingMolliePaymentLink {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    RowActionsComponent,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
@@ -227,12 +229,10 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let line">
-                    @if (!readOnly()) {
-                      <button mat-icon-button color="primary" (click)="openBookingLineDialog(line)"><mat-icon>edit</mat-icon></button>
-                      <button mat-icon-button color="warn" (click)="deleteBookingLine(line)"><mat-icon>delete</mat-icon></button>
-                    }
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let line" class="actions-cell">
+                    <app-row-actions [canEdit]="!readOnly()" [canDelete]="!readOnly()"
+                                     (edit)="openBookingLineDialog(line)" (remove)="deleteBookingLine(line)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="bookingLineColumns"></tr>
@@ -267,14 +267,10 @@ interface BookingMolliePaymentLink {
                   <td mat-cell *matCellDef="let t">{{ t.birthdate | date:'dd-MM-yyyy' }}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let t">
-                    @if (can('BOOKING_UPDATE')) {
-                      <button mat-icon-button color="primary" (click)="openTravelerDialog(t)"><mat-icon>edit</mat-icon></button>
-                    }
-                    @if (can('BOOKING_DELETE')) {
-                      <button mat-icon-button color="warn" (click)="deleteTraveler(t)"><mat-icon>delete</mat-icon></button>
-                    }
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let t" class="actions-cell">
+                    <app-row-actions [canEdit]="can('BOOKING_UPDATE')" [canDelete]="can('BOOKING_DELETE')"
+                                     (edit)="openTravelerDialog(t)" (remove)="deleteTraveler(t)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="travelerColumns"></tr>
@@ -326,12 +322,10 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="activityActions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
                   <td mat-cell *matCellDef="let ba" class="actions-cell">
-                    @if (!readOnly()) {
-                      <button mat-icon-button color="primary" (click)="openBookingActivityDialog(ba)"><mat-icon>edit</mat-icon></button>
-                      <button mat-icon-button color="warn" (click)="deleteBookingActivity(ba)"><mat-icon>delete</mat-icon></button>
-                    }
+                    <app-row-actions [canEdit]="!readOnly()" [canDelete]="!readOnly()"
+                                     (edit)="openBookingActivityDialog(ba)" (remove)="deleteBookingActivity(ba)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="bookingActivityColumns"></tr>
@@ -370,18 +364,10 @@ interface BookingMolliePaymentLink {
                   <td mat-cell *matCellDef="let d">{{ d.createdAt | date:'dd-MM-yyyy' }}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let d">
-                    @if (authService.hasAuthority('DOCUMENT_READ')) {
-                      <button mat-icon-button color="primary" (click)="viewDocument(d)">
-                        <mat-icon>visibility</mat-icon>
-                      </button>
-                    }
-                    @if (can('DOCUMENT_DELETE')) {
-                      <button mat-icon-button color="warn" (click)="deleteDocument(d)">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    }
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let d" class="actions-cell">
+                    <app-row-actions [canView]="authService.hasAuthority('DOCUMENT_READ')" [canDelete]="can('DOCUMENT_DELETE')"
+                                     (view)="viewDocument(d)" (remove)="deleteDocument(d)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="documentColumns"></tr>
@@ -752,9 +738,8 @@ interface BookingMolliePaymentLink {
       color: #666;
       font-size: 12px;
     }
-    .actions-cell {
-      white-space: nowrap;
-    }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; white-space: nowrap; }
     .new-payment-form {
       padding: 16px 0;
     }
