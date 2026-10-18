@@ -65,6 +65,7 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 | idem | `/api/roles` | `ROLE_*` |
 | idem | `/api/authorities` | `AUTHORITY_*` |
 | GET, GET `/{a}/{b}`, POST, DELETE `/{a}/{b}` | `/api/account-roles` (`accountId/roleId`) | `ACCOUNTROLE_READ/READ/CREATE/DELETE` |
+| GET | `/api/account-roles/assignable-roles` | `ACCOUNTROLE_READ` (de rollen die de ingelogde gebruiker mag toewijzen/intrekken: ADMIN alle, anderen alleen EMPLOYEE en MANAGER) |
 | idem | `/api/role-authorities` (`roleId/authorityId`) | `ROLEAUTHORITY_*` |
 | GET, GET `/{id}`, GET `/my-theme`, POST, PUT `/{id}`, DELETE `/{id}` | `/api/organization-themes` | `ORGANIZATION_THEME_*` |
 

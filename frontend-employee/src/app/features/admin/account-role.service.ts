@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AccountRole } from '../../shared/models';
+import { AccountRole, Role } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class AccountRoleService {
@@ -11,6 +11,11 @@ export class AccountRoleService {
 
   getAll(): Observable<AccountRole[]> {
     return this.http.get<AccountRole[]>(this.baseUrl);
+  }
+
+  /** Rollen die de ingelogde gebruiker mag toewijzen en intrekken (bepaald door de backend). */
+  getAssignable(): Observable<Role[]> {
+    return this.http.get<Role[]>(`${this.baseUrl}/assignable-roles`);
   }
 
   create(accountId: string, roleId: string): Observable<AccountRole> {

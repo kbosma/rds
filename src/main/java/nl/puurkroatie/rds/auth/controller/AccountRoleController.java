@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.auth.controller;
 
 import nl.puurkroatie.rds.auth.dto.AccountRoleDto;
 import nl.puurkroatie.rds.auth.dto.AccountRoleResponseDto;
+import nl.puurkroatie.rds.auth.dto.RoleDto;
 import nl.puurkroatie.rds.auth.service.AccountRoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,13 @@ public class AccountRoleController {
     @PreAuthorize("hasAuthority('ACCOUNTROLE_READ')")
     public List<AccountRoleResponseDto> findAll() {
         return accountRoleService.findAll();
+    }
+
+    // Rollen die de ingelogde gebruiker mag toewijzen/intrekken (ADMIN: alle, anderen: een beperkte set).
+    @GetMapping("/assignable-roles")
+    @PreAuthorize("hasAuthority('ACCOUNTROLE_READ')")
+    public List<RoleDto> findAssignableRoles() {
+        return accountRoleService.findAssignableRoles();
     }
 
     @GetMapping("/{accountId}/{roleId}")

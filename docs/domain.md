@@ -43,9 +43,9 @@ DocumentTemplate, EmailTemplate, EmailImage   (per organisatie, los van een boek
 
 ### Levenscyclus van een boeking
 
-`AANVRAAG → OFFERTE → BOEKING → VOORSCHOT → BETAALD → AFGEROND`
+`AANVRAAG → OFFERTE → BOEKING → VOORSCHOT → BETAALD → OPREIS → WEERTHUIS → AFGEROND`
 
-De status is een enum (`BookingStatus`); er is geen afgedwongen toestandsmachine: de medewerker zet de status. In de API en UI is de waarde lowercase (`aanvraag`, …), in het template-model de hoofdletter-naam (`BOEKING`).
+De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-constraint); er is geen afgedwongen toestandsmachine: de medewerker zet de status. In de API en UI is de waarde lowercase (`aanvraag`, …), in het template-model de hoofdletter-naam (`BOEKING`).
 
 ### Booker, prospect en het aanmeldproces
 

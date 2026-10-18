@@ -170,6 +170,8 @@
     "status_boeking": "Boeking",
     "status_voorschot": "Voorschot",
     "status_betaald": "Betaald",
+    "status_opreis": "Op reis",
+    "status_weerthuis": "Weer thuis",
     "status_afgerond": "Afgerond",
     "sendEmail": "E-mail versturen",
     "deleteCascadeWarning": "Alle bijbehorende reizigers, boekingsregels, activiteiten, documenten en betalingskoppelingen worden ook verwijderd.",
@@ -226,8 +228,10 @@
     "noRolesAssigned": "Geen rollen toegewezen.",
     "roleAssigned": "Rol toegewezen",
     "roleAssignError": "Fout bij toewijzen rol",
+    "roleAssignForbidden": "Je mag deze rol niet toewijzen. Alleen een beheerder kan dat.",
     "roleRemoved": "Rol verwijderd",
     "roleRemoveError": "Fout bij verwijderen rol",
+    "roleRemoveForbidden": "Je mag deze rol niet verwijderen. Alleen een beheerder kan dat.",
     "removeRoleConfirm": "Weet je zeker dat je de rol \"{{role}}\" wilt verwijderen?"
   },
   "emailTemplates": {

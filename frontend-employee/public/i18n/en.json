@@ -170,6 +170,8 @@
     "status_boeking": "Booking",
     "status_voorschot": "Advance",
     "status_betaald": "Paid",
+    "status_opreis": "On trip",
+    "status_weerthuis": "Back home",
     "status_afgerond": "Completed",
     "sendEmail": "Send email",
     "deleteCascadeWarning": "All related travelers, booking lines, activities, documents and payment links are deleted too.",
@@ -226,8 +228,10 @@
     "noRolesAssigned": "No roles assigned.",
     "roleAssigned": "Role assigned",
     "roleAssignError": "Error assigning role",
+    "roleAssignForbidden": "You are not allowed to assign this role. Only an administrator can.",
     "roleRemoved": "Role removed",
     "roleRemoveError": "Error removing role",
+    "roleRemoveForbidden": "You are not allowed to remove this role. Only an administrator can.",
     "removeRoleConfirm": "Are you sure you want to remove the role \"{{role}}\"?"
   },
   "emailTemplates": {

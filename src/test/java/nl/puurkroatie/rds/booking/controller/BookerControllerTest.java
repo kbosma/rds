@@ -228,4 +228,20 @@ class BookerControllerTest extends AbstractBookingControllerTest {
                     : "Filter status=prospect should only return prospects";
         }
     }
+
+    // MANAGER: POST /api/bookers met de status 'nietactief' — 201 en de waarde komt lowercase terug
+    @Test
+    void manager_createBooker_withStatusNietactief_returns201() throws Exception {
+        String json = "{\"firstname\":\"Oud\",\"prefix\":null,\"lastname\":\"Klant\"," +
+                "\"callsign\":\"Oud\",\"telephone\":\"0611111111\"," +
+                "\"emailaddress\":\"oud@example.com\",\"gender\":\"" + GENDER_MAN + "\"," +
+                "\"birthdate\":\"1970-01-01\",\"initials\":\"O.\",\"status\":\"nietactief\"}";
+
+        mockMvc.perform(post("/api/bookers")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("nietactief"));
+    }
 }

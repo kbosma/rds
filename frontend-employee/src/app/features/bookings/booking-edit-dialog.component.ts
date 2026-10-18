@@ -125,6 +125,8 @@ export class BookingEditDialogComponent {
     { value: 'boeking', labelKey: 'bookings.status_boeking' },
     { value: 'voorschot', labelKey: 'bookings.status_voorschot' },
     { value: 'betaald', labelKey: 'bookings.status_betaald' },
+    { value: 'opreis', labelKey: 'bookings.status_opreis' },
+    { value: 'weerthuis', labelKey: 'bookings.status_weerthuis' },
     { value: 'afgerond', labelKey: 'bookings.status_afgerond' },
   ];
 
