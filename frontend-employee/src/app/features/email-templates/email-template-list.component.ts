@@ -17,7 +17,6 @@ import { AuthService } from '../../core/auth/auth.service';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { EmailTemplate } from '../../shared/models';
 import { EmailTemplateDialogComponent } from './email-template-dialog.component';
-import { EmailTemplatePreviewDialogComponent } from './email-template-preview-dialog.component';
 
 /**
  * Beheer van e-mailtemplates (subject + HTML-body) die per organisatie worden
@@ -86,9 +85,9 @@ import { EmailTemplatePreviewDialogComponent } from './email-template-preview-di
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let tpl" class="actions-cell">
-              <!-- Inzien = het voorbeeld (preview) in een eigen dialoog; daar kan met EMAIL_SEND ook verstuurd worden. -->
+              <!-- Inzien = de template alleen-lezen. E-mail versturen kan hier niet: dat gebeurt vanuit een boeking of een prospect. -->
               <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
-                               (view)="preview(tpl)" (edit)="openDialog(tpl)" (remove)="confirmDelete(tpl)" />
+                               (view)="viewTemplate(tpl)" (edit)="openDialog(tpl)" (remove)="confirmDelete(tpl)" />
             </td>
           </ng-container>
 
@@ -210,10 +209,11 @@ export class EmailTemplateListComponent implements OnInit {
     });
   }
 
-  preview(template: EmailTemplate) {
-    this.dialog.open(EmailTemplatePreviewDialogComponent, {
-      data: { template },
-      width: '720px',
+  viewTemplate(template: EmailTemplate) {
+    this.dialog.open(EmailTemplateDialogComponent, {
+      data: { template, readOnly: true },
+      width: '860px',
+      maxWidth: '95vw',
     });
   }
 

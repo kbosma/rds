@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { EmailTemplateListComponent } from './email-template-list.component';
+import { EmailTemplateDialogComponent } from './email-template-dialog.component';
 import { EmailTemplateService } from './email-template.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../core/auth/auth.service';
@@ -132,14 +133,17 @@ describe('EmailTemplateListComponent', () => {
       expect(buttons('new-btn').length).toBe(0);
     }));
 
-    it('inzien opent het voorbeeld-dialoog van die template', fakeAsync(() => {
+    it('inzien opent de template alleen-lezen (geen voorbeeld en geen verzenden)', fakeAsync(() => {
       createComponent();
       load();
       const open = spyOn(dialog(), 'open');
 
-      component.preview(mockTemplates[1]);
+      component.viewTemplate(mockTemplates[1]);
 
-      expect((open.calls.mostRecent().args[1] as { data: { template: EmailTemplate } }).data.template).toBe(mockTemplates[1]);
+      const data = (open.calls.mostRecent().args[1] as { data: { template: EmailTemplate; readOnly: boolean } }).data;
+      expect(open.calls.mostRecent().args[0]).toBe(EmailTemplateDialogComponent);
+      expect(data.template).toBe(mockTemplates[1]);
+      expect(data.readOnly).toBe(true);
     }));
 
     it('bewerken opent het editor-dialoog en laadt de lijst opnieuw na opslaan', fakeAsync(() => {

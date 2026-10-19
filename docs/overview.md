@@ -35,7 +35,7 @@ Accommodaties (met adressen en leveranciers), leveranciers (met adressen), activ
 - Een template kan **geüpload** worden of in de **WYSIWYG-editor** gemaakt worden (met variabelen, afbeeldingen en herhaalde tabellen); zie [templates.md](templates.md).
 
 ### E-mail
-E-mailtemplates (onderwerp + HTML) met dezelfde editor, voorbeeld (preview) en versturen voor een prospect/boeker **of** voor een boeking (naar de hoofdboeker). Zie [email.md](email.md).
+E-mailtemplates (onderwerp + HTML) met dezelfde editor; het scherm *E-mailtemplates* is alleen voor het beheren ervan. Versturen (met voorbeeld) gebeurt **alleen** vanuit een boeking (naar de hoofdboeker) of vanuit een prospect (mail-icoon in *Prospects*). Zie [email.md](email.md).
 
 ### Betalingen (Mollie)
 De medewerker maakt een betalingsrecord voor een boeking; de klant triggert in de portal de echte betaling; een webhook werkt de status bij. Zie [mollie.md](mollie.md).

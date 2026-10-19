@@ -64,7 +64,7 @@ npx ng test --watch=false --browsers=FirefoxHeadless \
     --include='src/app/translate-test.setup.spec.ts'          # een deel (setup altijd meenemen!)
 ```
 
-- Stand 19-10-2026: **562 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
+- Stand 20-10-2026: **556 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
 - `src/app/translate-test.setup.spec.ts` laadt de echte nl-vertalingen in elke spec; wie specs selecteert met `--include` moet dat bestand mee-includen, anders zie je vertaalsleutels in plaats van tekst.
 - TipTap in een test: de editor draait echt in Firefox; plak/drop-gedrag test je door de ProseMirror-handlers rechtstreeks aan te roepen (synthetische `ClipboardEvent`s dragen geen bestanden).
 - Dev-proxy en `base href`: zie [frontend.md](frontend.md).

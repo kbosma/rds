@@ -9,12 +9,17 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BookerService } from '../bookers/booker.service';
 import { BookerDialogComponent, BookerDialogData } from '../bookers/booker-dialog.component';
 import { ProspectDialogComponent } from './prospect-dialog.component';
+import {
+  EmailTemplatePreviewDialogComponent,
+  EmailTemplatePreviewDialogData,
+} from '../email-templates/email-template-preview-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { deleteErrorKey } from '../../shared/utils/delete-error';
@@ -38,6 +43,7 @@ import { Booker } from '../../shared/models';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     MatDialogModule,
     MatSnackBarModule,
     RowActionsComponent,
@@ -88,7 +94,17 @@ import { Booker } from '../../shared/models';
             <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row" class="actions-cell">
               <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
-                               (view)="viewProspect(row)" (edit)="editProspect(row)" (remove)="deleteProspect(row)" />
+                               (view)="viewProspect(row)" (edit)="editProspect(row)" (remove)="deleteProspect(row)">
+                <!-- E-mail versturen kan alleen vanuit een boeking of een prospect, niet vanuit de e-mailtemplates. -->
+                @if (canSendEmail) {
+                  <button type="button" mat-icon-button color="primary" class="action-email"
+                          [matTooltip]="'emailTemplates.sendEmailTitle' | translate"
+                          [attr.aria-label]="'emailTemplates.sendEmailTitle' | translate"
+                          (click)="$event.stopPropagation(); sendEmail(row)">
+                    <mat-icon>mail</mat-icon>
+                  </button>
+                }
+              </app-row-actions>
             </td>
           </ng-container>
 
@@ -143,6 +159,7 @@ export class ProspectListComponent implements OnInit {
   canView = this.authService.hasAuthority('BOOKING_READ');
   canEdit = this.authService.hasAuthority('BOOKING_UPDATE');
   canDelete = this.authService.hasAuthority('BOOKING_DELETE');
+  canSendEmail = this.authService.hasAuthority('EMAIL_SEND');
 
   displayedColumns = ['name', 'emailaddress', 'telephone', 'birthdate', 'actions'];
   dataSource = new MatTableDataSource<Booker>();
@@ -196,6 +213,13 @@ export class ProspectListComponent implements OnInit {
           this.loadProspects();
         }
       });
+  }
+
+  /** Een e-mailtemplate kiezen en naar deze prospect sturen. */
+  sendEmail(booker: Booker) {
+    const name = `${booker.firstname} ${booker.prefix ?? ''} ${booker.lastname}`.replace(/\s+/g, ' ').trim();
+    const data: EmailTemplatePreviewDialogData = { booker: { bookerId: booker.bookerId, name } };
+    this.dialog.open(EmailTemplatePreviewDialogComponent, { data, width: '760px', maxWidth: '95vw' });
   }
 
   viewProspect(booker: Booker) {

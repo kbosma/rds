@@ -15,6 +15,8 @@ import { EmailTemplate } from '../../shared/models';
 
 export interface EmailTemplateDialogData {
   template?: EmailTemplate;
+  /** Alleen inzien: velden uitgeschakeld en geen opslaan-knop. */
+  readOnly?: boolean;
 }
 
 @Component({
@@ -33,36 +35,38 @@ export interface EmailTemplateDialogData {
     TemplateBodyEditorComponent,
   ],
   template: `
-    <h2 mat-dialog-title>{{ (isEdit ? 'emailTemplates.editTitle' : 'emailTemplates.newTitle') | translate }}</h2>
+    <h2 mat-dialog-title>{{ (readOnly ? 'emailTemplates.viewTitle' : isEdit ? 'emailTemplates.editTitle' : 'emailTemplates.newTitle') | translate }}</h2>
     <mat-dialog-content>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ 'emailTemplates.name' | translate }}</mat-label>
-        <input matInput [(ngModel)]="name" required />
+        <input matInput [(ngModel)]="name" [disabled]="readOnly" required />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ 'common.description' | translate }}</mat-label>
-        <input matInput [(ngModel)]="description" />
+        <input matInput [(ngModel)]="description" [disabled]="readOnly" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ 'emailTemplates.subject' | translate }}</mat-label>
-        <input matInput [(ngModel)]="subject" required />
+        <input matInput [(ngModel)]="subject" [disabled]="readOnly" required />
       </mat-form-field>
 
       <label class="editor-label">{{ 'emailTemplates.bodyHtml' | translate }}</label>
-      <app-template-body-editor [(ngModel)]="bodyHtml" [variableGroups]="variableGroups"
+      <app-template-body-editor [(ngModel)]="bodyHtml" [disabled]="readOnly" [variableGroups]="variableGroups"
                                 [repeatTables]="repeatTables"></app-template-body-editor>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="!canSave() || saving()">
-        @if (saving()) {
-          <mat-spinner diameter="20"></mat-spinner>
-        } @else {
-          <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
-        }
-      </button>
+      <button mat-button mat-dialog-close>{{ (readOnly ? 'common.close' : 'common.cancel') | translate }}</button>
+      @if (!readOnly) {
+        <button mat-raised-button color="primary" (click)="save()" [disabled]="!canSave() || saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
+          }
+        </button>
+      }
     </mat-dialog-actions>
   `,
   styles: [`
@@ -81,6 +85,7 @@ export class EmailTemplateDialogComponent {
   private translate = inject(TranslateService);
 
   isEdit: boolean;
+  readOnly: boolean;
   name: string;
   description: string;
   subject: string;
@@ -90,6 +95,7 @@ export class EmailTemplateDialogComponent {
 
   constructor() {
     this.isEdit = !!this.data.template;
+    this.readOnly = !!this.data.readOnly;
     this.name = this.data.template?.name ?? '';
     this.description = this.data.template?.description ?? '';
     this.subject = this.data.template?.subject ?? '';
@@ -101,7 +107,7 @@ export class EmailTemplateDialogComponent {
   }
 
   save() {
-    if (!this.canSave() || this.saving()) return;
+    if (this.readOnly || !this.canSave() || this.saving()) return;
 
     this.saving.set(true);
     const payload: Partial<EmailTemplate> = {

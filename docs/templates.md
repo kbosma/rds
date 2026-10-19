@@ -139,7 +139,7 @@ Gedeeld in `frontend-employee/src/app/shared/template-editor/`:
 
 De editor krijgt via `variableGroups` en `repeatTables` te horen wat hij moet aanbieden: een e-mail heeft de ontvanger (`prospect.*`) en de boeking (met de uitleg dat die alleen bij een boeking werkt); een Word-template de boeking en de hoofdboeker. Vertalingen staan onder `templateEditor.*`.
 
-Gebruikers van de editor: `features/email-templates/email-template-dialog` en `features/templates/template-dialog` (upload of editor). E-mail versturen voor een boeking: *Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten* van het boekingdetail (`EMAIL_SEND`), of de preview-dialoog vanuit de e-maillijst met de keuze *Prospect / boeker* of *Boeking*.
+Gebruikers van de editor: `features/email-templates/email-template-dialog` en `features/templates/template-dialog` (upload of editor). E-mail versturen voor een boeking: *Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten* van het boekingdetail (`EMAIL_SEND`), of het mail-icoon op een regel in het scherm *Prospects*. Vanuit de lijst *E-mailtemplates* kan niet worden verstuurd.
 
 ## Codekaart (backend)
 

@@ -80,6 +80,13 @@ Lokaal draaien de apps op poort 4200 (medewerkers) en 4300 (klanten); de backend
 
 De status is een keuzelijst: er is **geen afgedwongen volgorde**. De medewerker zet de status via *Bewerken* in het boekingsdetail. De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
 
+### 1.4 Twee vaste werkregels
+
+- **E-mail versturen** kan alleen vanuit een **boeking** (naar de hoofdboeker) of vanuit een **prospect** (mail-icoon in *Prospects*).
+- **Documenten maken** (genereren of uploaden) kan alleen vanuit een **boeking**.
+
+In de schermen *Templates* en *E-mailtemplates* maak en beheer je alleen de templates zelf; je verstuurt of genereert daar niets.
+
 ---
 
 ## 2. Rollen en authorities
@@ -457,7 +464,7 @@ De tijdlijn in de boeking vervangt de oude losse documentenkaart.
 
 ### 4.6 Documenten toevoegen
 
-**Nieuw → Document** opent *Document toevoegen* (`DOCUMENT_CREATE`) met twee onderdelen:
+Documenten maak je **alleen vanuit een boeking**. **Nieuw → Document** opent *Document toevoegen* (`DOCUMENT_CREATE`) met twee onderdelen:
 
 | Onderdeel | Hoe |
 |---|---|
@@ -470,10 +477,10 @@ Opmerking: een document gaat als JSON (bytes) naar de server, niet als multipart
 
 ### 4.7 E-mail versturen
 
-Twee ingangen:
+E-mail versturen kan op **twee plekken**, en nergens anders. In het scherm *E-mailtemplates* maak en beheer je alleen templates.
 
-1. **Vanuit de boeking:** *Berichten en documenten → Nieuw → E-mail aan hoofdboeker* (`EMAIL_SEND`). Kies een template; bevestig *"E-mail versturen naar de hoofdboeker van boeking {nummer}?"*. De mail gaat naar het e-mailadres van de **hoofdboeker**. Heeft de boeking geen hoofdboeker of heeft die geen e-mailadres, dan wordt er niets verstuurd.
-2. **Vanuit E-mailtemplates:** het oog-icoon opent *Voorbeeld*. Kies *Prospect / boeker* of *Boeking*, selecteer de ontvanger of boeking, klik **Genereer voorbeeld** en daarna (met `EMAIL_SEND`) **Verstuur**.
+1. **Vanuit de boeking:** *Berichten en documenten → Nieuw → E-mail aan hoofdboeker* (`EMAIL_SEND`). De dialoog toont de boeking als vast doel; kies een template, bekijk eventueel met **Genereer voorbeeld** het resultaat en klik **Verstuur**. Bevestig *"E-mail versturen naar de hoofdboeker van boeking {nummer}?"*. De mail gaat naar het e-mailadres van de **hoofdboeker**. Heeft de boeking geen hoofdboeker of heeft die geen e-mailadres, dan wordt er niets verstuurd.
+2. **Vanuit de prospect:** in *Prospects* het **mail-icoon** op de regel (`EMAIL_SEND`). Dezelfde dialoog, nu met de prospect als vast doel; bevestig *"Weet je zeker dat je deze e-mail naar {naam} wilt versturen?"*.
 
 De afzender is het adres dat bij de organisatie is ingesteld (`email_from`, alleen ADMIN kan dat instellen). Is dat leeg, of ontbreekt het ontvangeradres, dan volgt een duidelijke foutmelding (`400`). Een mail **voor een boeking** wordt na succesvol versturen bewaard in de tijdlijn; een mail aan een losse prospect wordt niet bewaard. Is er lokaal geen SMTP-server ingesteld, dan wordt er niets echt verstuurd maar alleen gelogd (§12).
 
@@ -491,7 +498,7 @@ Menu **Boekers** (`BOOKING_READ`). Kolommen: Naam, E-mailadres, Telefoon, Geboor
 Menu **Prospects**. Het aanmeldproces voor potentiële klanten.
 
 1. **Registreer prospect** (status `prospect`, nog geen boeking).
-2. Mail ze via een e-mailtemplate.
+2. Mail ze via het **mail-icoon** op hun regel in *Prospects* (§4.7).
 3. **Maak boeker** zet de status op `active` (*"Prospect is nu een boeker"*).
 4. Maak er een boeking voor aan. **Zodra er een boeking voor een prospect ontstaat, wordt die automatisch `active`.** Een boeker met een andere status (bijv. `nietactief`) wordt niet vanzelf weer actief.
 
@@ -527,7 +534,7 @@ Verwijderen van een accommodatie of leverancier neemt de bijbehorende boekingsre
 
 ### 4.13 Templates (Word)
 
-Menu **Templates** (`TEMPLATE_CREATE/UPDATE/DELETE`; lezen kan met `TEMPLATE_READ`). Kolommen o.a. Naam, Omschrijving, Soort (*Editor* of *Geüpload bestand*), Aangemaakt.
+Menu **Templates** (`TEMPLATE_CREATE/UPDATE/DELETE`; lezen kan met `TEMPLATE_READ`). Hier maak en beheer je alleen de templates; een document genereer je vanuit een boeking (§4.6). Kolommen o.a. Naam, Omschrijving, Soort (*Editor* of *Geüpload bestand*), Aangemaakt.
 
 Bij **Nieuwe template** kies je **Soort template**:
 - **Word-bestand uploaden** — sleep een `.docx` met velden zoals `${booking.bookingNumber}` (alleen `.docx`). Een geüpload bestand is niet in de editor te openen.
@@ -537,7 +544,7 @@ Het oog-icoon opent de template alleen-lezen (voor een geüploade template met e
 
 ### 4.14 E-mailtemplates
 
-Menu **E-mailtemplates** (`TEMPLATE_READ`). Velden: **Naam**, **Onderwerp** (platte tekst, mag variabelen bevatten) en de **HTML-body** in dezelfde editor. Een EMPLOYEE kan de lijst bekijken, een voorbeeld genereren en versturen; aanmaken, wijzigen en verwijderen is aan MANAGER.
+Menu **E-mailtemplates** (`TEMPLATE_READ`). Velden: **Naam**, **Onderwerp** (platte tekst, mag variabelen bevatten) en de **HTML-body** in dezelfde editor. Het oog-icoon toont de template alleen-lezen; er is hier **geen voorbeeld en geen verzendknop**: dat kan alleen vanuit een boeking of een prospect (§4.7). Aanmaken, wijzigen en verwijderen is aan MANAGER; een EMPLOYEE kan de templates alleen bekijken.
 
 ### 4.15 Beheer (ADMIN en MANAGER)
 
@@ -614,7 +621,7 @@ Het portaal heeft een taalwisselaar (Nederlands/Engels) en **Uitloggen** in het 
 | Stap | Wie | Wat |
 |---|---|---|
 | 1 | EMPLOYEE/MANAGER | **Prospects → Registreer prospect** (naam, e-mail, status `prospect`) |
-| 2 | EMPLOYEE/MANAGER | **E-mailtemplates → oog → Prospect / boeker** → voorbeeld → **Verstuur** |
+| 2 | EMPLOYEE/MANAGER | **Prospects → mail-icoon** → template kiezen → voorbeeld → **Verstuur** |
 | 3 | EMPLOYEE/MANAGER | **Maak boeker**, of laat het systeem dat doen zodra een boeking ontstaat |
 | 4 | EMPLOYEE/MANAGER | **Boekers → rij-icoon** (concept-boeking) of **Boekingen → Nieuwe boeking** |
 | 5 | EMPLOYEE/MANAGER | in de boeking: **Accommodaties** (verblijven), **Activiteiten**, **Reizigers** toevoegen; status op `offerte` |
@@ -646,8 +653,8 @@ De statussen volgen **niet automatisch** op betalingen: de medewerker zet ze.
 
 1. **E-mailtemplates → Nieuw template**: naam, onderwerp (bv. `Uw boeking ${booking.bookingNumber}`), body.
 2. Gebruik `${prospect.*}` voor de ontvanger en `${booking.*}` voor boekinggegevens (de laatste werken alleen als de mail *voor een boeking* wordt verstuurd).
-3. Klik **Voorbeeld** (eerst opslaan), kies ontvanger of boeking, **Genereer voorbeeld**.
-4. **Verstuur** (`EMAIL_SEND`).
+3. **Opslaan.** Het scherm *E-mailtemplates* is alleen voor het beheren van templates: daar kun je niet voorbeeld bekijken of versturen.
+4. Versturen: in een boeking *Nieuw → E-mail aan hoofdboeker*, of in *Prospects* het mail-icoon. Kies de template, klik **Genereer voorbeeld** en daarna **Verstuur** (`EMAIL_SEND`).
 
 ### 6.5 Een klant toegang geven tot het portaal
 
@@ -1243,9 +1250,9 @@ Portaal (`frontend-booker`): `/login`, `/verify`, `/dashboard`, `/itinerary`, `/
 | `PAYMENT_UPDATE` | potlood, alleen voor een betaling zonder Mollie-id |
 | `PAYMENT_CORRECT` | *Correctie registreren* |
 | `PAYMENT_RELINK` | *Naar andere boeking koppelen* |
-| `TEMPLATE_READ` | menu E-mailtemplates, voorbeeld genereren, templates kiezen |
+| `TEMPLATE_READ` | menu E-mailtemplates (alleen-lezen weergave), templates kiezen en een voorbeeld genereren in de verstuur-dialoog |
 | `TEMPLATE_CREATE/UPDATE/DELETE` | menu Templates (Word), aanmaken/wijzigen/verwijderen, afbeeldingen uploaden/verwijderen |
-| `EMAIL_SEND` | *Verstuur*, *E-mail aan hoofdboeker*, *Opnieuw versturen* |
+| `EMAIL_SEND` | *Verstuur* in de dialoog vanuit een boeking of prospect, het mail-icoon in *Prospects*, *E-mail aan hoofdboeker*, *Opnieuw versturen* |
 | `ORGANIZATION_*` | menu Organisaties, onboarding, beheerdashboard |
 | `PERSON_*`, `ACCOUNT_*` | Personen/Accounts, Mijn gegevens/Wachtwoord |
 | `ROLE_*`, `AUTHORITY_*`, `ROLEAUTHORITY_*`, `ACCOUNTROLE_*` | Rollen/Rechten beheren; rollen aan accounts hangen |

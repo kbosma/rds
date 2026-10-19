@@ -55,7 +55,8 @@ Waarom iets zo is gebouwd, wat de gebruiker heeft gekozen en wat we onderweg heb
 | **Afbeeldingen per organisatie, nooit gedeeld** | gebruikerscorrectie: een eerste ontwerp zocht over organisaties heen. Nu: lijst/verwijderen/in-gebruik per organisatie en controle bij het opslaan van een template (`TemplateImages`). |
 | **Verwijderen alleen als ongebruikt** (e-mailtemplates én Word-templates uit de editor) | keuze "Echt verwijderen als ongebruikt"; al verstuurde mails verliezen hun plaatje (de dialoog waarschuwt). |
 | **Bibliotheek als tab in het editorpaneel** | keuze van de gebruiker; slepen of aanklikken. |
-| **Menu "E-mailtemplates" op `TEMPLATE_READ`** | EMPLOYEE mag bekijken/previewen/versturen, alleen MANAGER beheert. |
+| **Menu "E-mailtemplates" op `TEMPLATE_READ`** | EMPLOYEE mag de templates bekijken (alleen-lezen), alleen MANAGER beheert. Versturen gebeurt niet in dit scherm (zie de beslissing hieronder). |
+| **E-mail versturen alleen vanuit een boeking of een prospect; documenten maken alleen vanuit een boeking** (20-10-2026) | keuze van de gebruiker: in *E-mailtemplates* en *Templates* maak je alleen templates. De verstuur-dialoog heeft daarom altijd een vast doel (boeking of prospect) en kiest alleen de template; het mail-icoon in *Prospects* is erbij gekomen zodat een prospect nog steeds te mailen is. De API-endpoints blijven ongewijzigd. |
 | **`EMAIL_SEND` als eigen authority** | een template beheren is iets anders dan er mail mee versturen. |
 | **`LoggingEmailSender` zolang SMTP niet is geconfigureerd** | veilig lokaal; niets verlaat de machine. |
 

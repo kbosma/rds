@@ -52,7 +52,7 @@ De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-co
 Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSPECT` (kolom `booker.status`, migratie V4; waarden `PROSPECT`, `ACTIVE`). Zo blijft het datamodel klein en kan een prospect zonder verhuizing een gewone boeker worden.
 
 1. Medewerker registreert een potentiële klant op het scherm *Prospects* (status `PROSPECT`, nog geen boeking).
-2. Mail met een e-mailtemplate versturen (preview + verzenden vanuit het e-maillijstscherm).
+2. Mail met een e-mailtemplate versturen: mail-icoon op de regel in het scherm *Prospects* (template kiezen, voorbeeld bekijken, verzenden).
 3. In het booker-dialoog zet **Maak boeker** de status op `ACTIVE`.
 4. Vanaf een boeker (rij-icoon) of via de boekingenlijst een **concept-boeking** starten.
 5. **Een prospect met een boeking is een echte boeker:** zodra een boeking voor een prospect wordt aangemaakt (de concept-boeking wordt vastgelegd door een accommodatie, reiziger of ander onderdeel toe te voegen) of een prospect aan een bestaande boeking wordt gekoppeld, zet de backend de status automatisch op `ACTIVE` (`BookingServiceImpl.activateIfProspect`). Een boeker met een andere status (bv. `NIETACTIEF`) wordt niet vanzelf weer actief. Het boekingsscherm laadt de boeker daarna opnieuw.
@@ -64,7 +64,7 @@ Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSP
 ## Documenten en templates
 
 - **DocumentTemplate** (Word, `.docx`) → met een boeking samengevoegd tot een **Document** (docx of pdf). Naam: `<sjabloonnaam> - <boekingsnummer> - <datum tijd>.ext` (het tijdstip voorkomt naamconflicten bij herhaald gebruik).
-- **EmailTemplate** → met een booker of boeking samengevoegd tot onderwerp + HTML, te bekijken of te versturen.
+- **EmailTemplate** → met een booker of boeking samengevoegd tot onderwerp + HTML, te bekijken (voorbeeld) of te versturen, alleen vanuit een boeking of een prospect.
 - Beide gebruiken **hetzelfde model** (`booking.*`, bij e-mail ook `prospect.*`) en dezelfde editor: zie [templates.md](templates.md).
 
 ## Betalen

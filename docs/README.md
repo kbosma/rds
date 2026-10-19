@@ -44,7 +44,7 @@
 | Rollen | `ADMIN` (systeembeheer), `MANAGER` (eigen organisatie, volledig), `EMPLOYEE` (eigen organisatie, beperkt) |
 | Templating | FreeMarker, afgeschermd; één model voor e-mail én Word (zie [templates.md](templates.md)) |
 | Betalingen | Mollie (webhook via NGINX op het publieke IP) |
-| Tests (stand 19-10-2026) | backend 697 (JUnit 5/Mockito/MockMvc), employee-frontend 562 specs (Jasmine/Karma, Firefox headless) |
+| Tests (stand 20-10-2026) | backend 697 (JUnit 5/Mockito/MockMvc), employee-frontend 556 specs (Jasmine/Karma, Firefox headless) |
 | Datum van deze documentatie | laatst bijgewerkt 15-10-2026 |
 
 ## Over deze map

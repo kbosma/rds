@@ -234,6 +234,7 @@
     "title": "Email templates",
     "new": "New template",
     "editTitle": "Edit email template",
+    "viewTitle": "View email template",
     "newTitle": "New email template",
     "saved": "Template saved",
     "saveError": "Error saving template",
@@ -247,7 +248,6 @@
     "placeholdersHint": "Use ${prospect.firstname}, ${prospect.fullName}, etc.",
     "preview": "Preview",
     "previewTitle": "Preview",
-    "selectProspect": "Select a prospect",
     "render": "Generate preview",
     "renderError": "Error generating preview",
     "saveFirst": "Save the template first to generate a preview.",
@@ -259,8 +259,6 @@
     "selectTemplate": "Choose a template",
     "forProspect": "Prospect / booker",
     "forBooking": "Booking",
-    "selectBooking": "Choose a booking",
-    "noBookingsFound": "No bookings found.",
     "sendConfirmBooking": "Send the email to the main booker of booking {{number}}?"
   },
   "templateEditor": {

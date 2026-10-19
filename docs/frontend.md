@@ -43,7 +43,7 @@ translate-test.setup.spec.ts   # laadt de echte nl-vertalingen in alle specs
 | `bookers`, `prospects`, `travelers` | bookers (+ concept-boeking starten), prospects (aanmeldproces), reizigers |
 | `accommodations`, `suppliers`, `activities` | stamgegevens |
 | `documents`, `templates` | documenten van boekingen; Word-templates (upload of editor) |
-| `email-templates` | e-mailtemplates, preview- en verstuur-dialoog (prospect of boeking) |
+| `email-templates` | e-mailtemplates beheren (lijst, editor-dialoog, alleen-lezen weergave) en de verstuur-dialoog met voorbeeld (alleen geopend vanuit een boeking of een prospect, met een vast doel) |
 | `mollie` | betalingen per boeking en overzicht |
 | `admin` | organisaties (+ onboarding-wizard), personen, accounts, rollen, authorities, thema |
 | `profile` | mijn profiel, wachtwoord wijzigen, TOTP instellen/uitzetten |
@@ -98,7 +98,7 @@ Alle lijsten die direct vanuit het linkermenu bereikbaar zijn gebruiken hetzelfd
 | Leveranciers (`SUPPLIER_*`) | `SupplierDetailComponent` alleen-lezen (`/suppliers/:id?readonly=true`) | detailpagina met adressen en gekoppelde accommodaties (`/suppliers/:id`, `/suppliers/new`) | ja |
 | Activiteiten (`ACTIVITY_*`) | detailpagina alleen-lezen | detailpagina | ja |
 | Templates (`TEMPLATE_*`) | `TemplateDialog` read-only (+ extra download-icoon) | `TemplateDialog` | ja |
-| E-mailtemplates (`TEMPLATE_*`) | voorbeeld-dialoog (preview, met `EMAIL_SEND` ook versturen) | `EmailTemplateDialog` | ja |
+| E-mailtemplates (`TEMPLATE_*`) | `EmailTemplateDialog` alleen-lezen (geen voorbeeld of verzenden: dat kan alleen vanuit een boeking of prospect) | `EmailTemplateDialog` | ja |
 | Personen, Accounts (`PERSON_*`, `ACCOUNT_*`) | detailpagina alleen-lezen | detailpagina | ja |
 
 Conventies:

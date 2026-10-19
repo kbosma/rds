@@ -4,7 +4,7 @@
 
 - E-mailtemplates (onderwerp + HTML-body) staan **per organisatie** in de database (`email_template`).
 - Een template wordt met **FreeMarker** gemerged met de gegevens van een **booker/prospect** (`${prospect.*}`) of van een **boeking** (`${booking.*}`, zie [templates.md](templates.md)).
-- Het resultaat kan **voorbekeken** (render) en **verstuurd** (send) worden — voor een booker, of voor een boeking (dan naar de hoofdboeker).
+- Het resultaat kan **voorbekeken** (render) en **verstuurd** (send) worden — voor een booker/prospect, of voor een boeking (dan naar de hoofdboeker). **In de interface kan dat alleen vanuit een boeking (*Nieuw → E-mail aan hoofdboeker*) of vanuit een prospect (mail-icoon in *Prospects*)**; het scherm *E-mailtemplates* is alleen voor het beheren van templates. De API-endpoints zelf zijn niet beperkt.
 - De WYSIWYG-editor, de variabelen, de afbeeldingenbibliotheek en de herhaalde tabellen zijn **gedeeld** met de Word-templates: zie [templates.md](templates.md).
 - De **afzender** (`From`) is per organisatie instelbaar (`organization.email_from`).
 - De applicatie is een **SMTP-client**, geen mailserver: ze levert af bij een externe **mail-relay**.
@@ -257,7 +257,7 @@ Keuze van `email_from` per organisatie en keuze van relay hangen dus samen: de r
 - ADMIN is puur systeembeheer en heeft deze business-authorities bewust niet.
 - Frontend toont componenten op basis van **authorities** (nooit rollen), conform de projectregels.
 
-> **Frontend-zichtbaarheid:** het menu-item *E-mailtemplates* is zichtbaar bij `TEMPLATE_READ` (dus MANAGER én EMPLOYEE). De aanmaak-/bewerk-/verwijderknoppen in de lijst blijven achter `TEMPLATE_CREATE` (alleen MANAGER); de verstuur-knop in de preview zit achter `EMAIL_SEND`. Zo kan een EMPLOYEE de lijst bekijken, previewen en versturen zonder templates te kunnen beheren.
+> **Frontend-zichtbaarheid:** het menu-item *E-mailtemplates* is zichtbaar bij `TEMPLATE_READ` (dus MANAGER én EMPLOYEE). De aanmaak-/bewerk-/verwijderknoppen in de lijst blijven achter `TEMPLATE_CREATE` (alleen MANAGER); *Inzien* toont de template alleen-lezen. Versturen zit niet in de lijst: de verstuur-knop in de dialoog vanuit een boeking of prospect zit achter `EMAIL_SEND`. Zo kan een EMPLOYEE de templates bekijken en mailen zonder ze te kunnen beheren.
 
 ---
 
@@ -299,7 +299,7 @@ Keuze van `email_from` per organisatie en keuze van relay hangen dus samen: de r
 | Entity | `email/entity/EmailTemplate`, `email/entity/EmailImage`, `auth/entity/Organization` (`email_from`) |
 | Migraties | `V5__email_template.sql`, `V6__email_sending.sql`, `V7__email_image.sql` |
 
-Frontend (frontend-employee): `features/email-templates/*` (lijst, editor-dialog, preview+verstuur-dialog voor een prospect of een boeking, service), de **gedeelde** editor in `shared/template-editor/*` (`template-body-editor`, `template-image-library`, `template-image.service`, `template-variables`), *Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten* van het boekingdetail, en `organization.email_from` in het org-detailformulier.
+Frontend (frontend-employee): `features/email-templates/*` (lijst, editor-dialog, verstuur-dialog met voorbeeld voor een vaste prospect of boeking, service), de **gedeelde** editor in `shared/template-editor/*` (`template-body-editor`, `template-image-library`, `template-image.service`, `template-variables`), *Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten* van het boekingdetail, het mail-icoon in `features/prospects`, en `organization.email_from` in het org-detailformulier.
 
 ---
 
