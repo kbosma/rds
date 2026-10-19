@@ -43,6 +43,10 @@ Migratie: `V5__email_template.sql`.
 
 ---
 
+## Verzonden e-mails bewaren
+
+Een mail die voor een **boeking** wordt verstuurd (dus naar de hoofdboeker) wordt na het succesvol versturen bewaard in `sent_email` (migratie V14): van, aan, onderwerp, HTML zoals verstuurd, wie en wanneer. Mislukt het versturen, dan wordt er niets bewaard. Een mail voor een booker/prospect (zonder boeking) wordt niet bewaard. De tabel is alleen-toevoegen (triggers weigeren `UPDATE`/`DELETE`/`TRUNCATE`) en een boeking met verzonden e-mails kan niet worden verwijderd (`ON DELETE RESTRICT` en `DeletionGuard`, 409). Opnieuw versturen maakt een nieuwe regel; het origineel blijft staan.
+
 ## Templating / merge (FreeMarker)
 
 Twee FreeMarker-configuraties (zie `EmailRenderServiceImpl`):
@@ -268,6 +272,9 @@ Keuze van `email_from` per organisatie en keuze van relay hangen dus samen: de r
 | DELETE | `/api/email-templates/{id}` | `TEMPLATE_DELETE` | Verwijderen |
 | POST | `/api/email-templates/{id}/render?bookerId=…` of `?bookingId=…` | `TEMPLATE_READ` | Merge-preview (verstuurt niets); precies één van de twee parameters |
 | POST | `/api/email-templates/{id}/send?bookerId=…` of `?bookingId=…` | `EMAIL_SEND` | Verstuurt de gemergde mail naar de booker, resp. de hoofdboeker van de boeking |
+| GET | `/api/sent-emails/booking/{bookingId}` | `BOOKING_READ` | Verzonden e-mails van een boeking, nieuwste eerst (met leesbare naam van de verzender) |
+| GET | `/api/sent-emails/{id}` | `BOOKING_READ` | Eén verzonden e-mail, inclusief de bewaarde HTML |
+| POST | `/api/sent-emails/{id}/resend` | `EMAIL_SEND` | Stuurt dezelfde inhoud opnieuw naar hetzelfde adres; 201 met de nieuwe regel (`resentFromId` verwijst naar het origineel). Geen PUT/DELETE: alleen-toevoegen |
 | POST | `/api/email-images` | `TEMPLATE_CREATE`/`UPDATE` | Upload een afbeelding (multipart, deel `file`) → `{ url, … }` |
 | GET | `/api/email-images` | `TEMPLATE_CREATE`/`UPDATE` | Bibliotheek van de eigen organisatie (zonder bytes, met `inUse`) |
 | DELETE | `/api/email-images/{id}` | `TEMPLATE_DELETE` | Verwijdert een ongebruikte afbeelding; `409` als een e-mailtemplate of een Word-template uit de editor hem gebruikt |

@@ -818,5 +818,28 @@
     "addError": "Adding the address failed",
     "saveError": "Saving the address failed",
     "removeError": "Deleting the address failed"
+  },
+  "messages": {
+    "title": "Messages and documents",
+    "new": "New",
+    "newEmail": "Email to main booker",
+    "newDocument": "Document",
+    "filter": "Filter",
+    "filterAll": "All",
+    "filterEmail": "Email",
+    "filterDocument": "Documents",
+    "filterPayment": "Payments",
+    "empty": "No messages, documents or payments yet.",
+    "to": "to",
+    "from": "From",
+    "sentOn": "Sent on",
+    "sentBy": "Sent by",
+    "unknown": "Unknown",
+    "sent": "sent",
+    "resent": "sent again",
+    "portal": "portal",
+    "resend": "Send again",
+    "resendDone": "Email sent again",
+    "resendError": "Sending again failed"
   }
 }

@@ -63,7 +63,7 @@ class DeletionGuardTest {
         DeletionBlockedException ex = assertThrows(DeletionBlockedException.class, () -> guard.verifyBookingDeletable(ID));
 
         assertTrue(ex.getMessage().contains("booking"), ex.getMessage());
-        assertTrue(ex.getMessage().contains("documents or payments"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("documents, payments or sent emails"), ex.getMessage());
         assertTrue(ex.getMessage().contains("1 booking"), ex.getMessage());
     }
 

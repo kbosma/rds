@@ -14,11 +14,11 @@ import java.util.UUID;
  * wordt verwijderd. Daarom weigert deze guard het verwijderen van:
  * <ul>
  *   <li>een boeking met documenten of betalingen (ook een boeking waar een betaling aan was gekoppeld en is
- *       herkoppeld, want die herkoppeling is geschiedenis);</li>
+ *       herkoppeld, want die herkoppeling is geschiedenis) of verzonden e-mails;</li>
  *   <li>een booker, accommodatie, leverancier of activiteit die voorkomt in een boeking met documenten of
  *       betalingen.</li>
  * </ul>
- * Verzonden e-mails worden niet bewaard (er is geen e-mailgeschiedenis), dus daar valt niets te bewaken.
+ * Ook verzonden e-mails aan de hoofdboeker (tabel sent_email, V14) tellen als geschiedenis.
  *
  * Het gaat om de bestaande boekingen in de database; de tenant-controle gebeurt door de aanroepende service.
  */
@@ -28,7 +28,8 @@ public class DeletionGuard {
     private static final String HAS_HISTORY =
             "(exists (select d.documentId from Document d where d.booking = b)"
                     + " or exists (select p.booking from BookingMolliePayment p where p.booking = b)"
-                    + " or exists (select r.relinkId from BookingMolliePaymentRelink r where r.fromBooking = b or r.toBooking = b))";
+                    + " or exists (select r.relinkId from BookingMolliePaymentRelink r where r.fromBooking = b or r.toBooking = b)"
+                    + " or exists (select e.sentEmailId from SentEmail e where e.booking = b))";
 
     private final EntityManager entityManager;
 
@@ -67,7 +68,7 @@ public class DeletionGuard {
         if (linked != null && linked > 0) {
             throw new DeletionBlockedException("This " + what + " cannot be deleted: it is linked to "
                     + linked + (linked == 1 ? " booking" : " bookings")
-                    + " that has documents or payments, which must be kept as history.");
+                    + " that has documents, payments or sent emails, which must be kept as history.");
         }
     }
 }

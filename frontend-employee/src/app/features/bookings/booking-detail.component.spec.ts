@@ -213,7 +213,7 @@ describe('BookingDetailComponent', () => {
     createComponent();
     fixture.detectChanges();
     tick();
-    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open');
+    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(undefined) } as never);
 
     component.openEmailDialog();
 
@@ -221,6 +221,42 @@ describe('BookingDetailComponent', () => {
     const config = openSpy.calls.mostRecent().args[1] as { data: { booking?: { bookingId: string; bookingNumber: string }; template?: unknown } };
     expect(config.data.booking).toEqual({ bookingId: 'b-1', bookingNumber: 'BK-2026-001' });
     expect(config.data.template).toBeUndefined(); // de gebruiker kiest de template in de dialoog
+  }));
+
+  it('opens the right dialog for a line in the messages timeline', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    const c = component as unknown as { viewDocument: jasmine.Spy; viewPayment: jasmine.Spy; viewSentEmail: jasmine.Spy };
+    spyOn(component, 'viewDocument');
+    spyOn(component, 'viewPayment');
+    spyOn(component, 'viewSentEmail');
+    const doc = { documentId: 'd-1' } as never;
+    const payment = { molliePaymentId: 'p-1' } as MolliePayment;
+    const email = { sentEmailId: 'e-1' } as never;
+
+    component.viewTimelineItem({ kind: 'document', id: 'd-1', at: '', source: doc });
+    component.viewTimelineItem({ kind: 'payment', id: 'p-1', at: '', source: payment });
+    component.viewTimelineItem({ kind: 'email', id: 'e-1', at: '', source: email });
+
+    expect(component.viewDocument).toHaveBeenCalledWith(doc);
+    expect(component.viewPayment).toHaveBeenCalledWith(payment);
+    expect(component.viewSentEmail).toHaveBeenCalledWith(email);
+    expect(c).toBeDefined();
+  }));
+
+  it('opens a sent mail read-only and offers resending only with EMAIL_SEND', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(false) } as never);
+    const email = { sentEmailId: 'e-1' } as never;
+
+    component.viewSentEmail(email);
+
+    const config = openSpy.calls.mostRecent().args[1] as { data: { email: unknown; canResend: boolean } };
+    expect(config.data.email).toBe(email);
+    expect(config.data.canResend).toBe(component.can('EMAIL_SEND'));
   }));
 
   it('should open the read-only payment dialog with the payment and the booking number', fakeAsync(() => {

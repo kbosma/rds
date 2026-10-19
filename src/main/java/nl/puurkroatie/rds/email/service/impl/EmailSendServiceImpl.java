@@ -8,6 +8,8 @@ import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.email.dto.EmailRenderDto;
 import nl.puurkroatie.rds.email.dto.EmailSendResultDto;
+import nl.puurkroatie.rds.email.entity.SentEmail;
+import nl.puurkroatie.rds.email.repository.SentEmailRepository;
 import nl.puurkroatie.rds.email.service.EmailMessage;
 import nl.puurkroatie.rds.email.service.EmailNotConfiguredException;
 import nl.puurkroatie.rds.email.service.EmailImageUrlResolver;
@@ -29,19 +31,22 @@ public class EmailSendServiceImpl implements EmailSendService {
     private final OrganizationRepository organizationRepository;
     private final EmailSender emailSender;
     private final EmailImageUrlResolver imageUrlResolver;
+    private final SentEmailRepository sentEmailRepository;
 
     public EmailSendServiceImpl(EmailRenderService emailRenderService,
                                 BookerRepository bookerRepository,
                                 BookingRepository bookingRepository,
                                 OrganizationRepository organizationRepository,
                                 EmailSender emailSender,
-                                EmailImageUrlResolver imageUrlResolver) {
+                                EmailImageUrlResolver imageUrlResolver,
+                                SentEmailRepository sentEmailRepository) {
         this.emailRenderService = emailRenderService;
         this.bookerRepository = bookerRepository;
         this.bookingRepository = bookingRepository;
         this.organizationRepository = organizationRepository;
         this.emailSender = emailSender;
         this.imageUrlResolver = imageUrlResolver;
+        this.sentEmailRepository = sentEmailRepository;
     }
 
     @Override
@@ -58,6 +63,7 @@ public class EmailSendServiceImpl implements EmailSendService {
     }
 
     @Override
+    @Transactional
     public EmailSendResultDto sendForBooking(UUID templateId, UUID bookingId) {
         // De tenant-controle op template én boeking gebeurt in renderForBooking().
         EmailRenderDto rendered = emailRenderService.renderForBooking(templateId, bookingId);
@@ -69,8 +75,11 @@ public class EmailSendServiceImpl implements EmailSendService {
             throw new EmailNotConfiguredException("Boeking heeft geen hoofdboeker om naar te mailen: " + bookingId);
         }
 
-        return deliver(rendered, booker.getEmailaddress(), booking.getTenantOrganization(),
+        EmailSendResultDto result = deliver(rendered, booker.getEmailaddress(), booking.getTenantOrganization(),
                 "De hoofdboeker van de boeking heeft geen e-mailadres: " + bookingId);
+        // Wat naar de hoofdboeker gaat blijft bewaard, zodat het in de tijdlijn van de boeking staat.
+        sentEmailRepository.save(new SentEmail(booking, result.getFrom(), result.getTo(), result.getSubject(), result.getBodyHtml(), null));
+        return result;
     }
 
     /** Gemeenschappelijk deel: afzender van de organisatie, ontvanger controleren, en versturen. */
@@ -92,6 +101,6 @@ public class EmailSendServiceImpl implements EmailSendService {
         // publiek bereikbare URL nodig, dus die vullen we pas nu in.
         String bodyHtml = imageUrlResolver.toAbsolute(rendered.getBodyHtml());
         emailSender.send(new EmailMessage(from, to, rendered.getSubject(), bodyHtml));
-        return new EmailSendResultDto(to, from, rendered.getSubject());
+        return new EmailSendResultDto(to, from, rendered.getSubject(), bodyHtml);
     }
 }
