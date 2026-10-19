@@ -95,9 +95,7 @@ type Filter = 'all' | TimelineKind;
                 </div>
                 <app-row-actions class="row-actions"
                                  [canView]="canView(item)" [canEdit]="item.kind === 'document' && canEditDocument()"
-                                 [canDelete]="item.kind === 'document' && canDeleteDocument()"
-                                 (view)="view.emit(item)" (edit)="editDocument.emit(asDocument(item))"
-                                 (remove)="removeDocument.emit(asDocument(item))" />
+                                 (view)="view.emit(item)" (edit)="editDocument.emit(asDocument(item))" />
               </li>
             }
           </ul>
@@ -139,13 +137,11 @@ export class BookingMessagesCardComponent {
   readonly canReadDocument = input(false);
   readonly canReadPayment = input(false);
   readonly canEditDocument = input(false);
-  readonly canDeleteDocument = input(false);
 
   readonly newEmail = output<void>();
   readonly newDocument = output<void>();
   readonly view = output<TimelineItem>();
   readonly editDocument = output<Document>();
-  readonly removeDocument = output<Document>();
 
   readonly filter = signal<Filter>('all');
   private readonly all = computed(() => buildTimeline(this.emails(), this.documents(), this.payments()));

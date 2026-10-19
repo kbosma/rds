@@ -47,14 +47,6 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public void delete(UUID id) {
-        Document existing = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found with id: " + id));
-        verifyOrganization(existing.getTenantOrganization());
-        documentRepository.deleteById(id);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<DocumentDto> findAll() {
         if (isAdmin()) {

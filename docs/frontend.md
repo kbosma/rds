@@ -43,7 +43,7 @@ translate-test.setup.spec.ts   # laadt de echte nl-vertalingen in alle specs
 | `bookers`, `prospects`, `travelers` | bookers (+ concept-boeking starten), prospects (aanmeldproces), reizigers |
 | `accommodations`, `suppliers`, `activities` | stamgegevens |
 | `documents`, `templates` | documenten van boekingen; Word-templates (upload of editor) |
-| `email-templates` | e-mailtemplates, preview- en verstuur-dialoog (prospect of boeking) |
+| `email-templates` | e-mailtemplates beheren (lijst, editor-dialoog, alleen-lezen weergave) en de verstuur-dialoog met voorbeeld (alleen geopend vanuit een boeking of een prospect, met een vast doel) |
 | `mollie` | betalingen per boeking en overzicht |
 | `admin` | organisaties (+ onboarding-wizard), personen, accounts, rollen, authorities, thema |
 | `profile` | mijn profiel, wachtwoord wijzigen, TOTP instellen/uitzetten |
@@ -98,7 +98,7 @@ Alle lijsten die direct vanuit het linkermenu bereikbaar zijn gebruiken hetzelfd
 | Leveranciers (`SUPPLIER_*`) | `SupplierDetailComponent` alleen-lezen (`/suppliers/:id?readonly=true`) | detailpagina met adressen en gekoppelde accommodaties (`/suppliers/:id`, `/suppliers/new`) | ja |
 | Activiteiten (`ACTIVITY_*`) | detailpagina alleen-lezen | detailpagina | ja |
 | Templates (`TEMPLATE_*`) | `TemplateDialog` read-only (+ extra download-icoon) | `TemplateDialog` | ja |
-| E-mailtemplates (`TEMPLATE_*`) | voorbeeld-dialoog (preview, met `EMAIL_SEND` ook versturen) | `EmailTemplateDialog` | ja |
+| E-mailtemplates (`TEMPLATE_*`) | `EmailTemplateDialog` alleen-lezen (geen voorbeeld of verzenden: dat kan alleen vanuit een boeking of prospect) | `EmailTemplateDialog` | ja |
 | Personen, Accounts (`PERSON_*`, `ACCOUNT_*`) | detailpagina alleen-lezen | detailpagina | ja |
 
 Conventies:
@@ -107,7 +107,7 @@ Conventies:
 - **Adressen beheren:** `shared/components/address-editor.component.ts` (`app-address-editor`) is een lijst + formulier zonder eigen API-calls: het meldt `create`/`update`/`remove` en de aanroeper koppelt aan de eigenaar. Gebruikt in `BookerDialogComponent` (alleen bij een bestaande booker, met `BOOKING_UPDATE`); accommodatie- en leveranciersdetail hebben hun eigen, oudere variant. Bij het verwijderen van een booker, accommodatie of leverancier ruimt de server de adressen op die nergens anders meer aan hangen (`AddressCleanup`).
 - **"Nieuw" vanuit een keuzelijst:** `BookerSelectDialogComponent` heeft "Nieuwe boeker" (opent `BookerDialogComponent` in aanmaakmodus en kiest de nieuwe booker meteen, met `BOOKING_CREATE`); `BookingLineDialogComponent` kan een accommodatie en een leverancier aanmaken via `shared/components/quick-create-dialog.component.ts` (alleen code + naam; de rest vul je later op de detailpagina in). Heeft de gekozen accommodatie nog geen leverancier, dan kies of maak je er een en wordt de koppeling bij opslaan vastgelegd. Op de accommodatie-/leveranciersdetail maakt "Nieuwe leverancier"/"Nieuwe accommodatie" het record aan en koppelt het meteen.
 - **Rollen en authorities:** `RoleDetailComponent` toont bij een bestaande rol een kaart met de gekoppelde authorities (`ROLEAUTHORITY_READ`), met koppelen (`_CREATE`) en ontkoppelen (`_DELETE`, met bevestiging). Rol↔authority is globaal (niet per organisatie); ADMIN heeft lezen/koppelen/ontkoppelen, MANAGER alleen lezen.
-- **Documenten, betalingen en verstuurde e-mails zijn de waarheid-geschiedenis** en krijgen bewust geen verwijderknop.
+- **Documenten, betalingen en verstuurde e-mails zijn de waarheid-geschiedenis** en krijgen bewust geen verwijderknop (ook niet in de tijdlijn *Berichten en documenten*); ook `DocumentService` heeft geen `delete`.
 - Een nieuwe lijst: kolom `actions`, `<app-row-actions [canView] [canEdit] [canDelete]>`, geen regelklik, specs voor icoon-zichtbaarheid per authority en voor elke actie.
 
 ### De gedeelde template-editor (`shared/template-editor/`)

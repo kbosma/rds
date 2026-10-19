@@ -19,7 +19,7 @@ De precieze rechten staan in [security.md](security.md) (rollen → authorities)
 
 ### Boekingen (`frontend-employee` → *Boekingen*)
 - Lijst en detailscherm per boeking: boekingsnummer, **status** (`aanvraag → offerte → boeking → voorschot → betaald → opreis → weerthuis → afgerond`), periode en totaalbedrag, **hoofdboeker**, **reizigers**, **boekingsregels** (accommodatie + leverancier + periode + prijs), **boekingsactiviteiten**, **documenten**, **betalingen**.
-- Acties in het detail: documenten uploaden of **genereren** uit een Word-template (docx of pdf), een Mollie-betaling aanmaken, **e-mail versturen** naar de hoofdboeker (knop op de hoofdboeker-kaart).
+- Acties in het detail: documenten uploaden of **genereren** uit een Word-template (docx of pdf), een Mollie-betaling aanmaken, **e-mail versturen** naar de hoofdboeker (*Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten*).
 - **Concept-boeking:** vanuit een boeker/prospect een nieuwe boeking starten (`/bookings/new?bookerId=…`). Het scherm is voorgevuld, maar er wordt **niets opgeslagen** totdat de eerste onderdelen (reiziger, boekingsregel, …) worden toegevoegd (`ensureBookingPersisted`). Heeft de gekozen boeker al een lopende (niet afgeronde) boeking, dan volgt een waarschuwing.
 
 ### Bookers en prospects
@@ -35,7 +35,7 @@ Accommodaties (met adressen en leveranciers), leveranciers (met adressen), activ
 - Een template kan **geüpload** worden of in de **WYSIWYG-editor** gemaakt worden (met variabelen, afbeeldingen en herhaalde tabellen); zie [templates.md](templates.md).
 
 ### E-mail
-E-mailtemplates (onderwerp + HTML) met dezelfde editor, voorbeeld (preview) en versturen voor een prospect/boeker **of** voor een boeking (naar de hoofdboeker). Zie [email.md](email.md).
+E-mailtemplates (onderwerp + HTML) met dezelfde editor; het scherm *E-mailtemplates* is alleen voor het beheren ervan. Versturen (met voorbeeld) gebeurt **alleen** vanuit een boeking (naar de hoofdboeker) of vanuit een prospect (mail-icoon in *Prospects*). Zie [email.md](email.md).
 
 ### Betalingen (Mollie)
 De medewerker maakt een betalingsrecord voor een boeking; de klant triggert in de portal de echte betaling; een webhook werkt de status bij. Zie [mollie.md](mollie.md).
@@ -59,7 +59,7 @@ flowchart LR
     end
     NGX[NGINX<br/>/rds/ /booker/ /api/]
     API[Spring Boot 4<br/>Jetty :8666 /rds]
-    DB[(PostgreSQL 17<br/>Flyway V1-V8)]
+    DB[(PostgreSQL 17<br/>Flyway V1-V16)]
     MOL[Mollie API]
     SMTP[Mail-relay SMTP]
 
@@ -90,7 +90,7 @@ rds/
 │   ├── email/       # e-mailtemplates, versturen, afbeeldingenbibliotheek
 │   ├── docgen/      # gedeeld template-model, documentgeneratie, HTML→docx, herhaalde tabellen
 │   └── common/      # kleine gedeelde hulpmiddelen (enum-parsing)
-├── src/main/resources/db/migration/   # Flyway V1..V8
+├── src/main/resources/db/migration/   # Flyway V1..V16
 ├── src/test/java/…                    # backend-tests (unit + MockMvc-integratie)
 ├── frontend-employee/           # Angular-app voor medewerkers
 ├── frontend-booker/             # Angular-app voor klanten

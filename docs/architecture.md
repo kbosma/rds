@@ -8,7 +8,7 @@ De frontends staan in [frontend.md](frontend.md); het geheel in [overview.md](ov
 |---|---|
 | Taal / framework | Java 21, Spring Boot **4.0.3** (webmvc, data-jpa, security, validation, actuator, mail) |
 | Webserver | **Jetty** (Tomcat uitgesloten), poort 8666, `server.servlet.context-path: /rds`, access-log naar `/opt/rds/log` |
-| Database | PostgreSQL 17; **Flyway** (`db/migration`, V1–V8); Hibernate `ddl-auto: validate` — een entity moet exact bij het schema passen |
+| Database | PostgreSQL 17; **Flyway** (`db/migration`, V1–V16); Hibernate `ddl-auto: validate` — een entity moet exact bij het schema passen |
 | Mapping | **MapStruct** 1.6.3 (`componentModel=spring`, compiler-arg `-parameters`) |
 | Beveiliging | Spring Security, stateless JWT (jjwt 0.12.6), TOTP (`dev.samstevens.totp`, QR via zxing), BCrypt |
 | Documenten | **xdocreport** 2.1.0 (docx-merge via FreeMarker, pdf via XWPF-converter), Apache POI (komt mee), **jsoup** 1.18.3 (HTML → docx, herhaalde tabellen) |

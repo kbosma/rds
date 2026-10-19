@@ -100,4 +100,16 @@ describe('EmailTemplateDialogComponent', () => {
     });
     expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
   });
+
+  it('readOnly: toont de template, maar save() doet niets', async () => {
+    const component = await setup({ template: mockTemplate, readOnly: true });
+    expect(component.readOnly).toBe(true);
+    expect(component.name).toBe('Welkom');
+
+    component.save();
+
+    expect(serviceSpy.update).not.toHaveBeenCalled();
+    expect(serviceSpy.create).not.toHaveBeenCalled();
+    expect(dialogRefSpy.close).not.toHaveBeenCalled();
+  });
 });

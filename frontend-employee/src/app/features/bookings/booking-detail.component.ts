@@ -439,9 +439,9 @@ interface BookingMolliePaymentLink {
           [emails]="sentEmails()" [documents]="documents()" [payments]="payments()" [paymentStatus]="paymentStatusMap()"
           [canSendEmail]="!!booker() && can('EMAIL_SEND')" [canAddDocument]="can('DOCUMENT_CREATE')"
           [canReadEmail]="authService.hasAuthority('BOOKING_READ')" [canReadDocument]="authService.hasAuthority('DOCUMENT_READ')"
-          [canReadPayment]="authService.hasAuthority('PAYMENT_READ')" [canEditDocument]="can('DOCUMENT_UPDATE')" [canDeleteDocument]="can('DOCUMENT_DELETE')"
+          [canReadPayment]="authService.hasAuthority('PAYMENT_READ')" [canEditDocument]="can('DOCUMENT_UPDATE')"
           (newEmail)="openEmailDialog()" (newDocument)="openDocumentUploadDialog()"
-          (view)="viewTimelineItem($event)" (editDocument)="editDocumentPortal($event)" (removeDocument)="deleteDocument($event)" />
+          (view)="viewTimelineItem($event)" (editDocument)="editDocumentPortal($event)" />
       }
         </div>
       </div>
@@ -1070,22 +1070,6 @@ export class BookingDetailComponent implements OnInit {
         },
         error: () => {
           this.snackBar.open(this.translate.instant('documents.fetchError'), this.translate.instant('common.close'), { duration: 5000 });
-        },
-      });
-  }
-
-  async deleteDocument(doc: Document) {
-    if (!await this.confirmService.confirmDelete(this.translate.instant('documents.deleteConfirm', { name: doc.displayname }))) return;
-
-    this.documentService.delete(doc.documentId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.snackBar.open(this.translate.instant('documents.removed'), this.translate.instant('common.close'), { duration: 3000 });
-          this.loadDocuments();
-        },
-        error: () => {
-          this.snackBar.open(this.translate.instant('documents.removeError'), this.translate.instant('common.close'), { duration: 5000 });
         },
       });
   }

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { ProspectListComponent } from './prospect-list.component';
+import { EmailTemplatePreviewDialogComponent } from '../email-templates/email-template-preview-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { BookerService } from '../bookers/booker.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -115,6 +116,37 @@ describe('ProspectListComponent', () => {
       (fixture.nativeElement.querySelector('tr.mat-mdc-row') as HTMLElement).click();
 
       expect(open).not.toHaveBeenCalled();
+    }));
+
+    it('toont per regel een e-mailknop met de authority EMAIL_SEND', fakeAsync(() => {
+      load();
+
+      expect(buttons('action-email').length).toBe(2);
+      expect(authSpy.hasAuthority).toHaveBeenCalledWith('EMAIL_SEND');
+    }));
+
+    it('verbergt de e-mailknop zonder EMAIL_SEND', fakeAsync(() => {
+      authSpy.hasAuthority.and.callFake((a: string) => a !== 'EMAIL_SEND');
+      fixture = TestBed.createComponent(ProspectListComponent);
+      component = fixture.componentInstance;
+      load();
+
+      expect(buttons('action-email').length).toBe(0);
+      expect(buttons('action-view').length).toBe(2);
+    }));
+
+    it('de e-mailknop opent het verstuur-dialoog voor die prospect', fakeAsync(() => {
+      load();
+      const open = spyOn(dialog(), 'open');
+
+      component.sendEmail(mockProspects[0]);
+
+      const args = open.calls.mostRecent().args;
+      expect(args[0]).toBe(EmailTemplatePreviewDialogComponent);
+      const data = (args[1] as { data: { booker: { bookerId: string; name: string }; booking?: unknown } }).data;
+      expect(data.booker.bookerId).toBe(mockProspects[0].bookerId);
+      expect(data.booker.name).toContain(mockProspects[0].lastname);
+      expect(data.booking).toBeUndefined();
     }));
 
     it('inzien opent het booker-dialoog alleen-lezen', fakeAsync(() => {

@@ -81,13 +81,10 @@ describe('BookingMessagesCardComponent', () => {
     expect(seen).toEqual(['email:e-1']);
   });
 
-  it('biedt alleen bij een document verwijderen aan, en alleen met het recht', async () => {
-    const withRight = await setup({ canDeleteDocument: true });
-    const buttonCount = (row: HTMLElement) => row.querySelectorAll('button').length;
-    const [paymentRow, emailRow, documentRow] = rows(withRight.el);
+  it('biedt nooit verwijderen aan: documenten, betalingen en e-mails zijn geschiedenis', async () => {
+    const { el } = await setup({ canEditDocument: true });
 
-    expect(buttonCount(documentRow)).toBe(buttonCount(emailRow) + 1);
-    expect(buttonCount(paymentRow)).toBe(buttonCount(emailRow));
+    expect(el.querySelector('.action-delete')).toBeNull();
   });
 
   it('toont of een document in het portaal zichtbaar is of alleen intern', async () => {

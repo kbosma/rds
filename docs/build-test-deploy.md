@@ -39,7 +39,7 @@ mvn -q -Dtest='NaamTest' -DfailIfNoTests=false test   # één klasse
 
 ### Testdatabase (embedded PostgreSQL)
 
-De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop Flyway (V1–V8, dus de seeddata uit V2). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
+De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop Flyway (V1–V16, dus de seeddata uit V2). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
 
 - `EmbeddedPostgresInitializer` (src/test/java/…/support) zet de datasource-properties van elke Spring-testcontext; geregistreerd in `src/test/resources/META-INF/spring.factories`. Eén database per testrun, gedeeld door alle contexten. Alleen in src/test: de applicatie zelf start hier nooit mee.
 - De properties staan bovenaan: een test draait dus nooit per ongeluk tegen een echte database, ook niet als `SPRING_DATASOURCE_*` gezet is. `TestDatabaseIsolationTest` bewaakt dat.
@@ -64,7 +64,7 @@ npx ng test --watch=false --browsers=FirefoxHeadless \
     --include='src/app/translate-test.setup.spec.ts'          # een deel (setup altijd meenemen!)
 ```
 
-- Stand 19-10-2026: **562 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
+- Stand 20-10-2026: **556 specs, 0 failures** in `frontend-employee` (Firefox 158); `frontend-booker` heeft 1 spec en geen Karma-launcher voor Firefox.
 - `src/app/translate-test.setup.spec.ts` laadt de echte nl-vertalingen in elke spec; wie specs selecteert met `--include` moet dat bestand mee-includen, anders zie je vertaalsleutels in plaats van tekst.
 - TipTap in een test: de editor draait echt in Firefox; plak/drop-gedrag test je door de ProseMirror-handlers rechtstreeks aan te roepen (synthetische `ClipboardEvent`s dragen geen bestanden).
 - Dev-proxy en `base href`: zie [frontend.md](frontend.md).

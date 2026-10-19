@@ -31,7 +31,7 @@ Elke controller-methode heeft `@PreAuthorize("hasAuthority('…')")`; de volledi
 
 ## Rollen en authorities
 
-61 granulaire authorities (`<DOMEIN>_<ACTIE>`, actie = CREATE/READ/UPDATE/DELETE, plus `EMAIL_SEND`). Seed (V2 + V6) — letters = C(reate) R(ead) U(pdate) D(elete), S = send:
+62 granulaire authorities (`<DOMEIN>_<ACTIE>`, actie = CREATE/READ/UPDATE/DELETE, plus `EMAIL_SEND`, `PAYMENT_CORRECT` en `PAYMENT_RELINK`). Aantallen per rol in de seed: ADMIN 28, MANAGER 48, EMPLOYEE 18. Seed (V2, V6, V10 en V12; V16 haalt `DOCUMENT_DELETE` weer weg) — letters = C(reate) R(ead) U(pdate) D(elete), S = send:
 
 | Domein | ADMIN | MANAGER | EMPLOYEE |
 |---|:--:|:--:|:--:|
@@ -46,14 +46,16 @@ Elke controller-methode heeft `@PreAuthorize("hasAuthority('…')")`; de volledi
 | PAYMENT_RELINK (betaling met reden aan een andere boeking hangen, V12) | ✓ | ✓ | – |
 | BOOKING (boekingen, bookers, reizigers, adressen, regels, activiteiten) | – | CRUD | CRUD |
 | ACCOMMODATION, SUPPLIER, ACTIVITY | – | CRUD | R |
-| DOCUMENT | – | CRUD | CRUD |
-| PAYMENT | – | CRUD | C R |
+| DOCUMENT (geen verwijderen: een document wordt nooit verwijderd) | – | C R U | C R U |
+| PAYMENT | – | CRUD\* | C R |
 | TEMPLATE (Word + e-mail + afbeeldingen) | – | CRUD | R |
 | EMAIL_SEND | – | S | S |
 | ORGANIZATION_THEME | – | CRUD | – |
 | BOOKER_PORTAL_READ/UPDATE | – | – | – (alleen via een BOOKER-token) |
 
-- **ADMIN = systeembeheer**: bewust geen boekings-, template- of e-mailrechten. Vandaar `403` voor ADMIN op die endpoints (ook in de tests).
+\* `PAYMENT_DELETE` bestaat als authority (en zit bij MANAGER), maar geen enkel endpoint gebruikt het: betalingen worden nooit verwijderd. `PAYMENT_UPDATE` werkt alleen zolang een betaling nog niet bij Mollie bestaat.
+
+- **ADMIN = systeembeheer**: bewust geen boekings-, template- of e-mailrechten. Vandaar `403` voor ADMIN op die endpoints (ook in de tests). ADMIN heeft wel `PAYMENT_CORRECT` en `PAYMENT_RELINK`, maar niet `PAYMENT_READ`: die twee rechten zijn in de praktijk voor MANAGER bedoeld.
 - De rol-authority-koppelingen staan in de database en zijn in het beheer te wijzigen; nieuwe authorities komen via een Flyway-migratie (zie V6 voor `EMAIL_SEND` als voorbeeld).
 - **Frontend:** componenten en menu-items worden getoond op basis van authorities, nooit rollen. Het dashboard kiest bijvoorbeeld op `ORGANIZATION_READ` (beheer) en `ACCOUNT_CREATE` (manager); organisaties tonen vraagt `ORGANIZATION_READ`.
 
@@ -99,7 +101,7 @@ Aangemaakte documenten en betalingen zijn de "waarheid" en mogen niet verdwijnen
 - een **boeking** met documenten, betalingen, een herkoppeling (als van- of naar-boeking) of verzonden e-mails (`sent_email`);
 - een **booker, accommodatie, leverancier of activiteit** die voorkomt in een boeking met documenten of betalingen.
 
-De controle zit in de services (dus niet te omzeilen via de API) en geldt voor iedereen met de verwijder-authority. Documenten en betalingen zelf hebben in de UI geen verwijderknop.
+De controle zit in de services (dus niet te omzeilen via de API) en geldt voor iedereen met de verwijder-authority. Documenten en betalingen kunnen niet worden verwijderd: er is geen knop en geen endpoint (`DELETE` geeft `405`). Alleen voor betalingen en hun statusregels dwingen ook databasetriggers dat af.
 
 **Organisatie verwijderen:** `OrganizationDeletionGuard` (`auth/service`) weigert met **409** zolang er nog data met `tenant_organization` = die organisatie is. De tabellen worden uit `information_schema` gehaald (elke tabel met een kolom `tenant_organization`), dus een nieuwe tenant-tabel is automatisch meegenomen; de melding noemt de aantallen per tabel. Reden: die kolommen hebben geen foreign key naar `organization`, een verwijderde organisatie zou verweesde data achterlaten. Verplaatsen of eerst opruimen is aan de beheerder. Verzonden e-mails aan de hoofdboeker (`sent_email`) hangen aan een boeking en blokkeren dat verwijderen al; e-mailtemplates zijn gewoon te verwijderen.
 

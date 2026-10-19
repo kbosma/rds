@@ -10,27 +10,29 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { EmailTemplateService } from './email-template.service';
-import { BookerService } from '../bookers/booker.service';
-import { BookingService } from '../bookings/booking.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { EmailTemplate, EmailRender, Booker, Booking } from '../../shared/models';
+import { EmailTemplate, EmailRender } from '../../shared/models';
 
+/**
+ * Het doel van de e-mail staat altijd vast: de dialoog wordt geopend vanuit een boeking (de mail gaat naar de
+ * hoofdboeker) of vanuit een prospect. E-mail versturen kan nergens anders; de lijst met e-mailtemplates is
+ * alleen voor het beheren van templates.
+ */
 export interface EmailTemplatePreviewDialogData {
-  /** Vast: de template (geopend vanuit de templatelijst). Ontbreekt: de gebruiker kiest er een. */
-  template?: EmailTemplate;
-  /** Vast: de boeking (geopend vanuit het boekingdetail). Ontbreekt: de gebruiker kiest prospect of boeking. */
+  /** De boeking (geopend vanuit het boekingdetail). */
   booking?: { bookingId: string; bookingNumber: string };
+  /** De prospect (geopend vanuit de prospectenlijst). */
+  booker?: { bookerId: string; name: string };
 }
 
 /**
- * Voorbeeld en verzending van een e-mailtemplate: laat de backend subject + HTML-body mergen voor een
- * prospect/boeker of voor een boeking (dan gaat de mail naar de hoofdboeker) en toont het resultaat. Het
- * resultaat wordt in een sandbox-iframe zonder scripts getoond.
+ * Een e-mailtemplate kiezen, het voorbeeld bekijken en versturen. De backend merget subject + HTML-body voor
+ * de prospect/boeker of voor de boeking (dan gaat de mail naar de hoofdboeker); het resultaat wordt in een
+ * sandbox-iframe zonder scripts getoond.
  */
 @Component({
   selector: 'app-email-template-preview-dialog',
@@ -44,76 +46,36 @@ export interface EmailTemplatePreviewDialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatButtonToggleModule,
     MatSnackBarModule,
     TranslatePipe,
   ],
   template: `
     <h2 mat-dialog-title>
-      @if (data.template) {
-        {{ 'emailTemplates.previewTitle' | translate }}: {{ data.template.name }}
-      } @else {
-        {{ 'emailTemplates.sendEmailTitle' | translate }}
-      }
+      {{ 'emailTemplates.sendEmailTitle' | translate }}
       @if (data.booking) { — {{ data.booking.bookingNumber }} }
+      @else if (data.booker) { — {{ data.booker.name }} }
     </h2>
     <mat-dialog-content>
-      @if (loadingTargets()) {
+      @if (loadingTemplates()) {
         <div class="loading"><mat-spinner diameter="32"></mat-spinner></div>
       } @else {
-        @if (!data.template) {
-          <mat-form-field appearance="outline" class="wide-field">
-            <mat-label>{{ 'emailTemplates.selectTemplate' | translate }}</mat-label>
-            <mat-select [(ngModel)]="selectedTemplateId" (ngModelChange)="rendered.set(null)">
-              @for (t of templates(); track t.emailTemplateId) {
-                <mat-option [value]="t.emailTemplateId">{{ t.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          @if (templates().length === 0) {
-            <p class="no-data">{{ 'emailTemplates.noTemplatesFound' | translate }}</p>
-          }
-        }
-
-        @if (!data.booking) {
-          <mat-button-toggle-group class="mode-toggle" [value]="mode()" (change)="setMode($event.value)"
-                                   [attr.aria-label]="'emailTemplates.selectProspect' | translate">
-            <mat-button-toggle value="prospect">{{ 'emailTemplates.forProspect' | translate }}</mat-button-toggle>
-            <mat-button-toggle value="booking">{{ 'emailTemplates.forBooking' | translate }}</mat-button-toggle>
-          </mat-button-toggle-group>
+        <mat-form-field appearance="outline" class="wide-field">
+          <mat-label>{{ 'emailTemplates.selectTemplate' | translate }}</mat-label>
+          <mat-select [(ngModel)]="selectedTemplateId" (ngModelChange)="rendered.set(null)">
+            @for (t of templates(); track t.emailTemplateId) {
+              <mat-option [value]="t.emailTemplateId">{{ t.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        @if (templates().length === 0) {
+          <p class="no-data">{{ 'emailTemplates.noTemplatesFound' | translate }}</p>
         }
 
         <div class="controls">
           @if (data.booking) {
             <span class="fixed-target">{{ 'emailTemplates.forBooking' | translate }}: {{ data.booking.bookingNumber }}</span>
-          } @else if (mode() === 'prospect') {
-            @if (prospects().length === 0) {
-              <p class="no-data">{{ 'prospects.noProspectsFound' | translate }}</p>
-            } @else {
-              <mat-form-field appearance="outline" class="prospect-select">
-                <mat-label>{{ 'emailTemplates.selectProspect' | translate }}</mat-label>
-                <mat-select [(ngModel)]="selectedBookerId" (ngModelChange)="rendered.set(null)">
-                  @for (p of prospects(); track p.bookerId) {
-                    <mat-option [value]="p.bookerId">
-                      {{ p.firstname }} {{ p.prefix }} {{ p.lastname }} &lt;{{ p.emailaddress }}&gt;
-                    </mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            }
-          } @else {
-            @if (bookings().length === 0) {
-              <p class="no-data">{{ 'emailTemplates.noBookingsFound' | translate }}</p>
-            } @else {
-              <mat-form-field appearance="outline" class="prospect-select">
-                <mat-label>{{ 'emailTemplates.selectBooking' | translate }}</mat-label>
-                <mat-select [(ngModel)]="selectedBookingId" (ngModelChange)="rendered.set(null)">
-                  @for (b of bookings(); track b.bookingId) {
-                    <mat-option [value]="b.bookingId">{{ b.bookingNumber }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            }
+          } @else if (data.booker) {
+            <span class="fixed-target">{{ 'emailTemplates.forProspect' | translate }}: {{ data.booker.name }}</span>
           }
           <button mat-stroked-button color="primary"
                   [disabled]="!canRun() || rendering() || sending()"
@@ -166,9 +128,7 @@ export interface EmailTemplatePreviewDialogData {
       gap: 12px;
       align-items: center;
     }
-    .prospect-select { flex: 1; }
     .wide-field { width: 100%; }
-    .mode-toggle { margin-bottom: 12px; }
     .fixed-target { flex: 1; font-weight: 600; }
     .error-text {
       color: #c62828;
@@ -193,8 +153,6 @@ export interface EmailTemplatePreviewDialogData {
 export class EmailTemplatePreviewDialogComponent implements OnInit {
   data: EmailTemplatePreviewDialogData = inject(MAT_DIALOG_DATA);
   private emailTemplateService = inject(EmailTemplateService);
-  private bookerService = inject(BookerService);
-  private bookingService = inject(BookingService);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
@@ -204,28 +162,16 @@ export class EmailTemplatePreviewDialogComponent implements OnInit {
 
   canSend = this.authService.hasAuthority('EMAIL_SEND');
 
-  prospects = signal<Booker[]>([]);
-  loadingProspects = signal(true);
-  selectedBookerId: string | null = null;
-
-  /** Voor een prospect/boeker, of voor een boeking (dan is de ontvanger de hoofdboeker). */
-  mode = signal<'prospect' | 'booking'>(this.data.booking ? 'booking' : 'prospect');
   templates = signal<EmailTemplate[]>([]);
-  loadingTemplates = signal(!this.data.template);
-  selectedTemplateId: string | null = this.data.template?.emailTemplateId ?? null;
-  bookings = signal<Booking[]>([]);
-  loadingBookings = signal(false);
-  selectedBookingId: string | null = this.data.booking?.bookingId ?? null;
-
-  loadingTargets = computed(() => this.loadingProspects() || this.loadingTemplates() || this.loadingBookings());
+  loadingTemplates = signal(true);
+  selectedTemplateId: string | null = null;
 
   /**
    * Is alles gekozen wat nodig is om te kunnen mergen/versturen? Bewust een methode en geen computed: de
-   * keuzes zijn gewone velden (ngModel), waar een computed niet op reageert.
+   * template-keuze is een gewoon veld (ngModel), waar een computed niet op reageert.
    */
   canRun(): boolean {
-    if (!this.selectedTemplateId) return false;
-    return this.mode() === 'booking' ? !!this.selectedBookingId : !!this.selectedBookerId;
+    return !!this.selectedTemplateId && (!!this.data.booking || !!this.data.booker);
   }
 
   rendering = signal(false);
@@ -251,58 +197,24 @@ export class EmailTemplatePreviewDialogComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (!this.data.template) {
-      this.emailTemplateService.getAll()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (templates) => {
-            this.templates.set(templates);
-            this.loadingTemplates.set(false);
-          },
-          error: () => this.loadingTemplates.set(false),
-        });
-    }
-
-    if (this.data.booking) {
-      this.loadingProspects.set(false); // vast doel: geen lijst nodig
-      return;
-    }
-    this.bookerService.getByStatus('prospect')
+    this.emailTemplateService.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (prospects) => {
-          this.prospects.set(prospects);
-          this.loadingProspects.set(false);
+        next: (templates) => {
+          this.templates.set(templates);
+          this.loadingTemplates.set(false);
         },
-        error: () => this.loadingProspects.set(false),
+        error: () => this.loadingTemplates.set(false),
       });
-  }
-
-  setMode(mode: 'prospect' | 'booking') {
-    this.mode.set(mode);
-    this.rendered.set(null);
-    this.errorText.set('');
-    if (mode === 'booking' && this.bookings().length === 0 && !this.loadingBookings()) {
-      this.loadingBookings.set(true);
-      this.bookingService.getAll()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (bookings) => {
-            this.bookings.set(bookings);
-            this.loadingBookings.set(false);
-          },
-          error: () => this.loadingBookings.set(false),
-        });
-    }
   }
 
   render() {
     if (!this.canRun()) return;
     this.rendering.set(true);
     this.errorText.set('');
-    const request = this.mode() === 'booking'
-      ? this.emailTemplateService.renderForBooking(this.selectedTemplateId!, this.selectedBookingId!)
-      : this.emailTemplateService.render(this.selectedTemplateId!, this.selectedBookerId!);
+    const request = this.data.booking
+      ? this.emailTemplateService.renderForBooking(this.selectedTemplateId!, this.data.booking.bookingId)
+      : this.emailTemplateService.render(this.selectedTemplateId!, this.data.booker!.bookerId);
     request
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -325,14 +237,16 @@ export class EmailTemplatePreviewDialogComponent implements OnInit {
   async send() {
     if (!this.canRun() || this.sending()) return;
 
-    const confirmMsg = this.mode() === 'booking' ? this.confirmTextForBooking() : this.confirmTextForProspect();
+    const confirmMsg = this.data.booking
+      ? this.translate.instant('emailTemplates.sendConfirmBooking', { number: this.data.booking.bookingNumber })
+      : this.translate.instant('emailTemplates.sendConfirm', { name: this.data.booker!.name });
     if (!await this.confirmService.confirm(confirmMsg)) return;
 
     this.sending.set(true);
     this.errorText.set('');
-    const request = this.mode() === 'booking'
-      ? this.emailTemplateService.sendForBooking(this.selectedTemplateId!, this.selectedBookingId!)
-      : this.emailTemplateService.send(this.selectedTemplateId!, this.selectedBookerId!);
+    const request = this.data.booking
+      ? this.emailTemplateService.sendForBooking(this.selectedTemplateId!, this.data.booking.bookingId)
+      : this.emailTemplateService.send(this.selectedTemplateId!, this.data.booker!.bookerId);
     request
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -354,18 +268,5 @@ export class EmailTemplatePreviewDialogComponent implements OnInit {
             { duration: 6000 });
         },
       });
-  }
-
-  private confirmTextForProspect(): string {
-    const prospect = this.prospects().find(p => p.bookerId === this.selectedBookerId);
-    const name = prospect ? `${prospect.firstname} ${prospect.lastname}`.trim() : '';
-    return this.translate.instant('emailTemplates.sendConfirm', { name });
-  }
-
-  private confirmTextForBooking(): string {
-    const number = this.data.booking?.bookingNumber
-      ?? this.bookings().find(b => b.bookingId === this.selectedBookingId)?.bookingNumber
-      ?? '';
-    return this.translate.instant('emailTemplates.sendConfirmBooking', { number });
   }
 }

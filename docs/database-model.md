@@ -1,9 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V16**, 20-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 

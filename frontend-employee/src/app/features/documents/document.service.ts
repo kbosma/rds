@@ -23,10 +23,6 @@ export class DocumentService {
     return this.http.put<Document>(`${environment.apiUrl}/${this.endpoint}/${id}`, { visibleInPortal });
   }
 
-  delete(id: string) {
-    return this.api.delete(this.endpoint, id);
-  }
-
   getContent(id: string) {
     return this.http.get(`${environment.apiUrl}/${this.endpoint}/${id}/content`, { responseType: 'blob' });
   }
