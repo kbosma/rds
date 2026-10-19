@@ -9,6 +9,8 @@ import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.email.dto.EmailRenderDto;
 import nl.puurkroatie.rds.email.dto.EmailSendResultDto;
+import nl.puurkroatie.rds.email.entity.SentEmail;
+import nl.puurkroatie.rds.email.repository.SentEmailRepository;
 import nl.puurkroatie.rds.email.service.EmailImageUrlResolver;
 import nl.puurkroatie.rds.email.service.EmailMessage;
 import nl.puurkroatie.rds.email.service.EmailNotConfiguredException;
@@ -53,13 +55,15 @@ class EmailSendServiceImplTest {
     private OrganizationRepository organizationRepository;
     @Mock
     private EmailSender emailSender;
+    @Mock
+    private SentEmailRepository sentEmailRepository;
 
     private EmailSendServiceImpl service;
 
     @BeforeEach
     void setUp() {
         service = new EmailSendServiceImpl(emailRenderService, bookerRepository, bookingRepository, organizationRepository, emailSender,
-                new EmailImageUrlResolver("http://public.example/api"));
+                new EmailImageUrlResolver("http://public.example/api"), sentEmailRepository);
     }
 
     private Booker booker(String email) {
@@ -163,6 +167,49 @@ class EmailSendServiceImplTest {
         assertEquals("Boeking B-1", captor.getValue().getSubject());
         assertEquals("<p>Uw boeking</p>", captor.getValue().getBodyHtml());
         assertEquals("jan@example.com", result.getTo());
+    }
+
+    @Test
+    void sendForBooking_keepsTheSentMailForTheBooking() {
+        when(emailRenderService.renderForBooking(TEMPLATE_ID, BOOKING_ID))
+                .thenReturn(new EmailRenderDto("Boeking B-1", "<p>Uw boeking</p>"));
+        Booking booking = bookingOfOrganization(booker("jan@example.com"));
+        when(bookingRepository.findById(BOOKING_ID)).thenReturn(Optional.of(booking));
+        when(organizationRepository.findById(ORG)).thenReturn(Optional.of(organization("noreply@puurkroatie.nl")));
+
+        service.sendForBooking(TEMPLATE_ID, BOOKING_ID);
+
+        ArgumentCaptor<SentEmail> captor = ArgumentCaptor.forClass(SentEmail.class);
+        verify(sentEmailRepository).save(captor.capture());
+        assertEquals("jan@example.com", captor.getValue().getToAddress());
+        assertEquals("noreply@puurkroatie.nl", captor.getValue().getFromAddress());
+        assertEquals("Boeking B-1", captor.getValue().getSubject());
+        assertEquals("<p>Uw boeking</p>", captor.getValue().getBodyHtml());
+    }
+
+    @Test
+    void sendForBooking_whenSendingFails_keepsNothing() {
+        when(emailRenderService.renderForBooking(TEMPLATE_ID, BOOKING_ID))
+                .thenReturn(new EmailRenderDto("S", "<p>x</p>"));
+        Booking booking = bookingOfOrganization(booker("jan@example.com"));
+        when(bookingRepository.findById(BOOKING_ID)).thenReturn(Optional.of(booking));
+        when(organizationRepository.findById(ORG)).thenReturn(Optional.of(organization("noreply@puurkroatie.nl")));
+        org.mockito.Mockito.doThrow(new RuntimeException("smtp down")).when(emailSender).send(org.mockito.ArgumentMatchers.any());
+
+        assertThrows(RuntimeException.class, () -> service.sendForBooking(TEMPLATE_ID, BOOKING_ID));
+        verify(sentEmailRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void sendToBooker_keepsNothing_becauseThereIsNoBooking() {
+        when(emailRenderService.render(TEMPLATE_ID, BOOKER_ID))
+                .thenReturn(new EmailRenderDto("Welkom", "<p>x</p>"));
+        when(bookerRepository.findById(BOOKER_ID)).thenReturn(Optional.of(booker("jan@example.com")));
+        when(organizationRepository.findById(ORG)).thenReturn(Optional.of(organization("noreply@puurkroatie.nl")));
+
+        service.sendToBooker(TEMPLATE_ID, BOOKER_ID);
+
+        verify(sentEmailRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test

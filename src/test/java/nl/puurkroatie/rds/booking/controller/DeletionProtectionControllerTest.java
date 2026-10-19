@@ -23,7 +23,7 @@ class DeletionProtectionControllerTest extends AbstractBookingControllerTest {
     private void expectBlocked(String path) throws Exception {
         mockMvc.perform(delete(path).header("Authorization", "Bearer " + managerToken()))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value(containsString("documents or payments")));
+                .andExpect(jsonPath("$.message").value(containsString("documents, payments or sent emails")));
     }
 
     @Test

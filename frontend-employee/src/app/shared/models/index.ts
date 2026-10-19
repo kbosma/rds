@@ -20,6 +20,7 @@ export * from './authority.model';
 export * from './role-authority.model';
 export * from './organization-theme.model';
 export * from './document.model';
+export * from './sent-email.model';
 export * from './document-template.model';
 export * from './email-template.model';
 export * from './template-image.model';

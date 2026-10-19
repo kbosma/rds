@@ -818,5 +818,28 @@
     "addError": "Fout bij toevoegen adres",
     "saveError": "Fout bij opslaan adres",
     "removeError": "Fout bij verwijderen adres"
+  },
+  "messages": {
+    "title": "Berichten en documenten",
+    "new": "Nieuw",
+    "newEmail": "E-mail aan hoofdboeker",
+    "newDocument": "Document",
+    "filter": "Filter",
+    "filterAll": "Alles",
+    "filterEmail": "E-mail",
+    "filterDocument": "Documenten",
+    "filterPayment": "Betalingen",
+    "empty": "Nog geen berichten, documenten of betalingen.",
+    "to": "aan",
+    "from": "Van",
+    "sentOn": "Verstuurd op",
+    "sentBy": "Verstuurd door",
+    "unknown": "Onbekend",
+    "sent": "verstuurd",
+    "resent": "opnieuw verstuurd",
+    "portal": "portaal",
+    "resend": "Opnieuw versturen",
+    "resendDone": "E-mail opnieuw verstuurd",
+    "resendError": "Opnieuw versturen is mislukt"
   }
 }

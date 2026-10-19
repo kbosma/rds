@@ -96,12 +96,12 @@ Word- en e-mailtemplates worden door gebruikers (MANAGER) geschreven en zijn dus
 ## Geschiedenis niet kwijtraken (verwijderbescherming)
 
 Aangemaakte documenten en betalingen zijn de "waarheid" en mogen niet verdwijnen. De database zou ze echter stilletjes meeverwijderen (`ON DELETE CASCADE`) zodra een boeking, of iets waaraan een boeking hangt, wordt verwijderd. `DeletionGuard` (`booking/service`) weigert daarom met **409 Conflict** (`DeletionBlockedException`) het verwijderen van:
-- een **boeking** met documenten, betalingen of een herkoppeling (als van- of naar-boeking);
+- een **boeking** met documenten, betalingen, een herkoppeling (als van- of naar-boeking) of verzonden e-mails (`sent_email`);
 - een **booker, accommodatie, leverancier of activiteit** die voorkomt in een boeking met documenten of betalingen.
 
 De controle zit in de services (dus niet te omzeilen via de API) en geldt voor iedereen met de verwijder-authority. Documenten en betalingen zelf hebben in de UI geen verwijderknop.
 
-**Organisatie verwijderen:** `OrganizationDeletionGuard` (`auth/service`) weigert met **409** zolang er nog data met `tenant_organization` = die organisatie is. De tabellen worden uit `information_schema` gehaald (elke tabel met een kolom `tenant_organization`), dus een nieuwe tenant-tabel is automatisch meegenomen; de melding noemt de aantallen per tabel. Reden: die kolommen hebben geen foreign key naar `organization`, een verwijderde organisatie zou verweesde data achterlaten. Verplaatsen of eerst opruimen is aan de beheerder. Verzonden e-mails worden niet bewaard, dus daar valt niets te beschermen; e-mailtemplates zijn gewoon te verwijderen.
+**Organisatie verwijderen:** `OrganizationDeletionGuard` (`auth/service`) weigert met **409** zolang er nog data met `tenant_organization` = die organisatie is. De tabellen worden uit `information_schema` gehaald (elke tabel met een kolom `tenant_organization`), dus een nieuwe tenant-tabel is automatisch meegenomen; de melding noemt de aantallen per tabel. Reden: die kolommen hebben geen foreign key naar `organization`, een verwijderde organisatie zou verweesde data achterlaten. Verplaatsen of eerst opruimen is aan de beheerder. Verzonden e-mails aan de hoofdboeker (`sent_email`) hangen aan een boeking en blokkeren dat verwijderen al; e-mailtemplates zijn gewoon te verwijderen.
 
 ## Foutafhandeling
 
