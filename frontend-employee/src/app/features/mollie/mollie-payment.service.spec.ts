@@ -36,7 +36,7 @@ describe('MolliePaymentService', () => {
   };
 
   beforeEach(() => {
-    apiSpy = jasmine.createSpyObj('ApiService', ['getAll', 'getById', 'create', 'update', 'delete']);
+    apiSpy = jasmine.createSpyObj('ApiService', ['getAll', 'getById', 'create', 'update']);
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -76,10 +76,8 @@ describe('MolliePaymentService', () => {
     expect(apiSpy.update).toHaveBeenCalledWith('mollie/payments', 'mp-1', data);
   });
 
-  it('delete() should delegate to ApiService', () => {
-    apiSpy.delete.and.returnValue(of(void 0));
-    service.delete('mp-1').subscribe();
-    expect(apiSpy.delete).toHaveBeenCalledWith('mollie/payments', 'mp-1');
+  it('heeft geen delete(): een betaling wordt nooit verwijderd', () => {
+    expect((service as unknown as { delete?: unknown }).delete).toBeUndefined();
   });
 
   it('createAtMollie() should POST directly to Mollie endpoint', () => {
@@ -96,5 +94,31 @@ describe('MolliePaymentService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(request);
     req.flush(mock);
+  });
+
+  it('createCorrection voegt een nieuwe regel toe via POST met status en reden (nooit PUT of DELETE)', () => {
+    service.createCorrection('mp-1', 'paid', 'Betaald per bank').subscribe();
+
+    const req = httpTesting.expectOne((r) => r.url.endsWith('/mollie/payment-status-entries/by-payment/mp-1'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ status: 'paid', reason: 'Betaald per bank' });
+    req.flush({});
+  });
+
+  it('getRelinks haalt de herkoppelingen van een betaling op via GET', () => {
+    service.getRelinks('mp-1').subscribe((r) => expect(r.length).toBe(1));
+
+    const req = httpTesting.expectOne((r) => r.url.endsWith('/booking-mollie-payments/mp-1/relinks'));
+    expect(req.request.method).toBe('GET');
+    req.flush([{ relinkId: 'r-1' }]);
+  });
+
+  it('relink registreert een herkoppeling via POST met doelboeking en reden (een koppeling wordt nooit losgemaakt)', () => {
+    service.relink('mp-1', 'b-2', 'Verkeerde boeking').subscribe();
+
+    const req = httpTesting.expectOne((r) => r.url.endsWith('/booking-mollie-payments/mp-1/relink'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ targetBookingId: 'b-2', reason: 'Verkeerde boeking' });
+    req.flush({});
   });
 });

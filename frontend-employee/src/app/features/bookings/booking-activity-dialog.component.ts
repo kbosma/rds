@@ -57,14 +57,22 @@ export interface BookingActivityDialogData {
             </div>
           }
 
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'bookingActivity.date' | translate }}</mat-label>
+            <input matInput formControlName="activityDate" type="date" />
+          </mat-form-field>
+
           <div class="row">
             <mat-form-field appearance="outline" class="flex-1">
-              <mat-label>{{ 'bookingActivity.fromDateTime' | translate }}</mat-label>
-              <input matInput formControlName="fromDate" type="datetime-local" />
+              <mat-label>{{ 'bookingActivity.fromTime' | translate }}</mat-label>
+              <input matInput formControlName="fromTime" type="time" />
             </mat-form-field>
             <mat-form-field appearance="outline" class="flex-1">
-              <mat-label>{{ 'bookingActivity.untilDateTime' | translate }}</mat-label>
-              <input matInput formControlName="untilDate" type="datetime-local" />
+              <mat-label>{{ 'bookingActivity.untilTime' | translate }}</mat-label>
+              <input matInput formControlName="untilTime" type="time" />
+              @if (endsNextDay()) {
+                <mat-hint>{{ 'bookingActivity.endsNextDay' | translate }}</mat-hint>
+              }
             </mat-form-field>
           </div>
 
@@ -130,11 +138,18 @@ export class BookingActivityDialogComponent implements OnInit {
 
   form = this.fb.group({
     activityId: [this.data.bookingActivity?.activityId ?? '', Validators.required],
-    fromDate: [this.data.bookingActivity?.fromDate ?? ''],
-    untilDate: [this.data.bookingActivity?.untilDate ?? ''],
+    activityDate: [this.data.bookingActivity?.activityDate ?? '', Validators.required],
+    fromTime: [this.data.bookingActivity?.fromTime?.substring(0, 5) ?? '', Validators.required],
+    untilTime: [this.data.bookingActivity?.untilTime?.substring(0, 5) ?? '', Validators.required],
     meetingPoint: [this.data.bookingActivity?.meetingPoint ?? ''],
     totalPrice: [this.data.bookingActivity?.totalPrice ?? null as number | null, [Validators.min(0)]],
   });
+
+  /** Een tot-tijd vóór de van-tijd betekent dat de activiteit de volgende dag eindigt. */
+  endsNextDay(): boolean {
+    const { fromTime, untilTime } = this.form.getRawValue();
+    return !!fromTime && !!untilTime && untilTime < fromTime;
+  }
 
   ngOnInit() {
     if (this.isEdit) {
@@ -152,7 +167,7 @@ export class BookingActivityDialogComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const raw = this.form.getRawValue();
@@ -162,8 +177,9 @@ export class BookingActivityDialogComponent implements OnInit {
       this.bookingActivityService.update(ba.bookingActivityId, {
         bookingId: ba.bookingId,
         activityId: ba.activityId,
-        fromDate: raw.fromDate!,
-        untilDate: raw.untilDate!,
+        activityDate: raw.activityDate!,
+        fromTime: raw.fromTime!,
+        untilTime: raw.untilTime!,
         meetingPoint: raw.meetingPoint!,
         totalPrice: raw.totalPrice!,
       }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -180,8 +196,9 @@ export class BookingActivityDialogComponent implements OnInit {
       this.bookingActivityService.create({
         bookingId: this.data.bookingId,
         activityId: raw.activityId!,
-        fromDate: raw.fromDate!,
-        untilDate: raw.untilDate!,
+        activityDate: raw.activityDate!,
+        fromTime: raw.fromTime!,
+        untilTime: raw.untilTime!,
         meetingPoint: raw.meetingPoint!,
         totalPrice: raw.totalPrice!,
       }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

@@ -65,6 +65,7 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 | idem | `/api/roles` | `ROLE_*` |
 | idem | `/api/authorities` | `AUTHORITY_*` |
 | GET, GET `/{a}/{b}`, POST, DELETE `/{a}/{b}` | `/api/account-roles` (`accountId/roleId`) | `ACCOUNTROLE_READ/READ/CREATE/DELETE` |
+| GET | `/api/mollie/payment-status-entries/by-payment/{id}` | `PAYMENT_READ` (antwoord bevat `createdByName`: leesbare naam van `createdBy`, leeg bij het systeem) |
 | GET | `/api/account-roles/assignable-roles` | `ACCOUNTROLE_READ` (de rollen die de ingelogde gebruiker mag toewijzen/intrekken: ADMIN alle, anderen alleen EMPLOYEE en MANAGER) |
 | idem | `/api/role-authorities` (`roleId/authorityId`) | `ROLEAUTHORITY_*` |
 | GET, GET `/{id}`, GET `/my-theme`, POST, PUT `/{id}`, DELETE `/{id}` | `/api/organization-themes` | `ORGANIZATION_THEME_*` |
@@ -84,16 +85,18 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 | `documents` | GET, GET `/{id}`, GET `/{id}/content`, GET `/booking/{bookingId}`, POST, PUT `/{id}`, DELETE `/{id}` | `DOCUMENT_READ/CREATE/UPDATE/DELETE` |
 | `documents/generate` | POST `{ templateId, bookingId, outputFormat }` | `DOCUMENT_CREATE` |
 | `document-templates` | GET, GET `/{id}`, GET `/{id}/content` (.docx), POST, PUT `/{id}`, DELETE `/{id}` | `TEMPLATE_READ/CREATE/UPDATE/DELETE` |
-| `booking-mollie-payments` | GET, GET `/{bookingId}`, GET `/{bookingId}/{paymentId}`, POST, DELETE `/{bookingId}/{paymentId}` | `PAYMENT_READ/CREATE/DELETE` |
+| `booking-mollie-payments` | GET, GET `/{bookingId}`, GET `/{bookingId}/{paymentId}`, POST, GET `/{paymentId}/relinks`, POST `/{paymentId}/relink` (herkoppelen met reden; geen DELETE: een koppeling wordt nooit losgemaakt) | `PAYMENT_READ/CREATE`, `PAYMENT_RELINK` |
+
+`booking-activities` body (alle drie verplicht; `untilTime` < `fromTime` = eindigt de volgende dag): `{"bookingId":"…","activityId":"…","activityDate":"2026-07-02","fromTime":"22:00","untilTime":"02:00","meetingPoint":"Haven","totalPrice":45.00}`.
 
 ### Mollie
 
 | Methode | Pad | Authority |
 |---|---|---|
-| GET, GET `/{id}`, POST, PUT `/{id}`, DELETE `/{id}` | `/api/mollie/payments` | `PAYMENT_READ/READ/CREATE/UPDATE/DELETE` |
+| GET, GET `/{id}`, POST, PUT `/{id}` (geen DELETE: betalingen worden nooit verwijderd) | `/api/mollie/payments` | `PAYMENT_READ/READ/CREATE/UPDATE` |
 | POST | `/api/mollie/payments/create-at-mollie` | `PAYMENT_CREATE` |
 | POST | `/api/mollie/payments/webhook?id=tr_…` | publiek |
-| GET, GET `/by-payment/{id}`, POST, PUT `/{id}`, DELETE `/{id}` | `/api/mollie/payment-status-entries` | `PAYMENT_*` |
+| GET, GET `/by-payment/{id}`, POST `/by-payment/{id}` (correctie) | `/api/mollie/payment-status-entries` | `PAYMENT_READ`, `PAYMENT_CORRECT` (geen PUT/DELETE: alleen-toevoegen) |
 
 ### E-mail en afbeeldingen
 

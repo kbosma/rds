@@ -308,7 +308,7 @@ export class PersonDetailComponent implements OnInit {
   }
 
   onSave() {
-    if (this.readOnly() || this.form.invalid) return;
+    if (this.readOnly() || this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const { firstname, prefix, lastname, organizationId } = this.form.value;

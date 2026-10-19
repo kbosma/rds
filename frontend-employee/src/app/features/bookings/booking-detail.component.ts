@@ -6,10 +6,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
+import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
+import { MolliePaymentViewDialogComponent } from '../mollie/mollie-payment-view-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -34,7 +36,7 @@ import {
   EmailTemplatePreviewDialogData,
 } from '../email-templates/email-template-preview-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
-import { Booker, Traveler, BookingLine, BookingActivity, MolliePayment, MolliePaymentStatusEntry, Document } from '../../shared/models';
+import { Booker, Traveler, BookingLine, BookingActivity, MolliePayment, Document } from '../../shared/models';
 import { CurrencyPipe, DatePipe, DecimalPipe, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -55,10 +57,11 @@ interface BookingMolliePaymentLink {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    RowActionsComponent,
+    PaymentStatusBadgeComponent,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatSelectModule,
     MatTableModule,
     MatDividerModule,
     MatDialogModule,
@@ -227,12 +230,10 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let line">
-                    @if (!readOnly()) {
-                      <button mat-icon-button color="primary" (click)="openBookingLineDialog(line)"><mat-icon>edit</mat-icon></button>
-                      <button mat-icon-button color="warn" (click)="deleteBookingLine(line)"><mat-icon>delete</mat-icon></button>
-                    }
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let line" class="actions-cell">
+                    <app-row-actions [canEdit]="!readOnly()" [canDelete]="!readOnly()"
+                                     (edit)="openBookingLineDialog(line)" (remove)="deleteBookingLine(line)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="bookingLineColumns"></tr>
@@ -267,14 +268,10 @@ interface BookingMolliePaymentLink {
                   <td mat-cell *matCellDef="let t">{{ t.birthdate | date:'dd-MM-yyyy' }}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let t">
-                    @if (can('BOOKING_UPDATE')) {
-                      <button mat-icon-button color="primary" (click)="openTravelerDialog(t)"><mat-icon>edit</mat-icon></button>
-                    }
-                    @if (can('BOOKING_DELETE')) {
-                      <button mat-icon-button color="warn" (click)="deleteTraveler(t)"><mat-icon>delete</mat-icon></button>
-                    }
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let t" class="actions-cell">
+                    <app-row-actions [canEdit]="can('BOOKING_UPDATE')" [canDelete]="can('BOOKING_DELETE')"
+                                     (edit)="openTravelerDialog(t)" (remove)="deleteTraveler(t)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="travelerColumns"></tr>
@@ -316,8 +313,16 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="period">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.from' | translate }} — {{ 'common.until' | translate }}</th>
-                  <td mat-cell *matCellDef="let ba">{{ ba.fromDate | date:'dd-MM-yyyy' }} — {{ ba.untilDate | date:'dd-MM-yyyy' }}</td>
+                  <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.dateAndTimes' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba" class="activity-when">
+                    <div>{{ ba.activityDate | date:'dd-MM-yyyy' }}</div>
+                    <div class="activity-type">
+                      {{ ba.fromTime?.substring(0, 5) }} — {{ ba.untilTime?.substring(0, 5) }}
+                      @if (ba.untilTime < ba.fromTime) {
+                        {{ 'bookingActivity.nextDay' | translate }}
+                      }
+                    </div>
+                  </td>
                 </ng-container>
                 <ng-container matColumnDef="totalPrice">
                   <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.totalPrice' | translate }}</th>
@@ -326,12 +331,10 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="activityActions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
                   <td mat-cell *matCellDef="let ba" class="actions-cell">
-                    @if (!readOnly()) {
-                      <button mat-icon-button color="primary" (click)="openBookingActivityDialog(ba)"><mat-icon>edit</mat-icon></button>
-                      <button mat-icon-button color="warn" (click)="deleteBookingActivity(ba)"><mat-icon>delete</mat-icon></button>
-                    }
+                    <app-row-actions [canEdit]="!readOnly()" [canDelete]="!readOnly()"
+                                     (edit)="openBookingActivityDialog(ba)" (remove)="deleteBookingActivity(ba)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="bookingActivityColumns"></tr>
@@ -370,18 +373,10 @@ interface BookingMolliePaymentLink {
                   <td mat-cell *matCellDef="let d">{{ d.createdAt | date:'dd-MM-yyyy' }}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-                  <td mat-cell *matCellDef="let d">
-                    @if (authService.hasAuthority('DOCUMENT_READ')) {
-                      <button mat-icon-button color="primary" (click)="viewDocument(d)">
-                        <mat-icon>visibility</mat-icon>
-                      </button>
-                    }
-                    @if (can('DOCUMENT_DELETE')) {
-                      <button mat-icon-button color="warn" (click)="deleteDocument(d)">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    }
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let d" class="actions-cell">
+                    <app-row-actions [canView]="authService.hasAuthority('DOCUMENT_READ')" [canDelete]="can('DOCUMENT_DELETE')"
+                                     (view)="viewDocument(d)" (remove)="deleteDocument(d)" />
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="documentColumns"></tr>
@@ -446,7 +441,7 @@ interface BookingMolliePaymentLink {
                 <mat-spinner diameter="30"></mat-spinner>
               </div>
             } @else if (payments().length > 0) {
-              <table mat-table [dataSource]="payments()" multiTemplateDataRows class="full-width">
+              <table mat-table [dataSource]="payments()" class="full-width">
                 <ng-container matColumnDef="description">
                   <th mat-header-cell *matHeaderCellDef>{{ 'common.description' | translate }}</th>
                   <td mat-cell *matCellDef="let p">{{ p.description }}</td>
@@ -460,7 +455,7 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="status">
                   <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
                   <td mat-cell *matCellDef="let p">
-                    <span class="status-badge" [attr.data-status]="currentPaymentStatus(p.molliePaymentId)">{{ 'payments.status_' + currentPaymentStatus(p.molliePaymentId) | translate }}</span>
+                    <app-payment-status-badge [status]="currentPaymentStatus(p.molliePaymentId)" />
                   </td>
                 </ng-container>
 
@@ -469,96 +464,15 @@ interface BookingMolliePaymentLink {
                   <td mat-cell *matCellDef="let p">{{ p.createdAt | date:'dd-MM-yyyy' }}</td>
                 </ng-container>
 
-                <ng-container matColumnDef="expand">
-                  <th mat-header-cell *matHeaderCellDef></th>
-                  <td mat-cell *matCellDef="let p">
-                    <button mat-icon-button (click)="togglePaymentRow(p); $event.stopPropagation()">
-                      <mat-icon>{{ expandedPaymentId() === p.molliePaymentId ? 'expand_less' : 'expand_more' }}</mat-icon>
-                    </button>
-                  </td>
-                </ng-container>
-
-                <!-- Expanded detail row -->
-                <ng-container matColumnDef="expandedDetail">
-                  <td mat-cell *matCellDef="let p" [attr.colspan]="paymentColumns.length">
-                    @if (expandedPaymentId() === p.molliePaymentId) {
-                      <div class="status-history">
-                        <div class="status-history-header">
-                          <h4>{{ 'bookings.statusHistory' | translate }}</h4>
-                          @if (canManageStatusEntries()) {
-                            <button mat-stroked-button color="primary" class="add-status-btn"
-                                    (click)="showNewStatusForm.set(!showNewStatusForm())">
-                              <mat-icon>add</mat-icon> {{ 'bookings.addStatus' | translate }}
-                            </button>
-                          }
-                        </div>
-
-                        @if (showNewStatusForm() && canManageStatusEntries()) {
-                          <div class="new-status-form">
-                            <form [formGroup]="newStatusForm" (ngSubmit)="onCreateStatusEntry(p.molliePaymentId)">
-                              <div class="row">
-                                <mat-form-field appearance="outline">
-                                  <mat-label>{{ 'common.status' | translate }}</mat-label>
-                                  <mat-select formControlName="status">
-                                    @for (s of paymentStatuses; track s.value) {
-                                      <mat-option [value]="s.value">{{ s.labelKey | translate }}</mat-option>
-                                    }
-                                  </mat-select>
-                                </mat-form-field>
-                                <div class="status-form-actions">
-                                  <button mat-button type="button" (click)="showNewStatusForm.set(false)"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
-                                  <button mat-raised-button color="primary" type="submit"
-                                          [disabled]="creatingStatusEntry() || newStatusForm.invalid">
-                                    @if (creatingStatusEntry()) {
-                                      <mat-spinner diameter="18"></mat-spinner>
-                                    } @else {
-                                      <ng-container><mat-icon>add</mat-icon> {{ 'common.add' | translate }}</ng-container>
-                                    }
-                                  </button>
-                                </div>
-                              </div>
-                            </form>
-                          </div>
-                        }
-
-                        @if (statusEntriesLoading()) {
-                          <mat-spinner diameter="24"></mat-spinner>
-                        } @else {
-                          <table class="history-table">
-                            <thead>
-                              <tr>
-                                <th>{{ 'common.status' | translate }}</th>
-                                <th>{{ 'common.date' | translate }}</th>
-                                <th>{{ 'bookings.by' | translate }}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              @for (entry of statusEntries(); track entry.molliePaymentStatusEntryId) {
-                                <tr>
-                                  <td>
-                                    <span class="status-badge" [attr.data-status]="entry.status">{{ 'payments.status_' + entry.status | translate }}</span>
-                                  </td>
-                                  <td>{{ entry.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
-                                  <td>{{ entry.createdBy ?? ('common.system' | translate) }}</td>
-                                </tr>
-                              }
-                              @if (statusEntries().length === 0) {
-                                <tr><td colspan="3" class="no-data-cell">{{ 'bookings.noStatusHistory' | translate }}</td></tr>
-                              }
-                            </tbody>
-                          </table>
-                        }
-                      </div>
-                    }
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                  <td mat-cell *matCellDef="let p" class="actions-cell">
+                    <app-row-actions [canView]="authService.hasAuthority('PAYMENT_READ')" (view)="viewPayment(p)" />
                   </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="paymentColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: paymentColumns;"
-                    (click)="togglePaymentRow(row)"
-                    class="clickable-row"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
-                    class="detail-row"></tr>
+                <tr mat-row *matRowDef="let row; columns: paymentColumns;"></tr>
               </table>
             } @else {
               <p class="empty-text">{{ 'bookings.noPaymentsLinked' | translate }}</p>
@@ -734,6 +648,10 @@ interface BookingMolliePaymentLink {
       font-weight: 600;
       color: #2e7d32;
     }
+    .activity-when {
+      white-space: nowrap;
+    }
+
     .activity-cell {
       display: flex;
       align-items: center;
@@ -752,106 +670,13 @@ interface BookingMolliePaymentLink {
       color: #666;
       font-size: 12px;
     }
-    .actions-cell {
-      white-space: nowrap;
-    }
+    .actions-header { text-align: right; }
+    .actions-cell { width: 1%; white-space: nowrap; }
     .new-payment-form {
       padding: 16px 0;
     }
     .form-divider {
       margin-bottom: 16px;
-    }
-    .clickable-row {
-      cursor: pointer;
-    }
-    .clickable-row:hover {
-      background-color: #f5f5f5;
-    }
-    .detail-row {
-      height: 0;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .status-badge[data-status="paid"] {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-    .status-badge[data-status="open"], .status-badge[data-status="pending"] {
-      background-color: #fff3e0;
-      color: #e65100;
-    }
-    .status-badge[data-status="failed"] {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-    .status-badge[data-status="canceled"] {
-      background-color: #f3e5f5;
-      color: #7b1fa2;
-    }
-    .status-badge[data-status="expired"] {
-      background-color: #efebe9;
-      color: #4e342e;
-    }
-    .status-badge[data-status="authorized"] {
-      background-color: #e3f2fd;
-      color: #1565c0;
-    }
-    .status-history {
-      padding: 16px 24px;
-      background: #fafafa;
-    }
-    .status-history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .status-history h4 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-      color: #555;
-    }
-    .add-status-btn {
-      font-size: 12px;
-    }
-    .new-status-form {
-      margin-bottom: 12px;
-    }
-    .new-status-form .row {
-      align-items: center;
-    }
-    .status-form-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding-bottom: 22px;
-    }
-    .history-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .history-table th {
-      text-align: left;
-      padding: 6px 12px;
-      border-bottom: 1px solid #ddd;
-      color: #888;
-      font-weight: 500;
-    }
-    .history-table td {
-      padding: 6px 12px;
-      border-bottom: 1px solid #eee;
-    }
-    .no-data-cell {
-      text-align: center;
-      padding: 16px;
-      color: #888;
     }
   `],
 })
@@ -882,10 +707,6 @@ export class BookingDetailComponent implements OnInit {
   newPaymentForm = this.fb.group({
     description: ['', Validators.required],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
-  });
-
-  newStatusForm = this.fb.group({
-    status: ['', Validators.required],
   });
 
   isNew = signal(true);
@@ -924,12 +745,7 @@ export class BookingDetailComponent implements OnInit {
   showNewPaymentForm = signal(false);
   creatingPayment = signal(false);
 
-  // Status entries
-  expandedPaymentId = signal<string | null>(null);
-  statusEntries = signal<MolliePaymentStatusEntry[]>([]);
-  statusEntriesLoading = signal(false);
-  showNewStatusForm = signal(false);
-  creatingStatusEntry = signal(false);
+  /** Huidige status per betaling (de laatste statusregel, gezet door Mollie). */
   paymentStatusMap = signal<Record<string, string>>({});
 
   // Booking Activities
@@ -938,17 +754,7 @@ export class BookingDetailComponent implements OnInit {
 
   bookingLineColumns = ['accommodation', 'period', 'price', 'actions'];
   travelerColumns = ['name', 'birthdate', 'actions'];
-  paymentColumns = ['description', 'amount', 'status', 'createdAt', 'expand'];
-
-  paymentStatuses = [
-    { value: 'open', labelKey: 'payments.status_open' },
-    { value: 'pending', labelKey: 'payments.status_pending' },
-    { value: 'authorized', labelKey: 'payments.status_authorized' },
-    { value: 'paid', labelKey: 'payments.status_paid' },
-    { value: 'failed', labelKey: 'payments.status_failed' },
-    { value: 'canceled', labelKey: 'payments.status_canceled' },
-    { value: 'expired', labelKey: 'payments.status_expired' },
-  ];
+  paymentColumns = ['description', 'amount', 'status', 'createdAt', 'actions'];
 
   currentPaymentStatus(molliePaymentId: string): string {
     return this.paymentStatusMap()[molliePaymentId] ?? '';
@@ -957,10 +763,6 @@ export class BookingDetailComponent implements OnInit {
   /** Een wijzigende actie is alleen toegestaan met de authority én buiten alleen-inzien. */
   can(authority: string): boolean {
     return !this.readOnly() && this.authService.hasAuthority(authority);
-  }
-
-  canManageStatusEntries(): boolean {
-    return !this.readOnly() && this.authService.hasAuthority('PAYMENT_UPDATE');
   }
 
   ngOnInit() {
@@ -1042,12 +844,25 @@ export class BookingDetailComponent implements OnInit {
       .subscribe({
         next: (created) => {
           this.applyCreatedBooking(created);
+          this.refreshBookerIfProspect();
           proceed(created.bookingId);
         },
         error: () => {
           this.snackBar.open(this.translate.instant('bookings.createError'), this.translate.instant('common.close'), { duration: 5000 });
         },
       });
+  }
+
+  /**
+   * De backend maakt een prospect ACTIVE zodra er een boeking voor hem wordt aangemaakt. Laad de boeker opnieuw,
+   * zodat het scherm niet nog de oude status (en bv. de knop "Maak boeker") toont.
+   */
+  private refreshBookerIfProspect() {
+    const booker = this.booker();
+    if (booker?.status !== 'prospect') return;
+    this.bookerService.getById(booker.bookerId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (fresh) => this.booker.set(fresh) });
   }
 
   /** Verwerkt de zojuist aangemaakte boeking: concept wordt een echte boeking. */
@@ -1115,40 +930,21 @@ export class BookingDetailComponent implements OnInit {
     });
   }
 
-  togglePaymentRow(payment: MolliePayment) {
-    if (this.expandedPaymentId() === payment.molliePaymentId) {
-      this.expandedPaymentId.set(null);
-      this.statusEntries.set([]);
-      this.showNewStatusForm.set(false);
-      return;
-    }
-
-    this.expandedPaymentId.set(payment.molliePaymentId);
-    this.showNewStatusForm.set(false);
-    this.loadStatusEntries(payment.molliePaymentId);
-  }
-
-  onCreateStatusEntry(molliePaymentId: string) {
-    if (this.newStatusForm.invalid) return;
-
-    this.creatingStatusEntry.set(true);
-    const status = this.newStatusForm.value.status!;
-
-    this.molliePaymentService.createStatusEntry(molliePaymentId, status)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.creatingStatusEntry.set(false);
-          this.showNewStatusForm.set(false);
-          this.newStatusForm.reset();
-          this.snackBar.open(this.translate.instant('bookings.statusAdded'), this.translate.instant('common.close'), { duration: 3000 });
-          this.loadStatusEntries(molliePaymentId);
-        },
-        error: () => {
-          this.creatingStatusEntry.set(false);
-          this.snackBar.open(this.translate.instant('bookings.statusAddError'), this.translate.instant('common.close'), { duration: 5000 });
-        },
-      });
+  /** Alleen-lezen weergave van een betaling met de volledige statushistorie, in een dialoog. */
+  viewPayment(payment: MolliePayment) {
+    this.dialog.open(MolliePaymentViewDialogComponent, {
+      data: {
+        payment,
+        bookingNumber: this.currentBookingNumber(),
+        canCorrect: this.can('PAYMENT_CORRECT'),
+        currentBookingId: this.bookingId,
+        canRelink: this.can('PAYMENT_RELINK'),
+      },
+      width: '640px',
+      maxWidth: '95vw',
+    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((changed) => {
+      if (changed) this.loadPayments(); // een correctie wijzigt de status, een herkoppeling haalt de betaling bij deze boeking weg
+    });
   }
 
   openBookingLineDialog(line?: BookingLine) {
@@ -1482,26 +1278,6 @@ export class BookingDetailComponent implements OnInit {
             }
           });
           this.paymentStatusMap.set(map);
-        },
-      });
-  }
-
-  private loadStatusEntries(molliePaymentId: string) {
-    this.statusEntriesLoading.set(true);
-    this.molliePaymentService.getStatusEntries(molliePaymentId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (entries) => {
-          this.statusEntries.set(entries);
-          this.statusEntriesLoading.set(false);
-          if (entries.length > 0) {
-            const latest = entries[entries.length - 1].status?.toLowerCase() ?? '';
-            this.paymentStatusMap.update(map => ({ ...map, [molliePaymentId]: latest }));
-          }
-        },
-        error: () => {
-          this.statusEntries.set([]);
-          this.statusEntriesLoading.set(false);
         },
       });
   }

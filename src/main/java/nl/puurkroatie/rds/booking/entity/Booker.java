@@ -120,6 +120,12 @@ public class Booker {
         this.tenantOrganization = tenantOrganization;
     }
 
+    /** Kopie met een andere status; de entity zelf is onveranderlijk (opslaan = bijwerken van dezelfde boeker). */
+    public Booker withStatus(BookerStatus newStatus) {
+        return new Booker(bookerId, firstname, prefix, lastname, callsign, telephone, emailaddress, gender, birthdate,
+                initials, newStatus, createdAt, createdBy, tenantOrganization);
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

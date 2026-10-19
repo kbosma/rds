@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
-import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -26,10 +26,6 @@ export class MolliePaymentService {
     return this.api.update<MolliePayment>(this.endpoint, id, payment);
   }
 
-  delete(id: string) {
-    return this.api.delete(this.endpoint, id);
-  }
-
   createAtMollie(request: { amount: { currency: string; value: string }; description: string; redirectUrl: string; webhookUrl: string; metadata?: Record<string, string> }) {
     return this.http.post<MolliePayment>(`${environment.apiUrl}/${this.endpoint}/create-at-mollie`, request);
   }
@@ -38,14 +34,30 @@ export class MolliePaymentService {
     return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries/by-payment/${molliePaymentId}`);
   }
 
-  getAllStatusEntries() {
-    return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries`);
+  /**
+   * Registreert een handmatige correctie van de status (nieuwe regel in de historie, met reden). Een bestaande
+   * regel wijzigen of verwijderen kan niet: de statushistorie is alleen-toevoegen.
+   */
+  createCorrection(molliePaymentId: string, status: string, reason: string) {
+    return this.http.post<MolliePaymentStatusEntry>(
+      `${environment.apiUrl}/mollie/payment-status-entries/by-payment/${molliePaymentId}`, { status, reason });
   }
 
-  createStatusEntry(molliePaymentId: string, status: string) {
-    return this.http.post<MolliePaymentStatusEntry>(`${environment.apiUrl}/mollie/payment-status-entries`, {
-      molliePaymentId,
-      status,
-    });
+  /** De geregistreerde herkoppelingen van een betaling, oudste eerst. */
+  getRelinks(molliePaymentId: string) {
+    return this.http.get<PaymentRelink[]>(`${environment.apiUrl}/booking-mollie-payments/${molliePaymentId}/relinks`);
+  }
+
+  /**
+   * Koppelt een betaling aan een andere boeking, met reden. Een koppeling wordt nooit losgemaakt: dit registreert een
+   * herkoppeling die alleen-toevoegen is.
+   */
+  relink(molliePaymentId: string, targetBookingId: string, reason: string) {
+    return this.http.post<PaymentRelink>(
+      `${environment.apiUrl}/booking-mollie-payments/${molliePaymentId}/relink`, { targetBookingId, reason });
+  }
+
+  getAllStatusEntries() {
+    return this.http.get<MolliePaymentStatusEntry[]>(`${environment.apiUrl}/mollie/payment-status-entries`);
   }
 }

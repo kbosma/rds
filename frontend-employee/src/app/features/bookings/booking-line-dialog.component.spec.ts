@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { BookingLineDialogComponent } from './booking-line-dialog.component';
 import { BookingLineService } from './booking-line.service';
 import { AccommodationService } from '../accommodations/accommodation.service';
@@ -145,6 +145,33 @@ describe('BookingLineDialogComponent', () => {
 
     expect(accSupplierService.create).not.toHaveBeenCalled();
     expect(bookingLineService.create).toHaveBeenCalled();
+  });
+
+  it('twee keer kort na elkaar opslaan maakt de regel maar één keer aan', () => {
+    const { component } = setup([{ accommodationId: 'a-1', supplierId: 's-1' }]);
+    component.form.patchValue({ accommodationId: 'a-1' });
+    component.onAccommodationChange();
+    fillDates(component);
+    // Het eerste verzoek is nog onderweg als de tweede klik (of tik) binnenkomt.
+    bookingLineService.create.and.returnValue(new Subject<BookingLine>());
+
+    component.onSubmit();
+    component.onSubmit();
+
+    expect(bookingLineService.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('na een mislukte poging kan opnieuw opgeslagen worden', () => {
+    const { component } = setup([{ accommodationId: 'a-1', supplierId: 's-1' }]);
+    component.form.patchValue({ accommodationId: 'a-1' });
+    component.onAccommodationChange();
+    fillDates(component);
+    bookingLineService.create.and.returnValues(throwError(() => new Error('fout')), of({ bookingLineId: 'bl-2' } as BookingLine));
+
+    component.onSubmit();
+    component.onSubmit();
+
+    expect(bookingLineService.create).toHaveBeenCalledTimes(2);
   });
 
   it('een mislukte koppeling voorkomt dat de regel wordt aangemaakt', () => {

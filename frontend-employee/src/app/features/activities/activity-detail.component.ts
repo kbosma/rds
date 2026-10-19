@@ -164,7 +164,7 @@ export class ActivityDetailComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.readOnly() || this.form.invalid) return;
+    if (this.readOnly() || this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const raw = this.form.getRawValue();

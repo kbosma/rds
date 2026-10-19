@@ -39,7 +39,7 @@ translate-test.setup.spec.ts   # laadt de echte nl-vertalingen in alle specs
 | `layout` | zijmenu (items per authority), toolbar, taalwissel |
 | `login` | login, TOTP-stap, herstelcode |
 | `dashboard` | dashboard per rol (admin/manager/employee) |
-| `bookings` | lijst, **detail** (hoofdscherm), boekingsregel-/activiteit-/bewerk-dialogen |
+| `bookings` | lijst, **detail** (hoofdscherm), boekingsregel-/activiteit-/bewerk-dialogen. Een boekingsactiviteit heeft één datum + van-/tot-tijd (`type="date"`/`type="time"`, 24-uurs); tot-tijd vóór van-tijd = eindigt de volgende dag (hint in dialoog, "(volgende dag)" in de tabel) |
 | `bookers`, `prospects`, `travelers` | bookers (+ concept-boeking starten), prospects (aanmeldproces), reizigers |
 | `accommodations`, `suppliers`, `activities` | stamgegevens |
 | `documents`, `templates` | documenten van boekingen; Word-templates (upload of editor) |
@@ -57,8 +57,9 @@ Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onde
 - **Signals + standalone:** state in `signal()`/`computed()`; `input()` voor component-inputs; formulieren zijn reactive forms (of `ngModel` in kleine dialogen). Velden die via `ngModel` veranderen horen niet in een `computed` (die ziet de wijziging niet): gebruik een methode of een signal.
 - **Dialogs:** Material dialogs; `ConfirmService.confirm()/confirmDelete()` (eigen dialoog) vervangt `window.confirm` **overal**; gebruik die ook voor nieuwe bevestigingen.
 - **Meldingen:** `MatSnackBar`; foutmeldingen uit de backend (`error.error.message`) worden getoond waar ze nuttig zijn (template-render, e-mail versturen, template opslaan).
-- **Vertalingen:** elke zichtbare tekst via `translate`-pipe / `translate.instant`; sleutels in `nl.json` én `en.json`. Nieuwe sleutels altijd in beide talen. Editor-teksten staan onder `templateEditor.*`.
+- **Vertalingen:** elke zichtbare tekst via `translate`-pipe / `translate.instant`; sleutels in `nl.json` én `en.json`. Nieuwe sleutels altijd in beide talen. `npm run check:i18n` (in `frontend-employee`) controleert dat elke in de code gebruikte sleutel in `nl.json` én `en.json` bestaat en dat beide bestanden dezelfde sleutels hebben; een ontbrekende sleutel toont anders de ruwe sleutel (bv. `travelers.addTraveler`) in de UI. Het script ziet ook sleutels in data-objecten (`labelKey: '…'`); alleen sleutels die pas tijdens het draaien worden opgebouwd (`'bookings.status_' + waarde`) controleert het niet, die controleer je met de beschikbare waarden (alle statussen hebben een vertaling). Editor-teksten staan onder `templateEditor.*`.
 - **Thema:** de organisatie bepaalt `--theme-primary`, `--theme-accent`, `--theme-card-title` (CSS-variabelen, gezet door `ThemeService`); gebruik die variabelen i.p.v. vaste kleuren.
+- **Opslaan beschermen tegen dubbel starten.** Elke opslaan-methode begint met `if (… || this.saving()) return;` (en zet `saving` bij een fout weer op `false`). Alleen de `[disabled]`-knop is niet genoeg: een tik plus klik komt binnen enkele milliseconden twee keer binnen, vóórdat Angular de knop heeft uitgeschakeld, en dat maakte een boekingsregel dubbel aan (twee rijen met 64 ms verschil). Een nieuw formulier krijgt dezelfde guard en een test die `onSubmit()` twee keer aanroept.
 - **Tenant/rol-logica zit in de backend.** De UI verbergt alleen; de server is de enige echte controle.
 - **Datums/bedragen:** datums als ISO-tekst (`jjjj-mm-dd`) tussen UI en API; `DatePipe`/`CurrencyPipe` voor weergave.
 
@@ -70,11 +71,19 @@ Het gedeelde ontwerp staat in `src/styles.scss` van **beide** apps (de bestanden
 - **Compact:** velden 40px (tekst 14px, regelhoogte 20px, padding 10px, zodat tekst nooit wordt afgeknipt), tabelrijen en -kop 40px, knoppen 36px. Wijzig de hoogte via `--mat-form-field-container-height` en `--mat-form-field-container-vertical-padding` (samen: hoogte = regelhoogte + 2 × padding).
 - **Tabellen:** getinte, hoofdletter-kop; om-en-om gekleurde rijen en hover komen globaal uit `.mat-mdc-row`; zet dus geen eigen `alt-row`-stijl meer in componenten.
 - **Zijbalk:** donker (`--ui-primary-deep`), actief item in `--theme-primary`.
+- **Kaarten:** de inhoud van een kaart met header krijgt `padding-top: 12px`, anders staat de eerste regel (bv. "Naam") bijna tegen de titel.
+- **Dialoog:** Material geeft de inhoud direct na de titel geen ruimte erboven, waardoor het zwevende label van het eerste veld werd afgesneden; `styles.scss` zet daar `padding-top: 8px`.
 - De uitklappijl van `mat-select` is 24px en wordt in `styles.scss` op 20px gezet, anders is een select 4px hoger dan een tekstveld.
+
+### Betalingen in een boeking
+
+De kaart *Betalingen* in het boekingsdetail toont per betaling alleen een oog-icoon (`PAYMENT_READ`, alleen lezen) dat `MolliePaymentViewDialogComponent` opent: de gegevens en de volledige statushistorie, zonder knoppen om iets te wijzigen. Statussen komen van Mollie en worden nooit gewijzigd of verwijderd (alleen-toevoegen). Een medewerker met `PAYMENT_RELINK` ziet daarnaast de knop *Naar andere boeking koppelen* (`MolliePaymentRelinkDialogComponent`: andere boeking + verplichte reden); de herkoppelgeschiedenis (van, naar, datum, door, reden) staat als tabel in hetzelfde dialoog en na een herkoppeling sluit het dialoog en herlaadt de lijst. Een medewerker met `PAYMENT_CORRECT` kan in dat dialoog een **correctie** registreren (`MolliePaymentCorrectionDialogComponent`: nieuwe status uit `open/paid/failed/canceled` en een verplichte reden); die verschijnt als nieuwe regel met de markering *Correctie*, naam en reden. Bij "Door" staat de leesbare naam van wie een regel aanmaakte (`createdByName` uit de backend; medewerker of boeker), "Systeem" voor Mollie en "Onbekend" als het id niet (meer) bij een naam past; nooit het ruwe id. De statusbadge (vertaald en gekleurd) komt uit `shared/components/payment-status-badge.component.ts` en wordt in het uitklapscherm en het dialoog gebruikt.
 
 ### Lijsten met actie-iconen (inzien / bewerken / verwijderen)
 
 Alle lijsten die direct vanuit het linkermenu bereikbaar zijn gebruiken hetzelfde grid: een Material-tabel met één vaste actiekolom, gevuld door `shared/components/row-actions.component.ts` (`<app-row-actions>`). **Klikken op de hele regel doet niets**; alleen de iconen werken.
+
+**Ook in tabellen op een detailscherm** (accommodaties, reizigers, activiteiten, documenten van een boeking) gebruik je `<app-row-actions>` met `class="actions-cell"` op de `td` en `class="actions-header"` op de `th`, zodat de iconen altijd naast elkaar op één regel staan. Als vangnet zet `styles.scss` `white-space: nowrap` op elke tabelcel die direct een `mat-icon-button` bevat; los icoon-knoppen in een cel wrappen dus ook niet meer onder elkaar.
 
 | Lijst | Inzien (`*_READ`) | Bewerken (`*_UPDATE`) | Verwijderen (`*_DELETE`) |
 |---|---|---|---|

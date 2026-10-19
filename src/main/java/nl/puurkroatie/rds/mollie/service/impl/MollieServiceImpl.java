@@ -1,6 +1,7 @@
 package nl.puurkroatie.rds.mollie.service.impl;
 
 import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.common.PaymentLockedException;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentRequestDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentResponseDto;
@@ -40,13 +41,15 @@ public class MollieServiceImpl implements MollieService {
 
     @Override
     public MolliePaymentDto create(MolliePaymentDto dto) {
+        // Een nieuwe betaling is een aankondiging: het Mollie-id en de checkout-URL komen alleen van Mollie
+        // (zodra de klant betaalt) en kunnen hier niet door een client worden gezet.
         MolliePayment entity = new MolliePayment(
-                dto.getMolliePaymentExternalId(),
+                null,
                 dto.getMethod(),
                 dto.getAmount(),
                 dto.getCurrency(),
                 dto.getDescription(),
-                dto.getCheckoutUrl()
+                null
         );
         MolliePayment saved = molliePaymentRepository.save(entity);
         statusEntryService.createInitialStatus(saved.getMolliePaymentId());
@@ -58,25 +61,24 @@ public class MollieServiceImpl implements MollieService {
         MolliePayment existing = molliePaymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
+        // Zodra de betaling bij Mollie bestaat (er is een Mollie-id) is ze geschiedenis en kan ze niet meer worden
+        // gewijzigd; alleen een nog niet bij Mollie aangemaakte betaling (een aankondiging) mag aangepast worden.
+        if (existing.getMolliePaymentExternalId() != null && !existing.getMolliePaymentExternalId().isBlank()) {
+            throw new PaymentLockedException("The payment already exists at Mollie (" + existing.getMolliePaymentExternalId()
+                    + ") and can no longer be changed");
+        }
+        // Het Mollie-id en de checkout-URL zijn van de server: een client kan ze niet zetten of wissen.
         MolliePayment entity = new MolliePayment(
                 id,
-                dto.getMolliePaymentExternalId(),
+                existing.getMolliePaymentExternalId(),
                 dto.getMethod(),
                 dto.getAmount(),
                 dto.getCurrency(),
                 dto.getDescription(),
-                dto.getCheckoutUrl()
+                existing.getCheckoutUrl()
         );
         MolliePayment saved = molliePaymentRepository.save(entity);
         return molliePaymentMapper.toDto(saved);
-    }
-
-    @Override
-    public void delete(UUID id) {
-        MolliePayment existing = molliePaymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + id));
-        verifyOrganization(existing.getTenantOrganization());
-        molliePaymentRepository.deleteById(id);
     }
 
     @Override

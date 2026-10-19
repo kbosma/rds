@@ -3,7 +3,7 @@
 Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -640,8 +640,9 @@ Boekingsactiviteit: koppeling Booking ↔ Activity met eigen UUID PK en extra ve
 | booking_activity_id | UUID | PK, auto-generated | |
 | booking_id | UUID | FK → booking, NOT NULL | Boeking |
 | activity_id | UUID | FK → activity, NOT NULL | Activiteit |
-| from_date | DATE | | Startdatum |
-| until_date | DATE | | Einddatum |
+| activity_date | DATE | | Dag waarop de activiteit plaatsvindt (API: verplicht) |
+| from_time | TIME | | Van-tijd, 24-uurs (API: verplicht) |
+| until_time | TIME | | Tot-tijd, 24-uurs (API: verplicht) |
 | meeting_point | VARCHAR | | Trefpunt |
 | total_price | DECIMAL | | Totaalprijs |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
@@ -652,7 +653,7 @@ Boekingsactiviteit: koppeling Booking ↔ Activity met eigen UUID PK en extra ve
 
 **Relaties:** ManyToOne → Booking, ManyToOne → Activity
 
-**Bijzonderheden:** `totalPrice` telt mee in de berekende `Booking.totalSum`.
+**Bijzonderheden:** `totalPrice` telt mee in de berekende `Booking.totalSum`. Een activiteit vindt altijd op één dag plaats; er is geen einddatum. Is `until_time` < `from_time`, dan eindigt de activiteit de volgende dag (nachtelijk). De entity biedt daarvoor `getStartDateTime()`/`getEndDateTime()`; de boekerportal (`fromDate`/`untilDate` als datum-tijd) en de document-/e-mailtemplates (`bookingActivities[].fromDate`/`untilDate`) krijgen die afgeleide waarden, dus hun contract blijft gelijk. Index `idx_booking_activity_booking_date (booking_id, activity_date, from_time)`. V13 vult de nieuwe kolommen uit de oude `from_date`/`until_date` (timestamps, daarna verwijderd); een einddatum meer dan één dag na de start gaat daarbij verloren.
 
 **Backend bestanden:**
 - Entity: `booking/entity/BookingActivity.java`
@@ -787,10 +788,28 @@ Koppeling Booking ↔ MolliePayment.
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | booking_id | UUID | PK (composite), FK → booking, NOT NULL | |
-| mollie_payment_id | UUID | PK (composite), FK → mollie_payment, NOT NULL | |
+| mollie_payment_id | UUID | PK (composite), FK → mollie_payment, NOT NULL, UNIQUE | |
+
+Een koppeling wordt nooit losgemaakt (V12: triggers weigeren `DELETE`/`TRUNCATE`); `mollie_payment_id` is onveranderlijk en `booking_id` wijzigt alleen via een herkoppeling met reden (zie hieronder).
+
+### booking_mollie_payment_relink *(alleen-toevoegen, V12)*
+
+Registratie van elke herkoppeling van een betaling naar een andere boeking.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| relink_id | UUID | PK | |
+| relink_seq | BIGSERIAL | UNIQUE | volgorde, bepaalt de nieuwste regel voor de trigger |
+| mollie_payment_id | UUID | FK → mollie_payment ON DELETE RESTRICT, NOT NULL | |
+| from_booking_id / to_booking_id | UUID | FK → booking ON DELETE RESTRICT, NOT NULL, CHECK from <> to | |
+| reason | TEXT | NOT NULL, CHECK `char_length(btrim(reason)) >= 5` | |
+| created_at / created_by | | NOT NULL | wie en wanneer |
+| tenant_organization | UUID | NOT NULL | uit de betaling |
+
+Triggers: `forbid_relink_change` (UPDATE/DELETE/TRUNCATE), `forbid_payment_link_delete` (DELETE/TRUNCATE op de koppeltabel), `guard_payment_link_update` (booking_id alleen wijzigen als de nieuwste herkoppelregel van die betaling precies van OLD naar NEW gaat). V12 voegt ook authority `PAYMENT_RELINK` toe voor ADMIN en MANAGER.
 
 **Backend bestanden:**
-- Entity: `booking/entity/BookingMolliePayment.java`
+- Entity: `booking/entity/BookingMolliePayment.java`, `BookingMolliePaymentRelink.java`
 - IdClass: `booking/entity/BookingMolliePaymentId.java`
 - DTO: `booking/dto/BookingMolliePaymentDto.java`
 - Mapper: `booking/mapper/BookingMolliePaymentMapper.java`
@@ -854,17 +873,19 @@ Mollie-betaling. Multi-tenant.
 
 ### mollie_payment_status_entry
 
-Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment).
+Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment). **Alleen-toevoegen:** een regel wordt nooit gewijzigd, vervangen of verwijderd (triggers weigeren elke `UPDATE`, `DELETE` en `TRUNCATE`; V10, V11; dezelfde `DELETE`/`TRUNCATE`-triggers staan op `mollie_payment`); een handmatige correctie door een medewerker is altijd een nieuwe regel met `correction = true` en een verplichte `reason` (V10).
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | mollie_payment_status_entry_id | UUID | PK, auto-generated | |
 | mollie_payment_id | UUID | FK → mollie_payment, NOT NULL | Betaling |
-| status | VARCHAR | NOT NULL, enum MolliePaymentStatus | Status |
+| status | VARCHAR | NOT NULL, CHECK `payment_status_entry_status_check`, enum MolliePaymentStatus | Status |
+| correction | BOOLEAN | NOT NULL, default false, immutable | true = handmatige correctie door een medewerker; false = Mollie, het systeem of de boeker |
+| reason | TEXT | immutable; verplicht (≥ 5 tekens) als `correction` | Reden van de correctie (CHECK `payment_status_entry_correction_reason_check`) |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
-| created_by | UUID | immutable | |
-| modified_at | TIMESTAMP | | |
-| modified_by | UUID | | |
+| created_by | UUID | immutable | Account van de medewerker (correctie), boeker (portal) of leeg (Mollie/systeem) |
+| modified_at | TIMESTAMP | | ongebruikt (regels worden niet gewijzigd) |
+| modified_by | UUID | | ongebruikt |
 
 **Relaties:** ManyToOne → MolliePayment
 

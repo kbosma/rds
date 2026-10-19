@@ -79,7 +79,7 @@ public class BookingActivityServiceImpl implements BookingActivityService {
 
         BookingActivity entity = new BookingActivity(
                 booking, activity,
-                dto.getFromDate(), dto.getUntilDate(), dto.getMeetingPoint(), dto.getTotalPrice()
+                dto.getActivityDate(), dto.getFromTime(), dto.getUntilTime(), dto.getMeetingPoint(), dto.getTotalPrice()
         );
         BookingActivity saved = bookingActivityRepository.save(entity);
         return bookingActivityMapper.toDto(saved);
@@ -97,7 +97,7 @@ public class BookingActivityServiceImpl implements BookingActivityService {
 
         BookingActivity updated = new BookingActivity(
                 bookingActivityId, booking, activity,
-                dto.getFromDate(), dto.getUntilDate(), dto.getMeetingPoint(), dto.getTotalPrice()
+                dto.getActivityDate(), dto.getFromTime(), dto.getUntilTime(), dto.getMeetingPoint(), dto.getTotalPrice()
         );
         BookingActivity saved = bookingActivityRepository.save(updated);
         return bookingActivityMapper.toDto(saved);

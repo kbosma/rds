@@ -101,7 +101,7 @@ export class EmailTemplateDialogComponent {
   }
 
   save() {
-    if (!this.canSave()) return;
+    if (!this.canSave() || this.saving()) return;
 
     this.saving.set(true);
     const payload: Partial<EmailTemplate> = {

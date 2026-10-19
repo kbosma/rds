@@ -1,12 +1,13 @@
 package nl.puurkroatie.rds.booking.controller;
 
 import nl.puurkroatie.rds.booking.dto.BookingMolliePaymentDto;
+import nl.puurkroatie.rds.booking.dto.PaymentRelinkDto;
+import nl.puurkroatie.rds.booking.dto.PaymentRelinkRequestDto;
 import nl.puurkroatie.rds.booking.service.BookingMolliePaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,10 +55,22 @@ public class BookingMolliePaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @DeleteMapping("/{bookingId}/{molliePaymentId}")
-    @PreAuthorize("hasAuthority('PAYMENT_DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable UUID bookingId, @PathVariable UUID molliePaymentId) {
-        bookingMolliePaymentService.delete(bookingId, molliePaymentId);
-        return ResponseEntity.noContent().build();
+    /** De geregistreerde herkoppelingen van een betaling, oudste eerst. */
+    @GetMapping("/{molliePaymentId}/relinks")
+    @PreAuthorize("hasAuthority('PAYMENT_READ')")
+    public List<PaymentRelinkDto> findRelinks(@PathVariable UUID molliePaymentId) {
+        return bookingMolliePaymentService.findRelinks(molliePaymentId);
+    }
+
+    /**
+     * Koppelt een betaling aan een andere boeking, met reden. Een koppeling wordt nooit losgemaakt; dit registreert een
+     * herkoppeling die alleen-toevoegen is.
+     */
+    @PostMapping("/{molliePaymentId}/relink")
+    @PreAuthorize("hasAuthority('PAYMENT_RELINK')")
+    public ResponseEntity<PaymentRelinkDto> relink(@PathVariable UUID molliePaymentId,
+                                                   @RequestBody @Valid PaymentRelinkRequestDto request) {
+        PaymentRelinkDto relink = bookingMolliePaymentService.relink(molliePaymentId, request.getTargetBookingId(), request.getReason());
+        return ResponseEntity.status(HttpStatus.CREATED).body(relink);
     }
 }

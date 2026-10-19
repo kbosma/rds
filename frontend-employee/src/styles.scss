@@ -83,11 +83,24 @@ mat-card-title, .mat-mdc-card-title {
   height: 20px;
 }
 
+/* Dialoog: direct na de titel heeft Material geen ruimte boven de inhoud. Het zwevende label van het eerste veld
+   steekt ~8px boven het veld uit en werd door de scroll-container afgesneden. De extra klasse laat deze regel
+   winnen van de standaardregel van Material. */
+.mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content.mdc-dialog__content {
+  padding-top: 8px;
+}
+
 /* Kaarten: vlak met een fijne rand i.p.v. een zware schaduw. */
 .mat-mdc-card {
   border: 1px solid var(--ui-line);
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(16, 40, 48, 0.04);
+}
+
+/* Kaart met een header: Material geeft de inhoud geen ruimte erboven, waardoor de eerste regel bijna tegen de titel
+   aan stond (4px). 12px extra geeft ~16px tussen titel en inhoud. */
+.mat-mdc-card-header + .mat-mdc-card-content {
+  padding-top: 12px;
 }
 
 /* Tabellen: kopregel met tint, om-en-om gekleurde rijen, duidelijke hover. */
@@ -110,6 +123,10 @@ mat-card-title, .mat-mdc-card-title {
 }
 .mat-mdc-table .mat-mdc-row:hover {
   background: var(--ui-primary-hover);
+}
+/* Acties-iconen in een cel (bewerken, verwijderen, ...) staan altijd naast elkaar op één regel, ook in een smalle kolom. */
+.mat-mdc-cell:has(> button[mat-icon-button]) {
+  white-space: nowrap;
 }
 .mat-mdc-paginator {
   background: transparent;

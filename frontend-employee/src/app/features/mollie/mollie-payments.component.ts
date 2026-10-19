@@ -144,7 +144,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
                               <span class="status-badge" [attr.data-status]="entry.status">{{ 'payments.status_' + entry.status | translate }}</span>
                             </td>
                             <td>{{ entry.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
-                            <td>{{ entry.createdBy ?? ('common.system' | translate) }}</td>
+                            <td>{{ entry.createdByName ?? (entry.createdBy ? ('common.unknown' | translate) : ('common.system' | translate)) }}</td>
                           </tr>
                         }
                         @if (statusEntries().length === 0) {

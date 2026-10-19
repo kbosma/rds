@@ -35,7 +35,7 @@ import { Authority } from '../../shared/models';
   template: `
     <div class="header">
       <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
-      <h1>{{ (isNew() ? 'roles.newRole' : 'roles.editRole') | translate }}</h1>
+      <h1>{{ (isNew() ? 'roles.newRole' : 'roles.editTitle') | translate }}</h1>
     </div>
     <mat-card>
       <mat-card-content>
@@ -149,6 +149,7 @@ export class RoleDetailComponent implements OnInit {
   }
 
   save() {
+    if (this.saving()) return;
     this.saving.set(true);
     const value = { description: this.form.value.description ?? undefined };
     const op = this.roleId

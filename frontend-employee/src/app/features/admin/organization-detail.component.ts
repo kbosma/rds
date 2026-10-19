@@ -219,7 +219,7 @@ export class OrganizationDetailComponent implements OnInit {
   }
 
   onSave() {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const payload: Partial<Organization> = {

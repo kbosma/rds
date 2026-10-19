@@ -1,7 +1,6 @@
 package nl.puurkroatie.rds.mollie.service.impl;
 
 import nl.puurkroatie.rds.auth.security.TenantContext;
-import nl.puurkroatie.rds.bookerportal.security.BookerContext;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
 import nl.puurkroatie.rds.mollie.entity.MolliePayment;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
@@ -9,12 +8,17 @@ import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatusEntry;
 import nl.puurkroatie.rds.mollie.mapper.MolliePaymentStatusEntryMapper;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentRepository;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
+import nl.puurkroatie.rds.mollie.service.CreatedByNameResolver;
 import nl.puurkroatie.rds.mollie.service.MolliePaymentStatusEntryService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -24,27 +28,28 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
     private final MolliePaymentStatusEntryRepository statusEntryRepository;
     private final MolliePaymentRepository molliePaymentRepository;
     private final MolliePaymentStatusEntryMapper statusEntryMapper;
+    private final CreatedByNameResolver createdByNameResolver;
 
     public MolliePaymentStatusEntryServiceImpl(MolliePaymentStatusEntryRepository statusEntryRepository,
                                                 MolliePaymentRepository molliePaymentRepository,
-                                                MolliePaymentStatusEntryMapper statusEntryMapper) {
+                                                MolliePaymentStatusEntryMapper statusEntryMapper,
+                                                CreatedByNameResolver createdByNameResolver) {
         this.statusEntryRepository = statusEntryRepository;
         this.molliePaymentRepository = molliePaymentRepository;
         this.statusEntryMapper = statusEntryMapper;
+        this.createdByNameResolver = createdByNameResolver;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MolliePaymentStatusEntryDto> findAll() {
-        if (isAdmin()) {
-            return statusEntryRepository.findAll().stream()
-                    .map(statusEntryMapper::toDto)
-                    .toList();
-        }
-        return statusEntryRepository.findAll().stream()
-                .filter(entry -> entry.getMolliePayment().getTenantOrganization().equals(TenantContext.getOrganizationId()))
-                .map(statusEntryMapper::toDto)
-                .toList();
+        List<MolliePaymentStatusEntryDto> entries = isAdmin()
+                ? statusEntryRepository.findAll().stream().map(statusEntryMapper::toDto).toList()
+                : statusEntryRepository.findAll().stream()
+                        .filter(entry -> entry.getMolliePayment().getTenantOrganization().equals(TenantContext.getOrganizationId()))
+                        .map(statusEntryMapper::toDto)
+                        .toList();
+        return withCreatedByNames(entries);
     }
 
     @Override
@@ -55,64 +60,45 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
         if (!isAdmin()) {
             verifyOrganization(payment.getTenantOrganization());
         }
-        return statusEntryRepository.findByMolliePaymentMolliePaymentId(molliePaymentId).stream()
+        return withCreatedByNames(statusEntryRepository.findByMolliePaymentMolliePaymentId(molliePaymentId).stream()
                 .map(statusEntryMapper::toDto)
+                .toList());
+    }
+
+    /** Voegt aan elke regel de leesbare naam van degene die hem aanmaakte toe (in één keer opgezocht). */
+    private List<MolliePaymentStatusEntryDto> withCreatedByNames(List<MolliePaymentStatusEntryDto> entries) {
+        Map<UUID, String> names = createdByNameResolver.resolve(
+                entries.stream().map(MolliePaymentStatusEntryDto::getCreatedBy).toList());
+        return entries.stream()
+                .map(entry -> entry.withCreatedByName(names.get(entry.getCreatedBy())))
                 .toList();
     }
 
-    @Override
-    public MolliePaymentStatusEntryDto create(MolliePaymentStatusEntryDto dto) {
-        MolliePayment payment = molliePaymentRepository.findById(dto.getMolliePaymentId())
-                .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + dto.getMolliePaymentId()));
-
-        MolliePaymentStatus status = MolliePaymentStatus.fromValue(dto.getStatus());
-        UUID createdBy;
-
-        if (BookerContext.isBooker()) {
-            if (status == MolliePaymentStatus.OPEN) {
-                throw new AccessDeniedException("Booker may not create status OPEN");
-            }
-            createdBy = BookerContext.getBookerId();
-        } else {
-            verifyOrganization(payment.getTenantOrganization());
-            if (!isAdmin() && !isManager()) {
-                if (status != MolliePaymentStatus.OPEN) {
-                    throw new AccessDeniedException("Employee may only create status OPEN");
-                }
-            }
-            createdBy = TenantContext.getAccountId();
-        }
-
-        MolliePaymentStatusEntry entity = new MolliePaymentStatusEntry(payment, status, createdBy);
-        MolliePaymentStatusEntry saved = statusEntryRepository.save(entity);
-        return statusEntryMapper.toDto(saved);
-    }
+    /** Statussen die een medewerker met de hand mag registreren; PENDING, AUTHORIZED en EXPIRED bepaalt alleen Mollie. */
+    static final Set<MolliePaymentStatus> CORRECTION_STATUSES = EnumSet.of(
+            MolliePaymentStatus.OPEN, MolliePaymentStatus.PAID, MolliePaymentStatus.FAILED, MolliePaymentStatus.CANCELED);
 
     @Override
-    public MolliePaymentStatusEntryDto update(UUID id, MolliePaymentStatusEntryDto dto) {
-        if (!isAdmin()) {
-            throw new AccessDeniedException("Only ADMIN can update status entries");
+    public MolliePaymentStatusEntryDto createCorrection(UUID molliePaymentId, String statusValue, String reason) {
+        MolliePayment payment = molliePaymentRepository.findById(molliePaymentId)
+                .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + molliePaymentId));
+        verifyOrganization(payment.getTenantOrganization());
+
+        MolliePaymentStatus status = MolliePaymentStatus.fromValue(statusValue);
+        if (!CORRECTION_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("A correction may only set one of the statuses: "
+                    + CORRECTION_STATUSES.stream().map(MolliePaymentStatus::toValue).sorted().toList());
         }
-        MolliePaymentStatusEntry existing = statusEntryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("MolliePaymentStatusEntry not found with id: " + id));
+        statusEntryRepository.findByMolliePaymentMolliePaymentId(molliePaymentId).stream()
+                .max(Comparator.comparing(MolliePaymentStatusEntry::getCreatedAt))
+                .filter(latest -> latest.getStatus() == status)
+                .ifPresent(latest -> {
+                    throw new IllegalArgumentException("The payment already has the status " + status.toValue());
+                });
 
-        MolliePayment payment = molliePaymentRepository.findById(dto.getMolliePaymentId())
-                .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + dto.getMolliePaymentId()));
-
-        MolliePaymentStatus status = MolliePaymentStatus.fromValue(dto.getStatus());
-        MolliePaymentStatusEntry updated = new MolliePaymentStatusEntry(id, payment, status, existing.getCreatedBy());
-        MolliePaymentStatusEntry saved = statusEntryRepository.save(updated);
-        return statusEntryMapper.toDto(saved);
-    }
-
-    @Override
-    public void delete(UUID id) {
-        if (!isAdmin()) {
-            throw new AccessDeniedException("Only ADMIN can delete status entries");
-        }
-        statusEntryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("MolliePaymentStatusEntry not found with id: " + id));
-        statusEntryRepository.deleteById(id);
+        MolliePaymentStatusEntry saved = statusEntryRepository.save(MolliePaymentStatusEntry.correction(
+                payment, status, TenantContext.getAccountId(), reason.trim()));
+        return withCreatedByNames(List.of(statusEntryMapper.toDto(saved))).get(0);
     }
 
     @Override
@@ -134,10 +120,6 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
 
     private boolean isAdmin() {
         return TenantContext.hasRole("ADMIN");
-    }
-
-    private boolean isManager() {
-        return TenantContext.hasRole("MANAGER");
     }
 
     private void verifyOrganization(UUID organizationId) {

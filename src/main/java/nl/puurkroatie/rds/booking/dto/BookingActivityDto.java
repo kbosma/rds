@@ -5,7 +5,9 @@ import nl.puurkroatie.rds.common.Default;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 public class BookingActivityDto {
@@ -20,8 +22,12 @@ public class BookingActivityDto {
     private String activityName;
     private String activityType;
 
-    private LocalDateTime fromDate;
-    private LocalDateTime untilDate;
+    @NotNull
+    private LocalDate activityDate;
+    @NotNull
+    private LocalTime fromTime;
+    @NotNull
+    private LocalTime untilTime;
     private String meetingPoint;
     private BigDecimal totalPrice;
     private LocalDateTime createdAt;
@@ -33,7 +39,8 @@ public class BookingActivityDto {
     @Default
     public BookingActivityDto(UUID bookingActivityId, UUID bookingId, UUID activityId,
                               String activityName, String activityType,
-                              LocalDateTime fromDate, LocalDateTime untilDate, String meetingPoint, BigDecimal totalPrice,
+                              LocalDate activityDate, LocalTime fromTime, LocalTime untilTime,
+                              String meetingPoint, BigDecimal totalPrice,
                               LocalDateTime createdAt, UUID createdBy,
                               LocalDateTime modifiedAt, UUID modifiedBy,
                               UUID tenantOrganization) {
@@ -42,8 +49,9 @@ public class BookingActivityDto {
         this.activityId = activityId;
         this.activityName = activityName;
         this.activityType = activityType;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
+        this.activityDate = activityDate;
+        this.fromTime = fromTime;
+        this.untilTime = untilTime;
         this.meetingPoint = meetingPoint;
         this.totalPrice = totalPrice;
         this.createdAt = createdAt;
@@ -56,7 +64,8 @@ public class BookingActivityDto {
     @JsonCreator
     public BookingActivityDto(UUID bookingActivityId, UUID bookingId, UUID activityId,
                               String activityName, String activityType,
-                              LocalDateTime fromDate, LocalDateTime untilDate, String meetingPoint, BigDecimal totalPrice,
+                              LocalDate activityDate, LocalTime fromTime, LocalTime untilTime,
+                              String meetingPoint, BigDecimal totalPrice,
                               LocalDateTime createdAt, UUID createdBy,
                               LocalDateTime modifiedAt, UUID modifiedBy) {
         this.bookingActivityId = bookingActivityId;
@@ -64,8 +73,9 @@ public class BookingActivityDto {
         this.activityId = activityId;
         this.activityName = activityName;
         this.activityType = activityType;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
+        this.activityDate = activityDate;
+        this.fromTime = fromTime;
+        this.untilTime = untilTime;
         this.meetingPoint = meetingPoint;
         this.totalPrice = totalPrice;
         this.createdAt = createdAt;
@@ -94,12 +104,16 @@ public class BookingActivityDto {
         return activityType;
     }
 
-    public LocalDateTime getFromDate() {
-        return fromDate;
+    public LocalDate getActivityDate() {
+        return activityDate;
     }
 
-    public LocalDateTime getUntilDate() {
-        return untilDate;
+    public LocalTime getFromTime() {
+        return fromTime;
+    }
+
+    public LocalTime getUntilTime() {
+        return untilTime;
     }
 
     public String getMeetingPoint() {

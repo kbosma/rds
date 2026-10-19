@@ -312,6 +312,8 @@ export class MolliePaymentsOverviewComponent implements OnInit {
 
   payments = signal<MolliePayment[]>([]);
   bookingNumberMap = signal<Map<string, string>>(new Map());
+  /** De boeking waaraan elke betaling nu hangt (voor het herkoppelen). */
+  bookingIdMap = signal<Map<string, string>>(new Map());
   loading = signal(true);
   searchTerm = signal('');
   pageIndex = signal(0);
@@ -373,6 +375,10 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.load();
+  }
+
+  private load() {
     forkJoin({
       payments: this.molliePaymentService.getAll(),
       links: this.http.get<BookingMolliePaymentLink[]>(`${environment.apiUrl}/booking-mollie-payments`),
@@ -383,13 +389,16 @@ export class MolliePaymentsOverviewComponent implements OnInit {
 
         const bookingMap = new Map(bookings.map(b => [b.bookingId, b.bookingNumber]));
         const bnMap = new Map<string, string>();
+        const idMap = new Map<string, string>();
         for (const link of links) {
           const bookingNumber = bookingMap.get(link.bookingId);
           if (bookingNumber) {
             bnMap.set(link.molliePaymentId, bookingNumber);
           }
+          idMap.set(link.molliePaymentId, link.bookingId);
         }
         this.bookingNumberMap.set(bnMap);
+        this.bookingIdMap.set(idMap);
         this.loading.set(false);
         this.loadPaymentStatuses(payments);
       },
@@ -415,8 +424,17 @@ export class MolliePaymentsOverviewComponent implements OnInit {
 
   viewPayment(payment: MolliePayment) {
     this.dialog.open(MolliePaymentViewDialogComponent, {
-      data: { payment, bookingNumber: this.bookingNumberMap().get(payment.molliePaymentId) },
-      width: '560px',
+      data: {
+        payment,
+        bookingNumber: this.bookingNumberMap().get(payment.molliePaymentId),
+        canCorrect: this.authService.hasAuthority('PAYMENT_CORRECT'),
+        currentBookingId: this.bookingIdMap().get(payment.molliePaymentId),
+        canRelink: this.authService.hasAuthority('PAYMENT_RELINK'),
+      },
+      width: '640px',
+      maxWidth: '95vw',
+    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((changed) => {
+      if (changed) this.load(); // een correctie wijzigt de status, een herkoppeling de boeking van de betaling
     });
   }
 

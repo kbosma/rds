@@ -55,6 +55,7 @@ Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSP
 2. Mail met een e-mailtemplate versturen (preview + verzenden vanuit het e-maillijstscherm).
 3. In het booker-dialoog zet **Maak boeker** de status op `ACTIVE`.
 4. Vanaf een boeker (rij-icoon) of via de boekingenlijst een **concept-boeking** starten.
+5. **Een prospect met een boeking is een echte boeker:** zodra een boeking voor een prospect wordt aangemaakt (de concept-boeking wordt vastgelegd door een accommodatie, reiziger of ander onderdeel toe te voegen) of een prospect aan een bestaande boeking wordt gekoppeld, zet de backend de status automatisch op `ACTIVE` (`BookingServiceImpl.activateIfProspect`). Een boeker met een andere status (bv. `NIETACTIEF`) wordt niet vanzelf weer actief. Het boekingsscherm laadt de boeker daarna opnieuw.
 
 ### Concept-boeking
 

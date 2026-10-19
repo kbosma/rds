@@ -370,7 +370,7 @@ export class AccountDetailComponent implements OnInit {
   }
 
   onSave() {
-    if (this.readOnly() || this.form.invalid) return;
+    if (this.readOnly() || this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
     const { userName, password, personId, locked, mustChangePassword } = this.form.value;
