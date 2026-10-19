@@ -43,6 +43,7 @@ Elke controller-methode heeft `@PreAuthorize("hasAuthority('…')")`; de volledi
 | AUTHORITY | CRUD | R | – |
 | ROLEAUTHORITY | C R D | R | – |
 | PAYMENT_CORRECT (status van een betaling corrigeren, V10) | ✓ | ✓ | – |
+| PAYMENT_RELINK (betaling met reden aan een andere boeking hangen, V12) | ✓ | ✓ | – |
 | BOOKING (boekingen, bookers, reizigers, adressen, regels, activiteiten) | – | CRUD | CRUD |
 | ACCOMMODATION, SUPPLIER, ACTIVITY | – | CRUD | R |
 | DOCUMENT | – | CRUD | CRUD |
@@ -95,7 +96,7 @@ Word- en e-mailtemplates worden door gebruikers (MANAGER) geschreven en zijn dus
 ## Geschiedenis niet kwijtraken (verwijderbescherming)
 
 Aangemaakte documenten en betalingen zijn de "waarheid" en mogen niet verdwijnen. De database zou ze echter stilletjes meeverwijderen (`ON DELETE CASCADE`) zodra een boeking, of iets waaraan een boeking hangt, wordt verwijderd. `DeletionGuard` (`booking/service`) weigert daarom met **409 Conflict** (`DeletionBlockedException`) het verwijderen van:
-- een **boeking** met documenten of betalingen;
+- een **boeking** met documenten, betalingen of een herkoppeling (als van- of naar-boeking);
 - een **booker, accommodatie, leverancier of activiteit** die voorkomt in een boeking met documenten of betalingen.
 
 De controle zit in de services (dus niet te omzeilen via de API) en geldt voor iedereen met de verwijder-authority. Documenten en betalingen zelf hebben in de UI geen verwijderknop.

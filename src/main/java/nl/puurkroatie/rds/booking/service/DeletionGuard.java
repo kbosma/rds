@@ -13,7 +13,8 @@ import java.util.UUID;
  * echter stilletjes meeverwijderen (ON DELETE CASCADE) zodra de boeking, of iets waaraan de boeking hangt,
  * wordt verwijderd. Daarom weigert deze guard het verwijderen van:
  * <ul>
- *   <li>een boeking met documenten of betalingen;</li>
+ *   <li>een boeking met documenten of betalingen (ook een boeking waar een betaling aan was gekoppeld en is
+ *       herkoppeld, want die herkoppeling is geschiedenis);</li>
  *   <li>een booker, accommodatie, leverancier of activiteit die voorkomt in een boeking met documenten of
  *       betalingen.</li>
  * </ul>
@@ -26,7 +27,8 @@ public class DeletionGuard {
 
     private static final String HAS_HISTORY =
             "(exists (select d.documentId from Document d where d.booking = b)"
-                    + " or exists (select p.booking from BookingMolliePayment p where p.booking = b))";
+                    + " or exists (select p.booking from BookingMolliePayment p where p.booking = b)"
+                    + " or exists (select r.relinkId from BookingMolliePaymentRelink r where r.fromBooking = b or r.toBooking = b))";
 
     private final EntityManager entityManager;
 

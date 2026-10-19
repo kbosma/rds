@@ -313,8 +313,16 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="period">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.from' | translate }} — {{ 'common.until' | translate }}</th>
-                  <td mat-cell *matCellDef="let ba">{{ ba.fromDate | date:'dd-MM-yyyy' }} — {{ ba.untilDate | date:'dd-MM-yyyy' }}</td>
+                  <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.dateAndTimes' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba" class="activity-when">
+                    <div>{{ ba.activityDate | date:'dd-MM-yyyy' }}</div>
+                    <div class="activity-type">
+                      {{ ba.fromTime?.substring(0, 5) }} — {{ ba.untilTime?.substring(0, 5) }}
+                      @if (ba.untilTime < ba.fromTime) {
+                        {{ 'bookingActivity.nextDay' | translate }}
+                      }
+                    </div>
+                  </td>
                 </ng-container>
                 <ng-container matColumnDef="totalPrice">
                   <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.totalPrice' | translate }}</th>
@@ -640,6 +648,10 @@ interface BookingMolliePaymentLink {
       font-weight: 600;
       color: #2e7d32;
     }
+    .activity-when {
+      white-space: nowrap;
+    }
+
     .activity-cell {
       display: flex;
       align-items: center;
@@ -921,11 +933,17 @@ export class BookingDetailComponent implements OnInit {
   /** Alleen-lezen weergave van een betaling met de volledige statushistorie, in een dialoog. */
   viewPayment(payment: MolliePayment) {
     this.dialog.open(MolliePaymentViewDialogComponent, {
-      data: { payment, bookingNumber: this.currentBookingNumber(), canCorrect: this.can('PAYMENT_CORRECT') },
+      data: {
+        payment,
+        bookingNumber: this.currentBookingNumber(),
+        canCorrect: this.can('PAYMENT_CORRECT'),
+        currentBookingId: this.bookingId,
+        canRelink: this.can('PAYMENT_RELINK'),
+      },
       width: '640px',
       maxWidth: '95vw',
     }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((changed) => {
-      if (changed) this.loadPaymentStatuses(this.payments()); // de status kan door een correctie veranderd zijn
+      if (changed) this.loadPayments(); // een correctie wijzigt de status, een herkoppeling haalt de betaling bij deze boeking weg
     });
   }
 

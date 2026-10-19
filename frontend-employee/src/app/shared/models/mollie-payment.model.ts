@@ -27,3 +27,17 @@ export interface MolliePaymentStatusEntry {
   modifiedAt: string | null;
   modifiedBy: string | null;
 }
+
+/** Een geregistreerde herkoppeling van een betaling naar een andere boeking (alleen-toevoegen). */
+export interface PaymentRelink {
+  relinkId: string;
+  molliePaymentId: string;
+  fromBookingId: string;
+  fromBookingNumber: string;
+  toBookingId: string;
+  toBookingNumber: string;
+  reason: string;
+  createdAt: string;
+  createdBy: string | null;
+  createdByName: string | null;
+}

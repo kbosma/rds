@@ -1,15 +1,16 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
 import { MolliePaymentCorrectionDialogComponent } from './mollie-payment-correction-dialog.component';
+import { MolliePaymentRelinkDialogComponent } from './mollie-payment-relink-dialog.component';
 import { MolliePaymentService } from './mollie-payment.service';
-import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
 
 export interface MolliePaymentViewDialogData {
   payment: MolliePayment;
@@ -17,6 +18,10 @@ export interface MolliePaymentViewDialogData {
   bookingNumber?: string;
   /** Mag de gebruiker een correctie registreren (authority PAYMENT_CORRECT en niet alleen-lezen)? */
   canCorrect?: boolean;
+  /** De boeking waaraan de betaling nu hangt (nodig om te kunnen herkoppelen). */
+  currentBookingId?: string;
+  /** Mag de gebruiker de betaling aan een andere boeking koppelen (authority PAYMENT_RELINK en niet alleen-lezen)? */
+  canRelink?: boolean;
 }
 
 /**
@@ -75,8 +80,39 @@ export interface MolliePaymentViewDialogData {
           </tbody>
         </table>
       }
+
+      @if (relinks().length > 0) {
+        <h3>{{ 'payments.relinkHistory' | translate }}</h3>
+        <table class="history relinks">
+          <thead>
+            <tr>
+              <th>{{ 'payments.relinkFrom' | translate }}</th>
+              <th>{{ 'payments.relinkTo' | translate }}</th>
+              <th>{{ 'common.date' | translate }}</th>
+              <th>{{ 'bookings.by' | translate }}</th>
+              <th>{{ 'payments.reason' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of relinks(); track r.relinkId) {
+              <tr>
+                <td>{{ r.fromBookingNumber }}</td>
+                <td>{{ r.toBookingNumber }}</td>
+                <td>{{ r.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
+                <td>{{ r.createdByName ?? ('common.unknown' | translate) }}</td>
+                <td class="reason">{{ r.reason }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
+      @if (data.canRelink && data.currentBookingId) {
+        <button mat-stroked-button color="primary" class="relink-btn" (click)="openRelink()" [disabled]="loading()">
+          <mat-icon>swap_horiz</mat-icon> {{ 'payments.relinkButton' | translate }}
+        </button>
+      }
       @if (data.canCorrect) {
         <button mat-stroked-button color="primary" class="correct-btn" (click)="openCorrection()" [disabled]="loading()">
           <mat-icon>edit_note</mat-icon> {{ 'payments.registerCorrection' | translate }}
@@ -103,14 +139,17 @@ export class MolliePaymentViewDialogComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   private dialog = inject(MatDialog);
+  private dialogRef = inject(MatDialogRef<MolliePaymentViewDialogComponent>);
 
   entries = signal<MolliePaymentStatusEntry[]>([]);
+  relinks = signal<PaymentRelink[]>([]);
   loading = signal(true);
   /** True zodra er een correctie is geregistreerd; de aanroeper ververst dan zijn lijst (het dialoog sluit met dit antwoord). */
   changed = signal(false);
 
   ngOnInit() {
     this.loadEntries();
+    this.loadRelinks();
   }
 
   openCorrection() {
@@ -124,6 +163,23 @@ export class MolliePaymentViewDialogComponent implements OnInit {
       this.changed.set(true);
       this.loadEntries();
     });
+  }
+
+  /** Na een herkoppeling hangt de betaling niet meer aan deze boeking: sluit en laat de aanroeper herladen. */
+  openRelink() {
+    this.dialog.open(MolliePaymentRelinkDialogComponent, {
+      data: { payment: this.data.payment, currentBookingId: this.data.currentBookingId },
+      width: '480px',
+      maxWidth: '95vw',
+    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((saved) => {
+      if (saved) this.dialogRef.close(true);
+    });
+  }
+
+  private loadRelinks() {
+    this.paymentService.getRelinks(this.data.payment.molliePaymentId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (relinks) => this.relinks.set(relinks), error: () => this.relinks.set([]) });
   }
 
   private loadEntries() {

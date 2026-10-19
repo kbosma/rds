@@ -37,7 +37,7 @@ flowchart LR
 | `booking.booker.*` | de hoofdboeker (zelfde velden als `prospect.*`) |
 | `booking.travelers` | lijst: `firstname`, `prefix`, `lastname`, `gender`, `birthdate`, `initials` |
 | `booking.bookingLines` | lijst: `fromDate`, `untilDate`, `price`, `accommodation.{key,name,addresses}`, `supplier.{key,name,addresses}` |
-| `booking.bookingActivities` | lijst: `activityName`, `activityType`, `fromDate`, `untilDate`, `meetingPoint`, `totalPrice` |
+| `booking.bookingActivities` | lijst: `activityName`, `activityType`, `fromDate`, `untilDate` (afgeleid uit activiteitsdatum + tijden; einde is de volgende dag bij tot-tijd < van-tijd), `meetingPoint`, `totalPrice` |
 
 Een adres heeft `street`, `housenumber`, `housenumberAddition`, `postalcode`, `city`, `country`, `addressrole`. De velden van de booker/prospect staan in [email.md](email.md).
 

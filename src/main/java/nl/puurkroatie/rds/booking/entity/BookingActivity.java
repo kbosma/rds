@@ -18,7 +18,9 @@ import org.hibernate.annotations.OnDeleteAction;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 @Entity
@@ -40,11 +42,14 @@ public class BookingActivity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Activity activity;
 
-    @Column(name = "from_date")
-    private LocalDateTime fromDate;
+    @Column(name = "activity_date")
+    private LocalDate activityDate;
 
-    @Column(name = "until_date")
-    private LocalDateTime untilDate;
+    @Column(name = "from_time")
+    private LocalTime fromTime;
+
+    @Column(name = "until_time")
+    private LocalTime untilTime;
 
     @Column(name = "meeting_point")
     private String meetingPoint;
@@ -70,23 +75,25 @@ public class BookingActivity {
     protected BookingActivity() {
     }
 
-    public BookingActivity(Booking booking, Activity activity, LocalDateTime fromDate, LocalDateTime untilDate,
-                           String meetingPoint, BigDecimal totalPrice) {
+    public BookingActivity(Booking booking, Activity activity, LocalDate activityDate, LocalTime fromTime,
+                           LocalTime untilTime, String meetingPoint, BigDecimal totalPrice) {
         this.booking = booking;
         this.activity = activity;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
+        this.activityDate = activityDate;
+        this.fromTime = fromTime;
+        this.untilTime = untilTime;
         this.meetingPoint = meetingPoint;
         this.totalPrice = totalPrice;
     }
 
-    public BookingActivity(UUID bookingActivityId, Booking booking, Activity activity, LocalDateTime fromDate,
-                           LocalDateTime untilDate, String meetingPoint, BigDecimal totalPrice) {
+    public BookingActivity(UUID bookingActivityId, Booking booking, Activity activity, LocalDate activityDate,
+                           LocalTime fromTime, LocalTime untilTime, String meetingPoint, BigDecimal totalPrice) {
         this.bookingActivityId = bookingActivityId;
         this.booking = booking;
         this.activity = activity;
-        this.fromDate = fromDate;
-        this.untilDate = untilDate;
+        this.activityDate = activityDate;
+        this.fromTime = fromTime;
+        this.untilTime = untilTime;
         this.meetingPoint = meetingPoint;
         this.totalPrice = totalPrice;
     }
@@ -116,12 +123,30 @@ public class BookingActivity {
         return activity;
     }
 
-    public LocalDateTime getFromDate() {
-        return fromDate;
+    public LocalDate getActivityDate() {
+        return activityDate;
     }
 
-    public LocalDateTime getUntilDate() {
-        return untilDate;
+    public LocalTime getFromTime() {
+        return fromTime;
+    }
+
+    public LocalTime getUntilTime() {
+        return untilTime;
+    }
+
+    /** Begin van de activiteit, of null als datum of van-tijd ontbreekt. */
+    public LocalDateTime getStartDateTime() {
+        return activityDate != null && fromTime != null ? activityDate.atTime(fromTime) : null;
+    }
+
+    /** Einde van de activiteit; een tot-tijd vóór de van-tijd betekent dat de activiteit de volgende dag eindigt. */
+    public LocalDateTime getEndDateTime() {
+        if (activityDate == null || untilTime == null) {
+            return null;
+        }
+        boolean endsNextDay = fromTime != null && untilTime.isBefore(fromTime);
+        return (endsNextDay ? activityDate.plusDays(1) : activityDate).atTime(untilTime);
     }
 
     public String getMeetingPoint() {

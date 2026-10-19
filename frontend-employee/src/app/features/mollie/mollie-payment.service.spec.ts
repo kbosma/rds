@@ -104,4 +104,21 @@ describe('MolliePaymentService', () => {
     expect(req.request.body).toEqual({ status: 'paid', reason: 'Betaald per bank' });
     req.flush({});
   });
+
+  it('getRelinks haalt de herkoppelingen van een betaling op via GET', () => {
+    service.getRelinks('mp-1').subscribe((r) => expect(r.length).toBe(1));
+
+    const req = httpTesting.expectOne((r) => r.url.endsWith('/booking-mollie-payments/mp-1/relinks'));
+    expect(req.request.method).toBe('GET');
+    req.flush([{ relinkId: 'r-1' }]);
+  });
+
+  it('relink registreert een herkoppeling via POST met doelboeking en reden (een koppeling wordt nooit losgemaakt)', () => {
+    service.relink('mp-1', 'b-2', 'Verkeerde boeking').subscribe();
+
+    const req = httpTesting.expectOne((r) => r.url.endsWith('/booking-mollie-payments/mp-1/relink'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ targetBookingId: 'b-2', reason: 'Verkeerde boeking' });
+    req.flush({});
+  });
 });

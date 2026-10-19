@@ -233,10 +233,12 @@ describe('BookingDetailComponent', () => {
     component.viewPayment(payment);
 
     expect(openSpy).toHaveBeenCalledTimes(1);
-    const config = openSpy.calls.mostRecent().args[1] as { data: { payment: MolliePayment; bookingNumber: string; canCorrect: boolean } };
+    const config = openSpy.calls.mostRecent().args[1] as { data: { payment: MolliePayment; bookingNumber: string; canCorrect: boolean; canRelink: boolean; currentBookingId: string } };
     expect(config.data.payment).toBe(payment);
     expect(config.data.bookingNumber).toBe('BK-2026-001');
     expect(typeof config.data.canCorrect).toBe('boolean'); // alleen met PAYMENT_CORRECT (en niet alleen-lezen)
+    expect(typeof config.data.canRelink).toBe('boolean'); // alleen met PAYMENT_RELINK (en niet alleen-lezen)
+    expect(config.data.currentBookingId).toBe('b-1');
   }));
 
   it('should not open the e-mail dialog for a concept booking that is not saved yet', fakeAsync(() => {

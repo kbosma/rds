@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,21 +10,15 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MolliePaymentService } from './mollie-payment.service';
 import { MolliePayment } from '../../shared/models';
+import { reasonHasText } from '../../shared/utils/reason.validator';
 
 /** Statussen die een medewerker met de hand mag registreren; de rest (pending, authorized, expired) komt van Mollie. */
 export const PAYMENT_CORRECTION_STATUSES = ['paid', 'canceled', 'failed', 'open'];
-
-export const CORRECTION_REASON_MIN_LENGTH = 5;
 
 export interface MolliePaymentCorrectionDialogData {
   payment: MolliePayment;
   /** Huidige status van de betaling; die is niet te kiezen (er verandert dan niets). */
   currentStatus: string | null;
-}
-
-function reasonHasText(control: AbstractControl): ValidationErrors | null {
-  const text = (control.value ?? '').trim();
-  return text.length >= CORRECTION_REASON_MIN_LENGTH ? null : { reasonTooShort: true };
 }
 
 /**

@@ -63,6 +63,6 @@ public class BookerPortalItineraryController {
         String description = activity.getActivity().getName();
         String location = activity.getMeetingPoint();
         return new ItineraryItemDto(activity.getBookingActivityId(), ItineraryItemDto.ItemType.ACTIVITY,
-                description, activity.getFromDate(), activity.getUntilDate(), location);
+                description, activity.getStartDateTime(), activity.getEndDateTime(), location);
     }
 }

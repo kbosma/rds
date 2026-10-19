@@ -1,13 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { MolliePaymentViewDialogComponent } from './mollie-payment-view-dialog.component';
 import { MolliePaymentEditDialogComponent } from './mollie-payment-edit-dialog.component';
 import { MolliePaymentService } from './mollie-payment.service';
-import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
 
 describe('Betalingsdialogen', () => {
   const payment: MolliePayment = {
@@ -22,20 +22,87 @@ describe('Betalingsdialogen', () => {
       { molliePaymentStatusEntryId: 'e-2', molliePaymentId: 'p-1', status: 'paid', createdAt: '2026-05-02T10:00:00', createdBy: 'u', modifiedAt: null, modifiedBy: null },
     ];
 
-    async function setup(result$: ReturnType<MolliePaymentService['getStatusEntries']>, canCorrect?: boolean) {
-      const service = jasmine.createSpyObj('MolliePaymentService', ['getStatusEntries']);
+    async function setup(
+      result$: ReturnType<MolliePaymentService['getStatusEntries']>,
+      canCorrect?: boolean,
+      extra: { canRelink?: boolean; currentBookingId?: string; relinks?: PaymentRelink[] } = {},
+    ) {
+      const service = jasmine.createSpyObj('MolliePaymentService', ['getStatusEntries', 'getRelinks']);
       service.getStatusEntries.and.returnValue(result$);
+      service.getRelinks.and.returnValue(of(extra.relinks ?? []));
+      const dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
       await TestBed.configureTestingModule({
         imports: [MolliePaymentViewDialogComponent, NoopAnimationsModule],
         providers: [
           { provide: MolliePaymentService, useValue: service },
-          { provide: MAT_DIALOG_DATA, useValue: { payment, bookingNumber: 'BK-1', canCorrect } },
+          { provide: MatDialogRef, useValue: dialogRef },
+          { provide: MAT_DIALOG_DATA, useValue: { payment, bookingNumber: 'BK-1', canCorrect, canRelink: extra.canRelink, currentBookingId: extra.currentBookingId } },
         ],
       }).compileComponents();
       const fixture = TestBed.createComponent(MolliePaymentViewDialogComponent);
       fixture.detectChanges();
-      return { fixture, component: fixture.componentInstance, service };
+      return { fixture, component: fixture.componentInstance, service, dialogRef };
     }
+
+    const relink: PaymentRelink = {
+      relinkId: 'r-1', molliePaymentId: 'p-1', fromBookingId: 'b-1', fromBookingNumber: 'BK-1', toBookingId: 'b-2', toBookingNumber: 'BK-2',
+      reason: 'Verkeerde boeking', createdAt: '2026-05-03T10:00:00', createdBy: 'acc-1', createdByName: 'Pieter de Groot',
+    };
+
+    it('toont de geregistreerde herkoppelingen met boekingnummers, naam en reden', async () => {
+      const { fixture } = await setup(of(entries), false, { relinks: [relink] });
+      fixture.detectChanges();
+
+      const row = fixture.nativeElement.querySelector('.relinks tbody tr') as HTMLElement;
+      const cells = Array.from(row.querySelectorAll('td')).map((td) => td.textContent?.trim());
+      expect(cells[0]).toBe('BK-1');
+      expect(cells[1]).toBe('BK-2');
+      expect(cells[3]).toBe('Pieter de Groot');
+      expect(cells[4]).toBe('Verkeerde boeking');
+    });
+
+    it('toont geen herkoppel-tabel zonder herkoppelingen', async () => {
+      const { fixture } = await setup(of(entries));
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.relinks')).toBeNull();
+    });
+
+    it('toont de knop "Naar andere boeking koppelen" alleen met canRelink én de huidige boeking', async () => {
+      const allowed = await setup(of(entries), false, { canRelink: true, currentBookingId: 'b-1' });
+      allowed.fixture.detectChanges();
+      expect(allowed.fixture.nativeElement.querySelector('.relink-btn')).not.toBeNull();
+    });
+
+    it('verbergt de herkoppelknop zonder canRelink', async () => {
+      const { fixture } = await setup(of(entries), false, { canRelink: false, currentBookingId: 'b-1' });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.relink-btn')).toBeNull();
+    });
+
+    it('verbergt de herkoppelknop als de huidige boeking niet bekend is', async () => {
+      const { fixture } = await setup(of(entries), false, { canRelink: true });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.relink-btn')).toBeNull();
+    });
+
+    it('sluit met true na een herkoppeling (de betaling hangt dan niet meer aan deze boeking)', async () => {
+      const { component, dialogRef } = await setup(of(entries), false, { canRelink: true, currentBookingId: 'b-1' });
+      spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(true) } as never);
+
+      component.openRelink();
+
+      expect(dialogRef.close).toHaveBeenCalledWith(true);
+    });
+
+    it('laat het dialoog open als het herkoppelen wordt geannuleerd', async () => {
+      const { component, dialogRef } = await setup(of(entries), false, { canRelink: true, currentBookingId: 'b-1' });
+      spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(undefined) } as never);
+
+      component.openRelink();
+
+      expect(dialogRef.close).not.toHaveBeenCalled();
+    });
 
     it('toont de gegevens, het boekingnummer en de volledige statushistorie', async () => {
       const { fixture, service } = await setup(of(entries));

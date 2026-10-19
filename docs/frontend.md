@@ -39,7 +39,7 @@ translate-test.setup.spec.ts   # laadt de echte nl-vertalingen in alle specs
 | `layout` | zijmenu (items per authority), toolbar, taalwissel |
 | `login` | login, TOTP-stap, herstelcode |
 | `dashboard` | dashboard per rol (admin/manager/employee) |
-| `bookings` | lijst, **detail** (hoofdscherm), boekingsregel-/activiteit-/bewerk-dialogen |
+| `bookings` | lijst, **detail** (hoofdscherm), boekingsregel-/activiteit-/bewerk-dialogen. Een boekingsactiviteit heeft één datum + van-/tot-tijd (`type="date"`/`type="time"`, 24-uurs); tot-tijd vóór van-tijd = eindigt de volgende dag (hint in dialoog, "(volgende dag)" in de tabel) |
 | `bookers`, `prospects`, `travelers` | bookers (+ concept-boeking starten), prospects (aanmeldproces), reizigers |
 | `accommodations`, `suppliers`, `activities` | stamgegevens |
 | `documents`, `templates` | documenten van boekingen; Word-templates (upload of editor) |
@@ -77,7 +77,7 @@ Het gedeelde ontwerp staat in `src/styles.scss` van **beide** apps (de bestanden
 
 ### Betalingen in een boeking
 
-De kaart *Betalingen* in het boekingsdetail toont per betaling alleen een oog-icoon (`PAYMENT_READ`, alleen lezen) dat `MolliePaymentViewDialogComponent` opent: de gegevens en de volledige statushistorie, zonder knoppen om iets te wijzigen. Statussen komen van Mollie en worden nooit gewijzigd of verwijderd (alleen-toevoegen). Een medewerker met `PAYMENT_CORRECT` kan in dat dialoog een **correctie** registreren (`MolliePaymentCorrectionDialogComponent`: nieuwe status uit `open/paid/failed/canceled` en een verplichte reden); die verschijnt als nieuwe regel met de markering *Correctie*, naam en reden. Bij "Door" staat de leesbare naam van wie een regel aanmaakte (`createdByName` uit de backend; medewerker of boeker), "Systeem" voor Mollie en "Onbekend" als het id niet (meer) bij een naam past; nooit het ruwe id. De statusbadge (vertaald en gekleurd) komt uit `shared/components/payment-status-badge.component.ts` en wordt in het uitklapscherm en het dialoog gebruikt.
+De kaart *Betalingen* in het boekingsdetail toont per betaling alleen een oog-icoon (`PAYMENT_READ`, alleen lezen) dat `MolliePaymentViewDialogComponent` opent: de gegevens en de volledige statushistorie, zonder knoppen om iets te wijzigen. Statussen komen van Mollie en worden nooit gewijzigd of verwijderd (alleen-toevoegen). Een medewerker met `PAYMENT_RELINK` ziet daarnaast de knop *Naar andere boeking koppelen* (`MolliePaymentRelinkDialogComponent`: andere boeking + verplichte reden); de herkoppelgeschiedenis (van, naar, datum, door, reden) staat als tabel in hetzelfde dialoog en na een herkoppeling sluit het dialoog en herlaadt de lijst. Een medewerker met `PAYMENT_CORRECT` kan in dat dialoog een **correctie** registreren (`MolliePaymentCorrectionDialogComponent`: nieuwe status uit `open/paid/failed/canceled` en een verplichte reden); die verschijnt als nieuwe regel met de markering *Correctie*, naam en reden. Bij "Door" staat de leesbare naam van wie een regel aanmaakte (`createdByName` uit de backend; medewerker of boeker), "Systeem" voor Mollie en "Onbekend" als het id niet (meer) bij een naam past; nooit het ruwe id. De statusbadge (vertaald en gekleurd) komt uit `shared/components/payment-status-badge.component.ts` en wordt in het uitklapscherm en het dialoog gebruikt.
 
 ### Lijsten met actie-iconen (inzien / bewerken / verwijderen)
 

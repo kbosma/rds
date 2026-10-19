@@ -85,7 +85,9 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 | `documents` | GET, GET `/{id}`, GET `/{id}/content`, GET `/booking/{bookingId}`, POST, PUT `/{id}`, DELETE `/{id}` | `DOCUMENT_READ/CREATE/UPDATE/DELETE` |
 | `documents/generate` | POST `{ templateId, bookingId, outputFormat }` | `DOCUMENT_CREATE` |
 | `document-templates` | GET, GET `/{id}`, GET `/{id}/content` (.docx), POST, PUT `/{id}`, DELETE `/{id}` | `TEMPLATE_READ/CREATE/UPDATE/DELETE` |
-| `booking-mollie-payments` | GET, GET `/{bookingId}`, GET `/{bookingId}/{paymentId}`, POST, DELETE `/{bookingId}/{paymentId}` | `PAYMENT_READ/CREATE/DELETE` |
+| `booking-mollie-payments` | GET, GET `/{bookingId}`, GET `/{bookingId}/{paymentId}`, POST, GET `/{paymentId}/relinks`, POST `/{paymentId}/relink` (herkoppelen met reden; geen DELETE: een koppeling wordt nooit losgemaakt) | `PAYMENT_READ/CREATE`, `PAYMENT_RELINK` |
+
+`booking-activities` body (alle drie verplicht; `untilTime` < `fromTime` = eindigt de volgende dag): `{"bookingId":"…","activityId":"…","activityDate":"2026-07-02","fromTime":"22:00","untilTime":"02:00","meetingPoint":"Haven","totalPrice":45.00}`.
 
 ### Mollie
 

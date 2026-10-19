@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
-import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -41,6 +41,20 @@ export class MolliePaymentService {
   createCorrection(molliePaymentId: string, status: string, reason: string) {
     return this.http.post<MolliePaymentStatusEntry>(
       `${environment.apiUrl}/mollie/payment-status-entries/by-payment/${molliePaymentId}`, { status, reason });
+  }
+
+  /** De geregistreerde herkoppelingen van een betaling, oudste eerst. */
+  getRelinks(molliePaymentId: string) {
+    return this.http.get<PaymentRelink[]>(`${environment.apiUrl}/booking-mollie-payments/${molliePaymentId}/relinks`);
+  }
+
+  /**
+   * Koppelt een betaling aan een andere boeking, met reden. Een koppeling wordt nooit losgemaakt: dit registreert een
+   * herkoppeling die alleen-toevoegen is.
+   */
+  relink(molliePaymentId: string, targetBookingId: string, reason: string) {
+    return this.http.post<PaymentRelink>(
+      `${environment.apiUrl}/booking-mollie-payments/${molliePaymentId}/relink`, { targetBookingId, reason });
   }
 
   getAllStatusEntries() {

@@ -27,14 +27,14 @@ public class BookerPortalBookingActivityController {
     public ResponseEntity<List<BookerPortalActivityDto>> findAll() {
         UUID bookingId = BookerContext.getBookingId();
         List<BookerPortalActivityDto> activities = bookingActivityRepository
-                .findByBookingBookingIdOrderByFromDateAsc(bookingId)
+                .findByBookingBookingIdOrderByActivityDateAscFromTimeAsc(bookingId)
                 .stream()
                 .map(ba -> new BookerPortalActivityDto(
                         ba.getBookingActivityId(),
                         ba.getActivity().getName(),
                         ba.getActivity().getDescription(),
-                        ba.getFromDate(),
-                        ba.getUntilDate(),
+                        ba.getStartDateTime(),
+                        ba.getEndDateTime(),
                         ba.getMeetingPoint(),
                         ba.getActivity().getActivityType().name()
                 ))

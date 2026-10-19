@@ -65,7 +65,13 @@ Beide: naam in de database, lowercase in JSON, hoofdletterongevoelig parsen.
 
 ## Een betaling wordt nooit verwijderd
 
-Een betaling en haar statushistorie blijven altijd bewaard, **ook als er (nog) geen Mollie-id is**. Er is geen `DELETE /api/mollie/payments/{id}` (405) en migratie V11 zet databasetriggers op `mollie_payment` en `mollie_payment_status_entry` die elke `DELETE` en `TRUNCATE` weigeren, dus ook een cascade of handmatige SQL kan de historie niet laten verdwijnen. Alleen de koppeling aan een boeking kan nog worden losgemaakt (`DELETE /api/booking-mollie-payments/…`, `PAYMENT_DELETE`); de betaling zelf en haar historie blijven dan staan.
+Een betaling en haar statushistorie blijven altijd bewaard, **ook als er (nog) geen Mollie-id is**. Er is geen `DELETE /api/mollie/payments/{id}` (405) en migratie V11 zet databasetriggers op `mollie_payment` en `mollie_payment_status_entry` die elke `DELETE` en `TRUNCATE` weigeren, dus ook een cascade of handmatige SQL kan de historie niet laten verdwijnen. Ook de koppeling aan een boeking wordt nooit losgemaakt: er is geen `DELETE /api/booking-mollie-payments/…` meer (405) en een databasetrigger (V12) weigert elke `DELETE`/`TRUNCATE` op de koppeltabel. De enige manier om een betaling aan een andere boeking te hangen is een **herkoppeling met reden** (zie hieronder).
+
+## Herkoppelen met reden
+
+Een medewerker met `PAYMENT_RELINK` (ADMIN en MANAGER) kan een betaling aan een andere boeking hangen: `POST /api/booking-mollie-payments/{molliePaymentId}/relink` met `{targetBookingId, reason}` (reden verplicht, 5 tot 500 tekens). Dat is altijd een **nieuwe regel** in `booking_mollie_payment_relink` (van boeking, naar boeking, reden, wie, wanneer) en pas daarna wordt de koppeling verplaatst; de betaling en haar statushistorie blijven onaangeroerd. `GET …/{molliePaymentId}/relinks` (`PAYMENT_READ`) geeft de geschiedenis, oudste eerst, met leesbare namen.
+
+Regels: de doelboeking moet bij dezelfde organisatie horen als de betaling (ook voor ADMIN, anders 403), dezelfde boeking als doel geeft 400, een betaling uit een andere organisatie 403. Databasetriggers (V12) maken de herkoppelregels alleen-toevoegen (`UPDATE`/`DELETE`/`TRUNCATE` geweigerd) en laten `booking_mollie_payment.booking_id` alleen wijzigen direct nadat een bijpassende herkoppelregel is ingevoegd; het betaling-id is onveranderlijk. Een boeking die in een herkoppeling voorkomt kan niet verwijderd worden (`DeletionGuard`, 409).
 
 ## Levenscyclus: een betaling is eerst een aankondiging
 
@@ -94,7 +100,8 @@ Toegestane correctiestatussen (`MolliePaymentStatusEntryServiceImpl.CORRECTION_S
 | POST | `/api/mollie/payment-status-entries/by-payment/{molliePaymentId}` | `PAYMENT_CORRECT` (ADMIN, MANAGER): handmatige correctie `{status, reason}` |
 | GET/POST | `/api/booking-mollie-payments` | `PAYMENT_READ` / `PAYMENT_CREATE` |
 | GET | `/api/booking-mollie-payments/{bookingId}` (en `/{bookingId}/{molliePaymentId}`) | `PAYMENT_READ` |
-| DELETE | `/api/booking-mollie-payments/{bookingId}/{molliePaymentId}` | `PAYMENT_DELETE` |
+| GET | `/api/booking-mollie-payments/{molliePaymentId}/relinks` | `PAYMENT_READ`: herkoppelgeschiedenis |
+| POST | `/api/booking-mollie-payments/{molliePaymentId}/relink` | `PAYMENT_RELINK` (ADMIN, MANAGER): herkoppelen `{targetBookingId, reason}` → 201. **Geen DELETE: een koppeling wordt nooit losgemaakt.** |
 | GET | `/api/booker-portal/payments` en `/status-entries` | `BOOKER_PORTAL_READ` |
 | POST | `/api/booker-portal/payments/pay/{molliePaymentId}` | `BOOKER_PORTAL_UPDATE` |
 

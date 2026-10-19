@@ -117,9 +117,10 @@ describe('MolliePaymentsOverviewComponent', () => {
 
     component.viewPayment(payments[0]);
 
-    const data = (open.calls.mostRecent().args[1] as { data: { payment: MolliePayment; bookingNumber?: string } }).data;
+    const data = (open.calls.mostRecent().args[1] as { data: { payment: MolliePayment; bookingNumber?: string; currentBookingId?: string } }).data;
     expect(data.payment).toBe(payments[0]);
     expect(data.bookingNumber).toBe('BK-1');
+    expect(data.currentBookingId).toBe('b-1'); // nodig om te kunnen herkoppelen
   }));
 
   it('bewerken van een verstuurde betaling opent niets', fakeAsync(() => {

@@ -157,8 +157,8 @@ public class BookingContextServiceImpl implements BookingContextService {
                 .map(ba -> new BookingActivityContext(
                         ba.getActivity().getName(),
                         ba.getActivity().getActivityType() != null ? ba.getActivity().getActivityType().toValue() : null,
-                        ba.getFromDate(),
-                        ba.getUntilDate(),
+                        ba.getStartDateTime(),
+                        ba.getEndDateTime(),
                         ba.getMeetingPoint(),
                         ba.getTotalPrice()
                 ))
