@@ -6,7 +6,8 @@ import { Document, MolliePayment, SentEmail } from '../../shared/models';
 
 describe('BookingMessagesCardComponent', () => {
   const email = { sentEmailId: 'e-1', subject: 'Betaalverzoek', toAddress: 'thomas@example.com', createdAt: '2026-10-12T14:05:00', createdByName: 'Pieter', resentFromId: null } as SentEmail;
-  const doc = { documentId: 'd-1', displayname: 'Bevestiging.pdf', mimeType: 'application/pdf', createdAt: '2026-10-10T09:00:00' } as Document;
+  const doc = { documentId: 'd-1', displayname: 'Bevestiging.pdf', mimeType: 'application/pdf', createdAt: '2026-10-10T09:00:00', visibleInPortal: true } as Document;
+  const hiddenDoc = { documentId: 'd-2', displayname: 'Intern.pdf', mimeType: 'application/pdf', createdAt: '2026-10-09T09:00:00', visibleInPortal: false } as Document;
   const payment = { molliePaymentId: 'p-1', amount: 1650, description: 'Betaling BK-4', method: 'ideal', createdAt: '2026-10-19T14:00:00' } as MolliePayment;
 
   async function setup(inputs: Record<string, unknown> = {}) {
@@ -82,6 +83,23 @@ describe('BookingMessagesCardComponent', () => {
 
   it('biedt alleen bij een document verwijderen aan, en alleen met het recht', async () => {
     const withRight = await setup({ canDeleteDocument: true });
+    const buttonCount = (row: HTMLElement) => row.querySelectorAll('button').length;
+    const [paymentRow, emailRow, documentRow] = rows(withRight.el);
+
+    expect(buttonCount(documentRow)).toBe(buttonCount(emailRow) + 1);
+    expect(buttonCount(paymentRow)).toBe(buttonCount(emailRow));
+  });
+
+  it('toont of een document in het portaal zichtbaar is of alleen intern', async () => {
+    const { el } = await setup({ documents: [doc, hiddenDoc] });
+    const documentRows = rows(el).filter((r) => r.dataset['kind'] === 'document');
+
+    expect(documentRows[0].querySelector('.pill-ok')).not.toBeNull();
+    expect(documentRows[1].querySelector('.pill-ok')).toBeNull();
+  });
+
+  it('biedt wijzigen alleen bij een document en alleen met het recht', async () => {
+    const withRight = await setup({ canEditDocument: true });
     const buttonCount = (row: HTMLElement) => row.querySelectorAll('button').length;
     const [paymentRow, emailRow, documentRow] = rows(withRight.el);
 

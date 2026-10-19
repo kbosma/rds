@@ -38,13 +38,12 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentDto update(UUID id, DocumentDto dto) {
+    public DocumentDto changePortalVisibility(UUID id, boolean visibleInPortal) {
         Document existing = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found with id: " + id));
         verifyOrganization(existing.getTenantOrganization());
-        Document entity = toEntity(id, dto);
-        Document saved = documentRepository.save(entity);
-        return documentMapper.toDto(saved);
+        existing.changeVisibleInPortal(visibleInPortal);
+        return documentMapper.toDto(documentRepository.save(existing));
     }
 
     @Override
@@ -109,18 +108,8 @@ public class DocumentServiceImpl implements DocumentService {
                 booking,
                 dto.getDisplayname(),
                 dto.getMimeType(),
-                dto.getDocument()
-        );
-    }
-
-    private Document toEntity(UUID id, DocumentDto dto) {
-        Booking booking = resolveBooking(dto.getBookingId());
-        return new Document(
-                id,
-                booking,
-                dto.getDisplayname(),
-                dto.getMimeType(),
-                dto.getDocument()
+                dto.getDocument(),
+                dto.isVisibleInPortal()
         );
     }
 }

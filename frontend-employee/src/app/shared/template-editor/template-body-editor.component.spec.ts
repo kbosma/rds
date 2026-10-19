@@ -10,6 +10,7 @@ import {
   EMAIL_VARIABLE_GROUPS,
   REPEAT_TRAVELERS,
 } from './template-variables';
+import { Editor } from '@tiptap/core';
 import { TemplateImageService, TEMPLATE_IMAGE_MAX_BYTES } from './template-image.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ConfirmService } from '../services/confirm.service';
@@ -446,6 +447,41 @@ describe('TemplateBodyEditorComponent', () => {
       component.onLibraryImageChosen({ ...libraryItem, url: other });
 
       expect(component.usedImageUrls()).toContain(other);
+    });
+
+    it('keeps the chosen image size (width/height) in the HTML, also after reopening the template', () => {
+      component.writeValue(`<p>Hoi</p><img src="${libraryUrl}" alt="x" width="169" height="85">`);
+      // writeValue selecteert de afbeelding; een variabele zou die vervangen. Daarom de cursor naar het begin.
+      (component as unknown as { editor: Editor }).editor.commands.setTextSelection(1);
+      component.insertVariable('x'); // forceert een onChange met de actuele HTML
+
+      expect(lastHtml()).toMatch(/<img[^>]*width="169"/);
+      expect(lastHtml()).toMatch(/<img[^>]*height="85"/);
+      // de vaste inline-stijl blijft: nooit breder dan de mail
+      expect(lastHtml()).toMatch(/<img[^>]*style="[^"]*max-width:\s*100%/);
+    });
+
+    it('writes the new size to the HTML after resizing an image', () => {
+      component.writeValue(`<img src="${libraryUrl}" alt="x">`);
+      const editor = (component as unknown as { editor: Editor }).editor;
+
+      editor.commands.updateAttributes('image', { width: 120, height: 60 });
+
+      expect(lastHtml()).toMatch(/<img[^>]*width="120"/);
+      expect(lastHtml()).toMatch(/<img[^>]*height="60"/);
+    });
+
+    it('shows a visible resize handle on the selected image only', () => {
+      component.writeValue(`<img src="${libraryUrl}" alt="x" width="100" height="50">`);
+      const handle = () => proseMirror().querySelector('[data-resize-handle]') as HTMLElement;
+
+      expect(handle()).not.toBeNull();
+      expect(getComputedStyle(handle()).display).toBe('block');
+      expect(handle().getBoundingClientRect().width).toBeGreaterThan(6);
+
+      (component as unknown as { editor: Editor }).editor.commands.setTextSelection(1);
+
+      expect(getComputedStyle(handle()).display).toBe('none');
     });
 
     it('refreshes the library after an upload through the toolbar', () => {

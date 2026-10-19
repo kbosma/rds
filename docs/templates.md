@@ -104,6 +104,13 @@ Een tabel krijgt randen, 100% breedte, een grijze kopcel en een kopregel die op 
 - Afbeeldingen moeten uit de bibliotheek komen (zie hieronder); een externe URL of `data:`-afbeelding wordt geweigerd.
 - Onbekende elementen worden genegeerd (hun inhoud blijft); `script`, `style`, `iframe` e.d. vervallen.
 
+### Afbeeldingsgrootte
+
+Een afbeelding in de editor selecteer je met een klik; dan verschijnt rechtsonder een **greep** waarmee je de afbeelding met de muis groter of kleiner maakt (de beeldverhouding blijft behouden; minimaal 40 px). De grootte wordt als `width`- en `height`-attribuut op de `<img>` bewaard, naast de vaste stijl `max-width:100%;height:auto` (nooit breder dan de mail/pagina), bv. `<img src="/api/public/email-images/…" width="169" height="85" style="max-width: 100%; height: auto;">`. Dit geldt voor e-mail- én Word-templates (één editor) en komt terug bij het heropenen van de template.
+
+- **E-mail**: `EmailImageUrlResolver.toAbsolute` past bij het versturen alleen het `src`-pad aan; de attributen blijven ongemoeid.
+- **Word**: `HtmlToDocxConverter.displaySize` neemt `width`/`height` (attribuut, anders `style`) over; zonder afmeting geldt de eigen afmeting van het plaatje, en nooit breder dan de pagina (605 px; de hoogte schaalt dan mee).
+
 ### Afbeeldingen: één bibliotheek
 
 E-mail en Word gebruiken **dezelfde** bibliotheek (`email_image`, endpoints `/api/email-images`; de naam is historisch). Zie [email.md](email.md) voor opslag, publiek uitleveren en verwijderen.

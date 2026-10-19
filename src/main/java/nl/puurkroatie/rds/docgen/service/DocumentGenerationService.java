@@ -6,5 +6,5 @@ import java.util.UUID;
 
 public interface DocumentGenerationService {
 
-    DocumentDto generate(UUID templateId, UUID bookingId, String outputFormat);
+    DocumentDto generate(UUID templateId, UUID bookingId, String outputFormat, boolean visibleInPortal);
 }

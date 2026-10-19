@@ -245,6 +245,19 @@ describe('BookingDetailComponent', () => {
     expect(c).toBeDefined();
   }));
 
+  it('opens the portal visibility dialog for a document and reloads after saving', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    const openSpy = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open').and.returnValue({ afterClosed: () => of(true) } as never);
+    const doc = { documentId: 'd-1' } as never;
+
+    component.editDocumentPortal(doc);
+
+    const config = openSpy.calls.mostRecent().args[1] as { data: { document: unknown } };
+    expect(config.data.document).toBe(doc);
+  }));
+
   it('opens a sent mail read-only and offers resending only with EMAIL_SEND', fakeAsync(() => {
     createComponent();
     fixture.detectChanges();

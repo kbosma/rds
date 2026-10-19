@@ -84,7 +84,7 @@ type Filter = 'all' | TimelineKind;
                       <span class="pill pill-ok">{{ (item.source.resentFromId ? 'messages.resent' : 'messages.sent') | translate }}</span>
                     }
                     @case ('document') {
-                      <span class="pill pill-ok">{{ 'messages.portal' | translate }}</span>
+                      <span class="pill" [class.pill-ok]="item.source.visibleInPortal" [class.pill-neutral]="!item.source.visibleInPortal">{{ (item.source.visibleInPortal ? 'messages.portal' : 'messages.internal') | translate }}</span>
                       @if (format(item.source.mimeType); as fmt) { <span class="pill pill-neutral">{{ fmt }}</span> }
                     }
                     @case ('payment') {
@@ -94,8 +94,10 @@ type Filter = 'all' | TimelineKind;
                   }
                 </div>
                 <app-row-actions class="row-actions"
-                                 [canView]="canView(item)" [canDelete]="item.kind === 'document' && canDeleteDocument()"
-                                 (view)="view.emit(item)" (remove)="removeDocument.emit(asDocument(item))" />
+                                 [canView]="canView(item)" [canEdit]="item.kind === 'document' && canEditDocument()"
+                                 [canDelete]="item.kind === 'document' && canDeleteDocument()"
+                                 (view)="view.emit(item)" (edit)="editDocument.emit(asDocument(item))"
+                                 (remove)="removeDocument.emit(asDocument(item))" />
               </li>
             }
           </ul>
@@ -136,11 +138,13 @@ export class BookingMessagesCardComponent {
   readonly canReadEmail = input(false);
   readonly canReadDocument = input(false);
   readonly canReadPayment = input(false);
+  readonly canEditDocument = input(false);
   readonly canDeleteDocument = input(false);
 
   readonly newEmail = output<void>();
   readonly newDocument = output<void>();
   readonly view = output<TimelineItem>();
+  readonly editDocument = output<Document>();
   readonly removeDocument = output<Document>();
 
   readonly filter = signal<Filter>('all');

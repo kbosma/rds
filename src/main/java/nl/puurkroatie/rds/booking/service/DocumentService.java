@@ -10,7 +10,8 @@ public interface DocumentService {
 
     DocumentDto create(DocumentDto dto);
 
-    DocumentDto update(UUID id, DocumentDto dto);
+    /** Wijzigt alleen de zichtbaarheid in het boekerportaal; al het andere aan een document staat vast. */
+    DocumentDto changePortalVisibility(UUID id, boolean visibleInPortal);
 
     void delete(UUID id);
 

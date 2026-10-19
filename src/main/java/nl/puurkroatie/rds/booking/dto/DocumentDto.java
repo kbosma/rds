@@ -18,6 +18,7 @@ public class DocumentDto {
     private String displayname;
     private String mimeType;
     private byte[] document;
+    private boolean visibleInPortal;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -25,12 +26,13 @@ public class DocumentDto {
     private UUID tenantOrganization;
 
     @Default
-    public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, boolean visibleInPortal, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.documentId = documentId;
         this.bookingId = bookingId;
         this.displayname = displayname;
         this.mimeType = mimeType;
         this.document = document;
+        this.visibleInPortal = visibleInPortal;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -39,12 +41,13 @@ public class DocumentDto {
     }
 
     @JsonCreator
-    public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public DocumentDto(UUID documentId, UUID bookingId, String displayname, String mimeType, byte[] document, Boolean visibleInPortal, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.documentId = documentId;
         this.bookingId = bookingId;
         this.displayname = displayname;
         this.mimeType = mimeType;
         this.document = document;
+        this.visibleInPortal = Boolean.TRUE.equals(visibleInPortal);
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -53,6 +56,10 @@ public class DocumentDto {
 
     public UUID getDocumentId() {
         return documentId;
+    }
+
+    public boolean isVisibleInPortal() {
+        return visibleInPortal;
     }
 
     public UUID getBookingId() {

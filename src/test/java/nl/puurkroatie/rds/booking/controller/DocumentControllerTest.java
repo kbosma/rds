@@ -55,8 +55,7 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
     void admin_update_returns403() throws Exception {
         String token = adminToken();
 
-        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
-                "\"displayname\":\"Admin Update\",\"document\":null}";
+        String json = "{\"visibleInPortal\":true}";
 
         mockMvc.perform(put("/api/documents/" + DOCUMENT_PK_1)
                         .header("Authorization", "Bearer " + token)
@@ -149,15 +148,13 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
     void manager_updateDocument_ownOrganization_returns200() throws Exception {
         String token = managerToken();
 
-        String json = "{\"bookingId\":\"" + BOOKING_TP_4 + "\"," +
-                "\"displayname\":\"Offerte BK-2026-004 Updated\",\"document\":null}";
-
         mockMvc.perform(put("/api/documents/" + DOCUMENT_TP_4)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content("{\"visibleInPortal\":false}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.displayname").value("Offerte BK-2026-004 Updated"));
+                .andExpect(jsonPath("$.visibleInPortal").value(false))
+                .andExpect(jsonPath("$.displayname").value("Offerte BK-2026-004"));
     }
 
     // MANAGER: PUT /api/documents/{id} andere org — 403
@@ -165,8 +162,7 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
     void manager_updateDocument_otherOrganization_returns403() throws Exception {
         String token = managerToken();
 
-        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
-                "\"displayname\":\"Hacked\",\"document\":null}";
+        String json = "{\"visibleInPortal\":true}";
 
         mockMvc.perform(put("/api/documents/" + DOCUMENT_PK_1)
                         .header("Authorization", "Bearer " + token)
@@ -245,15 +241,12 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
     void employee_updateDocument_ownOrganization_returns200() throws Exception {
         String token = employeeToken();
 
-        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
-                "\"displayname\":\"Bevestigingsbrief Updated\",\"document\":null}";
-
         mockMvc.perform(put("/api/documents/" + DOCUMENT_PK_1)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content("{\"visibleInPortal\":false}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.displayname").value("Bevestigingsbrief Updated"));
+                .andExpect(jsonPath("$.visibleInPortal").value(false));
     }
 
     // EMPLOYEE: PUT /api/documents/{id} andere org — 403
@@ -261,8 +254,7 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
     void employee_updateDocument_otherOrganization_returns403() throws Exception {
         String token = employeeToken();
 
-        String json = "{\"bookingId\":\"" + BOOKING_TP_4 + "\"," +
-                "\"displayname\":\"Hacked\",\"document\":null}";
+        String json = "{\"visibleInPortal\":true}";
 
         mockMvc.perform(put("/api/documents/" + DOCUMENT_TP_4)
                         .header("Authorization", "Bearer " + token)
@@ -301,16 +293,52 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // MANAGER: PUT eigen document verplaatsen naar een boeking van een andere organisatie — 403
+    // Een nieuw document is standaard niet zichtbaar in het boekerportaal
     @Test
-    void manager_updateDocument_moveToBookingOfOtherOrganization_returns403() throws Exception {
-        String json = "{\"bookingId\":\"" + BOOKING_PK_1 + "\"," +
-                "\"displayname\":\"Verplaatst\",\"document\":null}";
+    void manager_createDocument_isHiddenInThePortalByDefault() throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_TP_4 + "\",\"displayname\":\"Nieuw\",\"document\":null}";
+
+        mockMvc.perform(post("/api/documents")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.visibleInPortal").value(false));
+    }
+
+    @Test
+    void manager_createDocument_canBeMadeVisibleInThePortal() throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_TP_4 + "\",\"displayname\":\"Nieuw\",\"document\":null,\"visibleInPortal\":true}";
+
+        mockMvc.perform(post("/api/documents")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.visibleInPortal").value(true));
+    }
+
+    // PUT wijzigt alleen de portaalzichtbaarheid: naam en boeking uit het verzoek worden genegeerd
+    @Test
+    void manager_updateDocument_changesOnlyThePortalVisibility() throws Exception {
+        String json = "{\"visibleInPortal\":true,\"displayname\":\"Verplaatst\",\"bookingId\":\"" + BOOKING_PK_1 + "\"}";
 
         mockMvc.perform(put("/api/documents/" + DOCUMENT_TP_4)
                         .header("Authorization", "Bearer " + managerToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.visibleInPortal").value(true))
+                .andExpect(jsonPath("$.displayname").value("Offerte BK-2026-004"))
+                .andExpect(jsonPath("$.bookingId").value(BOOKING_TP_4.toString()));
+    }
+
+    @Test
+    void manager_updateDocument_withoutVisibility_returns400() throws Exception {
+        mockMvc.perform(put("/api/documents/" + DOCUMENT_TP_4)
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 }

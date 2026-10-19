@@ -11,6 +11,8 @@ public class GenerateDocumentRequest {
     @NotNull
     private UUID bookingId;
     private String outputFormat;
+    /** Of de boeker het gegenereerde document in het portaal ziet; standaard niet. */
+    private boolean visibleInPortal;
 
     public GenerateDocumentRequest() {
     }
@@ -31,5 +33,9 @@ public class GenerateDocumentRequest {
 
     public String getOutputFormat() {
         return outputFormat;
+    }
+
+    public boolean isVisibleInPortal() {
+        return visibleInPortal;
     }
 }

@@ -97,4 +97,31 @@ class BookerPortalDocumentControllerTest extends AbstractControllerTest {
         mockMvc.perform(get("/api/booker-portal/documents"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // Een document dat niet op "zichtbaar in portaal" staat, ziet de boeker niet (lijst en detail)
+    @Test
+    void booker_doesNotSeeADocumentThatIsNotVisibleInThePortal() throws Exception {
+        String portalToken = bookerToken();
+        String employee = employeeToken();
+        String json = "{\"bookingId\":\"01000000-0000-0000-0000-000000000001\",\"displayname\":\"Intern\",\"document\":null}";
+        String created = mockMvc.perform(post("/api/documents").header("Authorization", "Bearer " + employee)
+                        .contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String newId = objectMapper.readTree(created).get("documentId").asText();
+
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
+                .andExpect(jsonPath("$", hasSize(1)));
+        mockMvc.perform(get("/api/booker-portal/documents/" + newId).header("Authorization", "Bearer " + portalToken))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/documents/" + newId)
+                        .header("Authorization", "Bearer " + employee).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"visibleInPortal\":true}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
+                .andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(get("/api/booker-portal/documents/" + newId).header("Authorization", "Bearer " + portalToken))
+                .andExpect(status().isOk());
+    }
 }

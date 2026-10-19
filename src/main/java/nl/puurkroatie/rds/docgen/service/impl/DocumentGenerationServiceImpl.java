@@ -56,7 +56,7 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
     }
 
     @Override
-    public DocumentDto generate(UUID templateId, UUID bookingId, String outputFormat) {
+    public DocumentDto generate(UUID templateId, UUID bookingId, String outputFormat, boolean visibleInPortal) {
         DocumentTemplate template = documentTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new RuntimeException("DocumentTemplate not found with id: " + templateId));
         verifyOrganization(template.getTenantOrganization());
@@ -79,7 +79,7 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
         // Met datum en tijd: dezelfde template kan meermaals bij dezelfde boeking worden ingezet.
         String displayname = GeneratedDocumentName.of(
                 template.getName(), booking.getBookingNumber(), LocalDateTime.now(), extension);
-        Document document = new Document(booking, displayname, mimeType, generatedDocument);
+        Document document = new Document(booking, displayname, mimeType, generatedDocument, visibleInPortal);
         Document saved = documentRepository.save(document);
         return documentMapper.toDto(saved);
     }

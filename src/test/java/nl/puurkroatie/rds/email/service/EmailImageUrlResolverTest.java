@@ -23,6 +23,14 @@ class EmailImageUrlResolverTest {
     }
 
     @Test
+    void imageSizeFromTheEditor_survivesMakingTheSrcAbsolute() {
+        assertEquals("<img src=\"http://178.104.163.88/api/public/email-images/abc\" alt=\"logo\" width=\"169\" height=\"85\""
+                        + " style=\"max-width: 100%; height: auto;\">",
+                resolver.toAbsolute("<img src=\"/api/public/email-images/abc\" alt=\"logo\" width=\"169\" height=\"85\""
+                        + " style=\"max-width: 100%; height: auto;\">"));
+    }
+
+    @Test
     void singleQuotedSrc_becomesAbsolute() {
         assertEquals("<img src='http://178.104.163.88/api/public/email-images/abc'>",
                 resolver.toAbsolute("<img src='/api/public/email-images/abc'>"));

@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.bookerportal.controller;
 
 import nl.puurkroatie.rds.bookerportal.security.BookerContext;
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
+import nl.puurkroatie.rds.booking.entity.Document;
 import nl.puurkroatie.rds.booking.mapper.DocumentMapper;
 import nl.puurkroatie.rds.booking.repository.DocumentRepository;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ public class BookerPortalDocumentController {
     public ResponseEntity<List<DocumentDto>> findAll() {
         UUID bookingId = BookerContext.getBookingId();
         List<DocumentDto> documents = documentRepository.findByBookingBookingId(bookingId).stream()
+                .filter(Document::isVisibleInPortal)
                 .map(documentMapper::toDto)
                 .toList();
         return ResponseEntity.ok(documents);
@@ -41,7 +43,7 @@ public class BookerPortalDocumentController {
     public ResponseEntity<DocumentDto> findById(@PathVariable UUID id) {
         UUID bookingId = BookerContext.getBookingId();
         return documentRepository.findById(id)
-                .filter(doc -> doc.getBooking().getBookingId().equals(bookingId))
+                .filter(doc -> doc.getBooking().getBookingId().equals(bookingId) && doc.isVisibleInPortal())
                 .map(documentMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

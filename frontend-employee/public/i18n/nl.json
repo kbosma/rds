@@ -57,7 +57,6 @@
     "travelers": "Reizigers",
     "accommodations": "Accommodaties",
     "suppliers": "Leveranciers",
-    "documents": "Documenten",
     "payments": "Betalingen",
     "organizations": "Organisaties",
     "persons": "Personen",
@@ -682,11 +681,7 @@
     "accommodationCreatedAndLinked": "Accommodatie aangemaakt en gekoppeld"
   },
   "documents": {
-    "title": "Documenten",
-    "searchPlaceholder": "Zoek op naam of boekingsnummer...",
     "displayname": "Documentnaam",
-    "modifiedAt": "Gewijzigd",
-    "noDocumentsFound": "Geen documenten gevonden.",
     "dialogTitle": "Document toevoegen",
     "generateSection": "Genereren",
     "uploadSection": "Uploaden",
@@ -700,7 +695,6 @@
     "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
     "removed": "Document verwijderd",
     "removeError": "Fout bij verwijderen document",
-    "noDocumentsYet": "Nog geen documenten toegevoegd.",
     "url": "URL",
     "urlPlaceholder": "https://voorbeeld.nl/bestand.pdf",
     "fetchUrl": "Ophalen",
@@ -710,11 +704,8 @@
     "invalidMimeType": "Ongeldig bestandstype. Alleen PDF-bestanden zijn toegestaan.",
     "fetchError": "Fout bij ophalen van URL",
     "displaynamePlaceholder": "Documentnaam",
-    "viewTitle": "Document",
-    "editTitle": "Document hernoemen",
-    "mimeType": "Type",
-    "download": "Downloaden",
-    "downloadError": "Downloaden is mislukt"
+    "visibleInPortal": "Zichtbaar in het boekerportaal",
+    "visibleInPortalHint": "Standaard uit. De boeker ziet het document alleen als dit aan staat."
   },
   "templates": {
     "title": "Templates",
@@ -840,6 +831,7 @@
     "portal": "portaal",
     "resend": "Opnieuw versturen",
     "resendDone": "E-mail opnieuw verstuurd",
-    "resendError": "Opnieuw versturen is mislukt"
+    "resendError": "Opnieuw versturen is mislukt",
+    "internal": "alleen intern"
   }
 }

@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -44,6 +45,7 @@ export interface DocumentUploadDialogData {
     MatSelectModule,
     MatButtonModule,
     MatButtonToggleModule,
+    MatCheckboxModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
@@ -133,6 +135,11 @@ export interface DocumentUploadDialogData {
         </div>
       }
 
+      <mat-checkbox class="portal-option" [(ngModel)]="visibleInPortal">
+        {{ 'documents.visibleInPortal' | translate }}
+      </mat-checkbox>
+      <p class="portal-hint">{{ 'documents.visibleInPortalHint' | translate }}</p>
+
       @if (errorMessage()) {
         <p class="error-text">{{ errorMessage() }}</p>
       }
@@ -179,6 +186,8 @@ export interface DocumentUploadDialogData {
     .section {
       margin-top: 8px;
     }
+    .portal-option { display: block; margin-top: 8px; }
+    .portal-hint { margin: 0 0 8px 40px; font-size: 12px; color: var(--ui-text-muted); }
     .upload-section {
       display: flex;
       align-items: center;
@@ -243,6 +252,8 @@ export class DocumentUploadDialogComponent implements OnInit {
   mode: 'generate' | 'upload' = 'generate';
   displayname = '';
   url = '';
+  /** Zichtbaar in het boekerportaal: standaard uit. */
+  visibleInPortal = false;
 
   // Generate state
   templates = signal<DocumentTemplate[]>([]);
@@ -275,12 +286,12 @@ export class DocumentUploadDialogComponent implements OnInit {
   }
 
   generate() {
-    if (!this.canGenerate()) return;
+    if (!this.canGenerate() || this.saving()) return;
 
     this.saving.set(true);
     this.errorMessage.set('');
 
-    this.documentService.generate(this.selectedTemplateId, this.data.bookingId, this.outputFormat).subscribe({
+    this.documentService.generate(this.selectedTemplateId, this.data.bookingId, this.outputFormat, this.visibleInPortal).subscribe({
       next: () => {
         this.saving.set(false);
         this.snackBar.open(this.translate.instant('documents.generated'), this.translate.instant('common.close'), { duration: 3000 });
@@ -352,7 +363,7 @@ export class DocumentUploadDialogComponent implements OnInit {
   }
 
   upload() {
-    if (!this.canUpload()) return;
+    if (!this.canUpload() || this.saving()) return;
 
     this.saving.set(true);
     this.documentService.create({
@@ -360,6 +371,7 @@ export class DocumentUploadDialogComponent implements OnInit {
       displayname: this.displayname,
       mimeType: this.fileMimeType(),
       document: this.fileData()!,
+      visibleInPortal: this.visibleInPortal,
     } as any).subscribe({
       next: () => {
         this.saving.set(false);

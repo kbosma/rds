@@ -10,14 +10,6 @@ export class DocumentService {
   private http = inject(HttpClient);
   private readonly endpoint = 'documents';
 
-  getAll() {
-    return this.api.getAll<Document>(this.endpoint);
-  }
-
-  getById(id: string) {
-    return this.api.getById<Document>(this.endpoint, id);
-  }
-
   getByBookingId(bookingId: string) {
     return this.api.getAll<Document>(`${this.endpoint}/booking/${bookingId}`);
   }
@@ -26,8 +18,9 @@ export class DocumentService {
     return this.api.create<Document>(this.endpoint, document);
   }
 
-  update(id: string, document: Partial<Document>) {
-    return this.api.update<Document>(this.endpoint, id, document);
+  /** Het enige wat van een bestaand document nog wijzigt: of de boeker het in het portaal ziet. */
+  setPortalVisibility(id: string, visibleInPortal: boolean) {
+    return this.http.put<Document>(`${environment.apiUrl}/${this.endpoint}/${id}`, { visibleInPortal });
   }
 
   delete(id: string) {
@@ -38,7 +31,7 @@ export class DocumentService {
     return this.http.get(`${environment.apiUrl}/${this.endpoint}/${id}/content`, { responseType: 'blob' });
   }
 
-  generate(templateId: string, bookingId: string, outputFormat: string) {
-    return this.http.post<Document>(`${environment.apiUrl}/${this.endpoint}/generate`, { templateId, bookingId, outputFormat });
+  generate(templateId: string, bookingId: string, outputFormat: string, visibleInPortal = false) {
+    return this.http.post<Document>(`${environment.apiUrl}/${this.endpoint}/generate`, { templateId, bookingId, outputFormat, visibleInPortal });
   }
 }
