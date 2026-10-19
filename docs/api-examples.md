@@ -82,7 +82,7 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 | `suppliers` | CRUD | `SUPPLIER_*` |
 | `supplier-addresses` | GET, GET `/{a}/{b}`, POST, DELETE `/{a}/{b}` | `SUPPLIER_*` |
 | `activities` | CRUD | `ACTIVITY_*` |
-| `documents` | GET, GET `/{id}`, GET `/{id}/content`, GET `/booking/{bookingId}`, POST (`visibleInPortal`, standaard `false`), PUT `/{id}` (body alleen `{visibleInPortal}`: de enige wijzigbare eigenschap), DELETE `/{id}`, POST `/generate` (met optioneel `visibleInPortal`) | `DOCUMENT_READ/CREATE/UPDATE/DELETE` |
+| `documents` | GET, GET `/{id}`, GET `/{id}/content`, GET `/booking/{bookingId}`, POST (`visibleInPortal`, standaard `false`), PUT `/{id}` (body alleen `{visibleInPortal}`: de enige wijzigbare eigenschap), POST `/generate` (met optioneel `visibleInPortal`). **Geen DELETE: een document wordt nooit verwijderd (405).** | `DOCUMENT_READ/CREATE/UPDATE` |
 | `documents/generate` | POST `{ templateId, bookingId, outputFormat }` | `DOCUMENT_CREATE` |
 | `document-templates` | GET, GET `/{id}`, GET `/{id}/content` (.docx), POST, PUT `/{id}`, DELETE `/{id}` | `TEMPLATE_READ/CREATE/UPDATE/DELETE` |
 | `sent-emails` | GET `/booking/{bookingId}`, GET `/{id}`, POST `/{id}/resend` (alleen-toevoegen) | `BOOKING_READ`, `EMAIL_SEND` |

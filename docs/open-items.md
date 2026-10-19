@@ -1,6 +1,6 @@
 # Openstaande punten, risico's en ideeën
 
-Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het nalopen van code en configuratie op 15-10-2026. Prioriteit: **H**oog / **M**idden / **L**aag. Haal een punt weg als het is opgelost, en noteer de oplossing in [design-decisions.md](design-decisions.md) als er een keuze achter zat.
+Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het nalopen van code en configuratie op 15-10-2026; aangevuld op 20-10-2026 (punten 28 t/m 32 en 34, gevonden bij het schrijven van [handleiding.md](handleiding.md)). Prioriteit: **H**oog / **M**idden / **L**aag. Haal een punt weg als het is opgelost, en noteer de oplossing in [design-decisions.md](design-decisions.md) als er een keuze achter zat.
 
 ## Beveiliging en configuratie
 
@@ -15,6 +15,8 @@ Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het na
 | 8 | M | JWT in `localStorage`, geen intrekking | Een gestolen token is tot 1 uur geldig (employee én booker); geen refresh/revocation. Acceptabel voor nu, maar bewust: XSS-risico beperken door de editor-HTML nooit zonder sanitizer te renderen (de preview gebruikt een sandbox-iframe zonder scripts). |
 | 9 | L | Actuator en `/monitoring` | Alleen via NGINX afgeschermd; controleer welke Actuator-endpoints Spring zelf blootstelt. |
 | 10 | L | Mollie-webhook heeft geen handtekening | Mollie's klassieke webhooks zijn niet getekend; de backend haalt de status zelf op en valideert het id. Verder niets te doen, maar houd het in de gaten. |
+| 28 | M | **Geen automatische vergrendeling bij foute logins** | Een account wordt niet vanzelf `locked` na herhaalde foute wachtwoorden of codes; alleen de NGINX-rate-limit remt dat. `locked` zet een beheerder handmatig. |
+| 29 | L | **Wachtwoordregel verschilt tussen UI en server** | De interface (`change-password*.component.ts`) eist minimaal 8 tekens; `ChangePasswordDto` accepteert minimaal 6. Maak beide gelijk (liefst op de server de strengste). |
 
 ## Functionaliteit en gedrag
 
@@ -31,6 +33,10 @@ Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het na
 | 17 | L | `${prospect.gender}` is nu `MAN` i.p.v. `man` | Bewuste wijziging voor één model; bestaande e-mailtemplates met die waarde (indien al in gebruik) kunnen anders ogen. |
 | 18 | L | Bedragen in templates | Zonder `?string("#,##0.00")` toont FreeMarker `1250.00` als `1.250`. Bestaande, geüploade Word-templates kunnen dit probleem hebben. |
 | 19 | L | Datums in templates zijn ISO-tekst | Geen lokale opmaak (`dd-MM-jjjj`); dat kan in de template (FreeMarker-functies) of centraal in `TemplateModels`. |
+| 30 | M | **Klantportaal toont documenten zonder download** | `frontend-booker` (documentenscherm) toont alleen naam en datum; er is geen knop om het bestand te openen, hoewel `GET /api/booker-portal/documents/{id}` bestaat. |
+| 31 | L | Employee-dashboard is een plaatshouder | Voor gebruikers zonder `ORGANIZATION_READ` en `ACCOUNT_CREATE` (EMPLOYEE) toont het dashboard alleen een welkomstkaart en *"Deze pagina wordt binnenkort beschikbaar."* |
+| 32 | L | Authority `PAYMENT_DELETE` heeft geen endpoint | De authority staat in de seed (MANAGER) maar geen controller gebruikt hem: betalingen worden nooit verwijderd. Verwijder de authority of leg vast dat hij bewust ongebruikt blijft. |
+| 34 | L | ADMIN heeft `PAYMENT_CORRECT` en `PAYMENT_RELINK`, maar niet `PAYMENT_READ` | ADMIN kan de betalingen dus niet inzien waarop die rechten werken. Bedoeld voor MANAGER; overweeg ze bij ADMIN weg te halen. |
 
 ## Testen en kwaliteit
 

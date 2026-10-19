@@ -64,14 +64,30 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ADMIN: DELETE /api/documents/{id} — geen BOOKING_DELETE authority → 403
-    @Test
-    void admin_delete_returns403() throws Exception {
-        String token = adminToken();
+    // === DELETE /api/documents/{id}: bestaat niet (een document wordt nooit verwijderd) ===
 
+    // ADMIN: een document verwijderen kan niet (405)
+    @Test
+    void admin_delete_returns405() throws Exception {
         mockMvc.perform(delete("/api/documents/" + DOCUMENT_PK_1)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
+                        .header("Authorization", "Bearer " + adminToken()))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    // MANAGER: een document verwijderen kan ook niet (405)
+    @Test
+    void manager_delete_returns405() throws Exception {
+        mockMvc.perform(delete("/api/documents/" + DOCUMENT_PK_1)
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    // EMPLOYEE: een document verwijderen kan ook niet (405)
+    @Test
+    void employee_delete_returns405() throws Exception {
+        mockMvc.perform(delete("/api/documents/" + DOCUMENT_PK_1)
+                        .header("Authorization", "Bearer " + employeeToken()))
+                .andExpect(status().isMethodNotAllowed());
     }
 
     // ADMIN: GET /api/documents/{id}/content — geen BOOKING_READ authority → 403
@@ -171,16 +187,6 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // MANAGER: DELETE /api/documents/{id} andere org — 403
-    @Test
-    void manager_deleteDocument_otherOrganization_returns403() throws Exception {
-        String token = managerToken();
-
-        mockMvc.perform(delete("/api/documents/" + DOCUMENT_PK_1)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
-    }
-
     // EMPLOYEE: GET /api/documents — alleen documenten van eigen organisatie
     @Test
     void employee_findAll_returnsOnlyOwnOrganizationDocuments() throws Exception {
@@ -260,16 +266,6 @@ class DocumentControllerTest extends AbstractBookingControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isForbidden());
-    }
-
-    // EMPLOYEE: DELETE /api/documents/{id} andere org — 403
-    @Test
-    void employee_deleteDocument_otherOrganization_returns403() throws Exception {
-        String token = employeeToken();
-
-        mockMvc.perform(delete("/api/documents/" + DOCUMENT_TP_4)
-                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
 

@@ -73,7 +73,7 @@ De medewerker legt een betaling vast (`MolliePayment` + koppeling met de boeking
 
 ## Domeinregels om te onthouden
 
-- **Geschiedenis blijft:** een boeking (en een booker, accommodatie, leverancier of activiteit waarin zo'n boeking voorkomt) met documenten of betalingen kan niet verwijderd worden (409). Documenten en betalingen hebben zelf geen verwijderfunctie. Zie [security.md](security.md).
+- **Geschiedenis blijft:** een boeking (en een booker, accommodatie, leverancier of activiteit waarin zo'n boeking voorkomt) met documenten of betalingen kan niet verwijderd worden (409). Documenten en betalingen hebben geen verwijderfunctie (geen knop en geen endpoint; `DELETE` geeft `405`). Zie [security.md](security.md).
 - Altijd tenant-filtering respecteren; nooit een entity naar buiten (DTO's).
 - Entities zijn onveranderlijk; een update behoudt `createdAt/By` en `tenantOrganization`.
 - Booker-portal-endpoints geven **minimale** eigen DTO's en zijn gebonden aan de boeking uit het token.

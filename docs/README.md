@@ -15,6 +15,7 @@
 | Ik wil weten… | Open |
 |---|---|
 | Wat doet het systeem, wie gebruikt het, wat zijn de schermen? | [overview.md](overview.md) |
+| Alle functionaliteit per scherm, werkprocessen, rollen en authorities (volledige gebruikershandleiding)? | [handleiding.md](handleiding.md) |
 | Woorden als *prospect*, *hoofdboeker*, *tenant*, *herhaalde tabel*? | [glossary.md](glossary.md) |
 | Hoe is de backend opgebouwd (lagen, pakketten, patronen)? | [architecture.md](architecture.md) |
 | Hoe zijn de twee Angular-apps opgebouwd, welke conventies? | [frontend.md](frontend.md) |
@@ -35,7 +36,7 @@
 
 | | |
 |---|---|
-| Backend | Spring Boot 4.0.3, Java 21, Jetty (poort **8666**, context-path **`/rds`**), JPA (`ddl-auto: validate`), Flyway (V1–V8), MapStruct, PostgreSQL 17 (`rdsdb`) |
+| Backend | Spring Boot 4.0.3, Java 21, Jetty (poort **8666**, context-path **`/rds`**), JPA (`ddl-auto: validate`), Flyway (V1–V16), MapStruct, PostgreSQL 17 (`rdsdb`) |
 | Frontends | `frontend-employee` (medewerkers, dev-poort 4200) en `frontend-booker` (klanten, dev-poort 4300); Angular 22, standalone + signals, Angular Material, ngx-translate (nl/en), TypeScript 6 |
 | Pakketten (backend) | `nl.puurkroatie.rds.{auth, booking, mollie, bookerportal, email, docgen, common}` |
 | Multi-tenant | elke tenant-entiteit heeft `tenant_organization`; filtering via `TenantContext` (zie [security.md](security.md)) |

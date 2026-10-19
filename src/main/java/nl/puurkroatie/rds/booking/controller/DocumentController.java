@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -83,13 +82,6 @@ public class DocumentController {
     @PreAuthorize("hasAuthority('DOCUMENT_UPDATE')")
     public ResponseEntity<DocumentDto> update(@PathVariable UUID id, @RequestBody @Valid DocumentPortalVisibilityDto dto) {
         return ResponseEntity.ok(documentService.changePortalVisibility(id, dto.visibleInPortal()));
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DOCUMENT_DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        documentService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/generate")

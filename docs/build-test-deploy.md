@@ -39,7 +39,7 @@ mvn -q -Dtest='NaamTest' -DfailIfNoTests=false test   # één klasse
 
 ### Testdatabase (embedded PostgreSQL)
 
-De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop Flyway (V1–V8, dus de seeddata uit V2). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
+De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop Flyway (V1–V16, dus de seeddata uit V2). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
 
 - `EmbeddedPostgresInitializer` (src/test/java/…/support) zet de datasource-properties van elke Spring-testcontext; geregistreerd in `src/test/resources/META-INF/spring.factories`. Eén database per testrun, gedeeld door alle contexten. Alleen in src/test: de applicatie zelf start hier nooit mee.
 - De properties staan bovenaan: een test draait dus nooit per ongeluk tegen een echte database, ook niet als `SPRING_DATASOURCE_*` gezet is. `TestDatabaseIsolationTest` bewaakt dat.

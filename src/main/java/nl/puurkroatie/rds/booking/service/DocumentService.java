@@ -13,8 +13,6 @@ public interface DocumentService {
     /** Wijzigt alleen de zichtbaarheid in het boekerportaal; al het andere aan een document staat vast. */
     DocumentDto changePortalVisibility(UUID id, boolean visibleInPortal);
 
-    void delete(UUID id);
-
     List<DocumentDto> findAll();
 
     Optional<DocumentDto> findById(UUID id);

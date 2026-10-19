@@ -299,7 +299,7 @@ Keuze van `email_from` per organisatie en keuze van relay hangen dus samen: de r
 | Entity | `email/entity/EmailTemplate`, `email/entity/EmailImage`, `auth/entity/Organization` (`email_from`) |
 | Migraties | `V5__email_template.sql`, `V6__email_sending.sql`, `V7__email_image.sql` |
 
-Frontend (frontend-employee): `features/email-templates/*` (lijst, editor-dialog, preview+verstuur-dialog voor een prospect of een boeking, service), de **gedeelde** editor in `shared/template-editor/*` (`template-body-editor`, `template-image-library`, `template-image.service`, `template-variables`), de knop *E-mail versturen* in het boekingdetail, en `organization.email_from` in het org-detailformulier.
+Frontend (frontend-employee): `features/email-templates/*` (lijst, editor-dialog, preview+verstuur-dialog voor een prospect of een boeking, service), de **gedeelde** editor in `shared/template-editor/*` (`template-body-editor`, `template-image-library`, `template-image.service`, `template-variables`), *Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten* van het boekingdetail, en `organization.email_from` in het org-detailformulier.
 
 ---
 
