@@ -273,7 +273,18 @@ const IMAGE_STYLE = 'max-width:100%;height:auto;';
     }
     ::ng-deep .editor-host .ProseMirror ul, ::ng-deep .editor-host .ProseMirror ol { padding-left: 22px; margin: 0 0 8px; }
     ::ng-deep .editor-host .ProseMirror img { max-width: 100%; height: auto; }
-    ::ng-deep .editor-host .ProseMirror img.ProseMirror-selectednode { outline: 2px solid var(--theme-primary, #1976d2); }
+    /* Afbeelding: de resize-extensie zet de afbeelding in een container met een handle; die handle is standaard onzichtbaar. */
+    ::ng-deep .editor-host .ProseMirror [data-resize-container] { line-height: 0; }
+    ::ng-deep .editor-host .ProseMirror [data-resize-wrapper] { max-width: 100%; }
+    ::ng-deep .editor-host .ProseMirror [data-resize-container].ProseMirror-selectednode [data-resize-wrapper] {
+      outline: 2px solid var(--theme-primary, #1976d2);
+    }
+    ::ng-deep .editor-host .ProseMirror [data-resize-handle] {
+      display: none; width: 12px; height: 12px; box-sizing: border-box; z-index: 1;
+      background: var(--theme-primary, #1976d2); border: 2px solid #fff; border-radius: 2px;
+      cursor: nwse-resize; transform: translate(50%, 50%);
+    }
+    ::ng-deep .editor-host .ProseMirror [data-resize-container].ProseMirror-selectednode [data-resize-handle] { display: block; }
   `],
 })
 export class TemplateBodyEditorComponent implements AfterViewInit, OnDestroy, ControlValueAccessor {

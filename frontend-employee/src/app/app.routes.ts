@@ -71,13 +71,6 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'documents',
-        loadComponent: () =>
-          import('./features/documents/document-list.component').then(
-            (m) => m.DocumentListComponent
-          ),
-      },
-      {
         path: 'templates',
         loadComponent: () =>
           import('./features/templates/template-list.component').then(

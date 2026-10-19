@@ -32,6 +32,7 @@ import { MolliePaymentService } from '../mollie/mollie-payment.service';
 import { DocumentService } from '../documents/document.service';
 import { BookingMessagesCardComponent } from './booking-messages-card.component';
 import { TimelineItem } from './booking-timeline';
+import { DocumentPortalDialogComponent } from '../documents/document-portal-dialog.component';
 import { SentEmailService } from './sent-email.service';
 import { SentEmailViewDialogComponent } from './sent-email-view-dialog.component';
 import { DocumentUploadDialogComponent, DocumentUploadDialogData } from '../documents/document-upload-dialog.component';
@@ -438,9 +439,9 @@ interface BookingMolliePaymentLink {
           [emails]="sentEmails()" [documents]="documents()" [payments]="payments()" [paymentStatus]="paymentStatusMap()"
           [canSendEmail]="!!booker() && can('EMAIL_SEND')" [canAddDocument]="can('DOCUMENT_CREATE')"
           [canReadEmail]="authService.hasAuthority('BOOKING_READ')" [canReadDocument]="authService.hasAuthority('DOCUMENT_READ')"
-          [canReadPayment]="authService.hasAuthority('PAYMENT_READ')" [canDeleteDocument]="can('DOCUMENT_DELETE')"
+          [canReadPayment]="authService.hasAuthority('PAYMENT_READ')" [canEditDocument]="can('DOCUMENT_UPDATE')" [canDeleteDocument]="can('DOCUMENT_DELETE')"
           (newEmail)="openEmailDialog()" (newDocument)="openDocumentUploadDialog()"
-          (view)="viewTimelineItem($event)" (removeDocument)="deleteDocument($event)" />
+          (view)="viewTimelineItem($event)" (editDocument)="editDocumentPortal($event)" (removeDocument)="deleteDocument($event)" />
       }
         </div>
       </div>
@@ -921,6 +922,14 @@ export class BookingDetailComponent implements OnInit {
     if (item.kind === 'document') this.viewDocument(item.source);
     else if (item.kind === 'payment') this.viewPayment(item.source);
     else this.viewSentEmail(item.source);
+  }
+
+  /** Een document kan achteraf alleen nog zichtbaar of onzichtbaar gemaakt worden in het boekerportaal. */
+  editDocumentPortal(doc: Document) {
+    this.dialog.open(DocumentPortalDialogComponent, { data: { document: doc }, width: '420px', maxWidth: '95vw' })
+      .afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((saved) => {
+        if (saved) this.loadDocuments();
+      });
   }
 
   viewSentEmail(email: SentEmail) {

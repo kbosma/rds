@@ -178,7 +178,6 @@ export class LayoutComponent {
     { labelKey: 'nav.bookings', route: '/bookings', icon: 'book_online', authority: 'BOOKING_READ' },
     { labelKey: 'nav.bookers', route: '/bookers', icon: 'person', authority: 'BOOKING_READ' },
     { labelKey: 'nav.prospects', route: '/prospects', icon: 'person_add', authority: 'BOOKING_READ' },
-    { labelKey: 'nav.documents', route: '/documents', icon: 'description', authority: 'DOCUMENT_READ' },
     { labelKey: 'nav.payments', route: '/payments', icon: 'payment', authority: 'PAYMENT_READ' },
     { labelKey: 'nav.organizations', route: '/admin/organizations', icon: 'corporate_fare', authority: 'ORGANIZATION_READ', sectionKey: 'nav.admin' },
     { labelKey: 'nav.accommodations', route: '/accommodations', icon: 'hotel', authority: ['ACCOMMODATION_CREATE', 'ACCOMMODATION_UPDATE', 'ACCOMMODATION_DELETE'], sectionKey: 'nav.bookingAdmin' },

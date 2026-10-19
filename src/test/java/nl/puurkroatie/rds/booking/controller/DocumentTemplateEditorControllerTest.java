@@ -73,6 +73,19 @@ class DocumentTemplateEditorControllerTest extends AbstractBookingControllerTest
     }
 
     @Test
+    void manager_generateWithVisibleInPortal_marksTheDocumentVisible() throws Exception {
+        JsonNode created = createFromEditor("Bevestiging", "<h1>Boeking ${booking.bookingNumber}</h1>");
+
+        mockMvc.perform(post("/api/documents/generate")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("templateId", created.get("documentTemplateId").asText(),
+                                "bookingId", BOOKING_TP_4.toString(), "outputFormat", "pdf", "visibleInPortal", true))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.visibleInPortal").value(true));
+    }
+
+    @Test
     void manager_aTemplateFromTheEditor_canBeUsedToGenerateADocument() throws Exception {
         JsonNode created = createFromEditor("Bevestiging", "<h1>Boeking ${booking.bookingNumber}</h1>"
                 + "<table data-repeat=\"booking.travelers\" data-item=\"t\"><tbody>"
@@ -86,6 +99,7 @@ class DocumentTemplateEditorControllerTest extends AbstractBookingControllerTest
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
+        assertEquals(false, objectMapper.readTree(body).get("visibleInPortal").asBoolean()); // standaard niet in het portaal
         String documentId = objectMapper.readTree(body).get("documentId").asText();
         byte[] generated = mockMvc.perform(get("/api/documents/" + documentId + "/content")
                         .header("Authorization", "Bearer " + managerToken()))

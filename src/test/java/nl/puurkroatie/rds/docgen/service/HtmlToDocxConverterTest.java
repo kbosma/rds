@@ -647,6 +647,19 @@ class HtmlToDocxConverterTest {
     }
 
     @Test
+    void imageSize_asTheEditorWritesItAfterResizing_winsOverTheNaturalSize() throws Exception {
+        // De editor bewaart de sleepgrootte als width/height-attribuut, naast de vaste max-width/height:auto-stijl.
+        byte[] docx = converter.convert("<p><img src=\"" + IMAGE_SRC
+                        + "\" alt=\"logo\" width=\"169\" height=\"85\" style=\"max-width: 100%; height: auto;\"></p>",
+                library("image/png", png(300, 150)));
+
+        try (XWPFDocument doc = open(docx)) {
+            assertEquals(169L * 9525, width(doc));
+            assertEquals(85L * 9525, height(doc));
+        }
+    }
+
+    @Test
     void imageSize_withoutAttributes_isTheNaturalSize() throws Exception {
         byte[] docx = converter.convert("<p><img src=\"" + IMAGE_SRC + "\"></p>", library("image/png", png(120, 60)));
 

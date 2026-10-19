@@ -57,7 +57,6 @@
     "travelers": "Travelers",
     "accommodations": "Accommodations",
     "suppliers": "Suppliers",
-    "documents": "Documents",
     "payments": "Payments",
     "organizations": "Organizations",
     "persons": "Persons",
@@ -682,11 +681,7 @@
     "accommodationCreatedAndLinked": "Accommodation created and linked"
   },
   "documents": {
-    "title": "Documents",
-    "searchPlaceholder": "Search by name or booking number...",
     "displayname": "Document name",
-    "modifiedAt": "Modified",
-    "noDocumentsFound": "No documents found.",
     "dialogTitle": "Add document",
     "generateSection": "Generate",
     "uploadSection": "Upload",
@@ -700,7 +695,6 @@
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "removed": "Document removed",
     "removeError": "Error removing document",
-    "noDocumentsYet": "No documents added yet.",
     "url": "URL",
     "urlPlaceholder": "https://example.com/file.pdf",
     "fetchUrl": "Fetch",
@@ -710,11 +704,8 @@
     "invalidMimeType": "Invalid file type. Only PDF files are allowed.",
     "fetchError": "Error fetching URL",
     "displaynamePlaceholder": "Document name",
-    "viewTitle": "Document",
-    "editTitle": "Rename document",
-    "mimeType": "Type",
-    "download": "Download",
-    "downloadError": "Download failed"
+    "visibleInPortal": "Visible in the booker portal",
+    "visibleInPortalHint": "Off by default. The booker only sees the document when this is on."
   },
   "templates": {
     "title": "Templates",
@@ -840,6 +831,7 @@
     "portal": "portal",
     "resend": "Send again",
     "resendDone": "Email sent again",
-    "resendError": "Sending again failed"
+    "resendError": "Sending again failed",
+    "internal": "internal only"
   }
 }

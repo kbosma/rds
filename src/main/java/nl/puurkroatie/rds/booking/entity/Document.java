@@ -43,6 +43,9 @@ public class Document {
     @Column(name = "document", columnDefinition = "bytea")
     private byte[] document;
 
+    @Column(name = "visible_in_portal", nullable = false)
+    private boolean visibleInPortal;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -61,19 +64,12 @@ public class Document {
     protected Document() {
     }
 
-    public Document(UUID documentId, Booking booking, String displayname, String mimeType, byte[] document) {
-        this.documentId = documentId;
+    public Document(Booking booking, String displayname, String mimeType, byte[] document, boolean visibleInPortal) {
         this.booking = booking;
         this.displayname = displayname;
         this.mimeType = mimeType;
         this.document = document;
-    }
-
-    public Document(Booking booking, String displayname, String mimeType, byte[] document) {
-        this.booking = booking;
-        this.displayname = displayname;
-        this.mimeType = mimeType;
-        this.document = document;
+        this.visibleInPortal = visibleInPortal;
     }
 
     @PrePersist
@@ -95,6 +91,15 @@ public class Document {
 
     public Booking getBooking() {
         return booking;
+    }
+
+    public boolean isVisibleInPortal() {
+        return visibleInPortal;
+    }
+
+    /** De enige eigenschap van een document die achteraf nog wijzigt: of de boeker het in het portaal ziet. */
+    public void changeVisibleInPortal(boolean visibleInPortal) {
+        this.visibleInPortal = visibleInPortal;
     }
 
     public String getDisplayname() {

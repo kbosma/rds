@@ -48,8 +48,8 @@ sequenceDiagram
 | GET | `/api/booker-portal/booking-activities` | `BOOKER_PORTAL_READ` | boekingsactiviteiten |
 | GET | `/api/booker-portal/accommodations` | `BOOKER_PORTAL_READ` | accommodaties van de boeking |
 | GET | `/api/booker-portal/activities` | `BOOKER_PORTAL_READ` | activiteiten van de boeking |
-| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | documenten van de boeking |
-| GET | `/api/booker-portal/documents/{id}` | `BOOKER_PORTAL_READ` | één document (alleen van de eigen boeking) |
+| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | alleen de documenten van de boeking met `visibleInPortal = true` |
+| GET | `/api/booker-portal/documents/{id}` | `BOOKER_PORTAL_READ` | één document (alleen van de eigen boeking én zichtbaar in het portaal, anders 404) |
 | GET | `/api/booker-portal/payments` | `BOOKER_PORTAL_READ` | betalingen van de boeking |
 | GET | `/api/booker-portal/payments/status-entries` | `BOOKER_PORTAL_READ` | statushistorie (de klant ziet "Betaald" zodra de webhook binnen is) |
 | POST | `/api/booker-portal/payments/pay/{molliePaymentId}` | `BOOKER_PORTAL_UPDATE` | betaling bij Mollie starten → `checkoutUrl` |

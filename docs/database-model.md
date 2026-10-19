@@ -3,7 +3,7 @@
 Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V8**, 15-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -528,6 +528,7 @@ Document (binair), gekoppeld aan een boeking. Multi-tenant.
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | document_id | UUID | PK, auto-generated | |
+| visible_in_portal | BOOLEAN | NOT NULL, default FALSE | Of de boeker het document in het boekerportaal ziet (V15). Het enige veld dat na het aanmaken nog wijzigt (`PUT /api/documents/{id}`); bestaande documenten zijn bij V15 op TRUE gezet zodat er niets verdwijnt |
 | booking_id | UUID | FK → booking, NOT NULL | Boeking |
 | displayname | VARCHAR | NOT NULL | Weergavenaam |
 | document | BYTEA | @Lob | Binaire inhoud |
@@ -553,7 +554,7 @@ Document (binair), gekoppeld aan een boeking. Multi-tenant.
 - Service: `frontend-employee/src/app/features/documents/document.service.ts`
 - Components:
   - `frontend-employee/src/app/features/documents/document-upload-dialog.component.ts`
-  - `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (documenten-tabel)
+  - `frontend-employee/src/app/features/bookings/booking-detail.component.ts` (tijdlijn Berichten en documenten via `booking-messages-card.component.ts`; het menu-item Documenten met een eigen lijst bestaat niet meer)
 - Booker portal: `frontend-booker/src/app/features/documents/documents.component.ts`
 
 ---

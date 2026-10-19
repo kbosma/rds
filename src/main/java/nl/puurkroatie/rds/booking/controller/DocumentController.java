@@ -1,6 +1,7 @@
 package nl.puurkroatie.rds.booking.controller;
 
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
+import nl.puurkroatie.rds.booking.dto.DocumentPortalVisibilityDto;
 import nl.puurkroatie.rds.booking.service.DocumentService;
 import nl.puurkroatie.rds.docgen.dto.GenerateDocumentRequest;
 import nl.puurkroatie.rds.docgen.service.DocumentGenerationService;
@@ -80,9 +81,8 @@ public class DocumentController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('DOCUMENT_UPDATE')")
-    public ResponseEntity<DocumentDto> update(@PathVariable UUID id, @RequestBody @Valid DocumentDto dto) {
-        DocumentDto updated = documentService.update(id, dto);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<DocumentDto> update(@PathVariable UUID id, @RequestBody @Valid DocumentPortalVisibilityDto dto) {
+        return ResponseEntity.ok(documentService.changePortalVisibility(id, dto.visibleInPortal()));
     }
 
     @DeleteMapping("/{id}")
@@ -96,7 +96,7 @@ public class DocumentController {
     @PreAuthorize("hasAuthority('DOCUMENT_CREATE')")
     public ResponseEntity<DocumentDto> generate(@RequestBody @Valid GenerateDocumentRequest request) {
         DocumentDto generated = documentGenerationService.generate(
-                request.getTemplateId(), request.getBookingId(), request.getOutputFormat());
+                request.getTemplateId(), request.getBookingId(), request.getOutputFormat(), request.isVisibleInPortal());
         return ResponseEntity.status(HttpStatus.CREATED).body(generated);
     }
 }
