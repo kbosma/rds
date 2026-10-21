@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RDS Gebruikershandleiding</title>
+<meta name="description" content="Handleiding voor medewerkers en managers van het Reis Dossier Systeem (RDS): het boekingsproces stap voor stap, met schermen.">
+<style>
+  /* ---------- Basis ---------- */
+  :root {
+    --ink: #1f2d33;
+    --muted: #5d7a85;
+    --line: #dbe5e9;
+    --soft: #f3f7f8;
+    --brand: #1565c0;
+    --brand-soft: #e8f1fb;
+    --ok: #2e7d32;
+    --ok-soft: #e8f5e9;
+    --warn: #8a5a00;
+    --warn-soft: #fff5de;
+    --stop: #a64247;
+    --stop-soft: #fbeaea;
+    --violet: #755ba2;
+    --info: #336aaa;
+    --send: #a45235;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #eef2f4;
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .page { max-width: 960px; margin: 0 auto; background: #fff; padding: 56px 64px 72px; }
+  h1, h2, h3, h4 { line-height: 1.25; color: #12303b; }
+  h2 { font-size: 1.7rem; margin: 0 0 .6em; padding-bottom: .3em; border-bottom: 3px solid var(--brand); }
+  h3 { font-size: 1.2rem; margin: 1.7em 0 .5em; color: var(--brand); }
+  h4 { font-size: 1rem; margin: 1.2em 0 .3em; }
+  p { margin: .6em 0; }
+  ul, ol { margin: .5em 0 .8em; padding-left: 1.4em; }
+  li { margin: .25em 0; }
+  a { color: var(--brand); }
+  code, kbd { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; background: var(--soft); padding: .05em .35em; border-radius: 4px; }
+  .muted { color: var(--muted); }
+  .chapter { margin-top: 56px; }
+  .chapter.cont { margin-top: 36px; }
+
+  /* ---------- Omslag en inhoud ---------- */
+  .cover { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; }
+  .cover .logo { font-size: 3.6rem; font-weight: 800; letter-spacing: .12em; color: var(--brand); }
+  .cover h1 { font-size: 2.4rem; margin: .2em 0 .1em; }
+  .cover .sub { font-size: 1.2rem; color: var(--muted); margin: 0 0 2em; }
+  .cover dl { display: grid; grid-template-columns: 9em 1fr; gap: .3em 1em; margin: 0; font-size: .95rem; }
+  .cover dt { color: var(--muted); }
+  .cover dd { margin: 0; }
+  .toc { columns: 2; column-gap: 40px; padding: 0; list-style: none; counter-reset: toc; }
+  .toc li { break-inside: avoid; margin: .35em 0; counter-increment: toc; }
+  .toc li::before { content: counter(toc) ". "; color: var(--muted); }
+  .toc a { text-decoration: none; }
+
+  /* ---------- Bouwstenen ---------- */
+  .callout { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: .7em 1em; margin: 1em 0; border-radius: 0 8px 8px 0; }
+  .callout.tip { border-color: var(--ok); background: var(--ok-soft); }
+  .callout.warn { border-color: #d89b00; background: var(--warn-soft); }
+  .callout.stop { border-color: var(--stop); background: var(--stop-soft); }
+  .callout strong:first-child { display: block; margin-bottom: .15em; }
+  .callout p { margin: .25em 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: .93rem; }
+  th, td { border: 1px solid var(--line); padding: .45em .65em; text-align: left; vertical-align: top; }
+  th { background: var(--soft); color: #12303b; font-weight: 600; }
+  td.c, th.c { text-align: center; }
+  .yes { color: var(--ok); font-weight: 700; }
+  .no { color: #9aa9b0; }
+  .chip { display: inline-block; padding: 0 .55em; border-radius: 99px; font-size: .85em; font-weight: 600; background: var(--soft); border: 1px solid var(--line); white-space: nowrap; }
+  .sw { display: inline-block; width: .9em; height: .9em; border-radius: 50%; vertical-align: -.1em; margin-right: .3em; }
+
+  figure { margin: 1.1em 0; }
+  figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 6px rgba(16, 40, 48, .12); }
+  figure.narrow { max-width: 68%; margin-left: auto; margin-right: auto; }
+  figcaption { font-size: .85rem; color: var(--muted); margin-top: .45em; }
+  figcaption b { color: var(--ink); }
+
+  .steps { list-style: none; counter-reset: step; padding: 0; margin: 1em 0; }
+  .steps > li { counter-increment: step; position: relative; padding: .6em 1em .6em 3.4em; margin: .6em 0; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .steps > li::before { content: counter(step); position: absolute; left: .8em; top: .55em; width: 1.9em; height: 1.9em; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .steps > li > strong:first-child { display: block; font-size: 1.02em; }
+  .steps .sys { color: var(--muted); font-size: .92em; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: .8em 1em; background: #fff; }
+  .card h4 { margin-top: 0; }
+
+  .legend td:first-child { white-space: nowrap; }
+  .role { display: inline-block; padding: 0 .6em; border-radius: 99px; font-size: .85em; font-weight: 700; color: #fff; }
+  .role.emp { background: #2e7d32; }
+  .role.mgr { background: #755ba2; }
+
+  /* ---------- Printen (A4) ---------- */
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  @media print {
+    html { scroll-behavior: auto; }
+    body { background: #fff; font-size: 10.2pt; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { max-width: none; padding: 0; box-shadow: none; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Elke hoofdstuk begint op een nieuwe pagina; het omslag staat apart. */
+    .cover { min-height: 0; height: 240mm; break-after: page; page-break-after: always; }
+    .chapter { margin-top: 0; break-before: page; page-break-before: always; }
+    .toc-wrap { break-after: page; page-break-after: always; }
+
+    /* Koppen blijven bij hun inhoud. */
+    h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+
+    /* Niets wat bij elkaar hoort wordt over twee pagina's verdeeld: tabellen, schermen, kaders, stappen, kaarten. */
+    table, thead, tr, figure, .callout, .steps > li, .card, .grid2, .keep, dl, .toc li, details, blockquote {
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    thead { display: table-header-group; }
+    img { break-inside: avoid; page-break-inside: avoid; max-height: 235mm; width: auto; max-width: 100%; margin-left: auto; margin-right: auto; }
+    figure img { box-shadow: none; }
+    figure.narrow { max-width: 62%; }
+    /* Een inleidende zin blijft bij het scherm, tabel of kader dat erop volgt. */
+    p.lead-in { break-after: avoid; page-break-after: avoid; }
+    p, li { orphans: 3; widows: 3; }
+  }
+
+  /* ---------- Smal scherm ---------- */
+  @media (max-width: 720px) {
+    .page { padding: 28px 18px 48px; }
+    .toc { columns: 1; }
+    .grid2 { grid-template-columns: 1fr; }
+    figure.narrow { max-width: 100%; }
+    .cover dl { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+<!-- ====================== OMSLAG ====================== -->
+<header class="cover">
+  <div class="logo">RDS</div>
+  <h1>Gebruikershandleiding</h1>
+  <p class="sub">Reis Dossier Systeem voor medewerkers en managers van een reisorganisatie</p>
+  <dl>
+    <dt>Voor wie</dt><dd>medewerkers en managers die dagelijks boekingen beheren</dd>
+    <dt>Versie</dt><dd>21 oktober 2026</dd>
+    <dt>Schermen</dt><dd>echte schermen uit de app; alle namen, bedragen en boekingen zijn fictief</dd>
+    <dt>Techniek?</dt><dd>die staat in de technische handleiding (<code>docs/handleiding.md</code>); hier komt niets voor wat je niet nodig hebt</dd>
+  </dl>
+</header>
+
+<!-- ====================== INHOUD ====================== -->
+<section class="toc-wrap" id="inhoud">
+  <h2>Inhoud</h2>
+  <ol class="toc">
+    <li><a href="#welkom">Welkom bij RDS</a></li>
+    <li><a href="#aan-de-slag">Aan de slag: inloggen en je account</a></li>
+    <li><a href="#scherm">Het scherm leren kennen</a></li>
+    <li><a href="#proces">Van interesse tot afgeronde reis</a></li>
+    <li><a href="#boeking">Het boekingsscherm</a></li>
+    <li><a href="#documenten-mail">Documenten en e-mail</a></li>
+    <li><a href="#betalingen">Betalingen</a></li>
+    <li><a href="#boekers">Boekers en prospects</a></li>
+    <li><a href="#manager">Voor managers: beheren en inrichten</a></li>
+    <li><a href="#klant">Wat ziet de klant?</a></li>
+    <li><a href="#wie-mag-wat">Wie mag wat?</a></li>
+    <li><a href="#hulp">Hulp bij problemen</a></li>
+    <li><a href="#begrippen">Begrippen en statussen</a></li>
+  </ol>
+  <div class="callout tip">
+    <strong>Zo gebruik je deze handleiding</strong>
+    <p>Ben je nieuw? Lees hoofdstuk 1 tot en met 4: dan weet je genoeg om een boeking van begin tot eind te beheren. Daarna sla je op wat je nodig hebt. Managers vinden hun extra taken in hoofdstuk 9.</p>
+    <p>Printen kan: elk hoofdstuk begint op een nieuwe pagina en tabellen, schermen en kaders worden nooit over twee pagina's verdeeld.</p>
+  </div>
+  <p class="muted">Rollen in deze handleiding: <span class="role emp">Medewerker</span> en <span class="role mgr">Manager</span>. Waar een onderdeel alleen voor managers is, staat dat erbij.</p>
+</section>
+
+<!-- ====================== 1 WELKOM ====================== -->
+<section class="chapter" id="welkom">
+  <h2>1. Welkom bij RDS</h2>
+  <p>RDS is het dossiersysteem van de reisorganisatie. Per reis houd je één <strong>boeking</strong> (een dossier) bij: wie boekt, wie er meereist, welke verblijven en activiteiten erbij horen, welke documenten en e-mails er zijn uitgegaan en wat er is betaald. Alles staat bij elkaar, voor iedereen in je organisatie, en je ziet uitsluitend de gegevens van je eigen organisatie.</p>
+
+  <div class="keep"><h3>Jouw boekingswereld in RDS</h3>
+  <p class="lead-in">Wat je uit het dagelijks werk kent, heeft in RDS een vaste plek:</p>
+  <table>
+    <thead><tr><th>In het reisbureau</th><th>In RDS</th></tr></thead>
+    <tbody>
+      <tr><td>Iemand die interesse heeft en informatie vraagt</td><td><strong>Prospect</strong> (menu <em>Prospects</em>)</td></tr>
+      <tr><td>De klant die de reis boekt en betaalt</td><td><strong>Boeker</strong>; bij een boeking is dat de <strong>hoofdboeker</strong></td></tr>
+      <tr><td>Het reisdossier</td><td><strong>Boeking</strong> met een nummer als <code>BK-2026-001</code></td></tr>
+      <tr><td>Hotel, appartement of villa</td><td><strong>Accommodatie</strong> (met een <strong>leverancier</strong>), als regel in het blok <em>Accommodaties</em> van de boeking</td></tr>
+      <tr><td>Excursie, stadstour, transfer, ticket</td><td><strong>Activiteit</strong> in de boeking</td></tr>
+      <tr><td>Medereizigers</td><td><strong>Reizigers</strong> in de boeking</td></tr>
+      <tr><td>Bevestiging, voucher, reisbescheiden</td><td><strong>Document</strong>, gemaakt uit een Word-sjabloon (<strong>template</strong>) als PDF of DOCX, of geüpload als PDF</td></tr>
+      <tr><td>Een mail aan de klant</td><td><strong>E-mail</strong> uit een e-mailtemplate; wat bij een boeking is verstuurd blijft in het dossier bewaard</td></tr>
+      <tr><td>Voorschot en restbetaling</td><td><strong>Betalingen</strong>, via de online betaaldienst Mollie (iDEAL, creditcard)</td></tr>
+      <tr><td>De klant wil zijn reis zien en betalen</td><td><strong>Klantportaal</strong>: een eigen pagina voor de klant</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="keep"><h3>De levensloop van een boeking</h3>
+  <p>Een boeking doorloopt <strong>statussen</strong> die je zelf bijhoudt:</p>
+  <p style="text-align:center"><span class="chip">Aanvraag</span> → <span class="chip">Offerte</span> → <span class="chip">Boeking</span> → <span class="chip">Voorschot</span> → <span class="chip">Betaald</span> → <span class="chip">Op reis</span> → <span class="chip">Weer thuis</span> → <span class="chip">Afgerond</span></p>
+  <p>Je kiest de status zelf; RDS dwingt geen volgorde af en verandert de status niet vanzelf als er een betaling binnenkomt.</p>
+
+  <figure>
+    <img src="img/02-dashboard.jpg" alt="Het dashboard van een manager met boekingen, omzet en de meest geboekte accommodaties" width="800" height="836">
+    <figcaption><b>Het startscherm van een manager.</b> Je ziet het aantal boekingen van dit jaar, de omzet, wat is betaald en wat nog openstaat, en de meest geboekte accommodaties. Medewerkers zien hier voorlopig een welkomstkaart.</figcaption>
+  </figure>
+
+  <div class="keep"><h3>Vier dingen om meteen te onthouden</h3>
+  <div class="grid2">
+    <div class="card"><h4>1. Alles hangt aan de boeking</h4><p>Documenten maak je en e-mails verstuur je vanuit de <em>boeking</em> (of een e-mail vanuit een <em>prospect</em>). In de schermen <em>Templates</em> en <em>E-mailtemplates</em> beheer je alleen de sjablonen.</p></div>
+    <div class="card"><h4>2. Geschiedenis wordt niet gewist</h4><p>Documenten, betalingen en verzonden e-mails kun je niet verwijderen. Zo blijft het dossier betrouwbaar.</p></div>
+    <div class="card"><h4>3. Klikken op de regel doet niets</h4><p>In elke lijst werk je met de iconen aan het einde van de regel: bekijken, bewerken, verwijderen.</p></div>
+    <div class="card"><h4>4. Je ziet wat je mag</h4><p>Ontbreekt een knop of menu-item, dan heeft je rol daar geen recht op. Vraag het een manager.</p></div>
+  </div></div>
+</section>
+
+<!-- ====================== 2 AAN DE SLAG ====================== -->
+<section class="chapter" id="aan-de-slag">
+  <h2>2. Aan de slag: inloggen en je account</h2>
+
+  <h3>Inloggen</h3>
+  <ol>
+    <li>Open RDS in je browser. Heb je geen geldige sessie, dan kom je op het inlogscherm.</li>
+    <li>Vul je <strong>gebruikersnaam</strong> en <strong>wachtwoord</strong> in en kies <strong>Inloggen</strong>.</li>
+    <li>Heb je twee-factor-verificatie aan, dan vraagt RDS daarna om de 6-cijferige code uit je authenticator-app.</li>
+    <li>Je komt op het <strong>Dashboard</strong>.</li>
+  </ol>
+  <figure class="narrow">
+    <img src="img/01-inloggen.jpg" alt="Het inlogscherm van RDS" width="800" height="512">
+    <figcaption><b>Het inlogscherm.</b> De knop <em>Inloggen</em> werkt pas als beide velden zijn ingevuld.</figcaption>
+  </figure>
+  <div class="callout warn">
+    <strong>Sessie van een uur</strong>
+    <p>Na ongeveer een uur word je automatisch uitgelogd; je komt dan weer op het inlogscherm. Zorg dat je werk is opgeslagen voor je een pauze neemt.</p>
+  </div>
+  <p>Staat bij jouw account <em>Wachtwoord moet gewijzigd worden</em> aan, dan stuurt RDS je eerst naar het scherm <em>Wachtwoord</em>. Kies een nieuw wachtwoord (minimaal 8 tekens) en log daarna gewoon verder in.</p>
+
+  <h3>Je eigen gegevens (menu Mijn beheer)</h3>
+  <table>
+    <thead><tr><th>Scherm</th><th>Wat je er doet</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Mijn gegevens</strong></td><td>je voornaam, tussenvoegsel en achternaam aanpassen</td></tr>
+      <tr><td><strong>Wachtwoord</strong></td><td>je wachtwoord wijzigen: eerst je huidige wachtwoord, daarna twee keer het nieuwe (minimaal 8 tekens)</td></tr>
+      <tr><td><strong>2FA Instellingen</strong></td><td>twee-factor-verificatie aan- of uitzetten</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="keep"><h3>Twee-factor-verificatie (2FA)</h3>
+  <p>Met 2FA heb je naast je wachtwoord een code uit een app op je telefoon nodig (zoals Google Authenticator of Authy). Dat beschermt je account als iemand je wachtwoord kent.</p>
+  <figure class="narrow">
+    <img src="img/23-2fa.jpg" alt="Scherm Twee-factor authenticatie met de status Niet actief en de knop 2FA activeren" width="800" height="407">
+    <figcaption><b>2FA Instellingen.</b> Kies <em>2FA activeren</em>, scan de QR-code met je app en bevestig met een code.</figcaption>
+  </figure></div>
+  <ol>
+    <li>Kies <strong>2FA activeren</strong> en scan de QR-code met je authenticator-app (of voer de sleutel handmatig in).</li>
+    <li>Bevestig met de code die de app toont.</li>
+    <li><strong>Bewaar de herstelcodes</strong> op een veilige plek. Ze worden alleen nu getoond en werken elk één keer.</li>
+  </ol>
+  <div class="callout">
+    <strong>Telefoon kwijt?</strong>
+    <p>Log in met <em>Herstelcode gebruiken</em> en een van je herstelcodes. Heb je die ook niet meer, dan kan een manager of beheerder 2FA voor je resetten.</p>
+  </div>
+
+  <div class="keep"><h3>Taal en uitloggen</h3>
+  <p>Rechtsboven staan je naam met je organisatie, de <strong>taalwisselaar</strong> (Nederlands of Engels; RDS onthoudt je keuze) en <strong>Uitloggen</strong>.</p>
+</section>
+
+<!-- ====================== 3 SCHERM ====================== -->
+<section class="chapter" id="scherm">
+  <h2>3. Het scherm leren kennen</h2>
+
+  <h3>De indeling</h3>
+  <ul>
+    <li><strong>Menu links.</strong> Je ziet alleen de onderdelen waar je recht op hebt. De kleur volgt de huisstijl van je organisatie.</li>
+    <li><strong>Balk bovenin.</strong> De titel, je naam met organisatie, de taalwisselaar en <em>Uitloggen</em>.</li>
+    <li><strong>Werkgebied.</strong> Het scherm dat je hebt geopend.</li>
+    <li><strong>Meldingen</strong> verschijnen onderaan het scherm (opgeslagen, verstuurd, een foutmelding).</li>
+  </ul>
+  <figure>
+    <img src="img/24-medewerker-menu.jpg" alt="De boekingenlijst gezien door een medewerker, met een beperkter menu" width="800" height="465">
+    <figcaption><b>Het scherm van een medewerker.</b> Het menu bevat <em>Dashboard</em>, <em>Boekingen</em>, <em>Boekers</em>, <em>Prospects</em>, <em>Betalingen</em>, <em>E-mailtemplates</em> en <em>Mijn beheer</em>. Een manager ziet daarnaast het beheergedeelte (zie hoofdstuk 9).</figcaption>
+  </figure>
+
+  <h3>Lijsten: één vaste manier van werken</h3>
+  <p class="lead-in">Elke lijst werkt hetzelfde: een zoekveld bovenin, de gegevens in kolommen en aan het einde van elke regel de actie-iconen. Klikken op de regel zelf doet niets.</p>
+  <table class="legend">
+    <thead><tr><th>Icoon</th><th>Kleur</th><th>Wat het doet</th><th>Hoe riskant</th></tr></thead>
+    <tbody>
+      <tr><td><strong>oog</strong></td><td><span class="sw" style="background:var(--info)"></span>blauw</td><td><strong>Inzien</strong>: alleen lezen, je kunt niets per ongeluk wijzigen</td><td>geen risico</td></tr>
+      <tr><td><strong>potlood</strong></td><td><span class="sw" style="background:var(--violet)"></span>violet</td><td><strong>Bewerken</strong>: je past bestaande gegevens aan</td><td>middel</td></tr>
+      <tr><td><strong>prullenbak</strong></td><td><span class="sw" style="background:var(--stop)"></span>rood</td><td><strong>Verwijderen</strong>: altijd eerst met een bevestigingsvenster</td><td>hoog</td></tr>
+      <tr><td><strong>mail</strong> (bij prospects)</td><td><span class="sw" style="background:var(--send)"></span>oranje-rood</td><td><strong>E-mail versturen</strong>: gaat naar buiten en is niet terug te halen</td><td>hoog</td></tr>
+      <tr><td><strong>+ Toevoegen</strong>, nieuw</td><td><span class="sw" style="background:var(--ok)"></span>groen</td><td><strong>Toevoegen</strong>: er komt iets bij</td><td>laag</td></tr>
+    </tbody>
+  </table></div>
+  <p>De kleur laat dus zien hoe voorzichtig je moet zijn, nog voor je klikt. Dezelfde kleuren gebruikt RDS bij de knoppen <em>Bewerken</em>, <em>Toevoegen</em> en <em>Verwijderen</em> in de kaarten van een boeking.</p>
+  <figure>
+    <img src="img/03-boekingen-lijst.jpg" alt="De lijst met boekingen met zoekveld, filters en actie-iconen" width="800" height="407">
+    <figcaption><b>De boekingenlijst.</b> Zoek op boekingnummer of naam van de boeker, filter op periode of status en gebruik de iconen aan het einde van de regel.</figcaption>
+  </figure>
+
+  <div class="keep"><h3>Handige afspraken</h3>
+  <ul>
+    <li><strong>Bevestigen.</strong> Verwijderen vraagt altijd om een bevestiging in een eigen venster.</li>
+    <li><strong>Alleen inzien.</strong> Met het oog-icoon opent een scherm in <em>alleen-lezen</em>-stand: het formulier is uitgeschakeld en er zijn geen opslaan- of verwijderknoppen.</li>
+    <li><strong>Dubbelklikken.</strong> Een knop <em>Opslaan</em> verwerkt een tweede klik niet, dus je maakt niets dubbel aan.</li>
+    <li><strong>Verwijderen kan niet altijd.</strong> Hangt er een boeking met documenten of betalingen aan, dan weigert RDS het verwijderen (zie hoofdstuk 12). Dat is bewust.</li>
+  </ul>
+</section>
+
+<!-- ====================== 4 PROCES ====================== -->
+<section class="chapter" id="proces">
+  <h2>4. Van interesse tot afgeronde reis</h2>
+  <p>Dit hoofdstuk loopt het boekingsproces door zoals je het in de praktijk doet. Elke stap noemt wat je doet en wat RDS voor je regelt.</p>
+
+  <ol class="steps">
+    <li><strong>Interesse vastleggen: een prospect registreren</strong>
+      Ga naar <em>Prospects</em> en kies <strong>Registreer prospect</strong>. Voornaam, achternaam en een geldig e-mailadres zijn verplicht.
+      <div class="sys">RDS bewaart de prospect met de status <em>prospect</em>; er is nog geen boeking.</div></li>
+    <li><strong>Eerste contact: een mail sturen</strong>
+      Klik in <em>Prospects</em> op het mail-icoon van de regel, kies een template (bijvoorbeeld <em>Welkom prospect</em>), bekijk het resultaat met <strong>Genereer voorbeeld</strong> en kies <strong>Verstuur</strong>.
+      <div class="sys">RDS vult de naam van de prospect zelf in. Een mail aan een losse prospect wordt niet in een dossier bewaard.</div></li>
+    <li><strong>De prospect wordt klant</strong>
+      Zodra er voor een prospect een boeking ontstaat, wordt hij automatisch een <em>actieve boeker</em>. Wil je het eerder doen, open dan de prospect met het potlood en kies <strong>Maak boeker</strong>.</li>
+    <li><strong>Een nieuwe boeking starten</strong>
+      Ga naar <em>Boekingen</em> en kies <strong>Nieuwe boeking</strong>. Kies in het venster de <strong>hoofdboeker</strong>, of maak met <strong>Nieuwe boeker</strong> meteen een nieuwe aan.
+      <div class="sys">Je krijgt een <em>concept-boeking</em>: er is nog niets opgeslagen. Heeft de boeker al een lopende reis, dan waarschuwt RDS: <em>"Mogelijk is de verkeerde boeker gekozen. Toch doorgaan?"</em></div></li>
+    <li><strong>Verblijven toevoegen</strong>
+      Kies in de kaart <em>Accommodaties</em> op <strong>Toevoegen</strong>: accommodatie, leverancier, van-datum, tot-datum en prijs.
+      <div class="sys">Zodra je het eerste onderdeel toevoegt, maakt RDS de boeking definitief aan (na een bevestiging) en geeft het een boekingsnummer als <code>BK-2026-004</code>. Ook controleert RDS de periodes: bij overlap of een gat tussen twee verblijven kies je <strong>Toch opslaan</strong> of <strong>Aanpassen</strong>.</div></li>
+    <li><strong>Activiteiten toevoegen</strong>
+      Kies de activiteit, de datum, de tijden, het trefpunt en de totaalprijs. Eindigt de activiteit na middernacht, vul dan een eindtijd in die vóór de begintijd ligt: RDS laat zien dat de activiteit de volgende dag eindigt.</li>
+    <li><strong>Reizigers toevoegen</strong>
+      Voornaam en achternaam zijn verplicht; tussenvoegsel, initialen, geslacht en geboortedatum zijn optioneel.</li>
+    <li><strong>De status bijhouden</strong>
+      Kies in de kaart <em>Boekinggegevens</em> op <strong>Bewerken</strong> en zet de status (bijvoorbeeld van <em>Aanvraag</em> naar <em>Offerte</em>).
+      <div class="sys">Periode en totaalbedrag rekent RDS zelf uit de verblijven en activiteiten; je vult ze nergens apart in.</div></li>
+    <li><strong>Documenten maken</strong>
+      Bevestiging of voucher nodig? Kies in <em>Berichten en documenten</em> op <strong>Toevoegen → Document</strong> en genereer het uit een template, of upload een PDF. Zie hoofdstuk 6.</li>
+    <li><strong>De klant mailen</strong>
+      Kies <strong>Toevoegen → E-mail aan hoofdboeker</strong>, kies een template en verstuur. De mail komt in het dossier te staan. Zie hoofdstuk 6.</li>
+    <li><strong>Betalingen vastleggen en volgen</strong>
+      Voeg in de kaart <em>Betalingen</em> een betaling toe (omschrijving en bedrag, bijvoorbeeld het voorschot). De klant betaalt online in zijn portaal; Mollie meldt de uitkomst terug. Zie hoofdstuk 7.</li>
+    <li><strong>Afronden</strong>
+      Zet de status op <em>Afgerond</em>. Het dossier blijft volledig bewaard: reizigers, verblijven, documenten, e-mails en betalingen.</li>
+  </ol>
+
+  <figure>
+    <img src="img/06-prospects.jpg" alt="De lijst met prospects met een mail-icoon per regel" width="800" height="378">
+    <figcaption><b>Stap 1 en 2: Prospects.</b> Het mail-icoon (oranje-rood) verstuurt een e-mail aan de prospect.</figcaption>
+  </figure>
+</section>
+
+<section class="chapter cont" id="proces-schermen">
+  <h3 style="margin-top:0">De schermen bij stap 4 en 5</h3>
+  <figure>
+    <img src="img/12-boeker-kiezen.jpg" alt="Het venster Selecteer een boeker met zoekveld en de knop Nieuwe boeker" width="800" height="465">
+    <figcaption><b>Stap 4: de hoofdboeker kiezen.</b> Typ in het zoekveld om de lijst te verkleinen, of kies <em>Nieuwe boeker</em>.</figcaption>
+  </figure></div>
+  <figure>
+    <img src="img/13-concept-boeking.jpg" alt="Een concept-boeking met de melding dat de boeking nog niet is opgeslagen" width="800" height="465">
+    <figcaption><b>De concept-boeking.</b> De rode melding herinnert je eraan dat er nog niets is opgeslagen. Pas als je iets toevoegt, ontstaat de boeking.</figcaption>
+  </figure>
+</section>
+
+<section class="chapter cont" id="proces-schermen2">
+  <div class="keep"><h3 style="margin-top:0">Stap 5: een verblijf toevoegen</h3>
+  <figure>
+    <img src="img/14-accommodatie-toevoegen.jpg" alt="Het venster Accommodatie toevoegen met accommodatie, periode en prijs" width="800" height="560">
+    <figcaption><b>Accommodatie toevoegen.</b> Staat de accommodatie er nog niet bij, kies dan <em>Nieuwe accommodatie</em>: alleen een code en een naam zijn genoeg, de rest vul je later aan.</figcaption>
+  </figure></div>
+  <div class="callout tip">
+    <strong>Tip: eerst de stamgegevens</strong>
+    <p>Accommodaties, leveranciers en activiteiten kies je uit een lijst. Een manager houdt die lijsten bij (hoofdstuk 9). Ontbreekt er iets, dan kun je tijdens het boeken snel een nieuwe aanmaken en later aanvullen.</p>
+  </div>
+</section>
+
+<!-- ====================== 5 BOEKINGSSCHERM ====================== -->
+<section class="chapter" id="boeking">
+  <h2>5. Het boekingsscherm</h2>
+  <p>Het boekingsscherm is het hoofdscherm van RDS. Alles over één reis staat op één pagina, verdeeld over kaarten. Open het via <em>Boekingen</em> en het potlood- of oog-icoon.</p>
+  <figure>
+    <img src="img/04-boeking-detail.jpg" alt="Het boekingsscherm van BK-2026-001 met alle kaarten" width="800" height="781">
+    <figcaption><b>Boeking BK-2026-001.</b> Links de boekinggegevens, verblijven, activiteiten en betalingen; rechts de hoofdboeker, de reizigers en de tijdlijn <em>Berichten en documenten</em>.</figcaption>
+  </figure>
+
+  <div class="keep"><h3>De kaarten</h3>
+  <table>
+    <thead><tr><th>Kaart</th><th>Wat je ziet</th><th>Wat je kunt doen</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Boekinggegevens</strong></td><td>boekingsnummer, status, periode en totaalbedrag (door RDS berekend)</td><td><em>Bewerken</em>: de status zetten</td></tr>
+      <tr><td><strong>Hoofdboeker</strong></td><td>naam, telefoon, e-mail, geboortedatum</td><td><em>Bewerken</em> van de gegevens; <em>Verwijderen</em> koppelt de boeker los van deze boeking (de boeker zelf blijft bestaan); <em>Toevoegen</em> als er nog geen hoofdboeker is</td></tr>
+      <tr><td><strong>Accommodaties</strong></td><td>per verblijf accommodatie, leverancier, periode en prijs</td><td>toevoegen, bewerken, verwijderen</td></tr>
+      <tr><td><strong>Activiteiten</strong></td><td>activiteit, datum en tijd, prijs</td><td>toevoegen, bewerken, verwijderen</td></tr>
+      <tr><td><strong>Reizigers</strong></td><td>naam en geboortedatum</td><td>toevoegen, bewerken, verwijderen</td></tr>
+      <tr><td><strong>Betalingen</strong></td><td>omschrijving, bedrag, status, datum</td><td><em>Toevoegen</em>; het oog opent het betalingsvenster (hoofdstuk 7)</td></tr>
+      <tr><td><strong>Berichten en documenten</strong></td><td>e-mails, documenten en betalingen op volgorde van datum, nieuwste bovenaan</td><td><em>Toevoegen</em> → e-mail of document; filter op soort; bekijken</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="keep"><h3>De tijdlijn Berichten en documenten</h3>
+  <p>Eén lijst met alles wat bij de boeking is gebeurd. Het pictogram links toont de soort (mail, document, betaling); de vlakjes rechts de eigenschappen:</p>
+  <ul>
+    <li><strong>E-mail:</strong> <span class="chip">verstuurd</span> of <span class="chip">opnieuw verstuurd</span>.</li>
+    <li><strong>Document:</strong> <span class="chip">portaal</span> als de klant het kan zien, <span class="chip">alleen intern</span> als alleen jullie het zien, plus het bestandstype.</li>
+    <li><strong>Betaling:</strong> de status en de betaalmethode.</li>
+  </ul>
+  <p>Met de knoppen <em>Alles</em>, <em>E-mail</em>, <em>Documenten</em> en <em>Betalingen</em> filter je de lijst. Het oog opent het item, het potlood bij een document wijzigt alleen of de klant het ziet.</p>
+
+  <div class="callout warn">
+    <strong>Verwijderen van een boeking</strong>
+    <p>Een boeking met documenten, betalingen of verzonden e-mails kun je niet verwijderen. Verwijder je een boeking zonder die gegevens, dan verdwijnen ook de reizigers, verblijven, activiteiten en betalingskoppelingen. Weet je het niet zeker, zet de status dan op <em>Afgerond</em> in plaats van te verwijderen.</p>
+  </div>
+</section>
+
+<!-- ====================== 6 DOCUMENTEN EN MAIL ====================== -->
+<section class="chapter" id="documenten-mail">
+  <h2>6. Documenten en e-mail</h2>
+  <p>Beide maak je <strong>vanuit de boeking</strong>, in de kaart <em>Berichten en documenten</em> met de knop <strong>Toevoegen</strong>. E-mail aan een prospect verstuur je vanuit <em>Prospects</em>.</p>
+
+  <h3>Een document toevoegen</h3>
+  <p>Kies <strong>Toevoegen → Document</strong>. Je hebt twee manieren:</p>
+  <table>
+    <thead><tr><th>Manier</th><th>Zo werkt het</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Genereren</strong></td><td>Kies een <strong>template</strong> (bijvoorbeeld <em>Reisbevestiging</em>), kies <strong>PDF</strong> of <strong>DOCX</strong> en kies <strong>Genereer</strong>. RDS vult de gegevens van de boeking in het sjabloon in.</td></tr>
+      <tr><td><strong>Uploaden</strong></td><td>Sleep een bestand in het vak, kies <strong>Kies bestand</strong> of haal het op via een internetadres. Alleen <strong>PDF-bestanden</strong> zijn toegestaan.</td></tr>
+    </tbody>
+  </table></div>
+  <figure>
+    <img src="img/15-document-toevoegen.jpg" alt="Het venster Document toevoegen met Genereren en Uploaden, PDF of DOCX en het vinkje Zichtbaar in het boekerportaal" width="800" height="688">
+    <figcaption><b>Document toevoegen.</b> Het vinkje <em>Zichtbaar in het boekerportaal</em> staat standaard uit.</figcaption>
+  </figure>
+  <div class="callout tip">
+    <strong>Wanneer ziet de klant het document?</strong>
+    <p>Alleen als het vinkje <em>Zichtbaar in het boekerportaal</em> aanstaat. Je kunt dat later wijzigen met het potlood bij het document in de tijdlijn. Een per ongeluk gemaakt document kun je niet verwijderen, maar met dat vinkje uit ziet de klant het in elk geval niet.</p>
+  </div>
+
+  <div class="keep"><h3>Een e-mail versturen</h3>
+  <ol>
+    <li>Kies in de boeking <strong>Toevoegen → E-mail aan hoofdboeker</strong>. (Voor een prospect: het mail-icoon in <em>Prospects</em>.)</li>
+    <li>Kies een <strong>template</strong>.</li>
+    <li>Kies <strong>Genereer voorbeeld</strong>: je ziet onderwerp en tekst precies zoals de ontvanger ze krijgt, met naam en boekingsnummer ingevuld.</li>
+    <li>Kies <strong>Verstuur</strong> en bevestig.</li>
+  </ol>
+  <figure>
+    <img src="img/16-email-versturen.jpg" alt="Het venster E-mail versturen met een gekozen template en een voorbeeld van de e-mail" width="800" height="688">
+    <figcaption><b>E-mail versturen.</b> Het voorbeeld toont de ingevulde tekst. De mail gaat naar het e-mailadres van de hoofdboeker.</figcaption>
+  </figure>
+  <p>Een mail vanuit een boeking blijft in de tijdlijn staan. Open hem met het oog om te zien wat er is verstuurd, aan wie en door wie, en kies zo nodig <strong>Opnieuw versturen</strong>.</p>
+  <figure>
+    <img src="img/17-verzonden-email.jpg" alt="Een verzonden e-mail in een venster met afzender, ontvanger, datum en de knop Opnieuw versturen" width="800" height="688">
+    <figcaption><b>Een verzonden e-mail terugkijken.</b> De klant heeft precies deze tekst ontvangen.</figcaption>
+  </figure>
+
+  <div class="callout warn">
+    <strong>Als versturen niet lukt</strong>
+    <p>RDS meldt het als de hoofdboeker geen e-mailadres heeft of als jullie organisatie nog geen afzenderadres heeft. Vul het e-mailadres van de boeker in, of vraag een beheerder het afzenderadres in te stellen. Bijlagen, cc en bcc bestaan niet.</p>
+  </div>
+</section>
+
+<!-- ====================== 7 BETALINGEN ====================== -->
+<section class="chapter" id="betalingen">
+  <h2>7. Betalingen</h2>
+  <p>Betalingen verlopen via Mollie. Jij legt de betaling vast bij de boeking; de klant betaalt online in zijn portaal; Mollie meldt de uitkomst terug en RDS werkt de status bij.</p>
+
+  <h3>Het overzicht</h3>
+  <p class="lead-in">Het menu <em>Betalingen</em> toont alle betalingen van je organisatie met bovenaan het totaal, wat is betaald en wat nog openstaat.</p>
+  <figure>
+    <img src="img/07-betalingen.jpg" alt="Het betalingenoverzicht met totalen en een lijst met betalingen" width="800" height="378">
+    <figcaption><b>Betalingen.</b> Per betaling zie je het Mollie-nummer, de boeking, de methode, het bedrag en de status. Klik op een boekingsnummer om naar de boeking te gaan.</figcaption>
+  </figure></div>
+
+  <div class="keep"><h3>De statussen van een betaling</h3>
+  <table>
+    <thead><tr><th>Status</th><th>Betekenis</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip">Open</span></td><td>vastgelegd, de klant heeft nog niet betaald</td></tr>
+      <tr><td><span class="chip">In afwachting</span></td><td>de klant is bezig, de bank bevestigt nog</td></tr>
+      <tr><td><span class="chip">Betaald</span></td><td>het geld is ontvangen</td></tr>
+      <tr><td><span class="chip">Mislukt</span>, <span class="chip">Geannuleerd</span>, <span class="chip">Verlopen</span></td><td>de betaling is niet gelukt, afgebroken of te laat</td></tr>
+    </tbody>
+  </table></div>
+  <p>Mollie bepaalt de statussen <em>In afwachting</em>, <em>Geautoriseerd</em> en <em>Verlopen</em>; die kun je niet zelf zetten.</p>
+
+  <div class="keep"><h3>Het betalingsvenster</h3>
+  <p>Het oog-icoon bij een betaling opent het venster met de gegevens en de <strong>volledige statushistorie</strong>: wie of wat de status wanneer heeft veranderd.</p>
+  <figure>
+    <img src="img/18-betaling.jpg" alt="Het betalingsvenster met gegevens en de statushistorie Open, In afwachting en Betaald" width="800" height="688">
+    <figcaption><b>Een betaling met zijn geschiedenis.</b> Onderaan staan de knoppen <em>Naar andere boeking koppelen</em> en <em>Correctie registreren</em> (alleen voor managers).</figcaption>
+  </figure></div>
+
+  <div class="keep"><h3>Wat kun je wijzigen?</h3>
+  <ul>
+    <li><strong>Bedrag of omschrijving aanpassen</strong> kan alleen zolang de betaling nog niet bij Mollie bestaat. Is de klant al aan het betalen geweest of is de betaling gestart, dan staat ze vast.</li>
+    <li><strong>Verwijderen</strong> kan nooit; betalingen blijven bewaard.</li>
+    <li><span class="role mgr">Manager</span> <strong>Correctie registreren</strong>: een nieuwe status (open, betaald, mislukt, geannuleerd) met een <strong>reden</strong> van minstens 5 tekens. Het komt als nieuwe regel in de historie, met jouw naam en de markering <em>Correctie</em>.</li>
+    <li><span class="role mgr">Manager</span> <strong>Naar andere boeking koppelen</strong>: als een betaling bij de verkeerde boeking staat. Kies de juiste boeking van jullie organisatie en geef een reden. De koppelgeschiedenis blijft zichtbaar.</li>
+  </ul>
+  <div class="callout">
+    <strong>Waarom zo streng?</strong>
+    <p>Een betaling is geld. Daarom wijzigt of wist niemand stilletjes iets: elke afwijking wordt als nieuwe regel met reden vastgelegd.</p>
+  </div>
+</section>
+
+<!-- ====================== 8 BOEKERS ====================== -->
+<section class="chapter" id="boekers">
+  <h2>8. Boekers en prospects</h2>
+  <p>Een <strong>boeker</strong> is de klant die een reis boekt; een <strong>prospect</strong> is iemand die nog niet heeft geboekt. Beide staan in dezelfde lijst onder de motorkap, maar in het menu zijn ze gescheiden: <em>Boekers</em> en <em>Prospects</em>.</p>
+  <figure>
+    <img src="img/05-boekers.jpg" alt="De lijst met boekers met naam, e-mail, telefoon en geboortedatum" width="800" height="378">
+    <figcaption><b>Boekers.</b> Het groene icoon met plusje start direct een nieuwe boeking voor deze boeker.</figcaption>
+  </figure>
+
+  <h3>Wat je kunt doen</h3>
+  <ul>
+    <li><strong>Zoeken</strong> op naam, e-mailadres of telefoonnummer.</li>
+    <li><strong>Een boeker of prospect aanmaken en bewerken.</strong> Voornaam, achternaam en een geldig e-mailadres zijn verplicht.</li>
+    <li><strong>Een boeking starten</strong> met het groene icoon op de regel. Heeft de boeker al boekingen, dan kies je eerst of je een bestaande opent of een nieuwe maakt.</li>
+    <li><strong>Adressen beheren</strong> in het bewerkvenster (woon-, factuur-, accommodatie- of leveranciersadres). Dat kan bij een bestaande boeker.</li>
+  </ul>
+  <figure>
+    <img src="img/19-boeker-bewerken.jpg" alt="Het venster Boeker bewerken met persoonsgegevens en adressen" width="800" height="640">
+    <figcaption><b>Boeker bewerken.</b> Onderaan staan de adressen. Bij een prospect staat hier ook de knop <em>Maak boeker</em>.</figcaption>
+  </figure>
+
+  <h3>Statussen van een boeker</h3>
+  <table>
+    <thead><tr><th>Status</th><th>Betekenis</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip">prospect</span></td><td>potentiële klant, nog geen boeking</td></tr>
+      <tr><td><span class="chip">active</span></td><td>klant; wordt vanzelf zo zodra er een boeking voor een prospect ontstaat</td></tr>
+      <tr><td><span class="chip">nietactief</span></td><td>geen lopende klant meer; wordt niet vanzelf weer actief</td></tr>
+    </tbody>
+  </table></div>
+  <p>Een boeker met boekingen met documenten of betalingen kun je niet verwijderen; de gegevens blijven bewaard.</p>
+</section>
+
+<!-- ====================== 9 MANAGER ====================== -->
+<section class="chapter" id="manager">
+  <h2>9. Voor managers: beheren en inrichten <span class="role mgr">Manager</span></h2>
+  <p>Als manager beheer je de gegevens waarmee je team boekt, de sjablonen en de gebruikers van je organisatie. Alles wat in dit hoofdstuk staat, zie je in het menu onder <strong>Organisatie beheer</strong>.</p>
+
+  <div class="keep"><h3>Overzicht van het beheergedeelte</h3>
+  <table>
+    <thead><tr><th>Menu</th><th>Waarvoor</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dashboard</strong></td><td>cijfers van het lopende jaar: aantal boekingen, omzet, betaald, openstaand, top 5 accommodaties</td></tr>
+      <tr><td><strong>Accommodaties</strong></td><td>de verblijven die je kunt boeken, met adres en leveranciers</td></tr>
+      <tr><td><strong>Leveranciers</strong></td><td>de partijen waarvan je inkoopt, met adres en bijbehorende accommodaties</td></tr>
+      <tr><td><strong>Activiteiten</strong></td><td>tours, excursies, tickets en transfers die je kunt toevoegen aan een boeking</td></tr>
+      <tr><td><strong>Templates</strong></td><td>Word-sjablonen voor documenten (bevestiging, voucher, ...)</td></tr>
+      <tr><td><strong>E-mailtemplates</strong></td><td>sjablonen voor e-mails aan klanten en prospects</td></tr>
+      <tr><td><strong>Personen</strong> en <strong>Accounts</strong></td><td>je collega's en hun inloggegevens en rol</td></tr>
+      <tr><td><strong>Huisstijl</strong></td><td>kleuren (en logo) van je organisatie in RDS</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="keep"><h3>Het dashboard</h3>
+  <p>Het dashboard toont de cijfers van het lopende jaar. Klik op een tegel om naar de bijbehorende lijst te gaan (bijvoorbeeld <em>Openstaand</em> naar <em>Betalingen</em>). Zie ook de afbeelding in hoofdstuk 1.</p>
+</section>
+
+<section class="chapter cont" id="manager-stam">
+  <h3 style="margin-top:0">Accommodaties, leveranciers en activiteiten</h3>
+  <figure>
+    <img src="img/08-accommodaties.jpg" alt="De lijst met accommodaties met code, leverancier en adres" width="800" height="378">
+    <figcaption><b>Accommodaties.</b> Leveranciers en activiteiten werken op dezelfde manier.</figcaption>
+  </figure></div>
+  <table>
+    <thead><tr><th>Onderdeel</th><th>Verplicht</th><th>Goed om te weten</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Accommodatie</strong></td><td>code en naam</td><td>je koppelt er een of meer <strong>leveranciers</strong> en <strong>adressen</strong> aan; zoeken kan op naam, code of leverancier</td></tr>
+      <tr><td><strong>Leverancier</strong></td><td>code en naam</td><td>met adressen en de gekoppelde accommodaties</td></tr>
+      <tr><td><strong>Activiteit</strong></td><td>naam en type</td><td>type is <em>tour</em>, <em>excursie</em>, <em>ticket</em> of <em>transfer</em></td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn">
+    <strong>Verwijderen van stamgegevens</strong>
+    <p>Verwijder je een accommodatie of leverancier, dan verdwijnen ook de boekingsregels waarin ze voorkomen. RDS waarschuwt daarvoor. Hangt er een boeking met documenten of betalingen aan, dan weigert RDS het verwijderen.</p>
+  </div>
+</section>
+
+<section class="chapter cont" id="manager-templates">
+  <div class="keep"><h3 style="margin-top:0">Templates: sjablonen voor documenten en e-mails</h3>
+  <p>Een template is een tekst met invulvelden, zoals <code>${booking.bookingNumber}</code>. Bij het maken van een document of e-mail vult RDS de velden met de gegevens van de boeking en de boeker. Hier maak en beheer je alleen de sjablonen; ze gebruiken doe je vanuit een boeking (hoofdstuk 6).</p>
+  <figure>
+    <img src="img/20-template-editor.jpg" alt="De sjablooneditor met de tekst van een reisbevestiging en rechts een lijst met variabelen" width="800" height="654">
+    <figcaption><b>De editor.</b> Sleep een veld uit de lijst <em>Variabelen</em> naar de tekst of klik erop om het in te voegen. Bij het opslaan wordt de tekst een echt Word-document.</figcaption>
+  </figure></div>
+  <table>
+    <thead><tr><th>Soort</th><th>Zo maak je hem</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Word-template</strong><br><span class="muted">menu Templates</span></td><td>Kies <em>Nieuwe template</em> en dan <em>In de editor maken</em> (opmaak, tabellen, afbeeldingen, velden), of <em>Word-bestand uploaden</em> met velden die al in je .docx staan.</td></tr>
+      <tr><td><strong>E-mailtemplate</strong><br><span class="muted">menu E-mailtemplates</span></td><td>Naam, onderwerp (mag velden bevatten) en tekst in dezelfde editor.</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Met <strong>Genereer voorbeeld</strong> in het verstuurvenster (hoofdstuk 6) zie je meteen of een veld goed is ingevuld.</li>
+    <li>Een <strong>herhaalde tabel</strong> herhaalt de laatste rij voor elk item, bijvoorbeeld voor elke reiziger of elk verblijf.</li>
+    <li>In de editor staat naast <em>Variabelen</em> het tabblad <strong>Afbeeldingen</strong>: de bibliotheek met logo's en plaatjes van jullie organisatie (PNG, JPEG, GIF of WebP, maximaal 2 MB).</li>
+  </ul>
+  <div class="callout">
+    <strong>Alle velden en trucs</strong>
+    <p>De volledige lijst met velden, herhaalde tabellen en valkuilen staat in de technische handleiding (<code>docs/handleiding.md</code>, hoofdstuk 7).</p>
+  </div>
+  <figure>
+    <img src="img/09-templates.jpg" alt="De lijst met Word-templates" width="800" height="378">
+    <figcaption><b>Templates.</b> Met het pijl-icoon download je het Word-document, met het oog bekijk je het.</figcaption>
+  </figure>
+</section>
+
+<section class="chapter cont" id="manager-email">
+  <div class="keep"><h3 style="margin-top:0">E-mailtemplates</h3>
+  <figure>
+    <img src="img/10-emailtemplates.jpg" alt="De lijst met e-mailtemplates met naam, omschrijving, onderwerp en datum" width="800" height="378">
+    <figcaption><b>E-mailtemplates.</b> Medewerkers kunnen de sjablonen bekijken en gebruiken; alleen managers maken, wijzigen en verwijderen ze.</figcaption>
+  </figure></div>
+  <p>Een e-mailtemplate versturen kan niet vanuit dit scherm: dat doe je vanuit een boeking of een prospect, zodat altijd vaststaat aan wie de mail gaat.</p>
+</section>
+
+<section class="chapter cont" id="manager-gebruikers">
+  <div class="keep"><h3 style="margin-top:0">Collega's beheren: personen en accounts</h3>
+  <p>Een collega heeft een <strong>persoon</strong> (naam) en een <strong>account</strong> (inloggegevens) met een <strong>rol</strong>. Jij mag de rollen <em>Medewerker</em> en <em>Manager</em> toewijzen; de rol van beheerder niet.</p>
+  <figure>
+    <img src="img/11-accounts.jpg" alt="De lijst met accounts met filterknoppen op rol en een legenda" width="800" height="378">
+    <figcaption><b>Accounts.</b> Filter met de knoppen <em>Alle</em>, <em>Admin</em>, <em>Manager</em> en <em>Medewerker</em>. <em>Actief</em> en <em>Vergrendeld</em> staan in de legenda.</figcaption>
+  </figure></div>
+  <ol class="steps">
+    <li><strong>Persoon aanmaken</strong>Ga naar <em>Personen</em> → <em>Nieuwe persoon</em>. Voornaam en achternaam zijn verplicht. Je maakt personen automatisch aan in je eigen organisatie.</li>
+    <li><strong>Account aanmaken</strong>Ga naar <em>Accounts</em> → <em>Nieuw account</em>: kies de persoon, een gebruikersnaam en een startwachtwoord. Zet <em>Wachtwoord moet gewijzigd worden</em> aan, dan kiest je collega bij de eerste keer inloggen zelf een nieuw wachtwoord.</li>
+    <li><strong>Rol toewijzen</strong>Open het account met het potlood en kies onder <em>Rollen</em> een rol (<em>Medewerker</em> of <em>Manager</em>) en <strong>Toevoegen</strong>.</li>
+  </ol>
+  <figure>
+    <img src="img/21-account.jpg" alt="Het scherm Account bewerken met de optie Vergrendeld en de rol MANAGER" width="800" height="552">
+    <figcaption><b>Een account bewerken.</b> Met <em>Vergrendeld</em> blokkeer je het inloggen, bijvoorbeeld als iemand de organisatie verlaat. De rol verwijder je met het rode min-icoon.</figcaption>
+  </figure>
+  <p>Een rolwijziging werkt pas bij de volgende keer inloggen van je collega (de sessie duurt een uur). Wil je dat het direct ingaat, laat hem dan uit- en weer inloggen. Verlies je 2FA-apparaat? Een manager kan <em>2FA resetten</em> in het account.</p>
+</section>
+
+<section class="chapter cont" id="manager-huisstijl">
+  <div class="keep"><h3 style="margin-top:0">Huisstijl</h3>
+  <p>Met <strong>Huisstijl</strong> bepaal je de kleuren van RDS voor je hele organisatie: de balk, het actieve menu-item, de tabelkoppen en de knoppen. Je ziet het resultaat direct in het voorbeeld.</p>
+  <figure>
+    <img src="img/22-huisstijl.jpg" alt="Het scherm Huisstijl met kleurvelden en een voorbeeld" width="800" height="640">
+    <figcaption><b>Huisstijl.</b> Vul kleuren in als hexcode, bijvoorbeeld <code>#1976d2</code>. Zonder huisstijl gebruikt RDS het standaard-groenblauw.</figcaption>
+  </figure></div>
+  <ul>
+    <li><strong>Primaire kleur:</strong> de hoofdkleur (balk, actieve onderdelen).</li>
+    <li><strong>Accentkleur:</strong> de tweede kleur voor details.</li>
+    <li><strong>Kaart-titel kleur:</strong> de kleur van de koppen in de kaarten.</li>
+    <li><strong>Logo URL:</strong> het internetadres van je logo (maximaal 500 tekens).</li>
+  </ul>
+</section>
+
+<!-- ====================== 10 KLANT ====================== -->
+<section class="chapter" id="klant">
+  <h2>10. Wat ziet de klant?</h2>
+  <p>De klant heeft een eigen pagina, het <strong>klantportaal</strong>. Daar ziet hij alleen zijn eigen boeking, zonder te klikken: de reis in één oogopslag, zijn verblijven en activiteiten, de betalingen en de <em>Berichten en documenten</em> die jij hebt klaargezet.</p>
+  <figure>
+    <img src="img/25-klantportaal.jpg" alt="Het klantportaal met reisoverzicht, verblijven, activiteiten, betalingen en berichten en documenten" width="800" height="938">
+    <figcaption><b>Het klantportaal</b> (voorbeeld met fictieve gegevens). Wat jij in RDS aan de boeking toevoegt, verschijnt hier.</figcaption>
+  </figure>
+  <div class="keep"><h3>Wat bepaalt wat de klant ziet?</h3>
+  <table>
+    <thead><tr><th>Onderdeel</th><th>De klant ziet het als...</th></tr></thead>
+    <tbody>
+      <tr><td>Reisgegevens, verblijven, activiteiten</td><td>je ze in de boeking hebt toegevoegd</td></tr>
+      <tr><td>Documenten</td><td>bij het document <em>Zichtbaar in het boekerportaal</em> aanstaat</td></tr>
+      <tr><td>E-mails</td><td>je ze vanuit de boeking aan de hoofdboeker hebt verstuurd (alle mails, de klant heeft ze immers zelf ook ontvangen)</td></tr>
+      <tr><td>Betalingen</td><td>je ze bij de boeking hebt toegevoegd; de klant kan een openstaande betaling meteen betalen via Mollie</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>De klant kan niets wijzigen; hij kan alleen <strong>betalen</strong> en <strong>documenten downloaden</strong>.</li>
+    <li>De klant logt in met zijn e-mailadres, het boekingsnummer en een eenmalige code.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Let op: de inlogcode voor klanten</strong>
+    <p>De eenmalige code wordt op dit moment nog niet per e-mail naar de klant gestuurd (de koppeling is nog niet gelegd). Klanten kunnen daarom nog niet zelfstandig inloggen. Vraag het je beheerder wanneer dit is ingericht.</p>
+  </div>
+</section>
+
+<!-- ====================== 11 WIE MAG WAT ====================== -->
+<section class="chapter" id="wie-mag-wat">
+  <h2>11. Wie mag wat?</h2>
+  <p class="lead-in">Wat je mag, hangt af van je rol. RDS verbergt knoppen en menu-items waar je geen recht op hebt. Dit overzicht laat het verschil zien tussen medewerker en manager:</p>
+  <table>
+    <thead><tr><th>Onderdeel</th><th class="c"><span class="role emp">Medewerker</span></th><th class="c"><span class="role mgr">Manager</span></th></tr></thead>
+    <tbody>
+      <tr><td>Boekingen, boekers, prospects en reizigers aanmaken, bekijken, wijzigen en verwijderen</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>Verblijven en activiteiten aan een boeking toevoegen</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>Documenten maken, uploaden en zichtbaarheid zetten</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>E-mail versturen en opnieuw versturen</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>Betalingen vastleggen en bekijken</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>Betaling aanpassen (zolang niet bij Mollie), corrigeren en naar andere boeking koppelen</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+      <tr><td>Accommodaties, leveranciers en activiteiten kiezen in een boeking</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>Accommodaties, leveranciers en activiteiten beheren (menu Organisatie beheer)</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+      <tr><td>E-mailtemplates bekijken</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>Templates (Word en e-mail) maken, wijzigen en verwijderen</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+      <tr><td>Personen en accounts beheren; rol Medewerker of Manager toewijzen</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+      <tr><td>Huisstijl van de organisatie</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+      <tr><td>Dashboard met cijfers</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+      <tr><td>Eigen gegevens, wachtwoord en 2FA</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    </tbody>
+  </table>
+  <p>Organisaties aanmaken, rollen en rechten beheren en de rol van beheerder toewijzen kan alleen een <strong>beheerder</strong> van het hele platform. Die rol hoort niet bij het dagelijkse boekingswerk en komt in deze handleiding niet verder aan bod.</p>
+  <div class="callout">
+    <strong>Je ziet alleen je eigen organisatie</strong>
+    <p>Gegevens van andere organisaties zijn voor niemand zichtbaar, ook niet als je het adres van een scherm kent.</p>
+  </div>
+</section>
+
+<!-- ====================== 12 HULP ====================== -->
+<section class="chapter" id="hulp">
+  <h2>12. Hulp bij problemen</h2>
+<div class="keep"><h3>Inloggen en je account</h3><table><thead><tr><th>Wat gebeurt er</th><th>Waarom</th><th>Wat je doet</th></tr></thead><tbody><tr><td>Een menu-item of knop ontbreekt</td><td>je rol heeft daar geen recht op</td><td>vraag een manager om het te regelen of om het voor je te doen</td></tr><tr><td>"Controleer gebruikersnaam en wachtwoord"</td><td>verkeerde gegevens, of je account is vergrendeld</td><td>controleer je wachtwoord; vraag een manager je account te ontgrendelen</td></tr><tr><td>Je moet steeds een nieuw wachtwoord kiezen</td><td>bij je account staat "Wachtwoord moet gewijzigd worden" aan</td><td>kies een nieuw wachtwoord; het vinkje vervalt daarna</td></tr><tr><td>Je 2FA-telefoon is kwijt</td><td>geen toegang tot je codes</td><td>gebruik een herstelcode; of laat een manager 2FA resetten</td></tr><tr><td>Na een rolwijziging verandert er niets</td><td>de wijziging werkt pas bij een nieuwe sessie</td><td>uitloggen en weer inloggen</td></tr></tbody></table></div>
+<div class="keep"><h3>Boekingen en documenten</h3><table><thead><tr><th>Wat gebeurt er</th><th>Waarom</th><th>Wat je doet</th></tr></thead><tbody><tr><td>"Kan niet worden verwijderd"</td><td>er hangen documenten, betalingen of verzonden e-mails aan; dit is bewust</td><td>laat het staan en zet de boeking op <em>Afgerond</em></td></tr><tr><td>Een verkeerd document staat in de boeking</td><td>documenten kunnen niet worden verwijderd</td><td>haal het vinkje <em>Zichtbaar in het boekerportaal</em> uit en maak zo nodig een nieuw document</td></tr><tr><td>Uploaden van een document wordt geweigerd</td><td>alleen PDF-bestanden zijn toegestaan</td><td>sla het bestand op als PDF</td></tr></tbody></table></div>
+<div class="keep"><h3>E-mail, betalingen en de klant</h3><table><thead><tr><th>Wat gebeurt er</th><th>Waarom</th><th>Wat je doet</th></tr></thead><tbody><tr><td>E-mail versturen mislukt</td><td>de hoofdboeker heeft geen e-mailadres, of jullie organisatie heeft nog geen afzenderadres</td><td>vul het e-mailadres in; vraag een beheerder het afzenderadres in te stellen</td></tr><tr><td>"Onbekende of lege placeholder"</td><td>een template met boekingsvelden is voor een prospect gebruikt</td><td>verstuur de mail vanuit een boeking, of gebruik een template zonder boekingsvelden</td></tr><tr><td>"Deze betaling bestaat al bij Mollie"</td><td>de betaling is al gestart en staat vast</td><td>gebruik een correctie of koppel haar om (manager)</td></tr><tr><td>De klant ziet een document niet</td><td>"Zichtbaar in het boekerportaal" staat uit</td><td>zet het vinkje aan via het potlood in de tijdlijn</td></tr><tr><td>De klant ziet de betaalstatus niet bijgewerkt</td><td>de melding van Mollie is er nog niet</td><td>even wachten; het klantportaal ververst zelf</td></tr></tbody></table></div>
+<div class="callout">
+    <strong>Komt het er niet uit?</strong>
+    <p>Noteer wat je deed, het boekingsnummer en de melding op je scherm (een screenshot helpt) en neem contact op met je manager of beheerder.</p>
+  </div>
+</section>
+
+<!-- ====================== 13 BEGRIPPEN ====================== -->
+<section class="chapter" id="begrippen">
+  <h2>13. Begrippen en statussen</h2>
+
+  <div class="keep"><h3>Statussen van een boeking</h3>
+  <table>
+    <thead><tr><th>Status</th><th>Gebruik hem als...</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip">Aanvraag</span></td><td>de klant interesse heeft in een reis en je het dossier opent</td></tr>
+      <tr><td><span class="chip">Offerte</span></td><td>je een voorstel hebt gestuurd</td></tr>
+      <tr><td><span class="chip">Boeking</span></td><td>de klant akkoord is en de reis vaststaat</td></tr>
+      <tr><td><span class="chip">Voorschot</span></td><td>het voorschot is betaald</td></tr>
+      <tr><td><span class="chip">Betaald</span></td><td>alles is betaald</td></tr>
+      <tr><td><span class="chip">Op reis</span></td><td>de klant onderweg is</td></tr>
+      <tr><td><span class="chip">Weer thuis</span></td><td>de klant terug is, er kan nog iets af te handelen zijn</td></tr>
+      <tr><td><span class="chip">Afgerond</span></td><td>alles is afgehandeld</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="keep"><h3>Begrippenlijst</h3>
+  <table>
+    <thead><tr><th>Begrip</th><th>Uitleg</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Boeking</strong></td><td>het reisdossier, met een boekingsnummer zoals <code>BK-2026-001</code></td></tr>
+      <tr><td><strong>Boeker / hoofdboeker</strong></td><td>de klant die de reis boekt; bij een boeking de hoofdboeker</td></tr>
+      <tr><td><strong>Prospect</strong></td><td>een potentiële klant die nog niet heeft geboekt</td></tr>
+      <tr><td><strong>Reiziger</strong></td><td>iemand die meereist op een boeking</td></tr>
+      <tr><td><strong>Accommodatie</strong></td><td>een verblijf, bij een boeking een regel met periode en prijs</td></tr>
+      <tr><td><strong>Leverancier</strong></td><td>de partij waarvan je een verblijf inkoopt</td></tr>
+      <tr><td><strong>Activiteit</strong></td><td>tour, excursie, ticket of transfer</td></tr>
+      <tr><td><strong>Concept-boeking</strong></td><td>een voorgevuld scherm voor een boeking die nog niet is opgeslagen</td></tr>
+      <tr><td><strong>Template</strong></td><td>sjabloon met invulvelden voor een Word-document of een e-mail</td></tr>
+      <tr><td><strong>Document</strong></td><td>een bestand bij een boeking, gemaakt uit een template of geüpload als PDF</td></tr>
+      <tr><td><strong>Klantportaal</strong></td><td>de eigen pagina van de klant met zijn reis, documenten en betalingen</td></tr>
+      <tr><td><strong>Mollie</strong></td><td>de online betaaldienst waarmee klanten betalen</td></tr>
+      <tr><td><strong>2FA</strong></td><td>een tweede controle bij het inloggen: een code uit een app</td></tr>
+      <tr><td><strong>Huisstijl</strong></td><td>de kleuren van je organisatie in RDS</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Deze handleiding beschrijft RDS zoals het op 21 oktober 2026 werkt. De technische kant (rechtenmodel, koppelingen, installatie) staat in <code>docs/handleiding.md</code>.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -156,7 +156,8 @@ Gebruik ALLEEN indien nodig:
 - Datamodel → docs/database-model.md
 - Werkafspraken (taal, git, tests, grenzen, data-/API-regels) → docs/working-agreements.md
 - Bouwen, testen, deployen → docs/build-test-deploy.md
-- Gebruikershandleiding (alle functionaliteit, rollen & authorities, werkprocessen) → docs/handleiding.md
+- Technische handleiding (alle functionaliteit, rollen & authorities, werkprocessen) → docs/handleiding.md
+- Gebruikershandleiding voor medewerkers en managers (HTML, printklaar, met screenshots) → docs/gebruikershandleiding/index.html
 - Index van alle documentatie (start hier in een nieuwe sessie) → docs/README.md
 
 ---
