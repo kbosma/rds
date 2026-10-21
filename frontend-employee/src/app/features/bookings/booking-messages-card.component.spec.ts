@@ -30,11 +30,29 @@ describe('BookingMessagesCardComponent', () => {
 
   const rows = (el: HTMLElement) => Array.from(el.querySelectorAll('.timeline-row')) as HTMLElement[];
 
+  it('geeft de regels dezelfde om-en-om tint als de tabellen', async () => {
+    const { el } = await setup();
+    const [first, second, third] = rows(el);
+
+    expect(el.querySelector('ul.timeline')?.classList).toContain('zebra-rows');
+    expect(getComputedStyle(first).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(second).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(third).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  });
+
   it('toont alle soorten in één lijst met een pictogram per soort', async () => {
     const { el } = await setup();
 
     expect(rows(el).map((r) => r.dataset['kind'])).toEqual(['payment', 'email', 'document']);
     expect(rows(el).map((r) => r.querySelector('.kind-icon mat-icon')?.textContent?.trim())).toEqual(['credit_card', 'mail', 'description']);
+  });
+
+  it('toont het soort-pictogram zonder eigen achtergrond, zodat de regeltint erdoorheen blijft', async () => {
+    const { el } = await setup();
+
+    for (const icon of Array.from(el.querySelectorAll('.kind-icon'))) {
+      expect(getComputedStyle(icon).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    }
   });
 
   it('toont per soort de eigenschappen als vlakjes', async () => {
@@ -64,10 +82,12 @@ describe('BookingMessagesCardComponent', () => {
     expect(el.querySelector('.empty-text')).not.toBeNull();
   });
 
-  it('toont de Nieuw-knop alleen met e-mail- of documentrecht', async () => {
+  it('toont de Toevoegen-knop alleen met e-mail- of documentrecht', async () => {
     expect((await setup()).el.querySelector('.new-btn')).toBeNull();
     TestBed.resetTestingModule();
-    expect((await setup({ canSendEmail: true })).el.querySelector('.new-btn')).not.toBeNull();
+    const { el } = await setup({ canSendEmail: true });
+    expect(el.querySelector('.new-btn')).not.toBeNull();
+    expect(el.querySelector('.new-btn')?.classList).toContain('act-create');
   });
 
   it('meldt een klik op inzien met de betreffende regel', async () => {

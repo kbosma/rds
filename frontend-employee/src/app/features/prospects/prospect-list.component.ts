@@ -97,7 +97,7 @@ import { Booker } from '../../shared/models';
                                (view)="viewProspect(row)" (edit)="editProspect(row)" (remove)="deleteProspect(row)">
                 <!-- E-mail versturen kan alleen vanuit een boeking of een prospect, niet vanuit de e-mailtemplates. -->
                 @if (canSendEmail) {
-                  <button type="button" mat-icon-button color="primary" class="action-email"
+                  <button type="button" mat-icon-button class="action-email act-send"
                           [matTooltip]="'emailTemplates.sendEmailTitle' | translate"
                           [attr.aria-label]="'emailTemplates.sendEmailTitle' | translate"
                           (click)="$event.stopPropagation(); sendEmail(row)">

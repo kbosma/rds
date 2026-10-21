@@ -93,7 +93,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
           <mat-card-header>
             <mat-card-title>{{ 'accommodations.suppliers' | translate }}</mat-card-title>
             @if (canEditAddresses && !showSupplierSelect()) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
+              <button mat-stroked-button class="act-create card-header-btn"
                       (click)="startAddSupplier()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>
@@ -140,10 +140,10 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                     </div>
                     @if (canEditAddresses) {
                       <div class="address-actions">
-                        <a mat-icon-button color="primary" [routerLink]="'/suppliers/' + sup.supplierId">
+                        <a mat-icon-button class="act-info" [routerLink]="'/suppliers/' + sup.supplierId">
                           <mat-icon>open_in_new</mat-icon>
                         </a>
-                        <button mat-icon-button color="warn" (click)="unlinkSupplier(sup)">
+                        <button mat-icon-button class="act-delete" (click)="unlinkSupplier(sup)">
                           <mat-icon>link_off</mat-icon>
                         </button>
                       </div>
@@ -164,7 +164,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
           <mat-card-header>
             <mat-card-title>{{ 'accommodations.addresses' | translate }}</mat-card-title>
             @if (canEditAddresses && !showAddressForm()) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
+              <button mat-stroked-button class="act-create card-header-btn"
                       (click)="startAddAddress()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>
@@ -249,10 +249,10 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                     </div>
                     @if (canEditAddresses) {
                       <div class="address-actions">
-                        <button mat-icon-button color="primary" (click)="startEditAddress(addr)">
+                        <button mat-icon-button class="act-update" (click)="startEditAddress(addr)">
                           <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="deleteAddress(addr)">
+                        <button mat-icon-button class="act-delete" (click)="deleteAddress(addr)">
                           <mat-icon>delete</mat-icon>
                         </button>
                       </div>

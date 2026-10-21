@@ -312,6 +312,7 @@ describe('TemplateDialogComponent', () => {
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('.download-btn')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.download-btn').classList).toContain('act-info');
       expect(fixture.nativeElement.querySelector('.dropzone')).toBeNull();
     });
 

@@ -384,11 +384,23 @@ Zie §4.15 (Accounts). Een beheerder kan een account vergrendelen, een wachtwoor
 - **Werkgebied:** het geopende scherm.
 - **Lijsten** (Boekingen, Boekers, Prospects, Betalingen, Accommodaties, Leveranciers, Activiteiten, Templates, E-mailtemplates, Personen, Accounts, Organisaties, Rollen, Rechten) gebruiken allemaal hetzelfde grid met één kolom **Acties** met iconen. **Klikken op de hele regel doet niets**; alleen de iconen werken:
 
-| Icoon | Betekenis | Vereist |
-|---|---|---|
-| oog | **Inzien** (alleen lezen) | het `*_READ`-recht van de lijst |
-| potlood | **Bewerken** | het `*_UPDATE`-recht |
-| prullenbak | **Verwijderen** (altijd met bevestigingsvenster) | het `*_DELETE`-recht |
+| Icoon | Kleur | Betekenis | Vereist |
+|---|---|---|---|
+| oog | blauw | **Inzien** (alleen lezen): geen risico | het `*_READ`-recht van de lijst |
+| potlood | violet | **Bewerken**: middel risico, je wijzigt bestaande gegevens | het `*_UPDATE`-recht |
+| prullenbak | rood | **Verwijderen** (altijd met bevestigingsvenster): hoog risico | het `*_DELETE`-recht |
+
+De kleur van een icoon laat zien hoe riskant de actie is, zodat je het onderscheid ook ziet voordat je klikt. De kleuren zijn bewust rustig (met een grijze waas), zodat ze niet knallen. Dezelfde kleuren gelden voor de iconen én voor de knoppen met een rand in de kaarten (zoals *Bewerken*, *Toevoegen* en *Verwijderen* bij een boeking):
+
+| Kleur | Soort actie | Risico | Voorbeelden |
+|---|---|---|---|
+| blauw | lezen, openen, downloaden | geen | oog-icoon, template downloaden, een e-mail of document in het boekerportaal bekijken |
+| groen | toevoegen | laag | *Toevoegen* in een kaart, *nieuwe boeking* op een boekerregel |
+| violet | wijzigen | middel | potlood-icoon, *Bewerken*, een adres bewerken, *Naar andere boeking koppelen*, *Correctie registreren* |
+| oranje-rood | versturen naar buiten | hoog: niet terug te halen | mail-icoon in *Prospects*, *Opnieuw versturen* |
+| rood | verwijderen of ontkoppelen | hoog | prullenbak, *Verwijderen*, een adres of koppeling verwijderen |
+
+Knoppen zonder zo'n actie (*Opslaan*, *Annuleren*, *Sluiten*) houden de kleur van de organisatie.
 
 Een icoon verschijnt alleen als je het recht hebt. Detailpagina's gaan in *alleen-inzien*-modus met `?readonly=true`: formulier uitgeschakeld, geen opslaan/verwijderen.
 
@@ -437,7 +449,7 @@ Titel: *Boeking bewerken — BK-…* (of *Boeking inzien* in alleen-lezen-modus)
 | **Activiteiten** | activiteit, datum en tijden, trefpunt, totaalprijs | toevoegen/bewerken/verwijderen |
 | **Reizigers** | naam, geslacht, geboortedatum, initialen | toevoegen/bewerken/verwijderen |
 | **Betalingen** (alleen met `PAYMENT_READ`) | omschrijving, bedrag, datum, status | **Nieuwe betaling** (`PAYMENT_CREATE`); oog-icoon opent het betalingsvenster met de statushistorie. In dat venster staan *Naar andere boeking koppelen* (`PAYMENT_RELINK`) en *Correctie registreren* (`PAYMENT_CORRECT`). Een betaling bewerken (potlood, `PAYMENT_UPDATE`) kan alleen in het scherm *Betalingen*, en alleen zolang de betaling nog niet bij Mollie bestaat. |
-| **Berichten en documenten** (tijdlijn; documenten met `DOCUMENT_READ`) | e-mails aan de hoofdboeker, documenten en betalingen, nieuwste bovenaan, met filter *Alles/E-mail/Documenten/Betalingen* | **Nieuw → E-mail aan hoofdboeker** (`EMAIL_SEND`), **Nieuw → Document** (`DOCUMENT_CREATE`) |
+| **Berichten en documenten** (tijdlijn; documenten met `DOCUMENT_READ`) | e-mails aan de hoofdboeker, documenten en betalingen, nieuwste bovenaan, met filter *Alles/E-mail/Documenten/Betalingen* | **Toevoegen → E-mail aan hoofdboeker** (`EMAIL_SEND`), **Toevoegen → Document** (`DOCUMENT_CREATE`) |
 
 **Boekingsregel (accommodatie) toevoegen.** Kies een accommodatie, de leverancier, *Van datum*, *Tot datum* en de prijs. Het systeem controleert de periodes:
 - *"{x} overlapt met {y}"* — overlap met een andere regel;
@@ -464,7 +476,7 @@ De tijdlijn in de boeking vervangt de oude losse documentenkaart.
 
 ### 4.6 Documenten toevoegen
 
-Documenten maak je **alleen vanuit een boeking**. **Nieuw → Document** opent *Document toevoegen* (`DOCUMENT_CREATE`) met twee onderdelen:
+Documenten maak je **alleen vanuit een boeking**. **Toevoegen → Document** opent *Document toevoegen* (`DOCUMENT_CREATE`) met twee onderdelen:
 
 | Onderdeel | Hoe |
 |---|---|
@@ -479,7 +491,7 @@ Opmerking: een document gaat als JSON (bytes) naar de server, niet als multipart
 
 E-mail versturen kan op **twee plekken**, en nergens anders. In het scherm *E-mailtemplates* maak en beheer je alleen templates.
 
-1. **Vanuit de boeking:** *Berichten en documenten → Nieuw → E-mail aan hoofdboeker* (`EMAIL_SEND`). De dialoog toont de boeking als vast doel; kies een template, bekijk eventueel met **Genereer voorbeeld** het resultaat en klik **Verstuur**. Bevestig *"E-mail versturen naar de hoofdboeker van boeking {nummer}?"*. De mail gaat naar het e-mailadres van de **hoofdboeker**. Heeft de boeking geen hoofdboeker of heeft die geen e-mailadres, dan wordt er niets verstuurd.
+1. **Vanuit de boeking:** *Berichten en documenten → Toevoegen → E-mail aan hoofdboeker* (`EMAIL_SEND`). De dialoog toont de boeking als vast doel; kies een template, bekijk eventueel met **Genereer voorbeeld** het resultaat en klik **Verstuur**. Bevestig *"E-mail versturen naar de hoofdboeker van boeking {nummer}?"*. De mail gaat naar het e-mailadres van de **hoofdboeker**. Heeft de boeking geen hoofdboeker of heeft die geen e-mailadres, dan wordt er niets verstuurd.
 2. **Vanuit de prospect:** in *Prospects* het **mail-icoon** op de regel (`EMAIL_SEND`). Dezelfde dialoog, nu met de prospect als vast doel; bevestig *"Weet je zeker dat je deze e-mail naar {naam} wilt versturen?"*.
 
 De afzender is het adres dat bij de organisatie is ingesteld (`email_from`, alleen ADMIN kan dat instellen). Is dat leeg, of ontbreekt het ontvangeradres, dan volgt een duidelijke foutmelding (`400`). Een mail **voor een boeking** wordt na succesvol versturen bewaard in de tijdlijn; een mail aan een losse prospect wordt niet bewaard. Is er lokaal geen SMTP-server ingesteld, dan wordt er niets echt verstuurd maar alleen gelogd (§12).
@@ -666,7 +678,7 @@ De statussen volgen **niet automatisch** op betalingen: de medewerker zet ze.
 2. Typ de tekst; voeg **variabelen** in (paneel *Variabelen*: klik of sleep), bv. boekingsnummer, hoofdboeker, totaalbedrag.
 3. Reizigers of verblijven in een tabel? Gebruik **Tabel → Herhaalde tabel** (§7.3).
 4. **Opslaan.**
-5. In een boeking: **Nieuw → Document → Genereren**, kies de template en **PDF** of **DOCX**, eventueel *Zichtbaar in het boekerportaal*, **Genereer**.
+5. In een boeking: **Toevoegen → Document → Genereren**, kies de template en **PDF** of **DOCX**, eventueel *Zichtbaar in het boekerportaal*, **Genereer**.
 6. Controleer het resultaat in de tijdlijn.
 
 ### 6.4 Een e-mailtemplate maken en versturen
@@ -674,7 +686,7 @@ De statussen volgen **niet automatisch** op betalingen: de medewerker zet ze.
 1. **E-mailtemplates → Nieuw template**: naam, onderwerp (bv. `Uw boeking ${booking.bookingNumber}`), body.
 2. Gebruik `${prospect.*}` voor de ontvanger en `${booking.*}` voor boekinggegevens (de laatste werken alleen als de mail *voor een boeking* wordt verstuurd).
 3. **Opslaan.** Het scherm *E-mailtemplates* is alleen voor het beheren van templates: daar kun je niet voorbeeld bekijken of versturen.
-4. Versturen: in een boeking *Nieuw → E-mail aan hoofdboeker*, of in *Prospects* het mail-icoon. Kies de template, klik **Genereer voorbeeld** en daarna **Verstuur** (`EMAIL_SEND`).
+4. Versturen: in een boeking *Toevoegen → E-mail aan hoofdboeker*, of in *Prospects* het mail-icoon. Kies de template, klik **Genereer voorbeeld** en daarna **Verstuur** (`EMAIL_SEND`).
 
 ### 6.5 Een klant toegang geven tot het portaal
 
@@ -1265,7 +1277,7 @@ Portaal (`frontend-booker`): `/login`, `/verify`, `/dashboard`, `/itinerary`, `/
 | `BOOKING_DELETE` | verwijderen van boekingen, boekers, reizigers, regels, activiteiten |
 | `ACCOMMODATION_*`, `SUPPLIER_*`, `ACTIVITY_*` | READ: kiezen in een boeking; C/U/D: menu en beheer; in de boeking snel aanmaken met `_CREATE` |
 | `DOCUMENT_READ` | documenten in de tijdlijn |
-| `DOCUMENT_CREATE` | *Nieuw → Document* (uploaden/genereren) |
+| `DOCUMENT_CREATE` | *Toevoegen → Document* (uploaden/genereren) |
 | `DOCUMENT_UPDATE` | zichtbaarheid in het portaal wijzigen |
 | `PAYMENT_READ` | menu Betalingen; kaart Betalingen in een boeking; oog-icoon |
 | `PAYMENT_CREATE` | *Nieuwe betaling* |

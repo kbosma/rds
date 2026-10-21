@@ -97,7 +97,7 @@ interface BookingMolliePaymentLink {
           <mat-card-header>
             <mat-card-title>{{ 'bookings.bookingDetails' | translate }}</mat-card-title>
             @if (!isNew() && can('BOOKING_UPDATE')) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
+              <button mat-stroked-button class="act-update card-header-btn"
                       (click)="openBookingEditDialog()">
                 <mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}
               </button>
@@ -144,7 +144,7 @@ interface BookingMolliePaymentLink {
           <mat-card-header>
             <mat-card-title>{{ 'bookings.accommodations' | translate }}</mat-card-title>
             @if (!readOnly()) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
+              <button mat-stroked-button class="act-create card-header-btn"
                       (click)="openBookingLineDialog()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>
@@ -196,7 +196,7 @@ interface BookingMolliePaymentLink {
           <mat-card-header>
             <mat-card-title>{{ 'bookingActivity.title' | translate }}</mat-card-title>
             @if (!readOnly()) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
+              <button mat-stroked-button class="act-create card-header-btn"
                       (click)="openBookingActivityDialog()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>
@@ -255,7 +255,7 @@ interface BookingMolliePaymentLink {
             <mat-card-header>
               <mat-card-title>{{ 'bookings.payments' | translate }}</mat-card-title>
               @if (!readOnly()) {
-                <button mat-stroked-button color="primary" class="card-header-btn"
+                <button mat-stroked-button class="act-create card-header-btn"
                         (click)="showNewPaymentForm.set(!showNewPaymentForm())">
                   <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
                 </button>
@@ -347,19 +347,19 @@ interface BookingMolliePaymentLink {
             <mat-card-title>{{ 'bookings.mainBooker' | translate }}</mat-card-title>
             <span class="card-header-actions">
               @if (booker() && !isNew() && can('BOOKING_UPDATE')) {
-                <button mat-stroked-button color="primary"
+                <button mat-stroked-button class="act-update"
                         (click)="openBookerDialog()">
                   <mat-icon>edit</mat-icon> {{ 'common.edit' | translate }}
                 </button>
               }
               @if (booker() && !isNew() && can('BOOKING_DELETE')) {
-                <button mat-stroked-button color="warn"
+                <button mat-stroked-button class="act-delete"
                         (click)="removeBooker()">
                   <mat-icon>delete</mat-icon> {{ 'common.delete' | translate }}
                 </button>
               }
               @if (!booker() && !isNew() && can('BOOKING_CREATE')) {
-                <button mat-stroked-button color="primary"
+                <button mat-stroked-button class="act-create"
                         (click)="openBookerSelectDialog()">
                   <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
                 </button>
@@ -401,7 +401,7 @@ interface BookingMolliePaymentLink {
           <mat-card-header>
             <mat-card-title>{{ 'bookings.travelers' | translate }}</mat-card-title>
             @if (can('BOOKING_CREATE')) {
-              <button mat-stroked-button color="primary" class="card-header-btn"
+              <button mat-stroked-button class="act-create card-header-btn"
                       (click)="openTravelerDialog()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>

@@ -150,7 +150,7 @@ interface PersonOption {
                     <span>{{ ar.role.description }}</span>
                   </div>
                   @if (!readOnly() && canManageRole(ar)) {
-                    <button mat-icon-button color="warn" (click)="removeRole(ar)">
+                    <button mat-icon-button class="act-delete" (click)="removeRole(ar)">
                       <mat-icon>remove_circle</mat-icon>
                     </button>
                   }

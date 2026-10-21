@@ -109,12 +109,12 @@ export interface MolliePaymentViewDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       @if (data.canRelink && data.currentBookingId) {
-        <button mat-stroked-button color="primary" class="relink-btn" (click)="openRelink()" [disabled]="loading()">
+        <button mat-stroked-button class="act-update relink-btn" (click)="openRelink()" [disabled]="loading()">
           <mat-icon>swap_horiz</mat-icon> {{ 'payments.relinkButton' | translate }}
         </button>
       }
       @if (data.canCorrect) {
-        <button mat-stroked-button color="primary" class="correct-btn" (click)="openCorrection()" [disabled]="loading()">
+        <button mat-stroked-button class="act-update correct-btn" (click)="openCorrection()" [disabled]="loading()">
           <mat-icon>edit_note</mat-icon> {{ 'payments.registerCorrection' | translate }}
         </button>
       }

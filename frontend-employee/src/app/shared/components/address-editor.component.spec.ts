@@ -34,6 +34,9 @@ describe('AddressEditorComponent', () => {
     expect(el('.add-address-btn')).toBeTruthy();
     expect(el('.edit-address-btn')).toBeTruthy();
     expect(el('.delete-address-btn')).toBeTruthy();
+    expect(el('.add-address-btn')!.classList).toContain('act-create');
+    expect(el('.edit-address-btn')!.classList).toContain('act-update');
+    expect(el('.delete-address-btn')!.classList).toContain('act-delete');
   });
 
   it('alleen-lezen: geen knoppen', () => {

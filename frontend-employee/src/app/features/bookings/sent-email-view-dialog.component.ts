@@ -36,7 +36,7 @@ export interface SentEmailViewDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       @if (data.canResend) {
-        <button mat-stroked-button color="primary" class="resend-btn" (click)="resend()" [disabled]="sending()">
+        <button mat-stroked-button class="act-send resend-btn" (click)="resend()" [disabled]="sending()">
           <mat-icon>forward_to_inbox</mat-icon> {{ 'messages.resend' | translate }}
         </button>
       }

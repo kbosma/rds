@@ -72,6 +72,7 @@ describe('Betalingsdialogen', () => {
       const allowed = await setup(of(entries), false, { canRelink: true, currentBookingId: 'b-1' });
       allowed.fixture.detectChanges();
       expect(allowed.fixture.nativeElement.querySelector('.relink-btn')).not.toBeNull();
+      expect(allowed.fixture.nativeElement.querySelector('.relink-btn').classList).toContain('act-update');
     });
 
     it('verbergt de herkoppelknop zonder canRelink', async () => {
@@ -164,6 +165,7 @@ describe('Betalingsdialogen', () => {
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('.correct-btn')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.correct-btn').classList).toContain('act-update');
     });
 
     it('bevat geen enkele knop om iets te wijzigen', async () => {

@@ -56,6 +56,25 @@ describe('MessagesCardComponent', () => {
     expect(rows(el)[2].querySelector('button.view')).toBeNull();
   });
 
+  it('kleurt lezen en downloaden als risicoloze acties (blauw)', () => {
+    const { el } = setup();
+
+    expect(rows(el)[0].querySelector('button.view')?.classList).toContain('act-info');
+    expect(rows(el)[2].querySelector('button.download')?.classList).toContain('act-info');
+  });
+
+  it('geeft de regels de zachte om-en-om tint (zebra-rows) en de soort-iconen geen eigen achtergrond', () => {
+    const { el } = setup();
+    const background = (e: Element) => getComputedStyle(e).backgroundColor;
+    const clear = 'rgba(0, 0, 0, 0)';
+
+    expect(el.querySelector('ul.list')?.classList).toContain('zebra-rows');
+    expect(rows(el).map((r) => background(r) === clear)).toEqual([true, false, true, false, true]);
+    for (const icon of Array.from(el.querySelectorAll('.row .kind'))) {
+      expect(background(icon)).toBe(clear);
+    }
+  });
+
   it('opent een mail in het berichtenvenster', () => {
     const { el, dialog } = setup();
     const open = spyOn(dialog, 'open');

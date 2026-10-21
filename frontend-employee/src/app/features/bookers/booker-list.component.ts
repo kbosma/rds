@@ -89,7 +89,7 @@ import { Booker, Booking } from '../../shared/models';
               <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
                                (view)="viewBooker(row)" (edit)="editBooker(row)" (remove)="deleteBooker(row)">
                 @if (canCreateBooking) {
-                  <button type="button" mat-icon-button color="primary" class="action-new-booking"
+                  <button type="button" mat-icon-button class="action-new-booking act-create"
                           [matTooltip]="'bookers.newBookingForBooker' | translate"
                           [attr.aria-label]="'bookers.newBookingForBooker' | translate"
                           (click)="createBookingForBooker(row)">
