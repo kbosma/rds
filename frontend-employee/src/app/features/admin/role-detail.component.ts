@@ -80,7 +80,7 @@ import { Authority } from '../../shared/models';
             <div class="list-item">
               <span>{{ a.description }}</span>
               @if (canRemove) {
-                <button mat-icon-button color="warn" type="button" class="remove-authority-btn" (click)="removeAuthority(a)">
+                <button mat-icon-button type="button" class="remove-authority-btn act-delete" (click)="removeAuthority(a)">
                   <mat-icon>link_off</mat-icon>
                 </button>
               }

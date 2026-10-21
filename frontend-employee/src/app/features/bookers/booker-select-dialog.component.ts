@@ -47,7 +47,7 @@ import { BookerDialogComponent } from './booker-dialog.component';
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       @if (canCreate) {
-        <button mat-stroked-button color="primary" class="new-booker-btn" (click)="createNew()">
+        <button mat-stroked-button class="act-create new-booker-btn" (click)="createNew()">
           <mat-icon>add</mat-icon> {{ 'bookers.newBooker' | translate }}
         </button>
       }

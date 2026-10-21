@@ -88,7 +88,7 @@ import { TemplateDialogComponent } from './template-dialog.component';
               <app-row-actions [canView]="canView" [canEdit]="canEdit" [canDelete]="canDelete"
                                (view)="viewTemplate(tpl)" (edit)="openDialog(tpl)" (remove)="confirmDelete(tpl)">
                 @if (canView) {
-                  <button type="button" mat-icon-button color="primary" class="action-download"
+                  <button type="button" mat-icon-button class="action-download act-info"
                           [matTooltip]="'templates.download' | translate"
                           [attr.aria-label]="'templates.download' | translate"
                           (click)="download(tpl)">

@@ -22,7 +22,7 @@ import { Address } from '../models';
     <div class="header">
       <h3>{{ 'addressEditor.title' | translate }}</h3>
       @if (canManage() && !showForm()) {
-        <button mat-stroked-button color="primary" type="button" class="add-address-btn" (click)="startAdd()">
+        <button mat-stroked-button type="button" class="act-create add-address-btn" (click)="startAdd()">
           <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
         </button>
       }
@@ -89,8 +89,8 @@ import { Address } from '../models';
         </div>
         @if (canManage()) {
           <div class="item-actions">
-            <button mat-icon-button color="primary" type="button" class="edit-address-btn" (click)="startEdit(address)"><mat-icon>edit</mat-icon></button>
-            <button mat-icon-button color="warn" type="button" class="delete-address-btn" (click)="remove.emit(address)"><mat-icon>delete</mat-icon></button>
+            <button mat-icon-button type="button" class="edit-address-btn act-update" (click)="startEdit(address)"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button type="button" class="delete-address-btn act-delete" (click)="remove.emit(address)"><mat-icon>delete</mat-icon></button>
           </div>
         }
       </div>

@@ -49,6 +49,12 @@ describe('SentEmailViewDialogComponent', () => {
     expect(el.querySelector('.resend-btn')).toBeNull();
   });
 
+  it('kleurt opnieuw versturen als een actie naar buiten (oranje-rood)', async () => {
+    const { el } = await setup();
+
+    expect(el.querySelector('.resend-btn')?.classList).toContain('act-send');
+  });
+
   it('verstuurt opnieuw en sluit met true', async () => {
     const { component, service, dialogRef } = await setup();
 

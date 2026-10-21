@@ -19,7 +19,7 @@ De precieze rechten staan in [security.md](security.md) (rollen → authorities)
 
 ### Boekingen (`frontend-employee` → *Boekingen*)
 - Lijst en detailscherm per boeking: boekingsnummer, **status** (`aanvraag → offerte → boeking → voorschot → betaald → opreis → weerthuis → afgerond`), periode en totaalbedrag, **hoofdboeker**, **reizigers**, **boekingsregels** (accommodatie + leverancier + periode + prijs), **boekingsactiviteiten**, **documenten**, **betalingen**.
-- Acties in het detail: documenten uploaden of **genereren** uit een Word-template (docx of pdf), een Mollie-betaling aanmaken, **e-mail versturen** naar de hoofdboeker (*Nieuw → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten*).
+- Acties in het detail: documenten uploaden of **genereren** uit een Word-template (docx of pdf), een Mollie-betaling aanmaken, **e-mail versturen** naar de hoofdboeker (*Toevoegen → E-mail aan hoofdboeker* in de tijdlijn *Berichten en documenten*).
 - **Concept-boeking:** vanuit een boeker/prospect een nieuwe boeking starten (`/bookings/new?bookerId=…`). Het scherm is voorgevuld, maar er wordt **niets opgeslagen** totdat de eerste onderdelen (reiziger, boekingsregel, …) worden toegevoegd (`ensureBookingPersisted`). Heeft de gekozen boeker al een lopende (niet afgeronde) boeking, dan volgt een waarschuwing.
 
 ### Bookers en prospects

@@ -50,6 +50,7 @@ describe('BookerSelectDialogComponent', () => {
     const { fixture, component } = setup(true);
     dialogResult = booker('b-new', 'Nieuw', 'Persoon');
     expect(fixture.nativeElement.querySelector('.new-booker-btn')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.new-booker-btn').classList).toContain('act-create');
 
     component.createNew();
 

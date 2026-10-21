@@ -303,6 +303,24 @@ describe('BookingDetailComponent', () => {
     expect(openSpy).not.toHaveBeenCalled();
   }));
 
+  it('geeft de knoppen in de kaarten de kleur van hun functie: bewerken violet, toevoegen groen, verwijderen rood', fakeAsync(() => {
+    createComponent();
+    spyOn(component.authService, 'hasAuthority').and.returnValue(true);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const buttons = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button.mat-mdc-outlined-button'));
+    const withIcon = (icon: string) => buttons.filter(b => b.querySelector('mat-icon')?.textContent?.trim() === icon);
+
+    for (const [icon, kind] of [['edit', 'act-update'], ['add', 'act-create'], ['delete', 'act-delete']]) {
+      expect(withIcon(icon).length).withContext(icon).toBeGreaterThan(0);
+      for (const button of withIcon(icon)) {
+        expect(button.classList).withContext(icon).toContain(kind);
+      }
+    }
+  }));
+
   describe('alleen inzien (?readonly=true)', () => {
     it('is standaard uit', fakeAsync(() => {
       createComponent();

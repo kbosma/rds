@@ -96,7 +96,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
           <mat-card-header>
             <mat-card-title>{{ 'suppliers.addresses' | translate }}</mat-card-title>
             @if (canManage() && !showAddressForm()) {
-              <button mat-stroked-button color="primary" class="card-header-btn add-address-btn" (click)="startAddAddress()">
+              <button mat-stroked-button class="act-create card-header-btn add-address-btn" (click)="startAddAddress()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>
             }
@@ -163,8 +163,8 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
                 </div>
                 @if (canManage()) {
                   <div class="item-actions">
-                    <button mat-icon-button color="primary" class="edit-address-btn" (click)="startEditAddress(address)"><mat-icon>edit</mat-icon></button>
-                    <button mat-icon-button color="warn" class="delete-address-btn" (click)="deleteAddress(address)"><mat-icon>delete</mat-icon></button>
+                    <button mat-icon-button class="edit-address-btn act-update" (click)="startEditAddress(address)"><mat-icon>edit</mat-icon></button>
+                    <button mat-icon-button class="delete-address-btn act-delete" (click)="deleteAddress(address)"><mat-icon>delete</mat-icon></button>
                   </div>
                 }
               </div>
@@ -181,7 +181,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
           </mat-card-header>
           <mat-card-content>
             @if (canLinkAccommodations()) {
-              <button mat-stroked-button color="primary" type="button" class="new-accommodation-btn" (click)="createAccommodation()">
+              <button mat-stroked-button type="button" class="act-create new-accommodation-btn" (click)="createAccommodation()">
                 <mat-icon>add</mat-icon> {{ 'suppliers.newAccommodation' | translate }}
               </button>
             }
@@ -209,7 +209,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
                   <span class="muted">{{ acc.key }}</span>
                 </div>
                 @if (canLinkAccommodations()) {
-                  <button mat-icon-button color="warn" class="unlink-btn" (click)="unlinkAccommodation(acc)">
+                  <button mat-icon-button class="unlink-btn act-delete" (click)="unlinkAccommodation(acc)">
                     <mat-icon>link_off</mat-icon>
                   </button>
                 }

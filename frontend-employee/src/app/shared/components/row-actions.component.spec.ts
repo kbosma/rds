@@ -64,6 +64,29 @@ describe('RowActionsComponent', () => {
     expect(parentClick).not.toHaveBeenCalled();
   });
 
+  it('geeft elk icoon de kleur van zijn risico: inzien blauw, wijzigen violet, verwijderen rood', () => {
+    fixture.componentRef.setInput('canView', true);
+    fixture.componentRef.setInput('canEdit', true);
+    fixture.componentRef.setInput('canDelete', true);
+    fixture.detectChanges();
+    const color = (cls: string) => getComputedStyle(button(cls)!).color;
+    const token = (kind: string) => {
+      const probe = document.createElement('span');
+      probe.style.color = `var(--act-${kind})`;
+      document.body.appendChild(probe);
+      const value = getComputedStyle(probe).color;
+      probe.remove();
+      return value;
+    };
+
+    expect(button('action-view')!.classList).toContain('act-info');
+    expect(button('action-edit')!.classList).toContain('act-update');
+    expect(button('action-delete')!.classList).toContain('act-delete');
+    expect(color('action-view')).toBe(token('info'));
+    expect(color('action-edit')).toBe(token('update'));
+    expect(color('action-delete')).toBe(token('delete'));
+  });
+
   it('heeft toegankelijke labels (aria-label) op de iconen', () => {
     fixture.componentRef.setInput('canView', true);
     fixture.componentRef.setInput('canEdit', true);

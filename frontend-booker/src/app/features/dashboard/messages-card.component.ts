@@ -48,7 +48,7 @@ import { MessageDialogComponent } from './message-dialog.component';
         </div>
       }
 
-      <ul class="list">
+      <ul class="list zebra-rows">
         @for (item of store.visibleMessageItems(); track item.kind + item.id) {
           <li class="row" [attr.data-kind]="item.kind">
             <mat-icon class="kind" aria-hidden="true">{{ icon(item) }}</mat-icon>
@@ -65,12 +65,12 @@ import { MessageDialogComponent } from './message-dialog.component';
               </div>
             </div>
             @if (item.kind === 'email') {
-              <button mat-icon-button type="button" class="act view" (click)="open(item)"
+              <button mat-icon-button type="button" class="act view act-info" (click)="open(item)"
                       [attr.aria-label]="'dashboard.messages.view' | translate: { name: item.title }">
                 <mat-icon>visibility</mat-icon>
               </button>
             } @else {
-              <button mat-icon-button type="button" class="act download" (click)="store.download(item.document)"
+              <button mat-icon-button type="button" class="act download act-info" (click)="store.download(item.document)"
                       [attr.aria-label]="'dashboard.messages.download' | translate: { name: item.title }">
                 @if (store.downloadingId() === item.document.documentId) {
                   <mat-spinner diameter="20"></mat-spinner>
@@ -109,8 +109,8 @@ import { MessageDialogComponent } from './message-dialog.component';
     .chip .n { font-size: .85em; color: var(--ui-text-muted); }
     .chip.on .n { color: var(--ui-primary-strong); }
     .list { list-style: none; margin: 0; padding: 0; }
-    .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--ui-line); }
-    .row:first-child { border-top: 0; padding-top: 0; }
+    .row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-top: 1px solid var(--ui-line); }
+    .row:first-child { border-top: 0; }
     .kind { flex: none; color: var(--ui-text-muted); }
     .row[data-kind='document'] .kind { color: #c0392b; }
     .row[data-kind='email'] .kind { color: var(--theme-primary); }

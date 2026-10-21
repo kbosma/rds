@@ -70,7 +70,7 @@ import { TemplateImageItem } from '../models';
             <img [src]="image.url" [alt]="displayName(image)" draggable="false" loading="lazy" />
             <span class="name">{{ displayName(image) }}</span>
             @if (canDelete) {
-              <button type="button" mat-icon-button class="del" [disabled]="isLocked(image)"
+              <button type="button" mat-icon-button class="del act-delete" [disabled]="isLocked(image)"
                       [attr.aria-label]="'common.delete' | translate"
                       (click)="$event.stopPropagation(); remove(image)">
                 <mat-icon>delete</mat-icon>

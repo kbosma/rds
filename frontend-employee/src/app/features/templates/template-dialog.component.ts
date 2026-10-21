@@ -69,7 +69,7 @@ export interface TemplateDialogData {
         <app-template-body-editor [(ngModel)]="sourceHtml" [disabled]="readOnly" [variableGroups]="variableGroups"
                                   [repeatTables]="repeatTables"></app-template-body-editor>
       } @else if (readOnly) {
-        <button mat-stroked-button color="primary" class="download-btn" (click)="download()">
+        <button mat-stroked-button class="act-info download-btn" (click)="download()">
           <mat-icon>download</mat-icon> {{ 'templates.download' | translate }}
         </button>
       } @else {

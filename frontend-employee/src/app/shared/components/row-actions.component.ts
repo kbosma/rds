@@ -20,21 +20,21 @@ import { TranslatePipe } from '@ngx-translate/core';
     <div class="row-actions">
       <ng-content></ng-content>
       @if (canView()) {
-        <button type="button" mat-icon-button class="action-view"
+        <button type="button" mat-icon-button class="action-view act-info"
                 [matTooltip]="'common.view' | translate" [attr.aria-label]="'common.view' | translate"
                 (click)="$event.stopPropagation(); view.emit()">
           <mat-icon>visibility</mat-icon>
         </button>
       }
       @if (canEdit()) {
-        <button type="button" mat-icon-button color="primary" class="action-edit"
+        <button type="button" mat-icon-button class="action-edit act-update"
                 [matTooltip]="'common.edit' | translate" [attr.aria-label]="'common.edit' | translate"
                 (click)="$event.stopPropagation(); edit.emit()">
           <mat-icon>edit</mat-icon>
         </button>
       }
       @if (canDelete()) {
-        <button type="button" mat-icon-button color="warn" class="action-delete"
+        <button type="button" mat-icon-button class="action-delete act-delete"
                 [matTooltip]="'common.delete' | translate" [attr.aria-label]="'common.delete' | translate"
                 (click)="$event.stopPropagation(); remove.emit()">
           <mat-icon>delete</mat-icon>

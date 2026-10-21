@@ -1,4 +1,5 @@
 /* Globale stijlen en gedeeld design (compact, kleurrijk). Zie docs/frontend.md#design. */
+@use 'sass:color';
 
 :root {
   /* Kleuren per organisatie (ThemeService overschrijft primary/accent/card-title). */
@@ -11,7 +12,7 @@
   --ui-text-muted: #5d7a85;
   --ui-line: #e1ebee;
   --ui-canvas: #f3f7f8;
-  --ui-primary-faint: color-mix(in srgb, var(--theme-primary) 8%, white);
+  --ui-primary-faint: color-mix(in srgb, var(--theme-primary) 5%, white); /* om-en-om rij: bewust zacht, lichter dan de kop */
   --ui-primary-soft: color-mix(in srgb, var(--theme-primary) 12%, white);
   --ui-primary-hover: color-mix(in srgb, var(--theme-primary) 18%, white);
   --ui-primary-strong: color-mix(in srgb, var(--theme-primary) 70%, black);
@@ -124,10 +125,58 @@ mat-card-title, .mat-mdc-card-title {
 .mat-mdc-table .mat-mdc-row:hover {
   background: var(--ui-primary-hover);
 }
+/* Dezelfde om-en-om tint en hover voor lijsten die geen tabel zijn (bv. de tijdlijn Berichten en documenten):
+   zet `zebra-rows` op de lijst; de directe kinderen zijn de regels. */
+.zebra-rows > :nth-child(even) {
+  background: var(--ui-primary-faint);
+}
+.zebra-rows > :hover {
+  background: var(--ui-primary-hover);
+}
 /* Acties-iconen in een cel (bewerken, verwijderen, ...) staan altijd naast elkaar op één regel, ook in een smalle kolom. */
 .mat-mdc-cell:has(> button[mat-icon-button]) {
   white-space: nowrap;
 }
 .mat-mdc-paginator {
   background: transparent;
+}
+
+/* Actie-kleuren: de kleur zegt hoe riskant de actie is, zodat je een icoon of knop herkent voordat je leest of klikt.
+   Het pictogram en de tekst blijven de eigenlijke boodschap; kleur alleen is nooit genoeg.
+     act-info    lezen, openen, downloaden   blauw         geen risico: er verandert niets
+     act-create  toevoegen, nieuw starten    groen         laag: voegt iets toe en is terug te draaien
+     act-update  wijzigen                    violet        middel: past bestaande gegevens aan
+     act-send    versturen naar buiten       oranje-rood   hoog: gaat de deur uit en is niet terug te halen
+     act-delete  verwijderen, ontkoppelen    rood          hoog: haalt gegevens of koppelingen weg
+   Over de volle kleuren ligt een grijze waas ($act-haze), zodat iconen en knoppen niet knallen maar de volgorde
+   blauw → groen → violet → oranje-rood → rood goed te zien blijft. Meer waas = rustiger: verhoog $act-haze (0% = volle
+   kleur). Alle kleuren houden 4,5 : 1 op wit (WCAG 1.4.11 vraagt 3 : 1 voor bedieningselementen).
+   Klassen gelden voor icoon-knoppen (mat-icon-button) en tekstknoppen met rand (mat-stroked-button). */
+$act-haze: 35%;
+$act-haze-grey: #6b7280;
+$act-colors: (
+  info: #1565c0,
+  create: #2e7d32,
+  update: #7b4fb5,
+  send: #c2410c,
+  delete: #c62828,
+);
+
+:root {
+  @each $kind, $full in $act-colors {
+    --act-#{$kind}: #{color.mix($act-haze-grey, $full, $act-haze)};
+  }
+}
+@each $kind, $full in $act-colors {
+  .mat-mdc-icon-button.act-#{$kind} {
+    --mat-icon-button-icon-color: var(--act-#{$kind});
+    --mat-icon-button-state-layer-color: var(--act-#{$kind});
+    --mat-icon-button-ripple-color: color-mix(in srgb, var(--act-#{$kind}) 12%, transparent);
+  }
+  .mat-mdc-outlined-button.act-#{$kind} {
+    --mat-button-outlined-label-text-color: var(--act-#{$kind});
+    --mat-button-outlined-outline-color: color-mix(in srgb, var(--act-#{$kind}) 40%, transparent);
+    --mat-button-outlined-state-layer-color: var(--act-#{$kind});
+    --mat-button-outlined-ripple-color: color-mix(in srgb, var(--act-#{$kind}) 12%, transparent);
+  }
 }

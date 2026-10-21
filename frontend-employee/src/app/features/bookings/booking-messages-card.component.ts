@@ -28,8 +28,8 @@ type Filter = 'all' | TimelineKind;
       <mat-card-header>
         <mat-card-title>{{ 'messages.title' | translate }}</mat-card-title>
         @if (canSendEmail() || canAddDocument()) {
-          <button mat-stroked-button color="primary" class="card-header-btn new-btn" [matMenuTriggerFor]="newMenu">
-            <mat-icon>add</mat-icon> {{ 'messages.new' | translate }}
+          <button mat-stroked-button class="act-create card-header-btn new-btn" [matMenuTriggerFor]="newMenu">
+            <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
           </button>
           <mat-menu #newMenu="matMenu">
             @if (canSendEmail()) {
@@ -55,7 +55,7 @@ type Filter = 'all' | TimelineKind;
         </mat-button-toggle-group>
 
         @if (visible().length > 0) {
-          <ul class="timeline">
+          <ul class="timeline zebra-rows">
             @for (item of visible(); track item.kind + item.id) {
               <li class="timeline-row" [attr.data-kind]="item.kind">
                 <span class="kind-icon" [attr.data-kind]="item.kind">
@@ -110,9 +110,9 @@ type Filter = 'all' | TimelineKind;
     .messages-card mat-card-header { display: flex; justify-content: space-between; align-items: center; }
     .filters { margin-bottom: 8px; }
     .timeline { list-style: none; margin: 0; padding: 0; }
-    .timeline-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--ui-line); }
-    .kind-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none;
-      background: var(--ui-primary-soft); color: var(--ui-primary-strong); }
+    .timeline-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-top: 1px solid var(--ui-line); }
+    .kind-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex: none;
+      background: transparent; color: var(--ui-primary-strong); }
     .kind-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .what { flex: 1; min-width: 0; }
     .title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

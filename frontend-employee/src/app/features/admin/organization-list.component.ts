@@ -73,10 +73,10 @@ import { Organization } from '../../shared/models';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <button mat-icon-button color="primary" (click)="navigateToEdit(row)">
+              <button mat-icon-button class="act-update" (click)="navigateToEdit(row)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deleteOrganization(row)">
+              <button mat-icon-button class="act-delete" (click)="deleteOrganization(row)">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
