@@ -129,8 +129,8 @@ export class BookingMessagesCardComponent {
   readonly emails = input<SentEmail[]>([]);
   readonly documents = input<Document[]>([]);
   readonly payments = input<MolliePayment[]>([]);
-  /** Laatste status per betaling (id → lowercase status). */
-  readonly paymentStatus = input<Record<string, string>>({});
+  /** Laatste status per betaling (id → lowercase status); een betaling zonder statusregel staat er niet in. */
+  readonly paymentStatus = input<Record<string, string | undefined>>({});
   readonly canSendEmail = input(false);
   readonly canAddDocument = input(false);
   readonly canReadEmail = input(false);
