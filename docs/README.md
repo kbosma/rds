@@ -24,6 +24,7 @@
 | JWT, rollen, authorities, TOTP, tenant-isolatie, afscherming? | [security.md](security.md) |
 | Alle REST-endpoints met benodigde authority + voorbeelden? | [api-examples.md](api-examples.md) |
 | Booker-portal (klant) en OTP-login? | [bookerportal.md](bookerportal.md) |
+| Ontwerp en afwegingen van het dashboard in het boekerportaal (gebouwd)? | [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md) |
 | Betalingen, webhook, Mollie-flow? | [mollie.md](mollie.md) |
 | E-mailtemplates, versturen, SMTP, afbeeldingen in mail? | [email.md](email.md) |
 | Gedeelde template-editor, Word-templates (.docx), herhaalde tabellen? | [templates.md](templates.md) |
@@ -44,7 +45,7 @@
 | Rollen | `ADMIN` (systeembeheer), `MANAGER` (eigen organisatie, volledig), `EMPLOYEE` (eigen organisatie, beperkt) |
 | Templating | FreeMarker, afgeschermd; één model voor e-mail én Word (zie [templates.md](templates.md)) |
 | Betalingen | Mollie (webhook via NGINX op het publieke IP) |
-| Tests (stand 20-10-2026) | backend 697 (JUnit 5/Mockito/MockMvc), employee-frontend 556 specs (Jasmine/Karma, Firefox headless) |
+| Tests (stand 21-10-2026) | backend 718 (JUnit 5/Mockito/MockMvc), employee-frontend 556 specs, booker-frontend 158 specs (Jasmine/Karma, Firefox headless) |
 | Datum van deze documentatie | laatst bijgewerkt 15-10-2026 |
 
 ## Over deze map

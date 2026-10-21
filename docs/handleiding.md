@@ -277,7 +277,7 @@ Een klant heeft **geen account en geen rol**. Na een geslaagde OTP-login krijgt 
 
 | Authority | Wat het toestaat |
 |---|---|
-| `BOOKER_PORTAL_READ` | de `GET`-endpoints onder `/api/booker-portal/**` van de **eigen boeking**: reisschema, boekingsregels, boekingsactiviteiten, accommodaties, activiteiten, documenten (alleen zichtbare), betalingen en betaalstatussen |
+| `BOOKER_PORTAL_READ` | de `GET`-endpoints onder `/api/booker-portal/**` van de **eigen boeking**: overzicht (kerngegevens en huisstijl), reisschema, boekingsregels, boekingsactiviteiten, accommodaties, activiteiten, documenten (alleen zichtbare, en het bestand zelf), verzonden e-mails (lijst en inhoud), betalingen en betaalstatussen |
 | `BOOKER_PORTAL_UPDATE` | `POST /api/booker-portal/payments/pay/{molliePaymentId}`: een betaling starten |
 
 Een BOOKER-token werkt **niet** op `/api/bookings` e.d., en omgekeerd werkt een medewerkerstoken niet op de portal-endpoints. Elke portal-query is gebonden aan het `bookingId` uit het token; een betaling van een andere boeking wordt geweigerd.
@@ -576,7 +576,7 @@ In de editor staat naast *Variabelen* het tabblad **Afbeeldingen**, de bibliothe
 
 ## 5. Het boekerportaal (voor klanten)
 
-Het portaal (`/booker/`) is **alleen-lezen**, behalve het **betalen**. Elke ingelogde klant ziet uitsluitend de gegevens van de **eigen boeking**.
+Het portaal (`/booker/`) is **alleen-lezen**, behalve het **betalen** en het **downloaden van documenten**. Elke ingelogde klant ziet uitsluitend de gegevens van de **eigen boeking**.
 
 ### 5.1 Inloggen met een eenmalige code
 
@@ -587,30 +587,50 @@ Het portaal (`/booker/`) is **alleen-lezen**, behalve het **betalen**. Elke inge
 
 > **Let op (huidige stand):** de OTP-mail wordt nog **niet echt verstuurd**; `OtpEmailService` schrijft de code alleen in het serverlog. Zie §10. In een test lees je de code uit het backend-log.
 
-### 5.2 Schermen
+### 5.2 Het dashboard
 
-| Scherm | Inhoud |
+Na het inloggen ziet u **één pagina met alles van uw boeking**; u hoeft nergens op te klikken om iets te zien. Er zijn geen tabbladen meer. De pagina neemt de **kleuren en het logo van de organisatie** over en past zich aan uw scherm aan (§5.5).
+
+| Kaart | Wat u ziet |
 |---|---|
-| **Overzicht** (*Mijn Boeking*) | boeking-ID en vier snelkoppelingen: Reisschema, Documenten, Activiteiten, Betalingen |
-| **Reisschema** | de volledige planning: verblijven (check-in, check-out, aantal nachten, *doorlopend verblijf*) en activiteiten (tour/excursie/ticket/transfer, *hele dag*), op volgorde |
-| **Documenten** | de documenten die de medewerker **zichtbaar heeft gemaakt**, met naam en datum |
-| **Accommodaties** | de verblijven van de boeking met check-in, check-out en nachten |
-| **Activiteiten** | activiteit, periode, trefpunt, totaalprijs |
-| **Betalingen** | tegels **Totaal**, **Betaald**, **Openstaand**; per betaling omschrijving, bedrag, status, datum en een uitklapbare **statushistorie**; knop **Betalen** |
+| **Kop** | *Hallo {voornaam}*, de periode en het aantal nachten, uw boekingsnummer, het aantal reizigers met hun voornamen, een **statusbalk** met de voortgang van uw boeking (aanvraag tot afgerond), en rechts de **aftelling** (*234 dagen tot vertrek*) of, tijdens de reis, *Dag 9 van 15, nog 6 nachten* |
+| **Betaalbalk** (alleen telefoon) | wat er openstaat met een knop **Betaal nu**; staat er niets open, dan verdwijnt de balk |
+| **Wat komt eraan** | voor de reis: de eerstvolgende stap (bijv. *Check-in Villa Marina, zaterdag 12 juni, over 234 dagen*) en wat daarna komt. Tijdens de reis heet de kaart *Nu en straks*: wat nu bezig is, wat hierna komt en wat daarna. Na de reis staat er een bedankje |
+| **Uw reis in één oogopslag** | de tijdlijn: een **balk per verblijf** over de dagen, een **genummerd punt per activiteit**, en vandaag gemarkeerd. Op een smal scherm staat dezelfde informatie als **agenda per dag** (check-in, activiteiten met tijd en trefpunt, check-out), met een gekleurde rand per verblijf |
+| **Betalingen** | een cirkel met het percentage betaald, **Totaal**, **Betaald** en **Openstaand**, een regel per betaling met status (tekst, pictogram en kleur) en, bij een betaalde betaling, wanneer die is betaald; een knop **Betaal …** bij een betaling die nog openstaat |
+| **Verblijven** | een kaart per verblijf: naam, leverancier, periode en aantal nachten (op de telefoon om langs te zwiepen) |
+| **Activiteiten** | genummerd zoals de punten in de tijdlijn: naam, dag, tijd, trefpunt en soort (tour, excursie, ticket, transfer) |
+| **Berichten en documenten** | in één lijst, nieuwste bovenaan: de **e-mails** die de organisatie u heeft gestuurd (onderwerp, datum, afzender; *opnieuw verstuurd* als een medewerker ze nog eens heeft gestuurd) en de **documenten** die de organisatie zichtbaar heeft gemaakt (datum, grootte). Bij een e-mail opent het oog-icoon het bericht zoals u het ontving, bij een document bewaart de pijl het bestand. Een filter *Alles / E-mail / Documenten* verschijnt zodra er van beide soorten zijn; standaard staan de nieuwste zes regels er, de rest staat achter *Toon nog n*. Betalingen staan hier niet in |
 
-Let op: de documentenlijst toont naam en datum; er is in de huidige interface **geen downloadknop** (de API kent wel `GET /api/booker-portal/documents/{id}`).
+Elke kaart laadt los van de andere. Is er nog niets (bijvoorbeeld nog geen activiteiten), dan staat er een korte uitleg; mislukt het laden, dan staat er *"Dit onderdeel kon niet worden geladen"* met **Opnieuw proberen**, en de rest van de pagina blijft werken.
 
-### 5.3 Betalen
+### 5.3 Betalen en downloaden
 
-1. Bij een betaling met status **Open**, **Mislukt** of **Verlopen** staat de knop **Betalen**.
-2. De portal vraagt de backend de betaling bij Mollie te starten; u gaat naar de **betaalpagina van Mollie**.
-3. Na het betalen keert u terug naar het portaal. De pagina **ververst zichzelf** (elke 2,5 seconden) tot de uitkomst bekend is; de status wordt via de Mollie-webhook bijgewerkt en u ziet *Betaald* zodra die binnen is.
+**Betalen**
+
+1. Bij een betaling met status **Open**, **Mislukt** of **Verlopen** staat de knop **Betaal …** (op de telefoon ook de betaalbalk bovenaan; staan er meerdere betalingen open, dan brengt die u naar de kaart *Betalingen*).
+2. De portal vraagt de backend de betaling bij Mollie te starten; u gaat naar de **betaalpagina van Mollie**. Mislukt het starten, dan staat er *"De betaling kon niet worden gestart. Probeer het opnieuw."*
+3. Na het betalen keert u terug naar het portaal. De pagina **ververst de betalingen zelf** (elke 2,5 seconden, maximaal ongeveer 30 seconden) tot de uitkomst bekend is; de status wordt via de Mollie-webhook bijgewerkt en u ziet *Betaald* zodra die binnen is.
 
 Statussen voor de klant: Open, In behandeling, Geautoriseerd, Betaald, Mislukt, Geannuleerd, Verlopen.
 
+**Downloaden:** de pijl achter een document bewaart het bestand onder de naam van het document. Mislukt dat, dan staat er *"Het document kon niet worden gedownload. Probeer het opnieuw."*
+
+**Een e-mail lezen:** het oog-icoon opent een venster met onderwerp, afzender, verzenddatum en de mail zoals verstuurd. Dat venster toont de inhoud veilig afgeschermd (er kunnen geen scripts in draaien). Lukt het laden niet, dan kunt u het opnieuw proberen.
+
 ### 5.4 Taal en uitloggen
 
-Het portaal heeft een taalwisselaar (Nederlands/Engels) en **Uitloggen** in het menu. Het token (`rds_booker_token`) wordt na 1 uur ongeldig.
+Rechtsboven staan de taalwisselaar (Nederlands/Engels; ook datums en bedragen volgen de taal) en **Uitloggen**. Het token (`rds_booker_token`) wordt na 1 uur ongeldig.
+
+### 5.5 Op telefoon, tablet en computer
+
+| Scherm | Indeling |
+|---|---|
+| **Telefoon** (smaller dan 600 px) | één kolom in volgorde van urgentie: kop, betaalbalk, wat komt eraan, tijdlijn (als agenda), betalingen, verblijven, activiteiten, documenten |
+| **Tablet** (600 tot 999 px) | twee kolommen: wat komt eraan naast betalingen, daaronder de tijdlijn over de volle breedte, verblijven naast activiteiten, dan documenten |
+| **Computer** (1000 px en breder) | een brede kolom met tijdlijn, verblijven en activiteiten, en een smalle kolom met wat komt eraan, betalingen en documenten |
+
+De oude adressen (`/payments`, `/itinerary`, `/documents`, `/accommodations`, `/activities`) leiden naar het dashboard, zodat bladwijzers en de terugkeer van Mollie blijven werken.
 
 ---
 
@@ -818,7 +838,7 @@ Fouten komen terug als `{ "message": "…", "status": 400, "timestamp": "…" }`
 - **Enums zijn lowercase** in JSON; onbekende waarde → `400` met de toegestane waarden.
 - Datums `jjjj-mm-dd`, tijdstippen ISO, bedragen als getal (`70.00`).
 - Lijsten zijn tenant-gefilterd (ADMIN ziet alles).
-- Het totaal aantal endpoints: **165**, verdeeld over 39 controllers.
+- Het totaal aantal endpoints: **168**, verdeeld over 41 controllers.
 
 **Voorbeeld — inloggen en lezen**
 
@@ -1061,14 +1081,17 @@ curl -X POST "$BASE/api/email-templates/<id>/send?bookerId=<id>"    -H "Authoriz
 |---|---|---|---|
 | POST | `/api/booker-auth/request-otp` | – | OTP aanvragen |
 | POST | `/api/booker-auth/verify-otp` | – | OTP verifiëren; geeft een BOOKER-token |
+| GET | `/api/booker-portal/overview` | `BOOKER_PORTAL_READ` | Kerngegevens, reizigers en huisstijl voor het dashboard |
+| GET | `/api/booker-portal/messages` | `BOOKER_PORTAL_READ` | Verzonden e-mails aan de hoofdboeker, zonder inhoud |
+| GET | `/api/booker-portal/messages/{id}` | `BOOKER_PORTAL_READ` | Eén e-mail met de HTML zoals verstuurd |
 | GET | `/api/booker-portal/itinerary` | `BOOKER_PORTAL_READ` | Reisschema van de boeking |
 | GET | `/api/booker-portal/booking-lines` | `BOOKER_PORTAL_READ` | Lijst |
 | GET | `/api/booker-portal/booking-activities` | `BOOKER_PORTAL_READ` | Lijst |
 | GET | `/api/booker-portal/accommodations` | `BOOKER_PORTAL_READ` | Lijst |
 | GET | `/api/booker-portal/activities` | `BOOKER_PORTAL_READ` | Lijst |
-| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | Alleen documenten die zichtbaar zijn in het portaal |
-| GET | `/api/booker-portal/documents/{id}` | `BOOKER_PORTAL_READ` | Eén zichtbaar document van de eigen boeking |
-| GET | `/api/booker-portal/payments` | `BOOKER_PORTAL_READ` | Lijst |
+| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | Zichtbare documenten, zonder bytes (id, naam, type, grootte, datum) |
+| GET | `/api/booker-portal/documents/{id}/content` | `BOOKER_PORTAL_READ` | Het bestand als download; alleen een zichtbaar document van de eigen boeking |
+| GET | `/api/booker-portal/payments` | `BOOKER_PORTAL_READ` | Betalingen met de huidige status |
 | GET | `/api/booker-portal/payments/status-entries` | `BOOKER_PORTAL_READ` | Statushistorie van de betalingen |
 | POST | `/api/booker-portal/payments/pay/{molliePaymentId}` | `BOOKER_PORTAL_UPDATE` | Betaling bij Mollie starten; geeft de checkout-URL |
 
@@ -1102,7 +1125,6 @@ Eerlijke lijst van wat nu niet af of risicovol is. Volledige lijst: [open-items.
 | **Wachtwoordregel verschilt** | de interface eist minimaal 8 tekens, de server accepteert bij *wachtwoord wijzigen* minimaal 6. |
 | **Employee-dashboard** | is nog een plaatshouder. |
 | **Documenten zijn niet te verwijderen** | een verkeerd geüpload of gegenereerd document blijft staan; het kan alleen uit het klantportaal worden gehaald (*Zichtbaar in het boekerportaal* uit). |
-| **Portal-documenten** | worden getoond, maar er is nog geen downloadknop. |
 | **E-mail** | synchroon verzonden, geen wachtrij of herpoging, geen bijlagen, geen CC/BCC, geen tracking. |
 | **Token in browseropslag** | geen intrekking/refresh; een gestolen token is tot 1 uur geldig. |
 | **Rol↔authority is globaal** | een wijziging geldt voor alle organisaties tegelijk en werkt pas bij een nieuw token. |

@@ -7,7 +7,7 @@
 | Productie-pad (NGINX) | `/rds/` (build met `--base-href /rds/`) | `/booker/` |
 | Token | JWT `type=EMPLOYEE`, `localStorage` sleutel `rds_token` | JWT `type=BOOKER`, `localStorage` sleutel `rds_booker_token` |
 | Login | gebruikersnaam + wachtwoord (+ TOTP) | e-mailadres + boekingsnummer → OTP-code |
-| Omvang | 16 feature-mappen, 56 spec-bestanden | 7 schermen, 1 spec |
+| Omvang | 16 feature-mappen, 56 spec-bestanden | 1 dashboard-pagina met 8 kaarten, 2 inlogschermen, 19 spec-bestanden |
 | Taal | nl/en (`public/i18n/{nl,en}.json`) | nl/en |
 
 Gemeenschappelijk: **Angular 22**, TypeScript 6, standalone componenten (geen NgModules), RxJS 7.8, Angular Material 22 (+ CDK), `@ngx-translate/core` 18, `zone.js`. `frontend-employee` gebruikt daarnaast **TipTap 3** (WYSIWYG-editor).
@@ -128,7 +128,57 @@ Jasmine + Karma op **Firefox headless** (`karma.conf.js`). `translate-test.setup
 
 ## `frontend-booker`
 
-Klein en alleen-lezen (behalve betalen). `core/auth/booker-auth.{service,guard,interceptor}`; schermen: `otp-login` (aanvragen + verifiëren), `dashboard`, `itinerary`, `accommodations`, `activities`, `documents`, `payments`. De betaalstatus wordt na terugkeer van Mollie gepolld (auto-refresh). Backend-endpoints: `/api/booker-auth/*` en `/api/booker-portal/*`, zie [bookerportal.md](bookerportal.md).
+Eén **dashboard** met alles van de eigen boeking op één pagina, zonder te klikken om iets te zien (alleen betalen en downloaden zijn acties). Het ontwerp en de afwegingen staan in [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md); de API in [bookerportal.md](bookerportal.md).
+
+### Structuur (`src/app`)
+
+```
+core/
+  auth/      booker-auth.{service,guard,interceptor}                  (ongewijzigd)
+  i18n/      language.service, translate-loader
+  portal/
+    portal.service.ts     alle aanroepen van /api/booker-portal/**
+    portal.store.ts       signals + computed: fase, aftelling, tijdlijn, agenda, eerstvolgende, betaaltotalen, betalen, downloaden, betaalstatus verversen
+    trip-model.ts         zuivere rekenfuncties (geen Angular): fase, tijdlijn, agenda, eerstvolgende, betalingen
+    date-utils.ts         lokale datums (nooit new Date(tekst): dat verschuift een dag)
+    message-model.ts      e-mails en documenten in één lijst (nieuwste eerst), filter, "toon alle"
+    loadable.ts           één stuk gegevens met eigen laadtoestand (laden, klaar, fout)
+    apply-theme.ts        huisstijl van de organisatie op :root, alleen geldige hexkleuren
+    portal.tokens.ts      PORTAL_NOW, PORTAL_REDIRECT, PORTAL_SAVE_FILE (te vervangen in tests)
+features/
+  dashboard/ dashboard.component (raster + store), trip-hero, payment-alert, next-up, trip-timeline, stays, activities, payments-card, messages-card, message-dialog
+  layout/    smalle balk met taal en uitloggen (geen navigatie)
+  otp-login/ aanvragen en verifiëren van de code
+shared/
+  components/ section-card (titel + skeleton / fout / leeg / inhoud), event-title, language-switcher
+  models/     portal.models (spiegel van de portal-DTO's)
+testing/     portal-fixtures (vaste gegevens en een PortalService-spy voor specs)
+```
+
+### Indeling en responsive
+
+- De pagina is zelf de **container** (`container: page / inline-size`); kaarten kiezen hun indeling met `@container page (…)`, niet met de viewport.
+- Breekpunten: **telefoon < 600 px** (één kolom, in volgorde van urgentie, betaalbalk bovenaan, tijdlijn als verticale agenda, verblijven als zwiepbare kaarten), **tablet 600–999 px** (twee kolommen), **desktop ≥ 1000 px** (brede kolom met planning, smalle kolom met *wat komt eraan*, betalingen en documenten).
+- Op telefoon en tablet doen de kolomwrappers niet mee (`display: contents`) en bepaalt `grid-template-areas` de volgorde; op desktop zijn het echte kolommen. De HTML-volgorde is dus de leesvolgorde voor schermlezers.
+- De tijdlijn heeft **één model en twee weergaven** (balken met genummerde punten, en agenda); een container query toont de passende.
+- De store hoort bij de pagina (`providers: [PortalStore]` op `DashboardComponent`): een volgende klant op hetzelfde apparaat begint met een lege toestand.
+
+### Gedrag om te weten
+
+- **Fase** (voor, tijdens, na de reis) volgt uit de datums van de boeking, met terugval op de verblijven; niet uit de status.
+- **Berichten en documenten:** één lijst met de verzonden e-mails (`/messages`) en de vrijgegeven documenten, nieuwste bovenaan, met filter *Alles / E-mail / Documenten* (alleen als beide soorten bestaan) en maximaal zes regels tot *Toon nog n*. De lijst haalt alleen onderwerp en datum op; de inhoud van een mail komt pas bij het openen. Die staat in `MessageDialogComponent` in een `iframe` met `sandbox=""` (geen scripts, geen eigen herkomst) en `referrerpolicy="no-referrer"`. Mislukt één van de twee bronnen, dan toont de kaart wat er is met een melding en *Opnieuw proberen*; pas als beide mislukken is het een fout.
+- **Kaart-isolatie:** elke kaart heeft een eigen `Loadable`; een fout in één kaart toont *Opnieuw proberen* en breekt de rest niet. De planning (tijdlijn, *wat komt eraan*) hangt van `overview`, verblijven en activiteiten af en toont één gecombineerde toestand.
+- **Betaalstatus:** na `pay()` zet de store een vlag in `sessionStorage`. Bij terugkeer van Mollie ververst het dashboard de betalingen elke 2,5 s tot alles een eindstatus heeft (maximaal 13 keer); ook zolang een betaling `pending` of `authorized` is.
+- **Oude paden** (`/payments`, `/itinerary`, `/documents`, `/accommodations`, `/activities`, `/dashboard`) verwijzen naar `/`. Mollie stuurt de klant na het betalen naar `/payments` (backend: `app.mollie.urls.redirect`).
+- **Huisstijl:** `applyTheme` zet `--theme-primary`, `--theme-accent` en `--theme-card-title` uit `overview.organization` en herstelt de standaard bij weggaan; kleuren worden eerst op `#rrggbb` gecontroleerd.
+- **Toegankelijkheid:** één `h1` (de kop), een `h2` per kaart met `aria-labelledby`, status altijd met tekst en pictogram (nooit alleen kleur), tikdoelen van 44 px op de betaalknop, `prefers-reduced-motion`, `env(safe-area-inset-*)`.
+- **Datumnotatie** volgt de gekozen taal (`nl` of `en`); `nl` is geregistreerd in `app.config`, `en` is ingebouwd.
+
+### Tests
+
+Jasmine + Karma op **Firefox headless**, dezelfde opzet als `frontend-employee` (`karma.conf.js`, `translate-test.setup.spec.ts`, dat ook `nl` als locale registreert voor datums en bedragen). `npx ng test --watch=false --browsers=FirefoxHeadless` (met `MOZ_NO_REMOTE=1` als Firefox al open staat). De zuivere logica (`trip-model`, `date-utils`, `apply-theme`, `Loadable`) en de store (incl. betalen, downloaden en verversen met `fakeAsync`) hebben eigen specs; elke kaart heeft een spec voor inhoud, leeg, fout en acties. Gegevens komen uit `testing/portal-fixtures.ts`.
+
+Lokaal bekijken zonder backend: een eigen proxy-config (`ng serve --proxy-config <bestand>`) naar een stub van `/api/booker-portal/**`, en een token met een geldige `exp` in `localStorage` (`rds_booker_token`).
 
 ## Nieuw scherm toevoegen (checklist)
 

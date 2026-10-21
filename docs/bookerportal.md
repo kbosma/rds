@@ -1,6 +1,6 @@
 # Booker-portal (klanten, OTP-login)
 
-Externe klanten (bookers) loggen **zonder wachtwoord** in met een eenmalige code (OTP). Ze krijgen een beperkt JWT dat alleen toegang geeft tot de data van **hun eigen boeking** via `/api/booker-portal/**`. De frontend is `frontend-booker` (zie [frontend.md](frontend.md)).
+Externe klanten (bookers) loggen **zonder wachtwoord** in met een eenmalige code (OTP). Ze krijgen een beperkt JWT dat alleen toegang geeft tot de data van **hun eigen boeking** via `/api/booker-portal/**`. De frontend is `frontend-booker`: één **dashboard** met alles van de boeking op één pagina (zie [frontend.md](frontend.md); het ontwerp staat in [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md)).
 
 ## Loginflow
 
@@ -43,27 +43,40 @@ sequenceDiagram
 |---|---|---|---|
 | POST | `/api/booker-auth/request-otp` | publiek | OTP aanvragen |
 | POST | `/api/booker-auth/verify-otp` | publiek | OTP verifiëren → JWT |
-| GET | `/api/booker-portal/itinerary` | `BOOKER_PORTAL_READ` | reisschema van de boeking |
+| GET | `/api/booker-portal/overview` | `BOOKER_PORTAL_READ` | kerngegevens voor het dashboard: boekingsnummer, status, periode, totaalbedrag, voornaam van de boeker, voornamen van de reizigers, naam en huisstijl van de organisatie |
+| GET | `/api/booker-portal/itinerary` | `BOOKER_PORTAL_READ` | reisschema van de boeking (verblijven en activiteiten door elkaar; het dashboard gebruikt de twee lijsten hieronder) |
 | GET | `/api/booker-portal/booking-lines` | `BOOKER_PORTAL_READ` | boekingsregels (verblijven) |
 | GET | `/api/booker-portal/booking-activities` | `BOOKER_PORTAL_READ` | boekingsactiviteiten |
 | GET | `/api/booker-portal/accommodations` | `BOOKER_PORTAL_READ` | accommodaties van de boeking |
 | GET | `/api/booker-portal/activities` | `BOOKER_PORTAL_READ` | activiteiten van de boeking |
-| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | alleen de documenten van de boeking met `visibleInPortal = true` |
-| GET | `/api/booker-portal/documents/{id}` | `BOOKER_PORTAL_READ` | één document (alleen van de eigen boeking én zichtbaar in het portaal, anders 404) |
-| GET | `/api/booker-portal/payments` | `BOOKER_PORTAL_READ` | betalingen van de boeking |
-| GET | `/api/booker-portal/payments/status-entries` | `BOOKER_PORTAL_READ` | statushistorie (de klant ziet "Betaald" zodra de webhook binnen is) |
+| GET | `/api/booker-portal/documents` | `BOOKER_PORTAL_READ` | de documenten van de boeking met `visibleInPortal = true`, **zonder de bytes**: `documentId`, `displayname`, `mimeType`, `size`, `createdAt` |
+| GET | `/api/booker-portal/documents/{id}/content` | `BOOKER_PORTAL_READ` | het bestand als download (`Content-Disposition: attachment`); alleen van de eigen boeking én zichtbaar in het portaal, anders 404 |
+| GET | `/api/booker-portal/messages` | `BOOKER_PORTAL_READ` | de e-mails die via RDS aan de hoofdboeker van de eigen boeking zijn verstuurd (`sent_email`), nieuwste eerst, **zonder inhoud**: `messageId`, `subject`, `fromAddress`, `resent`, `createdAt` (geen ontvangersadres, medewerker of tenant) |
+| GET | `/api/booker-portal/messages/{id}` | `BOOKER_PORTAL_READ` | één mail met de HTML zoals verstuurd (`bodyHtml`); een mail van een andere boeking is 404 |
+| GET | `/api/booker-portal/payments` | `BOOKER_PORTAL_READ` | betalingen van de boeking met de **huidige status** al bepaald: `molliePaymentId`, `description`, `amount`, `currency`, `method`, `currentStatus`, `createdAt` |
+| GET | `/api/booker-portal/payments/status-entries` | `BOOKER_PORTAL_READ` | statushistorie: alleen `molliePaymentId`, `status`, `createdAt` (geen reden, correctie of naam van een medewerker) |
 | POST | `/api/booker-portal/payments/pay/{molliePaymentId}` | `BOOKER_PORTAL_UPDATE` | betaling bij Mollie starten → `checkoutUrl` |
 
-Ontwerpregels: alle antwoorden zijn **eigen, minimale DTO's** (geen entities of brede DTO's) en elke query is gebonden aan het `bookingId` uit de `BookerContext`; een `molliePaymentId` van een andere boeking wordt geweigerd. De betaalflow staat in [mollie.md](mollie.md).
+Ontwerpregels: alle antwoorden zijn **eigen, minimale DTO's** (geen entities of brede DTO's; geen `createdBy`, `tenantOrganization` of Mollie-gegevens) en elke query is gebonden aan het `bookingId` uit de `BookerContext`; een `molliePaymentId` of document van een andere boeking wordt geweigerd. Tests (`BookerPortal*ControllerTest`) controleren per endpoint dat er niets interns meekomt. De betaalflow staat in [mollie.md](mollie.md).
+
+## Het dashboard (frontend)
+
+Het scherm van de klant is één pagina; de klant hoeft nergens op te klikken om iets te zien. De kaarten (kop met aftelling of dag van de reis en voortgang van de boeking, *wat komt eraan / nu*, tijdlijn, betalingen, verblijven, activiteiten, en berichten en documenten) laden elk met een eigen laad-, leeg- en foutstand. De kaart *Berichten en documenten* toont de verzonden e-mails en de vrijgegeven documenten in één lijst; **alle** verzonden e-mails aan de hoofdboeker staan erin (de klant heeft ze immers ontvangen), betalingen niet. De indeling past zich aan de schermbreedte aan: telefoon (< 600 px) één kolom, tablet (600–999 px) twee kolommen, desktop (≥ 1000 px) een brede en een smalle kolom. Details in [frontend.md](frontend.md#frontend-booker) en [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md).
+
+- De **fase van de reis** (voor, tijdens, na) volgt uit de datums, niet uit de status; de status zet een medewerker handmatig.
+- De **huisstijl** van de organisatie (`primaryColor`, `accentColor`, `cardTitleColor`) komt uit `overview` en kleurt de hele pagina; zonder thema blijft de standaard-teal.
+- **Betalen:** de knop start `POST …/payments/pay/{id}` en stuurt de klant naar Mollie. Na terugkeer (Mollie stuurt naar `/payments`, dat naar het dashboard verwijst) ververst het dashboard de betalingen ±30 seconden, tot de webhook de nieuwe status heeft gezet.
 
 ## Package-structuur
 
 ```
 bookerportal.entity      Otp
-bookerportal.dto         OtpRequestDto, OtpVerifyDto, BookerLoginResponseDto, BookerPortalAccommodationDto, BookerPortalActivityDto, ItineraryItemDto
+bookerportal.dto         OtpRequestDto, OtpVerifyDto, BookerLoginResponseDto, BookerPortalAccommodationDto, BookerPortalActivityDto, ItineraryItemDto,
+                         Portal{Overview,Booking,Booker,Traveler,Organization,Document,DocumentContent,Message,MessageContent,Payment,PaymentStatus}Dto (records)
+bookerportal.mapper      PortalMapper (MapStruct: entities → minimale DTO's; enums als lowercase)
 bookerportal.repository  OtpRepository
-bookerportal.service     BookerAuthService, OtpEmailService, BookerPortalPaymentService
-bookerportal.controller  BookerAuthController, BookerPortal{Accommodations,Activities,BookingActivity,BookingLine,Document,Itinerary,Payment}Controller
+bookerportal.service     BookerAuthService, OtpEmailService, BookerPortalOverviewService, BookerPortalDocumentService, BookerPortalMessageService, BookerPortalPaymentService
+bookerportal.controller  BookerAuthController, BookerPortal{Overview,Accommodations,Activities,BookingActivity,BookingLine,Document,Itinerary,Message,Payment}Controller
 bookerportal.security    BookerContext
 ```
 
@@ -78,6 +91,7 @@ curl -X POST http://localhost:8666/rds/api/booker-auth/request-otp \
 curl -X POST http://localhost:8666/rds/api/booker-auth/verify-otp \
   -H "Content-Type: application/json" \
   -d '{"emailaddress":"klaas@example.com","bookingNumber":"BK-2026-001","code":"<code>"}'
+curl http://localhost:8666/rds/api/booker-portal/overview -H "Authorization: Bearer <booker-token>"
 curl http://localhost:8666/rds/api/booker-portal/documents -H "Authorization: Bearer <booker-token>"
 ```
 

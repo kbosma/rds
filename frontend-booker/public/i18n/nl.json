@@ -1,30 +1,13 @@
 {
   "common": {
-    "save": "Opslaan",
-    "cancel": "Annuleren",
-    "close": "Sluiten",
     "back": "Terug",
-    "search": "Zoeken",
-    "status": "Status",
-    "date": "Datum",
-    "amount": "Bedrag",
-    "description": "Omschrijving",
-    "total": "Totaal",
-    "paid": "Betaald",
-    "outstanding": "Openstaand",
-    "system": "Systeem"
+    "close": "Sluiten"
   },
   "app": {
     "title": "RDS",
     "subtitle": "Boekingsportaal"
   },
   "nav": {
-    "overview": "Overzicht",
-    "itinerary": "Reisschema",
-    "documents": "Documenten",
-    "accommodations": "Accommodaties",
-    "activities": "Activiteiten",
-    "payments": "Betalingen",
     "logout": "Uitloggen"
   },
   "auth": {
@@ -39,72 +22,117 @@
     "invalidCode": "Ongeldige of verlopen verificatiecode"
   },
   "dashboard": {
-    "title": "Mijn Boeking",
-    "bookingId": "Boeking ID",
-    "documents": "Documenten",
-    "viewDocuments": "Bekijk uw reisdocumenten",
-    "payments": "Betalingen",
-    "viewPayments": "Bekijk en betaal uw boeking",
-    "itinerary": "Reisschema",
-    "viewItinerary": "Bekijk uw volledige reisplanning",
-    "activities": "Activiteiten",
-    "viewActivities": "Bekijk uw geplande activiteiten"
-  },
-  "documents": {
-    "title": "Documenten",
-    "document": "Document",
-    "noDocuments": "Geen documenten beschikbaar."
-  },
-  "itinerary": {
-    "title": "Reisschema",
-    "subtitle": "Uw volledige reisplanning op een rij",
-    "noItems": "Er zijn nog geen items in uw reisschema.",
-    "accommodation": "Accommodatie",
-    "activity": "Activiteit",
-    "period": "Periode",
-    "accommodations": "Accommodaties",
-    "activities": "Activiteiten",
-    "allDay": "Hele dag",
-    "checkIn": "Check-in",
-    "checkOut": "Check-out",
-    "ongoing": "Doorlopend verblijf",
-    "nights": "{{count}} nachten",
-    "type_tour": "Tour",
-    "type_excursie": "Excursie",
-    "type_ticket": "Ticket",
-    "type_transfer": "Transfer"
-  },
-  "accommodations": {
-    "title": "Accommodaties",
-    "noAccommodations": "Er zijn geen accommodaties gevonden voor uw boeking.",
-    "checkIn": "Check-in",
-    "checkOut": "Check-out",
-    "nights": "nachten"
-  },
-  "activities": {
-    "title": "Activiteiten",
-    "activity": "Activiteit",
-    "period": "Periode",
-    "meetingPoint": "Trefpunt",
-    "totalPrice": "Totaalprijs",
-    "noActivities": "Geen activiteiten beschikbaar.",
-    "type_tour": "Tour",
-    "type_excursie": "Excursie",
-    "type_ticket": "Ticket",
-    "type_transfer": "Transfer"
-  },
-  "payments": {
-    "title": "Betalingen",
-    "noPayments": "Geen betalingen beschikbaar.",
-    "pay": "Betalen",
-    "statusHistory": "Status historie",
-    "noStatusHistory": "Geen status historie beschikbaar.",
-    "statusOpen": "Open",
-    "statusPending": "In behandeling",
-    "statusAuthorized": "Geautoriseerd",
-    "statusPaid": "Betaald",
-    "statusFailed": "Mislukt",
-    "statusCanceled": "Geannuleerd",
-    "statusExpired": "Verlopen"
+    "loading": "Uw boeking wordt geladen",
+    "heroError": "Uw boekingsgegevens konden niet worden geladen.",
+    "cardError": "Dit onderdeel kon niet worden geladen.",
+    "retry": "Opnieuw proberen",
+    "greeting": "Hallo {{name}}",
+    "greetingAnonymous": "Welkom",
+    "noDates": "Uw reisdata zijn nog niet bekend.",
+    "nightsOne": "{{count}} nacht",
+    "nightsOther": "{{count}} nachten",
+    "travelersOne": "{{count}} reiziger",
+    "travelersOther": "{{count}} reizigers",
+    "statusAria": "Status van uw boeking: {{status}}",
+    "status": {
+      "aanvraag": "Aanvraag",
+      "offerte": "Offerte",
+      "boeking": "Boeking",
+      "voorschot": "Voorschot",
+      "betaald": "Betaald",
+      "opreis": "Op reis",
+      "weerthuis": "Weer thuis",
+      "afgerond": "Afgerond"
+    },
+    "countdown": {
+      "dayOne": "dag tot vertrek",
+      "dayOther": "dagen tot vertrek",
+      "day": "Dag {{day}}",
+      "of": "van {{total}}",
+      "lastDay": "laatste dag",
+      "nightsLeftOne": "nog 1 nacht",
+      "nightsLeftOther": "nog {{count}} nachten",
+      "after": "Bedankt voor uw reis"
+    },
+    "alert": {
+      "outstanding": "Openstaand {{amount}}",
+      "pay": "Betaal nu"
+    },
+    "event": {
+      "checkin": "Check-in {{name}}",
+      "checkout": "Check-out {{name}}"
+    },
+    "nextUp": {
+      "title": "Wat komt eraan",
+      "titleDuring": "Nu en straks",
+      "first": "Eerstvolgende",
+      "now": "Nu",
+      "then": "Hierna",
+      "following": "Daarna",
+      "inDayOne": "Over 1 dag",
+      "inDaysOther": "Over {{count}} dagen",
+      "empty": "Er zijn nog geen onderdelen gepland.",
+      "afterText": "Fijn dat u met ons op reis was. Uw documenten en betalingen vindt u hieronder."
+    },
+    "timeline": {
+      "title": "Uw reis in één oogopslag",
+      "empty": "Er zijn nog geen verblijven of activiteiten gepland.",
+      "pinsHint": "De nummers verwijzen naar de activiteiten hieronder.",
+      "pinAria": "Activiteit {{number}}: {{name}}"
+    },
+    "stays": {
+      "title": "Verblijven",
+      "empty": "Er zijn nog geen verblijven toegevoegd."
+    },
+    "activities": {
+      "title": "Activiteiten",
+      "empty": "Er zijn nog geen activiteiten gepland."
+    },
+    "activityType": {
+      "tour": "Tour",
+      "excursie": "Excursie",
+      "ticket": "Ticket",
+      "transfer": "Transfer"
+    },
+    "payments": {
+      "title": "Betalingen",
+      "empty": "Er zijn nog geen betalingen.",
+      "total": "Totaal",
+      "paid": "Betaald",
+      "outstanding": "Openstaand",
+      "progressAria": "{{percent}} procent betaald",
+      "paidOn": "op {{date}}",
+      "pay": "Betaal {{amount}}",
+      "payError": "De betaling kon niet worden gestart. Probeer het opnieuw.",
+      "status": {
+        "open": "Open",
+        "pending": "In behandeling",
+        "authorized": "Geautoriseerd",
+        "paid": "Betaald",
+        "failed": "Mislukt",
+        "canceled": "Geannuleerd",
+        "expired": "Verlopen"
+      }
+    },
+    "messages": {
+      "title": "Berichten en documenten",
+      "empty": "Er zijn nog geen berichten of documenten.",
+      "filterAria": "Toon alles, alleen e-mails of alleen documenten",
+      "filter": {
+        "all": "Alles",
+        "email": "E-mail",
+        "document": "Documenten"
+      },
+      "showAll": "Toon nog {{count}}",
+      "showLess": "Toon minder",
+      "partialError": "Een deel kon niet worden geladen.",
+      "resent": "opnieuw verstuurd",
+      "view": "{{name}} lezen",
+      "download": "{{name}} downloaden",
+      "downloadError": "Het document kon niet worden gedownload. Probeer het opnieuw.",
+      "from": "Van",
+      "sentOn": "Verzonden op",
+      "loadError": "Het bericht kon niet worden geladen."
+    }
   }
 }

@@ -1,145 +1,99 @@
-import { Component, inject } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
-import { BookerAuthService } from '../../core/auth/booker-auth.service';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject } from '@angular/core';
+import { PortalStore } from '../../core/portal/portal.store';
+import { applyTheme } from '../../core/portal/apply-theme';
+import { ActivitiesComponent } from './activities.component';
+import { MessagesCardComponent } from './messages-card.component';
+import { NextUpComponent } from './next-up.component';
+import { PaymentAlertComponent } from './payment-alert.component';
+import { PaymentsCardComponent } from './payments-card.component';
+import { StaysComponent } from './stays.component';
+import { TripHeroComponent } from './trip-hero.component';
+import { TripTimelineComponent } from './trip-timeline.component';
 
+/**
+ * Het dashboard van het boekerportaal: alles van de eigen boeking op één pagina, zonder te hoeven klikken.
+ * De indeling hangt af van de breedte van de pagina zelf (container queries):
+ *  - telefoon (< 600 px): één kolom, in volgorde van urgentie;
+ *  - tablet (600–999 px): twee kolommen;
+ *  - desktop (≥ 1000 px): een brede kolom met de planning en een smalle met betalen, eerstvolgende en documenten.
+ * De volgorde in de HTML is de volgorde voor schermlezers en voor de telefoon; de rest regelt het raster.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, RouterLink, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [PortalStore],
+  imports: [
+    TripHeroComponent, PaymentAlertComponent, NextUpComponent, TripTimelineComponent,
+    PaymentsCardComponent, StaysComponent, ActivitiesComponent, MessagesCardComponent,
+  ],
   template: `
-    <h1>{{ 'dashboard.title' | translate }}</h1>
-
-    <div class="card-grid">
-      <mat-card class="info-card">
-        <mat-card-content class="info-content">
-          <mat-icon class="info-icon">book_online</mat-icon>
-          <div>
-            <div class="info-label">{{ 'dashboard.bookingId' | translate }}</div>
-            <div class="info-value">{{ auth.currentBooker()?.bookingId }}</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="action-card" routerLink="/itinerary">
-        <mat-card-content class="action-content">
-          <mat-icon class="action-icon">map</mat-icon>
-          <div>
-            <div class="action-title">{{ 'dashboard.itinerary' | translate }}</div>
-            <div class="action-sub">{{ 'dashboard.viewItinerary' | translate }}</div>
-          </div>
-          <mat-icon class="chevron">chevron_right</mat-icon>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="action-card" routerLink="/documents">
-        <mat-card-content class="action-content">
-          <mat-icon class="action-icon">description</mat-icon>
-          <div>
-            <div class="action-title">{{ 'dashboard.documents' | translate }}</div>
-            <div class="action-sub">{{ 'dashboard.viewDocuments' | translate }}</div>
-          </div>
-          <mat-icon class="chevron">chevron_right</mat-icon>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="action-card" routerLink="/activities">
-        <mat-card-content class="action-content">
-          <mat-icon class="action-icon">local_activity</mat-icon>
-          <div>
-            <div class="action-title">{{ 'dashboard.activities' | translate }}</div>
-            <div class="action-sub">{{ 'dashboard.viewActivities' | translate }}</div>
-          </div>
-          <mat-icon class="chevron">chevron_right</mat-icon>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="action-card" routerLink="/payments">
-        <mat-card-content class="action-content">
-          <mat-icon class="action-icon">payments</mat-icon>
-          <div>
-            <div class="action-title">{{ 'dashboard.payments' | translate }}</div>
-            <div class="action-sub">{{ 'dashboard.viewPayments' | translate }}</div>
-          </div>
-          <mat-icon class="chevron">chevron_right</mat-icon>
-        </mat-card-content>
-      </mat-card>
+    <div class="grid">
+      <app-trip-hero class="hero" />
+      <app-payment-alert class="alert" />
+      <div class="col main">
+        <app-trip-timeline class="timeline" />
+        <app-stays class="stays" />
+        <app-activities class="activities" />
+      </div>
+      <div class="col side">
+        <app-next-up class="next" />
+        <app-payments-card id="payments" class="payments" />
+        <app-messages-card class="messages" />
+      </div>
     </div>
   `,
   styles: [`
-    h1 {
-      font-size: 22px;
-      font-weight: 500;
-      margin-bottom: 20px;
+    :host { display: block; container: page / inline-size; }
+    /* Op telefoon en tablet doen de kolommen niet mee (display: contents): de kaarten staan dan als losse cellen in
+       het raster en het raster bepaalt de volgorde. Alleen op desktop zijn het echte kolommen. */
+    .col { display: contents; }
+    .grid {
+      display: grid; gap: 12px; font-size: 14px; line-height: 1.45;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "hero" "alert" "next" "timeline" "payments" "stays" "activities" "messages";
     }
-    .card-grid {
-      display: grid;
-      gap: 16px;
+    .hero { grid-area: hero; }
+    .alert { grid-area: alert; }
+    .next { grid-area: next; }
+    .timeline { grid-area: timeline; }
+    .payments { grid-area: payments; scroll-margin-top: 72px; }
+    .stays { grid-area: stays; }
+    .activities { grid-area: activities; }
+    .messages { grid-area: messages; }
+
+    @container page (min-width: 600px) {
+      .grid {
+        gap: 16px; font-size: 15px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas: "hero hero" "next payments" "timeline timeline" "stays activities" "messages messages";
+      }
+      .alert { display: none; }
     }
-    .info-card {
-      border-radius: 12px;
-      border-left: 4px solid var(--theme-primary);
-    }
-    .info-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 8px 0;
-    }
-    .info-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      color: var(--theme-primary);
-    }
-    .info-label {
-      font-size: 12px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .info-value {
-      font-size: 15px;
-      font-weight: 500;
-      margin-top: 2px;
-      word-break: break-all;
-    }
-    .action-card {
-      border-radius: 12px;
-      cursor: pointer;
-      transition: box-shadow 0.2s;
-    }
-    .action-card:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-    .action-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 8px 0;
-    }
-    .action-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      color: var(--theme-primary);
-    }
-    .action-title {
-      font-size: 16px;
-      font-weight: 500;
-    }
-    .action-sub {
-      font-size: 13px;
-      color: #888;
-    }
-    .chevron {
-      margin-left: auto;
-      color: #ccc;
+    @container page (min-width: 1000px) {
+      .grid {
+        gap: 20px; font-size: 16px; align-items: start;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        grid-template-areas: "hero hero" "main side";
+      }
+      .col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+      .main { grid-area: main; }
+      .side { grid-area: side; }
     }
   `],
 })
-export class DashboardComponent {
-  auth = inject(BookerAuthService);
+export class DashboardComponent implements OnInit {
+  private readonly store = inject(PortalStore);
+
+  constructor() {
+    // De huisstijl van de organisatie kleurt het hele dashboard; bij weggaan komen de standaardkleuren terug.
+    effect((onCleanup) => {
+      const undo = applyTheme(this.store.overview.data()?.organization ?? null);
+      onCleanup(undo);
+    });
+  }
+
+  ngOnInit(): void {
+    this.store.init();
+  }
 }

@@ -1,30 +1,13 @@
 {
   "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "close": "Close",
     "back": "Back",
-    "search": "Search",
-    "status": "Status",
-    "date": "Date",
-    "amount": "Amount",
-    "description": "Description",
-    "total": "Total",
-    "paid": "Paid",
-    "outstanding": "Outstanding",
-    "system": "System"
+    "close": "Close"
   },
   "app": {
     "title": "RDS",
-    "subtitle": "Booking Portal"
+    "subtitle": "Booking portal"
   },
   "nav": {
-    "overview": "Overview",
-    "itinerary": "Itinerary",
-    "documents": "Documents",
-    "accommodations": "Accommodations",
-    "activities": "Activities",
-    "payments": "Payments",
     "logout": "Log out"
   },
   "auth": {
@@ -32,79 +15,124 @@
     "emailAddress": "Email address",
     "bookingNumber": "Booking number",
     "requestCode": "Request verification code",
-    "codeSent": "Verification code has been sent to your email address",
+    "codeSent": "A verification code has been sent to your email address",
     "verifyInstruction": "Enter the 6-digit code you received by email",
     "verificationCode": "Verification code",
     "verify": "Verify",
     "invalidCode": "Invalid or expired verification code"
   },
   "dashboard": {
-    "title": "My Booking",
-    "bookingId": "Booking ID",
-    "documents": "Documents",
-    "viewDocuments": "View your travel documents",
-    "payments": "Payments",
-    "viewPayments": "View and pay your booking",
-    "itinerary": "Itinerary",
-    "viewItinerary": "View your complete travel schedule",
-    "activities": "Activities",
-    "viewActivities": "View your planned activities"
-  },
-  "documents": {
-    "title": "Documents",
-    "document": "Document",
-    "noDocuments": "No documents available."
-  },
-  "itinerary": {
-    "title": "Itinerary",
-    "subtitle": "Your complete travel schedule at a glance",
-    "noItems": "There are no items in your itinerary yet.",
-    "accommodation": "Accommodation",
-    "activity": "Activity",
-    "period": "Period",
-    "accommodations": "Accommodations",
-    "activities": "Activities",
-    "allDay": "All day",
-    "checkIn": "Check-in",
-    "checkOut": "Check-out",
-    "ongoing": "Ongoing stay",
-    "nights": "{{count}} nights",
-    "type_tour": "Tour",
-    "type_excursie": "Excursion",
-    "type_ticket": "Ticket",
-    "type_transfer": "Transfer"
-  },
-  "accommodations": {
-    "title": "Accommodations",
-    "noAccommodations": "No accommodations found for your booking.",
-    "checkIn": "Check-in",
-    "checkOut": "Check-out",
-    "nights": "nights"
-  },
-  "activities": {
-    "title": "Activities",
-    "activity": "Activity",
-    "period": "Period",
-    "meetingPoint": "Meeting point",
-    "totalPrice": "Total price",
-    "noActivities": "No activities available.",
-    "type_tour": "Tour",
-    "type_excursie": "Excursion",
-    "type_ticket": "Ticket",
-    "type_transfer": "Transfer"
-  },
-  "payments": {
-    "title": "Payments",
-    "noPayments": "No payments available.",
-    "pay": "Pay",
-    "statusHistory": "Status history",
-    "noStatusHistory": "No status history available.",
-    "statusOpen": "Open",
-    "statusPending": "Pending",
-    "statusAuthorized": "Authorized",
-    "statusPaid": "Paid",
-    "statusFailed": "Failed",
-    "statusCanceled": "Canceled",
-    "statusExpired": "Expired"
+    "loading": "Loading your booking",
+    "heroError": "Your booking details couldn't be loaded.",
+    "cardError": "This section couldn't be loaded.",
+    "retry": "Try again",
+    "greeting": "Hello {{name}}",
+    "greetingAnonymous": "Welcome",
+    "noDates": "Your travel dates aren't known yet.",
+    "nightsOne": "{{count}} night",
+    "nightsOther": "{{count}} nights",
+    "travelersOne": "{{count}} traveller",
+    "travelersOther": "{{count}} travellers",
+    "statusAria": "Status of your booking: {{status}}",
+    "status": {
+      "aanvraag": "Request",
+      "offerte": "Quote",
+      "boeking": "Booking",
+      "voorschot": "Deposit",
+      "betaald": "Paid",
+      "opreis": "On the road",
+      "weerthuis": "Back home",
+      "afgerond": "Completed"
+    },
+    "countdown": {
+      "dayOne": "day until departure",
+      "dayOther": "days until departure",
+      "day": "Day {{day}}",
+      "of": "of {{total}}",
+      "lastDay": "last day",
+      "nightsLeftOne": "1 night left",
+      "nightsLeftOther": "{{count}} nights left",
+      "after": "Thank you for travelling with us"
+    },
+    "alert": {
+      "outstanding": "Outstanding {{amount}}",
+      "pay": "Pay now"
+    },
+    "event": {
+      "checkin": "Check-in {{name}}",
+      "checkout": "Check-out {{name}}"
+    },
+    "nextUp": {
+      "title": "Coming up",
+      "titleDuring": "Now and next",
+      "first": "Up next",
+      "now": "Now",
+      "then": "Next",
+      "following": "After that",
+      "inDayOne": "In 1 day",
+      "inDaysOther": "In {{count}} days",
+      "empty": "Nothing has been planned yet.",
+      "afterText": "We're glad you travelled with us. Your documents and payments are below."
+    },
+    "timeline": {
+      "title": "Your trip at a glance",
+      "empty": "No stays or activities have been planned yet.",
+      "pinsHint": "The numbers refer to the activities below.",
+      "pinAria": "Activity {{number}}: {{name}}"
+    },
+    "stays": {
+      "title": "Stays",
+      "empty": "No stays have been added yet."
+    },
+    "activities": {
+      "title": "Activities",
+      "empty": "No activities have been planned yet."
+    },
+    "activityType": {
+      "tour": "Tour",
+      "excursie": "Excursion",
+      "ticket": "Ticket",
+      "transfer": "Transfer"
+    },
+    "payments": {
+      "title": "Payments",
+      "empty": "There are no payments yet.",
+      "total": "Total",
+      "paid": "Paid",
+      "outstanding": "Outstanding",
+      "progressAria": "{{percent}} percent paid",
+      "paidOn": "on {{date}}",
+      "pay": "Pay {{amount}}",
+      "payError": "The payment couldn't be started. Try again.",
+      "status": {
+        "open": "Open",
+        "pending": "Pending",
+        "authorized": "Authorised",
+        "paid": "Paid",
+        "failed": "Failed",
+        "canceled": "Cancelled",
+        "expired": "Expired"
+      }
+    },
+    "messages": {
+      "title": "Messages and documents",
+      "empty": "There are no messages or documents yet.",
+      "filterAria": "Show everything, only emails or only documents",
+      "filter": {
+        "all": "All",
+        "email": "Email",
+        "document": "Documents"
+      },
+      "showAll": "Show {{count}} more",
+      "showLess": "Show less",
+      "partialError": "Part of this couldn't be loaded.",
+      "resent": "sent again",
+      "view": "Read {{name}}",
+      "download": "Download {{name}}",
+      "downloadError": "The document couldn't be downloaded. Try again.",
+      "from": "From",
+      "sentOn": "Sent on",
+      "loadError": "The message couldn't be loaded."
+    }
   }
 }
