@@ -8,7 +8,7 @@
 | Raakt | `frontend-booker`, en in de backend het pakket `bookerportal` (nieuw overview-endpoint, slankere DTO's, document-download) |
 | Zie ook | [bookerportal.md](bookerportal.md), [frontend.md](frontend.md), [security.md](security.md), [open-items.md](open-items.md) |
 
-> De afbeeldingen in §3 zijn **echte schermen** uit de gebouwde app (`ng serve`, 21-10-2026), op 1280, 768 en 375 px, voor, tijdens en na de reis en met een geopende e-mail. De gegevens zijn **fictief**: ze komen van een stub van `/api/booker-portal/**`, omdat de lokale database niet voor de tooling bereikbaar was. De huisstijl is die van de organisatie *Puurkroatie* uit de seeddata. De oorspronkelijke schema's staan nog per breedte onder *Schema van het ontwerp*.
+> De afbeeldingen in §3 zijn **echte schermen** uit de gebouwde app (`ng serve`, 21-10-2026), op 1280, 768 en 375 px, voor, tijdens en na de reis en met een geopende e-mail. Ze zijn opnieuw gemaakt na de invoering van de risicokleuren en de om-en-om tint in *Berichten en documenten*. De gegevens zijn **fictief**: ze komen van een stub van `/api/booker-portal/**`, omdat de lokale database niet voor de tooling bereikbaar was. De huisstijl is die van de organisatie *Puurkroatie* uit de seeddata. De oorspronkelijke schema's staan nog per breedte onder *Schema van het ontwerp*.
 
 ## 1. Waar we nu staan
 
@@ -305,6 +305,7 @@ Alle vijf stappen uit §7 zijn in één keer opgeleverd. Verschillen met het voo
 | Overview | boeking, boeker, reizigers, organisatie | zo gebouwd; de totale som komt uit de boekingsregels en activiteiten |
 | Documenten | slanke lijst en download | zo gebouwd (`size` met `octet_length` in de query, het bestand via `…/content`); daarna uitgebreid met de verzonden e-mails: de kaart heet nu *Berichten en documenten* (`/messages`, alle mails aan de hoofdboeker, betalingen niet) |
 | Betaalbalk | knop start de betaling of brengt je naar de kaart | zo gebouwd |
+| Kleur en rijtint | niet uitgewerkt | bekijken en downloaden hebben de risicokleur *info* (gedempt blauw, `act-info`); de regels in *Berichten en documenten* hebben een zachte om-en-om tint (`zebra-rows`) en de pictogrammen links geen eigen achtergrond. De afbeeldingen in §3 zijn hiermee opnieuw gemaakt. Zie [frontend.md](frontend.md#actie-iconen-en-hun-risicokleur) |
 | Donkere modus, ankerrij op de telefoon | optioneel | niet gebouwd |
 | Mobiele test | Lighthouse-score | niet gemeten; wel visueel gecontroleerd op 375, 768 en 1280 px met echte schermen uit de draaiende app (tegen een stub van de API) |
 
