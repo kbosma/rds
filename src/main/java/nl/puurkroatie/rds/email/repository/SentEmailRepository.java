@@ -9,4 +9,7 @@ import java.util.UUID;
 public interface SentEmailRepository extends JpaRepository<SentEmail, UUID> {
 
     List<SentEmail> findByBookingBookingIdOrderByCreatedAtDesc(UUID bookingId);
+
+    /** Dezelfde mails zonder de HTML: alleen de kolommen die een lijst nodig heeft. */
+    List<SentEmailSummary> findSummariesByBookingBookingIdOrderByCreatedAtDesc(UUID bookingId);
 }

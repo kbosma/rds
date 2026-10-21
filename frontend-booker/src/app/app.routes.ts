@@ -22,49 +22,22 @@ export const routes: Routes = [
     component: LayoutComponent,
     canActivate: [bookerAuthGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
-        path: 'dashboard',
+        path: '',
+        pathMatch: 'full',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
           ),
       },
-      {
-        path: 'documents',
-        loadComponent: () =>
-          import('./features/documents/documents.component').then(
-            (m) => m.DocumentsComponent
-          ),
-      },
-      {
-        path: 'itinerary',
-        loadComponent: () =>
-          import('./features/itinerary/itinerary.component').then(
-            (m) => m.ItineraryComponent
-          ),
-      },
-      {
-        path: 'accommodations',
-        loadComponent: () =>
-          import('./features/accommodations/accommodations.component').then(
-            (m) => m.AccommodationsComponent
-          ),
-      },
-      {
-        path: 'activities',
-        loadComponent: () =>
-          import('./features/activities/activities.component').then(
-            (m) => m.ActivitiesComponent
-          ),
-      },
-      {
-        path: 'payments',
-        loadComponent: () =>
-          import('./features/payments/payments.component').then(
-            (m) => m.PaymentsComponent
-          ),
-      },
+      // De vroegere losse schermen zijn opgegaan in het dashboard. Mollie stuurt de klant na het betalen nog naar
+      // /payments (backend: app.mollie.urls.redirect), en bladwijzers verwijzen naar de oude paden.
+      { path: 'dashboard', redirectTo: '', pathMatch: 'full' },
+      { path: 'payments', redirectTo: '', pathMatch: 'full' },
+      { path: 'itinerary', redirectTo: '', pathMatch: 'full' },
+      { path: 'documents', redirectTo: '', pathMatch: 'full' },
+      { path: 'accommodations', redirectTo: '', pathMatch: 'full' },
+      { path: 'activities', redirectTo: '', pathMatch: 'full' },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -1,127 +1,134 @@
 package nl.puurkroatie.rds.bookerportal.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import nl.puurkroatie.rds.bookerportal.entity.Otp;
-import nl.puurkroatie.rds.bookerportal.repository.OtpRepository;
-import nl.puurkroatie.rds.common.controller.AbstractControllerTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class BookerPortalDocumentControllerTest extends AbstractControllerTest {
+class BookerPortalDocumentControllerTest extends AbstractBookerPortalControllerTest {
 
-    // Booker klaas@example.com is gekoppeld aan booking BK-2026-001 (heeft 1 document: 07000000-...-001)
-    private static final String BOOKER_EMAIL = "klaas@example.com";
-    private static final String BOOKING_NUMBER = "BK-2026-001";
+    // BK-2026-001 heeft 1 zichtbaar document (07000000-...-001, zonder inhoud); 07000000-...-002 hoort bij een andere boeking
     private static final UUID DOCUMENT_ID = UUID.fromString("07000000-0000-0000-0000-000000000001");
     private static final UUID DOCUMENT_OTHER = UUID.fromString("07000000-0000-0000-0000-000000000002");
+    // "%PDF-1.4" in base64
+    private static final String PDF_BASE64 = "JVBERi0xLjQ=";
 
-    @Autowired
-    private OtpRepository otpRepository;
-
-    private String bookerToken() throws Exception {
-        // Maak OTP aan en verifieer om een token te krijgen
-        Otp otp = new Otp(BOOKER_EMAIL, BOOKING_NUMBER, "111111",
-                LocalDateTime.now(), LocalDateTime.now().plusMinutes(10), false);
-        otpRepository.save(otp);
-
-        String json = "{\"emailaddress\":\"" + BOOKER_EMAIL + "\",\"bookingNumber\":\"" + BOOKING_NUMBER + "\",\"code\":\"111111\"}";
-
-        String response = mockMvc.perform(post("/api/booker-auth/verify-otp")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        JsonNode responseJson = objectMapper.readTree(response);
-        return responseJson.get("token").asText();
+    private String createDocument(String employee, String displayname, boolean withBytes) throws Exception {
+        String json = "{\"bookingId\":\"" + BOOKING_ID + "\",\"displayname\":\"" + displayname + "\","
+                + "\"mimeType\":\"application/pdf\",\"document\":" + (withBytes ? "\"" + PDF_BASE64 + "\"" : "null") + "}";
+        String created = mockMvc.perform(post("/api/documents").header("Authorization", "Bearer " + employee)
+                        .contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(created).get("documentId").asText();
     }
 
-    // Booker ziet documenten van de specifieke boeking → 200
-    @Test
-    void booker_findAll_returnsDocumentsForBooking() throws Exception {
-        String token = bookerToken();
+    private void makeVisible(String employee, String documentId) throws Exception {
+        mockMvc.perform(put("/api/documents/" + documentId).header("Authorization", "Bearer " + employee)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"visibleInPortal\":true}"))
+                .andExpect(status().isOk());
+    }
 
-        mockMvc.perform(get("/api/booker-portal/documents")
-                        .header("Authorization", "Bearer " + token))
+    // Booker ziet de documenten van de eigen boeking, zonder de bytes en zonder interne velden → 200
+    @Test
+    void booker_findAll_returnsSlimDocumentsForBooking() throws Exception {
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + bookerToken()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].documentId").value(DOCUMENT_ID.toString()));
+                .andExpect(jsonPath("$[0].documentId").value(DOCUMENT_ID.toString()))
+                .andExpect(jsonPath("$[0].displayname").value("Bevestigingsbrief BK-2026-001"))
+                .andExpect(jsonPath("$[0].size").value(0))
+                .andExpect(jsonPath("$[0].createdAt").exists())
+                .andExpect(jsonPath("$[0].document").doesNotExist())
+                .andExpect(jsonPath("$[0].createdBy").doesNotExist())
+                .andExpect(jsonPath("$[0].tenantOrganization").doesNotExist())
+                .andExpect(jsonPath("$[0].visibleInPortal").doesNotExist());
     }
 
-    // Booker ziet specifiek document van eigen boeking → 200
+    // De lijst toont de grootte van het bestand, het bestand zelf gaat via /content
     @Test
-    void booker_findById_ownBookingDocument_returns200() throws Exception {
-        String token = bookerToken();
+    void booker_findAll_showsTheSizeOfTheFile() throws Exception {
+        String portalToken = bookerToken();
+        String employee = employeeToken();
+        String id = createDocument(employee, "Reisgids.pdf", true);
+        makeVisible(employee, id);
 
-        mockMvc.perform(get("/api/booker-portal/documents/" + DOCUMENT_ID)
-                        .header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[?(@.documentId == '" + id + "')].size").value(8));
+    }
+
+    // Het bestand van een zichtbaar document van de eigen boeking → 200 met de bytes als download
+    @Test
+    void booker_getContent_returnsTheFileAsADownload() throws Exception {
+        String portalToken = bookerToken();
+        String employee = employeeToken();
+        String id = createDocument(employee, "Reisgids.pdf", true);
+        makeVisible(employee, id);
+
+        mockMvc.perform(get("/api/booker-portal/documents/" + id + "/content")
+                        .header("Authorization", "Bearer " + portalToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.documentId").value(DOCUMENT_ID.toString()));
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string("Content-Disposition", containsString("attachment")))
+                .andExpect(header().string("Content-Disposition", containsString("Reisgids.pdf")))
+                .andExpect(content().bytes("%PDF-1.4".getBytes()));
     }
 
-    // Booker ziet geen documenten van andere boeking → 404
+    // Een document van een andere boeking is voor de boeker hetzelfde als een document dat niet bestaat → 404
     @Test
-    void booker_findById_otherBookingDocument_returns404() throws Exception {
-        String token = bookerToken();
-
-        mockMvc.perform(get("/api/booker-portal/documents/" + DOCUMENT_OTHER)
-                        .header("Authorization", "Bearer " + token))
+    void booker_getContent_otherBookingDocument_returns404() throws Exception {
+        mockMvc.perform(get("/api/booker-portal/documents/" + DOCUMENT_OTHER + "/content")
+                        .header("Authorization", "Bearer " + bookerToken()))
                 .andExpect(status().isNotFound());
+    }
+
+    // Een document dat niet op "zichtbaar in portaal" staat, ziet de boeker niet (lijst en inhoud)
+    @Test
+    void booker_doesNotSeeADocumentThatIsNotVisibleInThePortal() throws Exception {
+        String portalToken = bookerToken();
+        String employee = employeeToken();
+        String newId = createDocument(employee, "Intern.pdf", true);
+
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
+                .andExpect(jsonPath("$", hasSize(1)));
+        mockMvc.perform(get("/api/booker-portal/documents/" + newId + "/content")
+                        .header("Authorization", "Bearer " + portalToken))
+                .andExpect(status().isNotFound());
+
+        makeVisible(employee, newId);
+
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
+                .andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(get("/api/booker-portal/documents/" + newId + "/content")
+                        .header("Authorization", "Bearer " + portalToken))
+                .andExpect(status().isOk());
     }
 
     // Medewerker-JWT op booker-portal → 403
     @Test
     void employee_accessBookerPortal_returns403() throws Exception {
-        String token = employeeToken();
-
-        mockMvc.perform(get("/api/booker-portal/documents")
-                        .header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + employeeToken()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/booker-portal/documents/" + DOCUMENT_ID + "/content")
+                        .header("Authorization", "Bearer " + employeeToken()))
                 .andExpect(status().isForbidden());
     }
 
     // Geen JWT → 401
     @Test
     void unauthenticated_accessBookerPortal_returns401() throws Exception {
-        mockMvc.perform(get("/api/booker-portal/documents"))
+        mockMvc.perform(get("/api/booker-portal/documents")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/booker-portal/documents/" + DOCUMENT_ID + "/content"))
                 .andExpect(status().isUnauthorized());
-    }
-
-    // Een document dat niet op "zichtbaar in portaal" staat, ziet de boeker niet (lijst en detail)
-    @Test
-    void booker_doesNotSeeADocumentThatIsNotVisibleInThePortal() throws Exception {
-        String portalToken = bookerToken();
-        String employee = employeeToken();
-        String json = "{\"bookingId\":\"01000000-0000-0000-0000-000000000001\",\"displayname\":\"Intern\",\"document\":null}";
-        String created = mockMvc.perform(post("/api/documents").header("Authorization", "Bearer " + employee)
-                        .contentType(MediaType.APPLICATION_JSON).content(json))
-                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-        String newId = objectMapper.readTree(created).get("documentId").asText();
-
-        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
-                .andExpect(jsonPath("$", hasSize(1)));
-        mockMvc.perform(get("/api/booker-portal/documents/" + newId).header("Authorization", "Bearer " + portalToken))
-                .andExpect(status().isNotFound());
-
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/documents/" + newId)
-                        .header("Authorization", "Bearer " + employee).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"visibleInPortal\":true}"))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/api/booker-portal/documents").header("Authorization", "Bearer " + portalToken))
-                .andExpect(jsonPath("$", hasSize(2)));
-        mockMvc.perform(get("/api/booker-portal/documents/" + newId).header("Authorization", "Bearer " + portalToken))
-                .andExpect(status().isOk());
     }
 }

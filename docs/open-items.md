@@ -1,6 +1,6 @@
 # Openstaande punten, risico's en ideeën
 
-Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het nalopen van code en configuratie op 15-10-2026; aangevuld op 20-10-2026 (punten 28 t/m 32 en 34, gevonden bij het schrijven van [handleiding.md](handleiding.md)). Prioriteit: **H**oog / **M**idden / **L**aag. Haal een punt weg als het is opgelost, en noteer de oplossing in [design-decisions.md](design-decisions.md) als er een keuze achter zat.
+Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het nalopen van code en configuratie op 15-10-2026; aangevuld op 20-10-2026 (punten 28, 29, 31, 32 en 34, gevonden bij het schrijven van [handleiding.md](handleiding.md)). Prioriteit: **H**oog / **M**idden / **L**aag. Haal een punt weg als het is opgelost, en noteer de oplossing in [design-decisions.md](design-decisions.md) als er een keuze achter zat.
 
 ## Beveiliging en configuratie
 
@@ -33,7 +33,6 @@ Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het na
 | 17 | L | `${prospect.gender}` is nu `MAN` i.p.v. `man` | Bewuste wijziging voor één model; bestaande e-mailtemplates met die waarde (indien al in gebruik) kunnen anders ogen. |
 | 18 | L | Bedragen in templates | Zonder `?string("#,##0.00")` toont FreeMarker `1250.00` als `1.250`. Bestaande, geüploade Word-templates kunnen dit probleem hebben. |
 | 19 | L | Datums in templates zijn ISO-tekst | Geen lokale opmaak (`dd-MM-jjjj`); dat kan in de template (FreeMarker-functies) of centraal in `TemplateModels`. |
-| 30 | M | **Klantportaal toont documenten zonder download** | `frontend-booker` (documentenscherm) toont alleen naam en datum; er is geen knop om het bestand te openen, hoewel `GET /api/booker-portal/documents/{id}` bestaat. |
 | 31 | L | Employee-dashboard is een plaatshouder | Voor gebruikers zonder `ORGANIZATION_READ` en `ACCOUNT_CREATE` (EMPLOYEE) toont het dashboard alleen een welkomstkaart en *"Deze pagina wordt binnenkort beschikbaar."* |
 | 32 | L | Authority `PAYMENT_DELETE` heeft geen endpoint | De authority staat in de seed (MANAGER) maar geen controller gebruikt hem: betalingen worden nooit verwijderd. Verwijder de authority of leg vast dat hij bewust ongebruikt blijft. |
 | 34 | L | ADMIN heeft `PAYMENT_CORRECT` en `PAYMENT_RELINK`, maar niet `PAYMENT_READ` | ADMIN kan de betalingen dus niet inzien waarop die rechten werken. Bedoeld voor MANAGER; overweeg ze bij ADMIN weg te halen. |
@@ -42,7 +41,7 @@ Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het na
 
 | # | Prio | Punt | Toelichting |
 |---|---|---|---|
-| 20 | M | **`frontend-booker` is vrijwel niet getest** | 1 spec-bestand voor 7 schermen en de OTP-flow. |
+| 20 | L | `frontend-booker`: nog geen test van de OTP-schermen en de inlogflow | Het dashboard heeft 158 specs (store, zuivere logica, alle kaarten, layout). `otp-login` (aanvragen en verifiëren) en de interceptor/guard hebben nog geen spec. |
 | 21 | M | **29 van 63 componenten in `frontend-employee` hebben geen spec** | o.a. boekingsregel-/activiteit-/bewerk-dialogen, organisatie-onboarding, rol-/authority-/accountdetails, profiel/TOTP-dialogen, accommodatie- en activiteitdetails, document-upload, de detailpagina's van persoon en account. 10 van 29 services hebben geen spec. |
 | 22 | M | Geen test van volledige UI-flows (e2e) | Alles is unit-/MockMvc-niveau; de editor-in-een-browser is alleen met Karma getest. |
 | 24 | L | Geen CI-pipeline in de repository | Bouwen/testen/deployen gaat via lokale scripts. |

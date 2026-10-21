@@ -131,3 +131,21 @@ mat-card-title, .mat-mdc-card-title {
 .mat-mdc-paginator {
   background: transparent;
 }
+
+/* Alleen voor schermlezers zichtbaar. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Wie minder beweging wil, krijgt geen vloeiend scrollen of animaties. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

@@ -115,5 +115,5 @@ Meer voorbeelden: Mollie in [mollie.md](mollie.md), klantportal in [bookerportal
 | Methode | Pad | Authority |
 |---|---|---|
 | POST | `/api/booker-auth/request-otp`, `/api/booker-auth/verify-otp` | publiek |
-| GET | `/api/booker-portal/{itinerary, booking-lines, booking-activities, accommodations, activities, documents, documents/{id}, payments, payments/status-entries}` | `BOOKER_PORTAL_READ` |
+| GET | `/api/booker-portal/{overview, itinerary, booking-lines, booking-activities, accommodations, activities, documents, documents/{id}/content, messages, messages/{id}, payments, payments/status-entries}` | `BOOKER_PORTAL_READ` (`documents`, `messages` en `payments` geven slanke DTO's, `documents/{id}/content` de download, `messages/{id}` de HTML van één mail) |
 | POST | `/api/booker-portal/payments/pay/{molliePaymentId}` | `BOOKER_PORTAL_UPDATE` |

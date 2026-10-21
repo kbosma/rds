@@ -1,9 +1,9 @@
 package nl.puurkroatie.rds.bookerportal.controller;
 
+import nl.puurkroatie.rds.bookerportal.dto.PortalPaymentDto;
+import nl.puurkroatie.rds.bookerportal.dto.PortalPaymentStatusDto;
 import nl.puurkroatie.rds.bookerportal.security.BookerContext;
 import nl.puurkroatie.rds.bookerportal.service.BookerPortalPaymentService;
-import nl.puurkroatie.rds.mollie.dto.MolliePaymentDto;
-import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
 import nl.puurkroatie.rds.mollie.dto.PaymentResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -29,14 +29,14 @@ public class BookerPortalPaymentController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('BOOKER_PORTAL_READ')")
-    public ResponseEntity<List<MolliePaymentDto>> findAll() {
+    public ResponseEntity<List<PortalPaymentDto>> findAll() {
         UUID bookingId = BookerContext.getBookingId();
         return ResponseEntity.ok(bookerPortalPaymentService.findPaymentsByBookingId(bookingId));
     }
 
     @GetMapping("/status-entries")
     @PreAuthorize("hasAuthority('BOOKER_PORTAL_READ')")
-    public ResponseEntity<List<MolliePaymentStatusEntryDto>> findStatusEntries() {
+    public ResponseEntity<List<PortalPaymentStatusDto>> findStatusEntries() {
         UUID bookingId = BookerContext.getBookingId();
         return ResponseEntity.ok(bookerPortalPaymentService.findStatusEntriesByBookingId(bookingId));
     }

@@ -11,7 +11,7 @@ RDS (**R**eis **D**ossier **S**ysteem) is een multi-tenant SaaS voor reisorganis
 | **ADMIN** (systeembeheer) | `frontend-employee` | organisaties, personen, accounts, rollen, authorities beheren. Heeft bewust géén boekingsrechten. |
 | **MANAGER** | `frontend-employee` | alles binnen de eigen organisatie: boekingen, stamgegevens, templates (Word + e-mail), documenten, betalingen, thema, gebruikersbeheer |
 | **EMPLOYEE** | `frontend-employee` | dagelijks werk: boekingen, bookers/prospects, documenten, mails versturen; templates alleen lezen |
-| **Booker** (klant, extern) | `frontend-booker` | inloggen met e-mailadres + boekingsnummer + eenmalige code (OTP); eigen reisschema, documenten, accommodaties, activiteiten en betalingen zien; betalen |
+| **Booker** (klant, extern) | `frontend-booker` | inloggen met e-mailadres + boekingsnummer + eenmalige code (OTP); één dashboard met kerngegevens, tijdlijn, verblijven, activiteiten, betalingen, verzonden e-mails (lezen) en documenten (downloaden) van de eigen boeking; betalen |
 
 De precieze rechten staan in [security.md](security.md) (rollen → authorities).
 
@@ -47,7 +47,7 @@ Organisaties (incl. afzenderadres voor e-mail en Mollie-sleutel), een **onboardi
 Wachtwoord wijzigen (afgedwongen bij eerste login als `must_change_password`), **TOTP** (2FA) instellen/uitzetten met herstelcodes.
 
 ### Booker-portal (`frontend-booker`)
-Inloggen met OTP; dashboard, reisschema (itinerary), documenten, accommodaties, activiteiten en betalingen van de **eigen boeking**. Zie [bookerportal.md](bookerportal.md).
+Inloggen met OTP; daarna **één dashboard** met alles van de **eigen boeking** op één pagina, responsive voor telefoon, tablet en desktop, in de huisstijl van de organisatie. Zie [bookerportal.md](bookerportal.md) en [frontend.md](frontend.md).
 
 ## Architectuur in het kort
 
