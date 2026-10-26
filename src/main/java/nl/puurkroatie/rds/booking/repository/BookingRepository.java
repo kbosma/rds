@@ -17,6 +17,9 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     boolean existsByBookingNumber(String bookingNumber);
 
+    @Query("SELECT b.bookingStatus FROM Booking b WHERE b.booker.bookerId = :bookerId")
+    List<nl.puurkroatie.rds.booking.entity.BookingStatus> findStatusesByBookerId(@Param("bookerId") UUID bookerId);
+
     @Query("SELECT b FROM Booking b " +
            "LEFT JOIN FETCH b.booker " +
            "LEFT JOIN FETCH b.travelers " +

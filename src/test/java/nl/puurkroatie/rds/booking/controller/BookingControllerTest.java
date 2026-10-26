@@ -79,7 +79,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void manager_createBooking_returns201() throws Exception {
         String token = managerToken();
 
-        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_TP_4 + "\"," +
                 "\"fromDate\":\"2026-12-01\",\"untilDate\":\"2026-12-14\"," +
                 "\"totalSum\":1500.00}";
 
@@ -203,7 +203,7 @@ class BookingControllerTest extends AbstractBookingControllerTest {
     void employee_createBooking_returns201() throws Exception {
         String token = employeeToken();
 
-        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"," +
+        String json = "{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_PK_1 + "\"," +
                 "\"fromDate\":\"2026-11-01\",\"untilDate\":\"2026-11-14\"," +
                 "\"totalSum\":1200.00}";
 
@@ -311,26 +311,86 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // MANAGER: POST /api/bookings met de status 'opreis' — 201 en de waarde komt lowercase terug
+    // MANAGER: PUT /api/bookings/{id} met de status 'opreis' — 200 en de waarde komt lowercase terug
     @Test
-    void manager_createBooking_withStatusOpreis_returns201() throws Exception {
-        mockMvc.perform(post("/api/bookings")
+    void manager_updateBooking_withStatusOpreis_returns200() throws Exception {
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4)
                         .header("Authorization", "Bearer " + managerToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"bookingStatus\":\"opreis\"}"))
-                .andExpect(status().isCreated())
+                        .content("{\"bookingStatus\":\"opreis\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bookingStatus").value("opreis"));
     }
 
-    // MANAGER: POST /api/bookings met de status 'weerthuis' — 201 en de waarde komt lowercase terug
+    // MANAGER: PUT /api/bookings/{id} met de status 'weerthuis' — 200 en de waarde komt lowercase terug
     @Test
-    void manager_createBooking_withStatusWeerthuis_returns201() throws Exception {
+    void manager_updateBooking_withStatusWeerthuis_returns200() throws Exception {
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4)
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"weerthuis\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookingStatus").value("weerthuis"));
+    }
+
+    // Een boeking ontstaat alleen vanuit een bestaande booker — zonder booker 400
+    @Test
+    void manager_createBooking_withoutBooker_returns400() throws Exception {
         mockMvc.perform(post("/api/bookings")
                         .header("Authorization", "Bearer " + managerToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"bookingStatus\":\"weerthuis\"}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.bookingStatus").value("weerthuis"));
+                        .content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // Een nieuwe boeking begint altijd als AANVRAAG — een andere status bij aanmaken is 400
+    @Test
+    void manager_createBooking_withOtherStatusThanAanvraag_returns400() throws Exception {
+        mockMvc.perform(post("/api/bookings")
+                        .header("Authorization", "Bearer " + managerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"betaald\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // Offerte bevestigen: alleen vanuit OFFERTE; daarna BOEKING met het moment van bevestigen
+    @Test
+    void manager_confirmQuote_fromOfferte_setsStatusBoekingAndConfirmedAt() throws Exception {
+        String token = managerToken();
+        String offerte = "{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}";
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(offerte))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quoteConfirmed").value(false));
+
+        String confirm = "{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + BOOKER_TP_4 + "\",\"quoteConfirmed\":true}";
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(confirm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quoteConfirmed").value(true))
+                .andExpect(jsonPath("$.quoteConfirmedAt").isNotEmpty())
+                .andExpect(jsonPath("$.bookingStatus").value("boeking"));
+
+        // terugdraaien via het vinkje kan niet
+        String unconfirm = "{\"bookingStatus\":\"boeking\",\"bookerId\":\"" + BOOKER_TP_4 + "\",\"quoteConfirmed\":false}";
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(unconfirm))
+                .andExpect(status().isBadRequest());
+    }
+
+    // Bevestigen kan niet vanuit een andere status dan OFFERTE
+    @Test
+    void manager_confirmQuote_fromAanvraag_returns400() throws Exception {
+        String token = managerToken();
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"aanvraag\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"aanvraag\",\"bookerId\":\"" + BOOKER_TP_4 + "\",\"quoteConfirmed\":true}"))
+                .andExpect(status().isBadRequest());
     }
 
     // MANAGER: POST /api/bookings met een onbekende status — 400

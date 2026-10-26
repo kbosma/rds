@@ -111,6 +111,10 @@
     "roles": "Roles"
   },
   "bookings": {
+    "quoteConfirmed": "Quote confirmed",
+    "quoteConfirmedOn": "Quote confirmed on",
+    "quoteConfirmHint": "You can confirm when the status is Quote and there is a main booker. The status then becomes Booking.",
+    "quoteConfirmEffect": "After saving, the status becomes Booking.",
     "title": "Bookings",
     "newBooking": "New booking",
     "searchPlaceholder": "Search by booking number, booker...",
@@ -343,9 +347,7 @@
     "registerTitle": "Register prospect",
     "registered": "Prospect registered",
     "registerError": "Error registering prospect",
-    "noProspectsFound": "No prospects found.",
-    "makeBooker": "Make booker",
-    "promoted": "Prospect is now a booker"
+    "noProspectsFound": "No prospects found."
   },
   "bookers": {
     "title": "Bookers",

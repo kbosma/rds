@@ -142,7 +142,7 @@ class PaymentRelinkControllerTest extends AbstractBookingControllerTest {
 
     private String createBooking(String token) throws Exception {
         return objectMapper.readTree(mockMvc.perform(post("/api/bookings").header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("bookingId").asText();
     }
 }

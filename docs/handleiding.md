@@ -430,7 +430,7 @@ Menu **Boekingen** (`BOOKING_READ`).
 
 - **Kolommen:** Boekingnummer, Van, Tot, Status, Totaal, Acties.
 - **Zoeken:** op boekingnummer of boeker; **Periode van/tot** als filter.
-- **Nieuwe boeking:** kies eerst een hoofdboeker in het venster *Hoofdboeker selecteren* (of maak met *Nieuwe boeker* meteen een nieuwe aan; vereist `BOOKING_CREATE`). Daarna opent een **concept-boeking** (§4.4).
+- **Nieuwe boeking:** kies eerst een hoofdboeker in het venster *Hoofdboeker selecteren* (een boeking ontstaat alleen vanuit een **bestaande** boeker: registreer een nieuwe klant eerst in *Prospects*). Daarna opent een **concept-boeking** (§4.4).
 - **Iconen:** inzien (`?readonly=true`), bewerken, verwijderen (zie §8.3 voor de beveiliging).
 
 Van, Tot en Totaal zijn **berekend**: de periode uit de boekingsregels en activiteiten, het totaal als som van de regelprijzen en activiteitsprijzen. Ze worden niet apart ingevoerd.
@@ -443,7 +443,7 @@ Titel: *Boeking bewerken — BK-…* (of *Boeking inzien* in alleen-lezen-modus)
 
 | Kaart | Inhoud | Acties (vereist recht) |
 |---|---|---|
-| **Boekinggegevens** | boekingsnummer, status, berekende periode en totaalbedrag | **Bewerken**: status kiezen (`BOOKING_UPDATE`) |
+| **Boekinggegevens** | boekingsnummer, status, berekende periode en totaalbedrag, en *Offerte bevestigd op* zodra de offerte is bevestigd | **Bewerken**: status kiezen en **Offerte bevestigd** aanvinken (`BOOKING_UPDATE`). Bevestigen kan alleen in status *Offerte* met een hoofdboeker; de status wordt dan *Boeking* en het moment wordt vastgelegd. Uitvinken kan niet. |
 | **Hoofdboeker** | naam, roepnaam, telefoon, e-mail, geboortedatum | *Toevoegen* (koppelen, `BOOKING_CREATE`); *Bewerken* van de boekergegevens (`BOOKING_UPDATE`); *Verwijderen* = ontkoppelen van de boeking (`BOOKING_DELETE`, de boeker zelf blijft bestaan) |
 | **Accommodaties** (boekingsregels) | accommodatie, leverancier, van, tot, prijs | toevoegen/bewerken/verwijderen (`BOOKING_CREATE`/`_UPDATE`/`_DELETE`) |
 | **Activiteiten** | activiteit, datum en tijden, trefpunt, totaalprijs | toevoegen/bewerken/verwijderen |
@@ -500,7 +500,7 @@ De afzender is het adres dat bij de organisatie is ingesteld (`email_from`, alle
 
 Menu **Boekers** (`BOOKING_READ`). Kolommen: Naam, E-mailadres, Telefoon, Geboortedatum, Acties. Zoek op naam, e-mail of telefoon.
 
-- **Nieuwe boeker** en bewerken: voornaam en achternaam en een geldig e-mailadres zijn verplicht; verder tussenvoegsel, roepnaam, telefoon, geslacht, geboortedatum, initialen, status.
+- **Nieuwe boeker** en bewerken: voornaam en achternaam en een geldig e-mailadres zijn verplicht; verder tussenvoegsel, roepnaam, telefoon, geslacht, geboortedatum en initialen. De **status** kies je niet: die volgt uit de boekingen (zie §4.9).
 - Een **rij-icoon** start een **concept-boeking** voor die boeker (heeft hij meerdere boekingen, dan kies je eerst: *"Er zijn meerdere boekingen voor {naam}"*).
 - **Adressen** van een boeker beheer je in het boekerdialoog (alleen bij een bestaande boeker, met `BOOKING_UPDATE`). Een adres heeft straat, huisnummer, toevoeging, postcode, plaats, land en een **rol** (*woon-, facturatie-, accommodatie- of leveranciersadres*).
 - Verwijderen: zie §8.3.
@@ -511,8 +511,9 @@ Menu **Prospects**. Het aanmeldproces voor potentiële klanten.
 
 1. **Registreer prospect** (status `prospect`, nog geen boeking).
 2. Mail ze via het **mail-icoon** op hun regel in *Prospects* (§4.7).
-3. **Maak boeker** zet de status op `active` (*"Prospect is nu een boeker"*).
-4. Maak er een boeking voor aan. **Zodra er een boeking voor een prospect ontstaat, wordt die automatisch `active`.** Een boeker met een andere status (bijv. `nietactief`) wordt niet vanzelf weer actief.
+3. Maak er een boeking voor aan (*Boekingen → Nieuwe boeking* of het rij-icoon in *Boekers*).
+
+De status van een boeker volgt automatisch uit zijn boekingen: **`prospect`** zolang er geen boeking is (zo begint elke nieuwe boeker), **`active`** zodra er een boeking is die nog niet is afgerond, **`nietactief`** als al zijn boekingen zijn afgerond. Een nieuwe boeking maakt hem weer `active`. Je kunt de status niet zelf kiezen; de knop *Maak boeker* bestaat niet meer.
 
 Statussen van een boeker: `prospect`, `active`, `nietactief`.
 
@@ -654,7 +655,7 @@ De oude adressen (`/payments`, `/itinerary`, `/documents`, `/accommodations`, `/
 |---|---|---|
 | 1 | EMPLOYEE/MANAGER | **Prospects → Registreer prospect** (naam, e-mail, status `prospect`) |
 | 2 | EMPLOYEE/MANAGER | **Prospects → mail-icoon** → template kiezen → voorbeeld → **Verstuur** |
-| 3 | EMPLOYEE/MANAGER | **Maak boeker**, of laat het systeem dat doen zodra een boeking ontstaat |
+| 3 | EMPLOYEE/MANAGER | de prospect wordt vanzelf een actieve boeker zodra er een boeking voor ontstaat |
 | 4 | EMPLOYEE/MANAGER | **Boekers → rij-icoon** (concept-boeking) of **Boekingen → Nieuwe boeking** |
 | 5 | EMPLOYEE/MANAGER | in de boeking: **Accommodaties** (verblijven), **Activiteiten**, **Reizigers** toevoegen; status op `offerte` |
 | 6 | EMPLOYEE/MANAGER | **Document genereren** (offerte/bevestiging) met *Zichtbaar in het boekerportaal* aan |
@@ -884,7 +885,9 @@ curl -X POST "$BASE/api/email-templates/<id>/send?bookerId=<id>"    -H "Authoriz
 | Resource | Verplicht | Overig |
 |---|---|---|
 | Boeking | `bookingStatus` | `bookingNumber` ≤ 14 tekens (wordt gegenereerd), `bookerId` optioneel |
-| Boeker | `firstname`, `lastname` (≤ 255), `emailaddress` (geldig e-mail) | `status`: `prospect` / `active` / `nietactief` |
+| Boeker | `firstname`, `lastname` (≤ 255), `emailaddress` (geldig e-mail) | `status` wordt door de server bepaald (een meegestuurde waarde wordt genegeerd) |
+| Boeking (aanmaken) | `bookerId` van een bestaande boeker, `bookingStatus` = `aanvraag` | anders `400` |
+| Boeking (bijwerken) | `bookingStatus` | `quoteConfirmed: true` alleen vanuit status `offerte` met een hoofdboeker (wordt `boeking`, `quoteConfirmedAt` = nu); terug naar `false` geeft `400` |
 | Reiziger | `bookingId`, `firstname`, `lastname` | geslacht: `man`, `vrouw`, `anders` |
 | Boekingsregel | `bookingId`, `accommodationId`, `supplierId` | `fromDate`, `untilDate`, `price` |
 | Boekingsactiviteit | `bookingId`, `activityId`, `activityDate`, `fromTime`, `untilTime` | `meetingPoint`, `totalPrice`; `untilTime` < `fromTime` = volgende dag |
@@ -1272,7 +1275,7 @@ Portaal (`frontend-booker`): `/login`, `/verify`, `/dashboard`, `/itinerary`, `/
 | Authority | Zichtbaar/mogelijk in de UI |
 |---|---|
 | `BOOKING_READ` | menu Boekingen/Boekers/Prospects; inzien-iconen; tijdlijn met verzonden e-mails |
-| `BOOKING_CREATE` | *Nieuwe boeking*/*Nieuwe boeker*; toevoegen van reizigers, accommodaties, activiteiten |
+| `BOOKING_CREATE` | *Nieuwe boeking*, *Registreer prospect*; toevoegen van reizigers, accommodaties, activiteiten |
 | `BOOKING_UPDATE` | bewerken van boeking, status, boeker, adressen, regels |
 | `BOOKING_DELETE` | verwijderen van boekingen, boekers, reizigers, regels, activiteiten |
 | `ACCOMMODATION_*`, `SUPPLIER_*`, `ACTIVITY_*` | READ: kiezen in een boeking; C/U/D: menu en beheer; in de boeking snel aanmaken met `_CREATE` |

@@ -96,15 +96,35 @@ class BookingProspectActivationControllerTest extends AbstractBookingControllerT
         assertEquals("active", bookerStatus(token, BOOKER_TP_4.toString()));
     }
 
-    // Een niet-actieve boeker wordt niet vanzelf weer actief: dat is een bewuste keuze
+    // Zijn al zijn boekingen afgerond, dan wordt de boeker NIETACTIEF; een nieuwe boeking maakt hem weer ACTIVE
     @Test
-    void creatingABookingForAnInactiveBooker_doesNotReactivateIt() throws Exception {
+    void allBookingsAfgerond_makesTheBookerInactive_andANewBookingReactivatesIt() throws Exception {
         String token = managerToken();
-        String inactiveId = createBooker(token, "nietactief");
+        String bookerId = createBooker(token, "prospect");
+        String bookingId = objectMapper.readTree(mockMvc.perform(post("/api/bookings").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookerId\":\"" + bookerId + "\",\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("bookingId").asText();
+        assertEquals("active", bookerStatus(token, bookerId));
 
-        createBookingFor(token, inactiveId);
+        mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookerId\":\"" + bookerId + "\",\"bookingStatus\":\"afgerond\"}"))
+                .andExpect(status().isOk());
+        assertEquals("nietactief", bookerStatus(token, bookerId));
 
-        assertEquals("nietactief", bookerStatus(token, inactiveId));
+        createBookingFor(token, bookerId);
+        assertEquals("active", bookerStatus(token, bookerId));
+    }
+
+    // De status van een booker is niet te kiezen: een nieuwe booker is altijd PROSPECT
+    @Test
+    void creatingABookerWithAnotherStatus_stillStartsAsProspect() throws Exception {
+        String token = managerToken();
+
+        String bookerId = createBooker(token, "nietactief");
+
+        assertEquals("prospect", bookerStatus(token, bookerId));
     }
 
     // Een prospect aan een bestaande boeking koppelen (boeking bijwerken) maakt hem ook ACTIVE

@@ -19,12 +19,14 @@ describe('BookingListComponent', () => {
     {
       bookingId: 'b-1', bookerId: 'bk-1', bookingNumber: 'BK-2026-001',
       bookingStatus: 'aanvraag', fromDate: '2026-07-01', untilDate: '2026-07-14',
+      quoteConfirmed: false, quoteConfirmedAt: null,
       totalSum: 2450, tenantOrganization: 'o-1', createdAt: '2026-04-10T09:00:00',
       createdBy: 'u-1', modifiedAt: '2026-04-10T09:00:00', modifiedBy: 'u-1',
     },
     {
       bookingId: 'b-2', bookerId: 'bk-2', bookingNumber: 'BK-2026-002',
       bookingStatus: 'offerte', fromDate: '2026-08-15', untilDate: '2026-08-22',
+      quoteConfirmed: false, quoteConfirmedAt: null,
       totalSum: 1875.50, tenantOrganization: 'o-1', createdAt: '2026-04-12T10:30:00',
       createdBy: 'u-1', modifiedAt: '2026-04-12T10:30:00', modifiedBy: 'u-1',
     },

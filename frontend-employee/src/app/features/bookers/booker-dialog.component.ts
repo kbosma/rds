@@ -110,13 +110,6 @@ export interface BookerDialogData {
         <mat-icon>close</mat-icon> {{ (data.readOnly ? 'common.close' : 'common.cancel') | translate }}
       </button>
       @if (!data.readOnly) {
-        @if (data.booker?.status === 'prospect') {
-          <button mat-raised-button color="accent"
-                  (click)="makeBooker()"
-                  [disabled]="saving() || form.invalid">
-            <mat-icon>how_to_reg</mat-icon> {{ 'prospects.makeBooker' | translate }}
-          </button>
-        }
         <button mat-raised-button color="primary"
                 (click)="onSubmit()"
                 [disabled]="saving() || form.invalid">
@@ -180,15 +173,11 @@ export class BookerDialogComponent implements OnInit {
   }
 
   onSubmit() {
-    this.persist({}, 'bookers.saved');
+    this.persist('bookers.saved');
   }
 
-  /** Promoveert een prospect tot boeker: slaat het formulier op én zet status ACTIVE. */
-  makeBooker() {
-    this.persist({ status: 'active' }, 'prospects.promoted');
-  }
-
-  private persist(extra: Partial<Booker>, successKey: string) {
+  /** Slaat de gegevens op. De status kies je niet: die volgt uit de boekingen van de booker (server). */
+  private persist(successKey: string) {
     if (this.data.readOnly || this.form.invalid || this.saving()) return;
     this.saving.set(true);
 
@@ -203,12 +192,11 @@ export class BookerDialogComponent implements OnInit {
       emailaddress: raw.emailaddress ?? undefined,
       gender: raw.gender ?? undefined,
       birthdate: raw.birthdate ?? undefined,
-      ...extra,
     };
 
     const request$ = this.data.booker
       ? this.bookerService.update(this.data.booker.bookerId, payload)
-      : this.bookerService.create({ ...payload, status: 'active' });
+      : this.bookerService.create(payload);
 
     request$
       .pipe(takeUntilDestroyed(this.destroyRef))

@@ -30,6 +30,7 @@ describe('BookingDetailComponent', () => {
   const mockBooking: Booking = {
     bookingId: 'b-1', bookerId: 'bk-1', bookingNumber: 'BK-2026-001',
     bookingStatus: 'aanvraag', fromDate: '2026-07-01', untilDate: '2026-07-14',
+    quoteConfirmed: false, quoteConfirmedAt: null,
     totalSum: 2450, tenantOrganization: 'o-1', createdAt: '2026-04-10T09:00:00',
     createdBy: 'u-1', modifiedAt: '2026-04-10T09:00:00', modifiedBy: 'u-1',
   };
@@ -187,6 +188,25 @@ describe('BookingDetailComponent', () => {
 
   // De unified onSave()/saving() is weg-gerefactord; opslaan gebeurt nu via gerichte
   // acties. We dekken dat af met removeBooker(), die via bookingService.update persisteert.
+  it('toont het moment van bevestigen bij een bevestigde offerte', fakeAsync(() => {
+    bookingServiceSpy.getById.and.returnValue(of({ ...mockBooking, bookingStatus: 'boeking', quoteConfirmed: true, quoteConfirmedAt: '2026-10-21T14:30:00' }));
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.quote-confirmed')?.textContent).toContain('21-10-2026 14:30');
+  }));
+
+  it('toont geen bevestiging zolang de offerte niet is bevestigd', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.quote-confirmed')).toBeNull();
+  }));
+
   it('should persist booker removal via bookingService.update', fakeAsync(() => {
     createComponent();
     fixture.detectChanges();
@@ -196,7 +216,7 @@ describe('BookingDetailComponent', () => {
     component.removeBooker();
     tick();
 
-    expect(bookingServiceSpy.update).toHaveBeenCalledWith('b-1', { bookerId: null as unknown as string });
+    expect(bookingServiceSpy.update).toHaveBeenCalledWith('b-1', jasmine.objectContaining({ bookerId: null as unknown as string, bookingStatus: 'aanvraag' }));
     expect(component.booker()).toBeNull();
   }));
 

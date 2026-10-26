@@ -66,14 +66,14 @@ class BookerServiceImplTest {
     // ---- create: default-status ----
 
     @Test
-    void create_withoutStatus_defaultsToActive() {
+    void create_withoutStatus_startsAsProspect() {
         when(bookerRepository.save(any(Booker.class))).thenAnswer(inv -> inv.getArgument(0));
         when(bookerMapper.toDto(any(Booker.class))).thenReturn(dtoWithStatus("active"));
 
         service.create(dtoWithStatus(null));
 
         verify(bookerRepository).save(bookerCaptor.capture());
-        assertEquals(BookerStatus.ACTIVE, bookerCaptor.getValue().getStatus());
+        assertEquals(BookerStatus.PROSPECT, bookerCaptor.getValue().getStatus());
     }
 
     @Test

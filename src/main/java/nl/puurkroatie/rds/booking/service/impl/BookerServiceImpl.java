@@ -98,7 +98,8 @@ public class BookerServiceImpl implements BookerService {
 
     private Booker toEntity(BookerDto dto) {
         Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
-        BookerStatus status = dto.getStatus() != null ? BookerStatus.fromValue(dto.getStatus()) : BookerStatus.ACTIVE;
+        // Elke nieuwe booker begint als PROSPECT; de status volgt daarna uit zijn boekingen (BookerStatusUpdater).
+        BookerStatus status = BookerStatus.PROSPECT;
         return new Booker(
                 dto.getFirstname(),
                 dto.getPrefix(),
@@ -115,7 +116,8 @@ public class BookerServiceImpl implements BookerService {
 
     private Booker toEntity(UUID id, BookerDto dto, Booker existing) {
         Gender gender = dto.getGender() != null ? Gender.fromValue(dto.getGender()) : null;
-        BookerStatus status = dto.getStatus() != null ? BookerStatus.fromValue(dto.getStatus()) : existing.getStatus();
+        // De status is niet te kiezen: die volgt uit de boekingen van de booker.
+        BookerStatus status = existing.getStatus();
         return new Booker(
                 id,
                 dto.getFirstname(),

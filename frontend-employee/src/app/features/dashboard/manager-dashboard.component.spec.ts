@@ -22,12 +22,14 @@ describe('ManagerDashboardComponent', () => {
     {
       bookingId: 'b-1', bookerId: 'bk-1', bookingNumber: 'BK-1', bookingStatus: 'boeking',
       fromDate: `${year}-07-01`, untilDate: `${year}-07-08`, totalSum: 2450,
+      quoteConfirmed: false, quoteConfirmedAt: null,
       tenantOrganization: 'o-1', createdAt: `${year}-04-10T09:00:00`, createdBy: 'u',
       modifiedAt: `${year}-04-10T09:00:00`, modifiedBy: 'u',
     },
     {
       bookingId: 'b-2', bookerId: 'bk-2', bookingNumber: 'BK-2', bookingStatus: 'offerte',
       fromDate: `${year}-08-15`, untilDate: `${year}-08-22`, totalSum: 1875.50,
+      quoteConfirmed: false, quoteConfirmedAt: null,
       tenantOrganization: 'o-1', createdAt: `${year}-04-12T10:00:00`, createdBy: 'u',
       modifiedAt: `${year}-04-12T10:00:00`, modifiedBy: 'u',
     },
