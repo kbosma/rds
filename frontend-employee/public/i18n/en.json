@@ -346,8 +346,14 @@
       "accommodationName": "Accommodation",
       "supplierName": "Supplier",
       "activityName": "Activity",
-      "meetingPoint": "Meeting point"
-    }
+      "meetingPoint": "Meeting point",
+      "description": "Description",
+      "paymentType": "Type",
+      "amount": "Amount",
+      "dueDate": "Due date",
+      "paymentStatus": "Status"
+    },
+    "repeatPayments": "Payments"
   },
   "prospects": {
     "title": "Prospects",
@@ -486,7 +492,14 @@
     "relinkHistory": "Relinks",
     "relinkFrom": "From booking",
     "relinkTo": "To booking",
-    "relinkNoBookings": "There is no other booking to link to."
+    "relinkNoBookings": "There is no other booking to link to.",
+    "types": {
+      "voorschot": "Deposit",
+      "restant": "Balance",
+      "definitief": "Full payment",
+      "overig": "Other"
+    },
+    "dueDate": "Due"
   },
   "organizations": {
     "title": "Organizations",
@@ -851,6 +864,14 @@
     "readOnly": "Only a manager can change these settings.",
     "saved": "Settings saved",
     "saveError": "Saving failed",
-    "loadError": "Loading settings failed"
+    "loadError": "Loading settings failed",
+    "paymentsTitle": "Payments",
+    "paymentsIntro": "When the quote is confirmed, the system creates the payments. The deposit is due some weeks before departure (or immediately if that moment has passed), the balance later. If the balance term has passed too, there is one payment of the full amount, due immediately.",
+    "depositPercentage": "Deposit (% of the total)",
+    "depositWeeks": "Deposit: weeks before departure",
+    "balanceWeeks": "Balance: weeks before departure",
+    "weeksOrder": "The deposit must be due before the balance.",
+    "paymentEmailTemplate": "Payment email (email template)",
+    "paymentEmailHint": "Sent to the main booker once the payments are created. Not chosen: no email."
   }
 }

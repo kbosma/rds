@@ -49,7 +49,7 @@ De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-co
 
 ![Stroomdiagram boekingsstatussen](img/boeking-statusflow.svg)
 
-Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd zijn stap 1 en 2: een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE` en het vinkje *Offerte bevestigd* zet `BOEKING`; de overige overgangen zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
+Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd zijn stap 1 t/m 3: een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE`, het vinkje *Offerte bevestigd* zet `BOEKING` en maakt de betalingen aan (zie *Automatische betalingen*); de statussen na `BOEKING` zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
 
 ### Booker, prospect en het aanmeldproces
 
@@ -76,7 +76,23 @@ Mislukt een stap (PDF, mail), dan wordt alles teruggedraaid. Opnieuw versturen i
 
 ### Organisatie-instellingen
 
-`organization_settings` (V18): per organisatie één rij met keuzes die het systeem nodig heeft. Nu: `quote_document_template_id` en `quote_email_template_id` (beide optioneel; zonder beide kan geen offerte verstuurd worden). Een gekozen template moet van de eigen organisatie zijn; verwijderen van de template maakt de keuze leeg (`ON DELETE SET NULL`). Later komen hier de betalingsinstellingen bij (voorschotpercentage, termijnen, betaalmail). API: `GET`/`PUT /api/organization-settings/mine`.
+`organization_settings` (V18): per organisatie één rij met keuzes die het systeem nodig heeft. Offerte (V18): `quote_document_template_id` en `quote_email_template_id` (beide optioneel; zonder beide kan geen offerte verstuurd worden). Betalingen (V19): `deposit_percentage` (1–100, standaard 30), `deposit_weeks_before_departure` (standaard 12), `balance_weeks_before_departure` (standaard 6; het voorschot moet eerder vervallen dan het restant) en `payment_email_template_id` (optioneel). Een gekozen template moet van de eigen organisatie zijn; verwijderen van de template maakt de keuze leeg (`ON DELETE SET NULL`). Zonder opgeslagen rij gelden de standaardwaarden. API: `GET`/`PUT /api/organization-settings/mine`.
+
+### Automatische betalingen
+
+Bij het bevestigen van de offerte (vinkje *Offerte bevestigd*, status wordt `BOEKING`) maakt `PaymentPlanService` in dezelfde transactie de betalingen aan, koppelt ze aan de boeking (status `OPEN`, nog niet bij Mollie) en stuurt de **betaalmail** naar de hoofdboeker als de organisatie er een heeft gekozen. Het schema (`PaymentPlan`, pure berekening) gaat uit van het totaal (verblijven plus activiteiten) en de **vertrekdatum** (de vroegste begindatum van de verblijven):
+
+| Situatie (vandaag) | Betalingen |
+|---|---|
+| restanttermijn (vertrek − y weken) ligt nog voor ons | **VOORSCHOT** (x% van het totaal, op centen afgerond) uiterlijk vertrek − x weken, of vandaag als dat al voorbij is; **RESTANT** (de rest) uiterlijk vertrek − y weken |
+| restanttermijn is al voorbij | één **DEFINITIEF**: het hele bedrag, uiterlijk vandaag |
+| voorschot is 100% | alleen een VOORSCHOT |
+
+Zonder verblijf met een prijs kan niet bevestigd worden (`400`, er verandert niets). Handmatig vastgelegde betalingen hebben soort **OVERIG** (ook alle betalingen van vóór V19) en tellen niet mee in het schema.
+
+**Restant herberekenen.** Na elke wijziging van een verblijf of activiteit (toevoegen, wijzigen, verwijderen) rekent het systeem bij een bevestigde boeking het restant (of de definitieve betaling) opnieuw uit: totaal min voorschot. Dat gebeurt alleen zolang die betaling nog niet bij Mollie bestaat; zou het restant 0 of negatief worden, dan blijft het bedrag staan (gelogd).
+
+**In templates** staan de betalingen als `booking.payments` (zie [templates.md](templates.md)), zodat de betaalmail ze kan opsommen.
 
 ### Concept-boeking
 
@@ -90,7 +106,7 @@ Mislukt een stap (PDF, mail), dan wordt alles teruggedraaid. Opnieuw versturen i
 
 ## Betalen
 
-De medewerker legt een betaling vast (`MolliePayment` + koppeling met de boeking); de klant betaalt in de portal; de webhook werkt de status bij (`OPEN → … → PAID`). Zie [mollie.md](mollie.md).
+Het systeem maakt bij het bevestigen van de offerte het betalingsschema aan (zie *Automatische betalingen*); een medewerker kan daarnaast zelf een betaling vastleggen (soort OVERIG). De klant betaalt in de portal; de webhook werkt de status bij (`OPEN → … → PAID`). Zie [mollie.md](mollie.md).
 
 ## Domeinregels om te onthouden
 

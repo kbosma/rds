@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.settings.controller;
 
+import jakarta.validation.Valid;
 import nl.puurkroatie.rds.settings.dto.OrganizationSettingsDto;
 import nl.puurkroatie.rds.settings.service.OrganizationSettingsService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,7 +29,7 @@ public class OrganizationSettingsController {
 
     @PutMapping("/mine")
     @PreAuthorize("hasAuthority('ORGANIZATION_SETTINGS_UPDATE')")
-    public OrganizationSettingsDto updateMine(@RequestBody OrganizationSettingsDto dto) {
+    public OrganizationSettingsDto updateMine(@RequestBody @Valid OrganizationSettingsDto dto) {
         return settingsService.updateMine(dto);
     }
 }

@@ -118,7 +118,17 @@ interface BookingMolliePaymentLink {
 
           <ng-container matColumnDef="description">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.description' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+            <td mat-cell *matCellDef="let row">
+              {{ row.description }}
+              @if (row.paymentType && row.paymentType !== 'overig') {
+                <div class="payment-type">{{ 'payments.types.' + row.paymentType | translate }}</div>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'payments.dueDate' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.dueDate ? (row.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="method">
@@ -176,6 +186,7 @@ interface BookingMolliePaymentLink {
     }
   `,
   styles: [`
+    .payment-type { font-size: 12px; color: var(--ui-text-secondary, #666); }
     h1 {
       margin: 0 0 20px;
       font-size: 24px;
@@ -323,7 +334,7 @@ export class MolliePaymentsOverviewComponent implements OnInit {
 
   paymentStatusMap = signal<Record<string, string>>({});
 
-  displayedColumns = ['molliePaymentExternalId', 'bookingNumber', 'createdAt', 'description', 'method', 'amount', 'status', 'actions'];
+  displayedColumns = ['molliePaymentExternalId', 'bookingNumber', 'createdAt', 'description', 'dueDate', 'method', 'amount', 'status', 'actions'];
 
   totalAmount = computed(() =>
     this.filteredPayments().reduce((sum, p) => sum + (p.amount ?? 0), 0)

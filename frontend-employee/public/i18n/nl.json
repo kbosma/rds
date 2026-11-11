@@ -346,8 +346,14 @@
       "accommodationName": "Accommodatie",
       "supplierName": "Leverancier",
       "activityName": "Activiteit",
-      "meetingPoint": "Ontmoetingspunt"
-    }
+      "meetingPoint": "Ontmoetingspunt",
+      "description": "Omschrijving",
+      "paymentType": "Soort",
+      "amount": "Bedrag",
+      "dueDate": "Uiterlijk betalen",
+      "paymentStatus": "Status"
+    },
+    "repeatPayments": "Betalingen"
   },
   "prospects": {
     "title": "Prospects",
@@ -486,7 +492,14 @@
     "relinkHistory": "Herkoppelingen",
     "relinkFrom": "Van boeking",
     "relinkTo": "Naar boeking",
-    "relinkNoBookings": "Er is geen andere boeking om aan te koppelen."
+    "relinkNoBookings": "Er is geen andere boeking om aan te koppelen.",
+    "types": {
+      "voorschot": "Voorschot",
+      "restant": "Restant",
+      "definitief": "Volledige betaling",
+      "overig": "Overig"
+    },
+    "dueDate": "Uiterlijk"
   },
   "organizations": {
     "title": "Organisaties",
@@ -851,6 +864,14 @@
     "readOnly": "Alleen een manager kan deze instellingen wijzigen.",
     "saved": "Instellingen opgeslagen",
     "saveError": "Opslaan mislukt",
-    "loadError": "Instellingen laden mislukt"
+    "loadError": "Instellingen laden mislukt",
+    "paymentsTitle": "Betalingen",
+    "paymentsIntro": "Bij het bevestigen van de offerte maakt het systeem de betalingen aan. Het voorschot vervalt een aantal weken voor vertrek (of direct, als dat moment al voorbij is), het restant later. Is ook de restanttermijn al voorbij, dan is er één betaling van het hele bedrag, direct.",
+    "depositPercentage": "Voorschot (% van het totaal)",
+    "depositWeeks": "Voorschot: weken voor vertrek",
+    "balanceWeeks": "Restant: weken voor vertrek",
+    "weeksOrder": "Het voorschot moet eerder vervallen dan het restant.",
+    "paymentEmailTemplate": "Betaalmail (e-mailtemplate)",
+    "paymentEmailHint": "Gaat naar de hoofdboeker zodra de betalingen zijn aangemaakt. Niet gekozen: geen mail."
   }
 }

@@ -43,10 +43,18 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
         UUID organizationId = ownOrganization();
         verifyDocumentTemplate(dto.quoteDocumentTemplateId(), organizationId);
         verifyEmailTemplate(dto.quoteEmailTemplateId(), organizationId);
+        verifyEmailTemplate(dto.paymentEmailTemplateId(), organizationId);
+        if (dto.depositWeeksBeforeDeparture() <= dto.balanceWeeksBeforeDeparture()) {
+            throw new IllegalArgumentException(
+                    "Het voorschot moet eerder vervallen dan het restant: kies meer weken voor vertrek bij het voorschot");
+        }
 
+        OrganizationSettings choices = new OrganizationSettings(organizationId, dto.quoteDocumentTemplateId(),
+                dto.quoteEmailTemplateId(), dto.depositPercentage(), dto.depositWeeksBeforeDeparture(),
+                dto.balanceWeeksBeforeDeparture(), dto.paymentEmailTemplateId());
         OrganizationSettings settings = settingsRepository.findByOrganizationId(organizationId)
-                .map(existing -> existing.withQuoteTemplates(dto.quoteDocumentTemplateId(), dto.quoteEmailTemplateId()))
-                .orElseGet(() -> new OrganizationSettings(organizationId, dto.quoteDocumentTemplateId(), dto.quoteEmailTemplateId()));
+                .map(existing -> existing.withChoicesOf(choices))
+                .orElse(choices);
         return mapper.toDto(settingsRepository.save(settings));
     }
 
@@ -54,7 +62,7 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
     @Transactional(readOnly = true)
     public OrganizationSettings forOrganization(UUID organizationId) {
         return settingsRepository.findByOrganizationId(organizationId)
-                .orElseGet(() -> new OrganizationSettings(organizationId, null, null));
+                .orElseGet(() -> OrganizationSettings.defaults(organizationId));
     }
 
     /** Instellingen horen altijd bij de organisatie van de ingelogde gebruiker (ook een ADMIN heeft er één). */

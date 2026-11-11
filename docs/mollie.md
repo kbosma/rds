@@ -75,7 +75,8 @@ Regels: de doelboeking moet bij dezelfde organisatie horen als de betaling (ook 
 
 ## Levenscyclus: een betaling is eerst een aankondiging
 
-1. **Aangekondigd:** een medewerker legt een betaling vast (omschrijving, bedrag). Er is nog geen Mollie-id; de betaling bestaat alleen bij ons en mag nog worden **aangepast** (omschrijving, bedrag).
+0. **Soort en vervaldatum** (V19): `payment_type` is `VOORSCHOT`, `RESTANT` of `DEFINITIEF` voor betalingen die het systeem aanmaakt bij het bevestigen van de offerte (zie [domain.md](domain.md#automatische-betalingen)), en `OVERIG` voor een betaling die een medewerker zelf vastlegt (en voor alle betalingen van vóór V19). `due_date` is de uiterlijke betaaldatum. Beide bepaalt de server; bij bewerken blijven ze staan. In JSON lowercase (`voorschot`, …), ook in het portaal (`PortalPaymentDto.paymentType`, `dueDate`).
+1. **Aangekondigd:** een medewerker legt een betaling vast (omschrijving, bedrag), of het systeem maakt haar aan. Er is nog geen Mollie-id; de betaling bestaat alleen bij ons en mag nog worden **aangepast** (omschrijving, bedrag).
 2. **Bij Mollie aangemaakt:** zodra de klant in het portaal betaalt, maakt de backend de betaling bij Mollie aan en krijgt het record het Mollie-id (`tr_…`) en de checkout-URL. Vanaf dat moment is de betaling **geschiedenis**: `PUT` geeft **409** (`PaymentLockedException`) en de UI toont geen bewerkicoon.
 3. **Statussen via de webhook:** zie hieronder.
 

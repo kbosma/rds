@@ -18,6 +18,7 @@ import nl.puurkroatie.rds.bookerportal.dto.PortalPaymentStatusDto;
 import nl.puurkroatie.rds.bookerportal.dto.PortalTravelerDto;
 import nl.puurkroatie.rds.mollie.entity.MolliePayment;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentMethod;
+import nl.puurkroatie.rds.mollie.entity.PaymentType;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatusEntry;
 import org.mapstruct.Mapper;
@@ -51,6 +52,8 @@ public interface PortalMapper {
     @Mapping(target = "method", source = "payment.method")
     @Mapping(target = "currentStatus", source = "currentStatus")
     @Mapping(target = "createdAt", source = "payment.createdAt")
+    @Mapping(target = "paymentType", source = "payment.paymentType")
+    @Mapping(target = "dueDate", source = "payment.dueDate")
     PortalPaymentDto toPaymentDto(MolliePayment payment, MolliePaymentStatus currentStatus);
 
     @Mapping(target = "molliePaymentId", source = "entry.molliePayment.molliePaymentId")
@@ -72,6 +75,10 @@ public interface PortalMapper {
 
     default String toValue(MolliePaymentMethod method) {
         return method == null ? null : method.toValue();
+    }
+
+    default String toValue(PaymentType type) {
+        return type == null ? null : type.toValue();
     }
 
     default String toValue(MolliePaymentStatus status) {

@@ -15,8 +15,14 @@ public class BookingContext {
     private List<TravelerContext> travelers;
     private List<BookingLineContext> bookingLines;
     private List<BookingActivityContext> bookingActivities;
+    private List<PaymentContext> payments;
 
     public BookingContext(String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, BookerContext booker, List<TravelerContext> travelers, List<BookingLineContext> bookingLines, List<BookingActivityContext> bookingActivities) {
+        this(bookingNumber, bookingStatus, fromDate, untilDate, totalSum, booker, travelers, bookingLines, bookingActivities, List.of());
+    }
+
+    public BookingContext(String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, BookerContext booker, List<TravelerContext> travelers, List<BookingLineContext> bookingLines, List<BookingActivityContext> bookingActivities, List<PaymentContext> payments) {
+        this.payments = payments;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
         this.fromDate = fromDate;
@@ -62,5 +68,10 @@ public class BookingContext {
 
     public List<BookingActivityContext> getBookingActivities() {
         return bookingActivities;
+    }
+
+    /** De betalingen van de boeking, op vervaldatum (zonder vervaldatum achteraan). */
+    public List<PaymentContext> getPayments() {
+        return payments;
     }
 }

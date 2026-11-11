@@ -127,11 +127,14 @@ describe('TemplateBodyEditorComponent', () => {
 
     it('de lijsten en velden bestaan in het model van de backend (geen verzonnen velden)', () => {
       const lists = BOOKING_REPEAT_TABLES.map(d => d.list);
-      expect(lists).toEqual(['booking.travelers', 'booking.bookingLines', 'booking.bookingActivities']);
+      expect(lists).toEqual(['booking.travelers', 'booking.bookingLines', 'booking.bookingActivities', 'booking.payments']);
       const tokens = BOOKING_REPEAT_TABLES.flatMap(d => d.columns.map(c => c.token));
       expect(tokens).toContain('${t.firstname}');
       expect(tokens).toContain('${l.accommodation.name}');
       expect(tokens).toContain('${a.activityName}');
+      // PaymentContext: description, amount, paymentType, dueDate, status
+      expect(tokens).toContain('${p.paymentType}');
+      expect(tokens).toContain('${p.dueDate!""}');
       // elke kolom gebruikt het itemnaam van zijn eigen definitie
       BOOKING_REPEAT_TABLES.forEach(d =>
         d.columns.forEach(c => expect(c.token.startsWith('${' + d.item + '.')).toBe(true)));
@@ -206,7 +209,7 @@ describe('TemplateBodyEditorComponent', () => {
 
       fixture.componentRef.setInput('repeatTables', BOOKING_REPEAT_TABLES);
 
-      expect(component.repeatTables().length).toBe(3);
+      expect(component.repeatTables().length).toBe(4);
     });
   });
 

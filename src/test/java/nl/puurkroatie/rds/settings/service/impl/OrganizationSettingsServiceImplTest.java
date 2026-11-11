@@ -67,7 +67,25 @@ class OrganizationSettingsServiceImplTest {
         when(documentTemplateRepository.findById(TEMPLATE_ID)).thenReturn(Optional.of(foreign));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.updateMine(new OrganizationSettingsDto(null, TEMPLATE_ID, null, null, null)));
+                () -> service.updateMine(new OrganizationSettingsDto(null, TEMPLATE_ID, null, 30, 12, 6, null, null, null)));
+        verify(settingsRepository, never()).save(any());
+    }
+
+    @Test
+    void aPaymentEmailTemplateOfAnotherOrganization_isRejected() {
+        EmailTemplate foreign = mock(EmailTemplate.class);
+        when(foreign.getTenantOrganization()).thenReturn(OTHER_ORG);
+        when(emailTemplateRepository.findById(TEMPLATE_ID)).thenReturn(Optional.of(foreign));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.updateMine(new OrganizationSettingsDto(null, null, null, 30, 12, 6, TEMPLATE_ID, null, null)));
+        verify(settingsRepository, never()).save(any());
+    }
+
+    @Test
+    void theDepositMustFallDueBeforeTheBalance() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.updateMine(new OrganizationSettingsDto(null, null, null, 30, 6, 6, null, null, null)));
         verify(settingsRepository, never()).save(any());
     }
 
@@ -78,7 +96,7 @@ class OrganizationSettingsServiceImplTest {
         when(emailTemplateRepository.findById(TEMPLATE_ID)).thenReturn(Optional.of(foreign));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.updateMine(new OrganizationSettingsDto(null, null, TEMPLATE_ID, null, null)));
+                () -> service.updateMine(new OrganizationSettingsDto(null, null, TEMPLATE_ID, 30, 12, 6, null, null, null)));
         verify(settingsRepository, never()).save(any());
     }
 }

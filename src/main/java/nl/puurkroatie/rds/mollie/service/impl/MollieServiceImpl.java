@@ -68,15 +68,8 @@ public class MollieServiceImpl implements MollieService {
                     + ") and can no longer be changed");
         }
         // Het Mollie-id en de checkout-URL zijn van de server: een client kan ze niet zetten of wissen.
-        MolliePayment entity = new MolliePayment(
-                id,
-                existing.getMolliePaymentExternalId(),
-                dto.getMethod(),
-                dto.getAmount(),
-                dto.getCurrency(),
-                dto.getDescription(),
-                existing.getCheckoutUrl()
-        );
+        // Soort en vervaldatum horen bij het betalingsschema en blijven staan.
+        MolliePayment entity = existing.withDetails(dto.getMethod(), dto.getAmount(), dto.getCurrency(), dto.getDescription());
         MolliePayment saved = molliePaymentRepository.save(entity);
         return molliePaymentMapper.toDto(saved);
     }
@@ -139,16 +132,6 @@ public class MollieServiceImpl implements MollieService {
         if (response != null) {
             molliePaymentRepository.findByMolliePaymentExternalId(request.getId())
                     .ifPresent(existing -> {
-                        MolliePayment updated = new MolliePayment(
-                                existing.getMolliePaymentId(),
-                                existing.getMolliePaymentExternalId(),
-                                existing.getMethod(),
-                                existing.getAmount(),
-                                existing.getCurrency(),
-                                existing.getDescription(),
-                                existing.getCheckoutUrl()
-                        );
-                        molliePaymentRepository.save(updated);
                         MolliePaymentStatus status = response.getStatus() != null ? MolliePaymentStatus.fromValue(response.getStatus()) : null;
                         if (status != null) {
                             statusEntryService.createStatusFromWebhook(existing.getMolliePaymentId(), status);

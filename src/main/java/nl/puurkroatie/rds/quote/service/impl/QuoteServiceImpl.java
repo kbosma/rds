@@ -61,7 +61,7 @@ public class QuoteServiceImpl implements QuoteService {
         // Eerst de status, zodat document en mail al "OFFERTE" tonen. Gaat daarna iets mis (PDF, mail), dan wordt
         // alles in deze transactie teruggedraaid, ook de status.
         if (booking.getBookingStatus() != BookingStatus.OFFERTE) {
-            bookingRepository.saveAndFlush(new Booking(booking.getBookingId(), booking.getBooker(), booking.getBookingNumber(),
+            bookingRepository.saveAndRefresh(new Booking(booking.getBookingId(), booking.getBooker(), booking.getBookingNumber(),
                     BookingStatus.OFFERTE, booking.isQuoteConfirmed(), booking.getQuoteConfirmedAt(),
                     booking.getCreatedAt(), booking.getCreatedBy(), booking.getTenantOrganization()));
         }

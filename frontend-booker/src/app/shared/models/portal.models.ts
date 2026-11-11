@@ -54,6 +54,10 @@ export interface PortalPayment {
   /** open, pending, authorized, paid, failed, canceled of expired */
   currentStatus: string;
   createdAt: string;
+  /** voorschot, restant, definitief of overig */
+  paymentType?: string | null;
+  /** uiterlijke betaaldatum (jjjj-mm-dd), of leeg */
+  dueDate?: string | null;
 }
 
 export interface PortalPaymentStatus {

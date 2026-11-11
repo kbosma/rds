@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.paymentplan.service.PaymentPlanService;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
@@ -32,14 +33,17 @@ public class BookingServiceImpl implements BookingService {
 
     private final DeletionGuard deletionGuard;
     private final BookerStatusUpdater bookerStatusUpdater;
+    private final PaymentPlanService paymentPlanService;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper, BookingNumberGenerator bookingNumberGenerator, DeletionGuard deletionGuard, BookerStatusUpdater bookerStatusUpdater) {
+    public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper, BookingNumberGenerator bookingNumberGenerator, DeletionGuard deletionGuard, BookerStatusUpdater bookerStatusUpdater,
+                              PaymentPlanService paymentPlanService) {
         this.bookingRepository = bookingRepository;
         this.bookerRepository = bookerRepository;
         this.bookingMapper = bookingMapper;
         this.bookingNumberGenerator = bookingNumberGenerator;
         this.deletionGuard = deletionGuard;
         this.bookerStatusUpdater = bookerStatusUpdater;
+        this.paymentPlanService = paymentPlanService;
     }
 
     /** Een boeking ontstaat altijd vanuit een bestaande booker, met status AANVRAAG en een nog niet bevestigde offerte. */
@@ -70,7 +74,8 @@ public class BookingServiceImpl implements BookingService {
         if (confirmed && !dto.isQuoteConfirmed()) {
             throw new IllegalArgumentException("A confirmed quote cannot be unconfirmed");
         }
-        if (!confirmed && dto.isQuoteConfirmed()) {
+        boolean newlyConfirmed = !confirmed && dto.isQuoteConfirmed();
+        if (newlyConfirmed) {
             verifyConfirmable(existing, booker);
             confirmed = true;
             confirmedAt = LocalDateTime.now();
@@ -78,11 +83,15 @@ public class BookingServiceImpl implements BookingService {
         }
 
         UUID previousBookerId = existing.getBooker() != null ? existing.getBooker().getBookerId() : null;
-        Booking saved = bookingRepository.save(new Booking(id, booker, existing.getBookingNumber(), status, confirmed, confirmedAt,
+        Booking saved = bookingRepository.saveAndRefresh(new Booking(id, booker, existing.getBookingNumber(), status, confirmed, confirmedAt,
                 existing.getCreatedAt(), existing.getCreatedBy(), existing.getTenantOrganization()));
         bookerStatusUpdater.refresh(dto.getBookerId());
         if (previousBookerId != null && !previousBookerId.equals(dto.getBookerId())) {
             bookerStatusUpdater.refresh(previousBookerId);
+        }
+        if (newlyConfirmed) {
+            // Net bevestigd: het systeem maakt de betalingen aan en stuurt de betaalmail (zelfde transactie).
+            paymentPlanService.createFor(id);
         }
         return bookingMapper.toDto(saved);
     }

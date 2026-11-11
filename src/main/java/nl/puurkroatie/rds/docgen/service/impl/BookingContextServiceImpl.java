@@ -1,5 +1,12 @@
 package nl.puurkroatie.rds.docgen.service.impl;
 
+import nl.puurkroatie.rds.booking.entity.BookingMolliePayment;
+import nl.puurkroatie.rds.booking.repository.BookingMolliePaymentRepository;
+import nl.puurkroatie.rds.docgen.context.PaymentContext;
+import nl.puurkroatie.rds.mollie.entity.MolliePayment;
+import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
+import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatusEntry;
+import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.Booking;
@@ -21,6 +28,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,12 +44,18 @@ public class BookingContextServiceImpl implements BookingContextService {
     private final BookerAddressRepository bookerAddressRepository;
     private final AccommodationAddressRepository accommodationAddressRepository;
     private final SupplierAddressRepository supplierAddressRepository;
+    private final BookingMolliePaymentRepository bookingMolliePaymentRepository;
+    private final MolliePaymentStatusEntryRepository statusEntryRepository;
 
     public BookingContextServiceImpl(BookingRepository bookingRepository,
                                      BookerRepository bookerRepository,
                                      BookerAddressRepository bookerAddressRepository,
                                      AccommodationAddressRepository accommodationAddressRepository,
-                                     SupplierAddressRepository supplierAddressRepository) {
+                                     SupplierAddressRepository supplierAddressRepository,
+                                     BookingMolliePaymentRepository bookingMolliePaymentRepository,
+                                     MolliePaymentStatusEntryRepository statusEntryRepository) {
+        this.bookingMolliePaymentRepository = bookingMolliePaymentRepository;
+        this.statusEntryRepository = statusEntryRepository;
         this.bookingRepository = bookingRepository;
         this.bookerRepository = bookerRepository;
         this.bookerAddressRepository = bookerAddressRepository;
@@ -174,8 +188,30 @@ public class BookingContextServiceImpl implements BookingContextService {
                 bookerContext,
                 travelerContexts,
                 bookingLineContexts,
-                bookingActivityContexts
+                bookingActivityContexts,
+                paymentContexts(bookingWithBookerAndTravelers.getBookingId())
         );
+    }
+
+    private List<PaymentContext> paymentContexts(UUID bookingId) {
+        List<MolliePayment> payments = bookingMolliePaymentRepository.findByBookingBookingId(bookingId).stream()
+                .map(BookingMolliePayment::getMolliePayment)
+                .sorted(Comparator.comparing(MolliePayment::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(MolliePayment::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        if (payments.isEmpty()) {
+            return List.of();
+        }
+        // De huidige status is de laatste statusregel (statusregels worden alleen toegevoegd).
+        Map<UUID, MolliePaymentStatus> current = new HashMap<>();
+        statusEntryRepository.findByMolliePaymentMolliePaymentIdIn(payments.stream().map(MolliePayment::getMolliePaymentId).toList())
+                .stream()
+                .sorted(Comparator.comparing(MolliePaymentStatusEntry::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())))
+                .forEach(e -> current.put(e.getMolliePayment().getMolliePaymentId(), e.getStatus()));
+        return payments.stream()
+                .map(p -> new PaymentContext(p.getDescription(), p.getAmount(), p.getPaymentType().toValue(), p.getDueDate(),
+                        current.getOrDefault(p.getMolliePaymentId(), MolliePaymentStatus.OPEN).toValue()))
+                .toList();
     }
 
     private AddressContext toAddressContext(nl.puurkroatie.rds.booking.entity.Address address) {

@@ -342,6 +342,27 @@ describe('BookingDetailComponent', () => {
     }
   }));
 
+  it('toont bij een betaling uit het betalingsschema de soort en de uiterlijke betaaldatum', fakeAsync(() => {
+    createComponent();
+    spyOn(component.authService, 'hasAuthority').and.returnValue(true);
+    fixture.detectChanges();
+    tick();
+    component.paymentsLoading.set(false);
+    component.payments.set([
+      { molliePaymentId: 'p-1', description: 'Voorschot BK-2026-001', amount: 735, paymentType: 'voorschot', dueDate: '2026-04-15' } as MolliePayment,
+      { molliePaymentId: 'p-2', description: 'Aanbetaling', amount: 100, paymentType: 'overig', dueDate: null } as MolliePayment,
+    ]);
+    fixture.detectChanges();
+
+    const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('tr.mat-mdc-row');
+    const paymentRows = Array.from(rows).filter(r => r.textContent?.includes('Voorschot BK') || r.textContent?.includes('Aanbetaling'));
+    expect(paymentRows.length).toBe(2);
+    expect(paymentRows[0].querySelector('.payment-type')).not.toBeNull();
+    expect(paymentRows[0].querySelector('.due-date')?.textContent).toContain('15-04-2026');
+    expect(paymentRows[1].querySelector('.payment-type')).toBeNull();
+    expect(paymentRows[1].querySelector('.due-date')?.textContent).toContain('—');
+  }));
+
   describe('offerte versturen', () => {
     const sendQuoteButton = () => (fixture.nativeElement as HTMLElement).querySelector('button.send-quote-btn') as HTMLButtonElement | null;
     // Het component heeft MatSnackBarModule in zijn imports, dus de eigen snackbar telt (niet die uit de providers).

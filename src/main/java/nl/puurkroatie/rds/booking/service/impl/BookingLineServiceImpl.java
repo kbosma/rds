@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.paymentplan.service.PaymentPlanService;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingLineDto;
 import nl.puurkroatie.rds.booking.entity.Accommodation;
@@ -30,17 +31,20 @@ public class BookingLineServiceImpl implements BookingLineService {
     private final AccommodationRepository accommodationRepository;
     private final SupplierRepository supplierRepository;
     private final BookingLineMapper bookingLineMapper;
+    private final PaymentPlanService paymentPlanService;
 
     public BookingLineServiceImpl(BookingLineRepository bookingLineRepository,
                                   BookingRepository bookingRepository,
                                   AccommodationRepository accommodationRepository,
                                   SupplierRepository supplierRepository,
-                                  BookingLineMapper bookingLineMapper) {
+                                  BookingLineMapper bookingLineMapper,
+                                  PaymentPlanService paymentPlanService) {
         this.bookingLineRepository = bookingLineRepository;
         this.bookingRepository = bookingRepository;
         this.accommodationRepository = accommodationRepository;
         this.supplierRepository = supplierRepository;
         this.bookingLineMapper = bookingLineMapper;
+        this.paymentPlanService = paymentPlanService;
     }
 
     @Override
@@ -91,6 +95,8 @@ public class BookingLineServiceImpl implements BookingLineService {
                 dto.getFromDate(), dto.getUntilDate(), dto.getPrice()
         );
         BookingLine saved = bookingLineRepository.save(entity);
+        // Het totaal is veranderd: een nog niet gestart restant rekent mee.
+        paymentPlanService.recalculateBalance(booking.getBookingId());
         return bookingLineMapper.toDto(saved);
     }
 
@@ -110,6 +116,8 @@ public class BookingLineServiceImpl implements BookingLineService {
                 dto.getFromDate(), dto.getUntilDate(), dto.getPrice()
         );
         BookingLine saved = bookingLineRepository.save(updated);
+        // Het totaal is veranderd: een nog niet gestart restant rekent mee.
+        paymentPlanService.recalculateBalance(booking.getBookingId());
         return bookingLineMapper.toDto(saved);
     }
 
@@ -121,6 +129,8 @@ public class BookingLineServiceImpl implements BookingLineService {
         verifyOrganization(existing.getTenantOrganization());
 
         bookingLineRepository.deleteById(bookingLineId);
+        // Het totaal is veranderd: een nog niet gestart restant rekent mee.
+        paymentPlanService.recalculateBalance(existing.getBooking().getBookingId());
     }
 
     private boolean isAdmin() {

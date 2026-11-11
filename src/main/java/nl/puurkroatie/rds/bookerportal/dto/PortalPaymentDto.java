@@ -1,6 +1,7 @@
 package nl.puurkroatie.rds.bookerportal.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -12,5 +13,9 @@ public record PortalPaymentDto(
         String currency,
         String method,
         String currentStatus,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        /** voorschot, restant, definitief of overig */
+        String paymentType,
+        /** uiterlijke betaaldatum, of leeg */
+        LocalDate dueDate) {
 }

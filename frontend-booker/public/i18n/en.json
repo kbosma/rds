@@ -112,6 +112,13 @@
         "failed": "Failed",
         "canceled": "Cancelled",
         "expired": "Expired"
+      },
+      "dueBy": "due by {{date}}",
+      "types": {
+        "voorschot": "deposit",
+        "restant": "balance",
+        "definitief": "full payment",
+        "overig": "other"
       }
     },
     "messages": {

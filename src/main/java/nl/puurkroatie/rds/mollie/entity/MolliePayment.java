@@ -15,6 +15,7 @@ import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.common.Default;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -45,6 +46,14 @@ public class MolliePayment {
 
     @Column(name = "checkout_url")
     private String checkoutUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false)
+    private PaymentType paymentType = PaymentType.OVERIG;
+
+    /** Uiterlijke betaaldatum; leeg bij een betaling zonder termijn. */
+    @Column(name = "due_date")
+    private LocalDate dueDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -96,6 +105,49 @@ public class MolliePayment {
         this.description = description;
         this.checkoutUrl = checkoutUrl;
         this.tenantOrganization = tenantOrganization;
+    }
+
+    /**
+     * Een betaling uit het betalingsschema (voorschot, restant of definitief), aangemaakt door het systeem bij het
+     * bevestigen van de offerte. Nog niet bij Mollie: dat gebeurt pas als de klant betaalt.
+     */
+    public static MolliePayment planned(PaymentType paymentType, BigDecimal amount, String currency, String description,
+                                        LocalDate dueDate, UUID tenantOrganization) {
+        MolliePayment payment = new MolliePayment(null, null, amount, currency, description, null, tenantOrganization);
+        payment.paymentType = paymentType;
+        payment.dueDate = dueDate;
+        return payment;
+    }
+
+    /** Kopie met andere gegevens (bewerken van een aankondiging); soort, vervaldatum en Mollie-gegevens blijven. */
+    public MolliePayment withDetails(MolliePaymentMethod newMethod, BigDecimal newAmount, String newCurrency, String newDescription) {
+        return copy(molliePaymentExternalId, newMethod, newAmount, newCurrency, newDescription, checkoutUrl);
+    }
+
+    /** Kopie met het Mollie-id en de checkout-URL, zodra de betaling bij Mollie is aangemaakt. */
+    public MolliePayment withMollieReference(String externalId, String newCheckoutUrl) {
+        return copy(externalId, method, amount, currency, description, newCheckoutUrl);
+    }
+
+    /** Kopie met een ander bedrag (herberekend restant). */
+    public MolliePayment withAmount(BigDecimal newAmount) {
+        return copy(molliePaymentExternalId, method, newAmount, currency, description, checkoutUrl);
+    }
+
+    /** Of de betaling al bij Mollie bestaat; dan is ze geschiedenis en verandert er niets meer aan. */
+    public boolean isAtMollie() {
+        return molliePaymentExternalId != null && !molliePaymentExternalId.isBlank();
+    }
+
+    private MolliePayment copy(String externalId, MolliePaymentMethod newMethod, BigDecimal newAmount, String newCurrency,
+                               String newDescription, String newCheckoutUrl) {
+        MolliePayment copy = new MolliePayment(molliePaymentId, externalId, newMethod, newAmount, newCurrency, newDescription, newCheckoutUrl);
+        copy.paymentType = paymentType;
+        copy.dueDate = dueDate;
+        copy.createdAt = createdAt;
+        copy.createdBy = createdBy;
+        copy.tenantOrganization = tenantOrganization;
+        return copy;
     }
 
     @PrePersist
@@ -155,6 +207,14 @@ public class MolliePayment {
 
     public UUID getModifiedBy() {
         return modifiedBy;
+    }
+
+    public PaymentType getPaymentType() {
+        return paymentType;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
     }
 
     public UUID getTenantOrganization() {

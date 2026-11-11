@@ -19,7 +19,9 @@ describe('OrganizationSettingsComponent', () => {
   let settingsSpy: jasmine.SpyObj<OrganizationSettingsService>;
 
   const settings: OrganizationSettings = {
-    organizationId: 'o-1', quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: null, modifiedAt: null, modifiedBy: null,
+    organizationId: 'o-1', quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: null,
+    depositPercentage: 25, depositWeeksBeforeDeparture: 10, balanceWeeksBeforeDeparture: 4, paymentEmailTemplateId: 'et-1',
+    modifiedAt: null, modifiedBy: null,
   };
   const documentTemplates = [{ documentTemplateId: 'dt-1', name: 'Offerte' }, { documentTemplateId: 'dt-2', name: 'Voucher' }] as DocumentTemplate[];
   const emailTemplates = [{ emailTemplateId: 'et-1', name: 'Offertemail' }] as EmailTemplate[];
@@ -59,7 +61,10 @@ describe('OrganizationSettingsComponent', () => {
     expect(component.loading()).toBeFalse();
     expect(component.documentTemplates().length).toBe(2);
     expect(component.emailTemplates().length).toBe(1);
-    expect(component.form.getRawValue()).toEqual({ quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: null });
+    expect(component.form.getRawValue()).toEqual({
+      quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: null,
+      depositPercentage: 25, depositWeeksBeforeDeparture: 10, balanceWeeksBeforeDeparture: 4, paymentEmailTemplateId: 'et-1',
+    });
   }));
 
   it('slaat de gekozen templates op', fakeAsync(() => {
@@ -70,9 +75,37 @@ describe('OrganizationSettingsComponent', () => {
     component.save();
     tick();
 
-    expect(settingsSpy.updateMine).toHaveBeenCalledWith({ quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: 'et-1' });
+    expect(settingsSpy.updateMine).toHaveBeenCalledWith({
+      quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: 'et-1',
+      depositPercentage: 25, depositWeeksBeforeDeparture: 10, balanceWeeksBeforeDeparture: 4, paymentEmailTemplateId: 'et-1',
+    });
     expect(component.form.pristine).toBeTrue();
     expect(component.modifiedAt()).toBe('2026-11-11T10:00:00');
+  }));
+
+  it('weigert een voorschot dat niet eerder vervalt dan het restant', fakeAsync(() => {
+    setup(['ORGANIZATION_SETTINGS_READ', 'ORGANIZATION_SETTINGS_UPDATE']);
+    component.form.patchValue({ depositWeeksBeforeDeparture: 4 });
+    component.form.markAsDirty();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(component.form.hasError('weeksOrder')).toBeTrue();
+    expect(el.querySelector('.weeks-order-error')).not.toBeNull();
+    expect((el.querySelector('.save-btn') as HTMLButtonElement).disabled).toBeTrue();
+    component.save();
+    expect(settingsSpy.updateMine).not.toHaveBeenCalled();
+  }));
+
+  it('weigert een voorschotpercentage buiten 1 tot en met 100', fakeAsync(() => {
+    setup(['ORGANIZATION_SETTINGS_READ', 'ORGANIZATION_SETTINGS_UPDATE']);
+
+    component.form.patchValue({ depositPercentage: 0 });
+    expect(component.form.invalid).toBeTrue();
+    component.form.patchValue({ depositPercentage: 101 });
+    expect(component.form.invalid).toBeTrue();
+    component.form.patchValue({ depositPercentage: 100 });
+    expect(component.form.valid).toBeTrue();
   }));
 
   it('is alleen-lezen zonder ORGANIZATION_SETTINGS_UPDATE', fakeAsync(() => {

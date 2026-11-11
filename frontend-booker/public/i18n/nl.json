@@ -112,6 +112,13 @@
         "failed": "Mislukt",
         "canceled": "Geannuleerd",
         "expired": "Verlopen"
+      },
+      "dueBy": "uiterlijk {{date}}",
+      "types": {
+        "voorschot": "voorschot",
+        "restant": "restant",
+        "definitief": "volledige betaling",
+        "overig": "overig"
       }
     },
     "messages": {
