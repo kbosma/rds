@@ -393,6 +393,43 @@ class BookingControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // Bevestigen kan niet zonder hoofdboeker
+    @Test
+    void manager_confirmQuote_withoutBooker_returns400() throws Exception {
+        String token = managerToken();
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"offerte\",\"bookerId\":null}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"offerte\",\"bookerId\":null,\"quoteConfirmed\":true}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // Na bevestigen blijven vinkje en moment van bevestigen staan bij latere statuswijzigingen
+    @Test
+    void manager_confirmedQuote_keepsConfirmedAtOnLaterUpdates() throws Exception {
+        String token = managerToken();
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + BOOKER_TP_4 + "\"}"))
+                .andExpect(status().isOk());
+        String confirmedAt = objectMapper.readTree(mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4)
+                        .header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + BOOKER_TP_4 + "\",\"quoteConfirmed\":true}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("quoteConfirmedAt").asText();
+
+        mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"voorschot\",\"bookerId\":\"" + BOOKER_TP_4 + "\",\"quoteConfirmed\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookingStatus").value("voorschot"))
+                .andExpect(jsonPath("$.quoteConfirmed").value(true))
+                .andExpect(jsonPath("$.quoteConfirmedAt").value(confirmedAt));
+    }
+
     // MANAGER: POST /api/bookings met een onbekende status — 400
     @Test
     void manager_createBooking_withUnknownStatus_returns400() throws Exception {

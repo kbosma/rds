@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -34,6 +35,23 @@ class BookingProspectActivationControllerTest extends AbstractBookingControllerT
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).get("status").asText();
+    }
+
+    private String createBookingIdFor(String token, String bookerId) throws Exception {
+        String body = mockMvc.perform(post("/api/bookings").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookerId\":\"" + bookerId + "\",\"bookingStatus\":\"" + BOOKING_STATUS_AANVRAAG + "\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(body).get("bookingId").asText();
+    }
+
+    private void updateBooking(String token, String bookingId, String bookerId, String bookingStatus) throws Exception {
+        String booker = bookerId == null ? "null" : "\"" + bookerId + "\"";
+        mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookerId\":" + booker + ",\"bookingStatus\":\"" + bookingStatus + "\"}"))
+                .andExpect(status().isOk());
     }
 
     private void createBookingFor(String token, String bookerId) throws Exception {
@@ -153,5 +171,76 @@ class BookingProspectActivationControllerTest extends AbstractBookingControllerT
                 .andExpect(status().isBadRequest());
 
         assertEquals("prospect", bookerStatus(token, prospectId));
+    }
+
+    // Ontkoppel je de enige boeking van een boeker, dan is hij weer PROSPECT
+    @Test
+    void unlinkingTheOnlyBooking_makesTheBookerProspectAgain() throws Exception {
+        String token = managerToken();
+        String bookerId = createBooker(token, "prospect");
+        String bookingId = createBookingIdFor(token, bookerId);
+        assertEquals("active", bookerStatus(token, bookerId));
+
+        updateBooking(token, bookingId, null, BOOKING_STATUS_AANVRAAG);
+
+        assertEquals("prospect", bookerStatus(token, bookerId));
+    }
+
+    // Verplaats je een boeking naar een andere boeker, dan worden beide boekers opnieuw bepaald
+    @Test
+    void movingABookingToAnotherBooker_updatesBothBookers() throws Exception {
+        String token = managerToken();
+        String fromId = createBooker(token, "prospect");
+        String toId = createBooker(token, "prospect");
+        String bookingId = createBookingIdFor(token, fromId);
+
+        updateBooking(token, bookingId, toId, BOOKING_STATUS_AANVRAAG);
+
+        assertEquals("prospect", bookerStatus(token, fromId));
+        assertEquals("active", bookerStatus(token, toId));
+    }
+
+    // Verwijder je de laatste boeking van een boeker, dan is hij weer PROSPECT
+    @Test
+    void deletingTheLastBooking_makesTheBookerProspectAgain() throws Exception {
+        String token = managerToken();
+        String bookerId = createBooker(token, "prospect");
+        String bookingId = createBookingIdFor(token, bookerId);
+
+        mockMvc.perform(delete("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        assertEquals("prospect", bookerStatus(token, bookerId));
+    }
+
+    // Zet je een afgeronde boeking terug, dan wordt een NIETACTIEF-boeker weer ACTIVE
+    @Test
+    void reopeningAnAfgerondBooking_makesTheBookerActiveAgain() throws Exception {
+        String token = managerToken();
+        String bookerId = createBooker(token, "prospect");
+        String bookingId = createBookingIdFor(token, bookerId);
+        updateBooking(token, bookingId, bookerId, "afgerond");
+        assertEquals("nietactief", bookerStatus(token, bookerId));
+
+        updateBooking(token, bookingId, bookerId, "weerthuis");
+
+        assertEquals("active", bookerStatus(token, bookerId));
+    }
+
+    // Bij het bijwerken van een boeker negeert de server een meegestuurde status
+    @Test
+    void updatingABookerWithAnotherStatus_keepsTheDerivedStatus() throws Exception {
+        String token = managerToken();
+        String bookerId = createBooker(token, "prospect");
+        createBookingFor(token, bookerId);
+        String json = "{\"firstname\":\"Petra\",\"prefix\":null,\"lastname\":\"Prospect\",\"callsign\":\"Petra\","
+                + "\"telephone\":\"0611111111\",\"emailaddress\":\"petra@example.com\",\"gender\":\"" + GENDER_MAN + "\","
+                + "\"birthdate\":\"1990-01-01\",\"initials\":\"P.\",\"status\":\"nietactief\"}";
+
+        mockMvc.perform(put("/api/bookers/" + bookerId).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isOk());
+
+        assertEquals("active", bookerStatus(token, bookerId));
     }
 }

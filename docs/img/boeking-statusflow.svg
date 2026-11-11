@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="760" viewBox="0 0 680 760" role="img">
+<title>Stroomdiagram boekingsstatussen</title>
+<desc>Boekingsstatussen van aanvraag tot afgerond, met overgangen per trigger en rol, en terugval door terugboeking of handmatig terugzetten. Doelontwerp (stap 1 t/m 5).</desc>
+<style>
+  svg { background: #ffffff; }
+  text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #5F5E5A; font-size: 12px; dominant-baseline: central; }
+  .th { font-size: 14px; font-weight: 500; fill: #2C2C2A; text-anchor: middle; }
+  .box { fill: #F1EFE8; stroke: #888780; stroke-width: 0.5; }
+  .bg { fill: #ffffff; }
+  .man { stroke: #7F77DD; stroke-width: 1.5; fill: none; }
+  .sys { stroke: #1D9E75; stroke-width: 1.5; fill: none; }
+  .back { stroke: #D85A30; stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #1f1e1c; }
+    text { fill: #B4B2A9; }
+    .th { fill: #F1EFE8; }
+    .box { fill: #444441; stroke: #B4B2A9; }
+  }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect class="bg" x="0" y="0" width="680" height="760"/>
+
+<text x="360" y="40" text-anchor="middle">Nieuwe boeking via bestaande boeker · EMPLOYEE, MANAGER</text>
+<line class="man" x1="360" y1="50" x2="360" y2="77" marker-end="url(#arrow)"/>
+
+<rect class="box" x="280" y="80" width="160" height="44" rx="8"/><text class="th" x="360" y="102">Aanvraag</text>
+<rect class="box" x="280" y="160" width="160" height="44" rx="8"/><text class="th" x="360" y="182">Offerte</text>
+<rect class="box" x="280" y="240" width="160" height="44" rx="8"/><text class="th" x="360" y="262">Boeking</text>
+<rect class="box" x="280" y="320" width="160" height="44" rx="8"/><text class="th" x="360" y="342">Voorschot</text>
+<rect class="box" x="280" y="400" width="160" height="44" rx="8"/><text class="th" x="360" y="422">Betaald</text>
+<rect class="box" x="280" y="480" width="160" height="44" rx="8"/><text class="th" x="360" y="502">Op reis</text>
+<rect class="box" x="280" y="560" width="160" height="44" rx="8"/><text class="th" x="360" y="582">Weer thuis</text>
+<rect class="box" x="280" y="640" width="160" height="44" rx="8"/><text class="th" x="360" y="662">Afgerond</text>
+
+<line class="man" x1="360" y1="126" x2="360" y2="157" marker-end="url(#arrow)"/>
+<line class="man" x1="360" y1="206" x2="360" y2="237" marker-end="url(#arrow)"/>
+<line class="sys" x1="360" y1="286" x2="360" y2="317" marker-end="url(#arrow)"/>
+<line class="sys" x1="360" y1="366" x2="360" y2="397" marker-end="url(#arrow)"/>
+<line class="sys" x1="360" y1="446" x2="360" y2="477" marker-end="url(#arrow)"/>
+<line class="sys" x1="360" y1="526" x2="360" y2="557" marker-end="url(#arrow)"/>
+<line class="sys" x1="360" y1="606" x2="360" y2="637" marker-end="url(#arrow)"/>
+
+<text x="478" y="135">Offerte versturen (knop)</text>
+<text x="478" y="149">EMPLOYEE, MANAGER</text>
+<text x="478" y="215">Vinkje offerte bevestigd</text>
+<text x="478" y="229">EMPLOYEE, MANAGER</text>
+<text x="478" y="295">Voorschot betaald</text>
+<text x="478" y="309">systeem (Mollie)</text>
+<text x="478" y="375">Alles betaald</text>
+<text x="478" y="389">systeem (Mollie)</text>
+<text x="478" y="455">Vertrekdatum bereikt</text>
+<text x="478" y="469">systeem (login, nacht)</text>
+<text x="478" y="535">Einddatum voorbij</text>
+<text x="478" y="549">systeem (login, nacht)</text>
+<text x="478" y="615">Notificaties afgehandeld</text>
+<text x="478" y="629">systeem, of MANAGER</text>
+
+<path class="sys" d="M442 262 H462 V422 H443" marker-end="url(#arrow)"/>
+<text x="478" y="335">Definitieve betaling</text>
+<text x="478" y="349">systeem (Mollie)</text>
+
+<path class="back" d="M278 428 H268 V348 H277" marker-end="url(#arrow)"/>
+<path class="back" d="M278 336 H268 V278 H277" marker-end="url(#arrow)"/>
+<text x="220" y="366" text-anchor="middle">Terugboeking</text>
+<text x="220" y="382" text-anchor="middle">systeem</text>
+<text x="220" y="398" text-anchor="middle">(Mollie)</text>
+
+<path class="back" d="M278 250 H210 V100 H277" marker-end="url(#arrow)"/>
+<text x="40" y="150">Terugzetten</text>
+<text x="40" y="166">met reden</text>
+<text x="40" y="182">EMPLOYEE, MANAGER</text>
+<text x="40" y="198">niets betaald</text>
+
+<path class="back" d="M278 582 H170 V268 H277" marker-end="url(#arrow)"/>
+<text x="40" y="470">Terugzetten</text>
+<text x="40" y="486">met reden</text>
+<text x="40" y="502">alleen MANAGER</text>
+<text x="40" y="518">er is betaald</text>
+
+<line class="man" x1="60" y1="722" x2="96" y2="722"/>
+<text x="104" y="722">Handmatig (rol)</text>
+<line class="sys" x1="240" y1="722" x2="276" y2="722"/>
+<text x="284" y="722">Systeem</text>
+<line class="back" x1="380" y1="722" x2="416" y2="722"/>
+<text x="424" y="722">Terugval</text>
+</svg>

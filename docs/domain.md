@@ -47,6 +47,10 @@ DocumentTemplate, EmailTemplate, EmailImage   (per organisatie, los van een boek
 
 De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-constraint); er is geen afgedwongen toestandsmachine: de medewerker zet de status. In de API en UI is de waarde lowercase (`aanvraag`, …), in het template-model de hoofdletter-naam (`BOEKING`).
 
+![Stroomdiagram boekingsstatussen](img/boeking-statusflow.svg)
+
+Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd is alleen stap 1: een nieuwe boeking start als `AANVRAAG` en het vinkje *Offerte bevestigd* zet `BOEKING`; de overige overgangen zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
+
 ### Booker, prospect en het aanmeldproces
 
 Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSPECT` (kolom `booker.status`, migratie V4; waarden `PROSPECT`, `ACTIVE`, `NIETACTIEF`). Zo blijft het datamodel klein en kan een prospect zonder verhuizing een gewone boeker worden.
