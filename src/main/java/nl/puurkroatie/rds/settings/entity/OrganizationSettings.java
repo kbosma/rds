@@ -15,12 +15,16 @@ import java.util.UUID;
 
 /**
  * De instellingen van één organisatie: keuzes die het systeem nodig heeft om zelf iets te doen, zoals welke
- * Word-template de offerte is en welke e-mailtemplate de offerte begeleidt. Eén rij per organisatie; onveranderlijk
- * (bijwerken = een nieuwe instantie met hetzelfde id opslaan).
+ * Word-template de offerte is, en hoe het betalingsschema eruitziet. Eén rij per organisatie; onveranderlijk
+ * (bijwerken = een nieuwe instantie met hetzelfde id opslaan). Zonder opgeslagen rij gelden {@link #defaults}.
  */
 @Entity
 @Table(name = "organization_settings")
 public class OrganizationSettings {
+
+    public static final int DEFAULT_DEPOSIT_PERCENTAGE = 30;
+    public static final int DEFAULT_DEPOSIT_WEEKS_BEFORE_DEPARTURE = 12;
+    public static final int DEFAULT_BALANCE_WEEKS_BEFORE_DEPARTURE = 6;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -35,6 +39,22 @@ public class OrganizationSettings {
 
     @Column(name = "quote_email_template_id")
     private UUID quoteEmailTemplateId;
+
+    /** Voorschot als percentage van het totaal (1 tot en met 100). */
+    @Column(name = "deposit_percentage", nullable = false)
+    private int depositPercentage;
+
+    /** Het voorschot vervalt zoveel weken voor vertrek (of direct, als dat moment al voorbij is). */
+    @Column(name = "deposit_weeks_before_departure", nullable = false)
+    private int depositWeeksBeforeDeparture;
+
+    /** Het restant vervalt zoveel weken voor vertrek; is dat al voorbij, dan is er één definitieve betaling. */
+    @Column(name = "balance_weeks_before_departure", nullable = false)
+    private int balanceWeeksBeforeDeparture;
+
+    /** De e-mail waarmee de hoofdboeker zijn betalingen krijgt; leeg = geen mail. */
+    @Column(name = "payment_email_template_id")
+    private UUID paymentEmailTemplateId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,16 +71,29 @@ public class OrganizationSettings {
     protected OrganizationSettings() {
     }
 
-    /** Nieuwe instellingen voor een organisatie. */
-    public OrganizationSettings(UUID organizationId, UUID quoteDocumentTemplateId, UUID quoteEmailTemplateId) {
+    public OrganizationSettings(UUID organizationId, UUID quoteDocumentTemplateId, UUID quoteEmailTemplateId,
+                                int depositPercentage, int depositWeeksBeforeDeparture, int balanceWeeksBeforeDeparture,
+                                UUID paymentEmailTemplateId) {
         this.organizationId = organizationId;
         this.quoteDocumentTemplateId = quoteDocumentTemplateId;
         this.quoteEmailTemplateId = quoteEmailTemplateId;
+        this.depositPercentage = depositPercentage;
+        this.depositWeeksBeforeDeparture = depositWeeksBeforeDeparture;
+        this.balanceWeeksBeforeDeparture = balanceWeeksBeforeDeparture;
+        this.paymentEmailTemplateId = paymentEmailTemplateId;
     }
 
-    /** Bijgewerkte instellingen: id en aanmaakgegevens blijven, de keuzes zijn nieuw. */
-    public OrganizationSettings withQuoteTemplates(UUID quoteDocumentTemplateId, UUID quoteEmailTemplateId) {
-        OrganizationSettings updated = new OrganizationSettings(organizationId, quoteDocumentTemplateId, quoteEmailTemplateId);
+    /** De instellingen van een organisatie die nog niets heeft opgeslagen (niet bewaard). */
+    public static OrganizationSettings defaults(UUID organizationId) {
+        return new OrganizationSettings(organizationId, null, null, DEFAULT_DEPOSIT_PERCENTAGE,
+                DEFAULT_DEPOSIT_WEEKS_BEFORE_DEPARTURE, DEFAULT_BALANCE_WEEKS_BEFORE_DEPARTURE, null);
+    }
+
+    /** Bijgewerkte instellingen: id en aanmaakgegevens blijven, de keuzes komen uit {@code choices}. */
+    public OrganizationSettings withChoicesOf(OrganizationSettings choices) {
+        OrganizationSettings updated = new OrganizationSettings(organizationId, choices.quoteDocumentTemplateId,
+                choices.quoteEmailTemplateId, choices.depositPercentage, choices.depositWeeksBeforeDeparture,
+                choices.balanceWeeksBeforeDeparture, choices.paymentEmailTemplateId);
         updated.organizationSettingsId = organizationSettingsId;
         updated.createdAt = createdAt;
         updated.createdBy = createdBy;
@@ -93,6 +126,22 @@ public class OrganizationSettings {
 
     public UUID getQuoteEmailTemplateId() {
         return quoteEmailTemplateId;
+    }
+
+    public int getDepositPercentage() {
+        return depositPercentage;
+    }
+
+    public int getDepositWeeksBeforeDeparture() {
+        return depositWeeksBeforeDeparture;
+    }
+
+    public int getBalanceWeeksBeforeDeparture() {
+        return balanceWeeksBeforeDeparture;
+    }
+
+    public UUID getPaymentEmailTemplateId() {
+        return paymentEmailTemplateId;
     }
 
     public LocalDateTime getCreatedAt() {

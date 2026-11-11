@@ -1,9 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V18**, 11-11-2026).
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V19**, 11-11-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`, V19 `mollie_payment.payment_type`/`due_date` en de betalingsinstellingen in `organization_settings`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -80,6 +80,10 @@ Instellingen per organisatie (één rij per organisatie), nodig om het systeem z
 | organization_id | UUID | FK → organization ON DELETE CASCADE, NOT NULL, **UNIQUE** | Organisatie |
 | quote_document_template_id | UUID | FK → document_template ON DELETE SET NULL | Word-template van de offerte |
 | quote_email_template_id | UUID | FK → email_template ON DELETE SET NULL | e-mail die de offerte begeleidt |
+| deposit_percentage | INTEGER | NOT NULL, default 30, CHECK 1–100 (V19) | voorschot als percentage van het totaal |
+| deposit_weeks_before_departure | INTEGER | NOT NULL, default 12 (V19) | voorschot vervalt zoveel weken voor vertrek |
+| balance_weeks_before_departure | INTEGER | NOT NULL, default 6, CHECK ≥ 0 en < deposit_weeks (V19) | restant vervalt zoveel weken voor vertrek |
+| payment_email_template_id | UUID | FK → email_template ON DELETE SET NULL (V19) | betaalmail aan de hoofdboeker; leeg = geen mail |
 | created_at / created_by / modified_at / modified_by | | | audit |
 
 **Bestanden:** `settings/entity/OrganizationSettings.java`, `OrganizationSettingsService(+Impl)`, `OrganizationSettingsController` (`GET`/`PUT /api/organization-settings/mine`); frontend `features/organization-settings/*`. Gebruikt door `quote/service/QuoteService` (offerte versturen).
@@ -875,6 +879,8 @@ Mollie-betaling. Multi-tenant.
 | method | VARCHAR | enum MolliePaymentMethod | Betaalmethode |
 | description | VARCHAR | | Omschrijving |
 | checkout_url | VARCHAR | | Checkout URL |
+| payment_type | VARCHAR(20) | NOT NULL, default `OVERIG`, CHECK `mollie_payment_type_check` (V19) | `VOORSCHOT`, `RESTANT`, `DEFINITIEF` (systeem) of `OVERIG` (handmatig) |
+| due_date | DATE | (V19) | uiterlijke betaaldatum |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |

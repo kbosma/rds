@@ -139,15 +139,7 @@ public class BookerPortalPaymentService {
                     ? response.getLinks().getCheckout().getHref()
                     : null;
             // Update existing payment with Mollie external ID and checkout URL
-            MolliePayment updated = new MolliePayment(
-                    payment.getMolliePaymentId(),
-                    response.getId(),
-                    payment.getMethod(),
-                    payment.getAmount(),
-                    payment.getCurrency(),
-                    payment.getDescription(),
-                    checkoutUrl
-            );
+            MolliePayment updated = payment.withMollieReference(response.getId(), checkoutUrl);
             molliePaymentRepository.save(updated);
         }
 

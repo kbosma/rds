@@ -116,8 +116,22 @@ export const REPEAT_ACTIVITIES: RepeatTableDefinition = {
   ],
 };
 
+/** De betalingen (voorschot, restant, ...), op vervaldatum; soort en status zijn lowercase (bv. voorschot, open). */
+export const REPEAT_PAYMENTS: RepeatTableDefinition = {
+  labelKey: 'templateEditor.repeatPayments',
+  list: 'booking.payments',
+  item: 'p',
+  columns: [
+    { labelKey: 'templateEditor.vars.description', token: '${p.description}' },
+    { labelKey: 'templateEditor.vars.paymentType', token: '${p.paymentType}' },
+    { labelKey: 'templateEditor.vars.amount', token: money('p.amount') },
+    { labelKey: 'templateEditor.vars.dueDate', token: '${p.dueDate!""}' },
+    { labelKey: 'templateEditor.vars.paymentStatus', token: '${p.status}' },
+  ],
+};
+
 /** Beschikbaar voor beide soorten templates: lijsten uit de boeking. */
-export const BOOKING_REPEAT_TABLES: RepeatTableDefinition[] = [REPEAT_TRAVELERS, REPEAT_BOOKING_LINES, REPEAT_ACTIVITIES];
+export const BOOKING_REPEAT_TABLES: RepeatTableDefinition[] = [REPEAT_TRAVELERS, REPEAT_BOOKING_LINES, REPEAT_ACTIVITIES, REPEAT_PAYMENTS];
 
 /** Voor een e-mail (ontvanger + boeking). */
 export const EMAIL_VARIABLE_GROUPS: TemplateVariableGroup[] = [PROSPECT_VARIABLES, BOOKING_VARIABLES_FOR_EMAIL];

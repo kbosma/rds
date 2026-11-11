@@ -5,8 +5,10 @@ import nl.puurkroatie.rds.common.Default;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentMethod;
+import nl.puurkroatie.rds.mollie.entity.PaymentType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,11 +31,17 @@ public class MolliePaymentDto {
     private LocalDateTime modifiedAt;
     private UUID modifiedBy;
     private UUID tenantOrganization;
+    /** Soort en vervaldatum bepaalt de server (betalingsschema); een medewerker kan ze niet zetten. */
+    private PaymentType paymentType;
+    private LocalDate dueDate;
 
     @Default
     @JsonCreator
-    public MolliePaymentDto(UUID molliePaymentId, String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public MolliePaymentDto(UUID molliePaymentId, String molliePaymentExternalId, MolliePaymentMethod method, BigDecimal amount, String currency, String description, String checkoutUrl, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization,
+                            PaymentType paymentType, LocalDate dueDate) {
         this.molliePaymentId = molliePaymentId;
+        this.paymentType = paymentType;
+        this.dueDate = dueDate;
         this.molliePaymentExternalId = molliePaymentExternalId;
         this.method = method;
         this.amount = amount;
@@ -59,6 +67,14 @@ public class MolliePaymentDto {
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
         this.tenantOrganization = tenantOrganization;
+    }
+
+    public PaymentType getPaymentType() {
+        return paymentType;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
     }
 
     public UUID getMolliePaymentId() {

@@ -49,6 +49,9 @@ class OrganizationSettingsControllerTest extends AbstractBookingControllerTest {
         java.util.HashMap<String, Object> fields = new java.util.HashMap<>();
         fields.put("quoteDocumentTemplateId", documentTemplateId);
         fields.put("quoteEmailTemplateId", emailTemplateId);
+        fields.put("depositPercentage", 30);
+        fields.put("depositWeeksBeforeDeparture", 12);
+        fields.put("balanceWeeksBeforeDeparture", 6);
         return objectMapper.writeValueAsString(fields);
     }
 
@@ -58,7 +61,44 @@ class OrganizationSettingsControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.organizationId").isNotEmpty())
                 .andExpect(jsonPath("$.quoteDocumentTemplateId").isEmpty())
-                .andExpect(jsonPath("$.quoteEmailTemplateId").isEmpty());
+                .andExpect(jsonPath("$.quoteEmailTemplateId").isEmpty())
+                .andExpect(jsonPath("$.depositPercentage").value(30))
+                .andExpect(jsonPath("$.depositWeeksBeforeDeparture").value(12))
+                .andExpect(jsonPath("$.balanceWeeksBeforeDeparture").value(6))
+                .andExpect(jsonPath("$.paymentEmailTemplateId").isEmpty());
+    }
+
+    @Test
+    void manager_savesThePaymentSchedule() throws Exception {
+        String token = managerToken();
+        String emailTemplateId = createEmailTemplate(token);
+        Map<String, Object> fields = new java.util.HashMap<>();
+        fields.put("depositPercentage", 25);
+        fields.put("depositWeeksBeforeDeparture", 20);
+        fields.put("balanceWeeksBeforeDeparture", 8);
+        fields.put("paymentEmailTemplateId", emailTemplateId);
+
+        mockMvc.perform(put(MINE).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(fields)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get(MINE).header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.depositPercentage").value(25))
+                .andExpect(jsonPath("$.depositWeeksBeforeDeparture").value(20))
+                .andExpect(jsonPath("$.balanceWeeksBeforeDeparture").value(8))
+                .andExpect(jsonPath("$.paymentEmailTemplateId").value(emailTemplateId));
+    }
+
+    @Test
+    void manager_invalidPaymentSchedule_returns400() throws Exception {
+        String token = managerToken();
+        for (int[] invalid : new int[][] {{0, 12, 6}, {101, 12, 6}, {30, 6, 6}, {30, 12, -1}}) {
+            Map<String, Object> fields = Map.of("depositPercentage", invalid[0],
+                    "depositWeeksBeforeDeparture", invalid[1], "balanceWeeksBeforeDeparture", invalid[2]);
+            mockMvc.perform(put(MINE).header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(fields)))
+                    .andExpect(status().isBadRequest());
+        }
     }
 
     @Test

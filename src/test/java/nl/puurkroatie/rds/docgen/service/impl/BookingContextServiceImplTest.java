@@ -1,5 +1,7 @@
 package nl.puurkroatie.rds.docgen.service.impl;
 
+import nl.puurkroatie.rds.booking.repository.BookingMolliePaymentRepository;
+import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.BookerStatus;
@@ -54,13 +56,17 @@ class BookingContextServiceImplTest {
     private AccommodationAddressRepository accommodationAddressRepository;
     @Mock
     private SupplierAddressRepository supplierAddressRepository;
+    @Mock
+    private BookingMolliePaymentRepository bookingMolliePaymentRepository;
+    @Mock
+    private MolliePaymentStatusEntryRepository statusEntryRepository;
 
     private BookingContextServiceImpl service;
 
     @BeforeEach
     void setUp() {
         service = new BookingContextServiceImpl(bookingRepository, bookerRepository, bookerAddressRepository,
-                accommodationAddressRepository, supplierAddressRepository);
+                accommodationAddressRepository, supplierAddressRepository, bookingMolliePaymentRepository, statusEntryRepository);
         TenantContext.setOrganizationId(ORG);
         TenantContext.setRoles(Set.of("MANAGER"));
     }

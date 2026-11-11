@@ -320,7 +320,12 @@ interface BookingMolliePaymentLink {
                 <table mat-table [dataSource]="payments()" class="full-width">
                   <ng-container matColumnDef="description">
                     <th mat-header-cell *matHeaderCellDef>{{ 'common.description' | translate }}</th>
-                    <td mat-cell *matCellDef="let p">{{ p.description }}</td>
+                    <td mat-cell *matCellDef="let p">
+                      {{ p.description }}
+                      @if (p.paymentType && p.paymentType !== 'overig') {
+                        <div class="payment-type">{{ 'payments.types.' + p.paymentType | translate }}</div>
+                      }
+                    </td>
                   </ng-container>
 
                   <ng-container matColumnDef="amount">
@@ -335,9 +340,9 @@ interface BookingMolliePaymentLink {
                     </td>
                   </ng-container>
 
-                  <ng-container matColumnDef="createdAt">
-                    <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | translate }}</th>
-                    <td mat-cell *matCellDef="let p">{{ p.createdAt | date:'dd-MM-yyyy' }}</td>
+                  <ng-container matColumnDef="dueDate">
+                    <th mat-header-cell *matHeaderCellDef>{{ 'payments.dueDate' | translate }}</th>
+                    <td mat-cell *matCellDef="let p" class="due-date">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
                   </ng-container>
 
                   <ng-container matColumnDef="actions">
@@ -466,6 +471,7 @@ interface BookingMolliePaymentLink {
     }
   `,
   styles: [`
+    .payment-type { font-size: 12px; color: var(--ui-text-secondary, #666); }
     .quote-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
     .quote-hint { font-size: 13px; color: var(--ui-text-secondary, #666); }
     .back-link {
@@ -713,7 +719,7 @@ export class BookingDetailComponent implements OnInit {
 
   bookingLineColumns = ['accommodation', 'period', 'price', 'actions'];
   travelerColumns = ['name', 'birthdate', 'actions'];
-  paymentColumns = ['description', 'amount', 'status', 'createdAt', 'actions'];
+  paymentColumns = ['description', 'amount', 'status', 'dueDate', 'actions'];
 
   currentPaymentStatus(molliePaymentId: string): string {
     return this.paymentStatusMap()[molliePaymentId] ?? '';

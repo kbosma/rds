@@ -46,7 +46,8 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
                 "Boeking BK-2026-001",
                 "https://www.mollie.com/checkout/test",
                 null, null, null, null,
-                ORG_PUURKROATIE_ID
+                ORG_PUURKROATIE_ID,
+                null, null
         );
     }
 

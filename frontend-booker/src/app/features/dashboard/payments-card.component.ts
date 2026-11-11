@@ -50,7 +50,11 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
           @for (payment of store.paymentList(); track payment.molliePaymentId) {
             <li class="row">
               <div class="g">
-                <div class="desc">{{ payment.description }}</div>
+                <div class="desc">{{ payment.description }}
+                  @if (payment.paymentType && payment.paymentType !== 'overig') {
+                    <span class="type">· {{ 'dashboard.payments.types.' + payment.paymentType | translate }}</span>
+                  }
+                </div>
                 <div class="sub">
                   <span [class]="'st ' + tone(payment)">
                     <mat-icon aria-hidden="true">{{ statusIcon(payment) }}</mat-icon>
@@ -58,6 +62,9 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
                   </span>
                   @if (payment.currentStatus === 'paid' && store.statusDate(payment.molliePaymentId); as paidOn) {
                     <span>{{ 'dashboard.payments.paidOn' | translate: { date: (paidOn | date: 'd MMM y' : undefined : locale()) } }}</span>
+                  }
+                  @if (payment.currentStatus !== 'paid' && payment.dueDate) {
+                    <span class="due-date">{{ 'dashboard.payments.dueBy' | translate: { date: (payment.dueDate | date: 'd MMM y' : undefined : locale()) } }}</span>
                   }
                 </div>
               </div>
@@ -98,6 +105,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     .desc { font-weight: 500; }
     .sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--ui-text-muted); font-size: .84em; margin-top: 2px; }
     .amount { font-weight: 600; white-space: nowrap; }
+    .type { font-weight: 400; color: var(--ui-text-secondary, #666); }
     .st { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px 1px 5px; border-radius: 99px; font-weight: 500; font-size: .95em; }
     .st mat-icon { font-size: 15px; width: 15px; height: 15px; }
     .st.ok { background: #e6f4ea; color: #1b5e20; }

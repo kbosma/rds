@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface BookingRepository extends JpaRepository<Booking, UUID> {
+public interface BookingRepository extends JpaRepository<Booking, UUID>, BookingRepositoryCustom {
 
     List<Booking> findByTenantOrganization(UUID tenantOrganization);
 

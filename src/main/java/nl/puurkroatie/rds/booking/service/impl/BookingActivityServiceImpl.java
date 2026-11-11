@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.paymentplan.service.PaymentPlanService;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingActivityDto;
 import nl.puurkroatie.rds.booking.entity.Activity;
@@ -26,15 +27,18 @@ public class BookingActivityServiceImpl implements BookingActivityService {
     private final BookingRepository bookingRepository;
     private final ActivityRepository activityRepository;
     private final BookingActivityMapper bookingActivityMapper;
+    private final PaymentPlanService paymentPlanService;
 
     public BookingActivityServiceImpl(BookingActivityRepository bookingActivityRepository,
                                       BookingRepository bookingRepository,
                                       ActivityRepository activityRepository,
-                                      BookingActivityMapper bookingActivityMapper) {
+                                      BookingActivityMapper bookingActivityMapper,
+                                  PaymentPlanService paymentPlanService) {
         this.bookingActivityRepository = bookingActivityRepository;
         this.bookingRepository = bookingRepository;
         this.activityRepository = activityRepository;
         this.bookingActivityMapper = bookingActivityMapper;
+        this.paymentPlanService = paymentPlanService;
     }
 
     @Override
@@ -82,6 +86,8 @@ public class BookingActivityServiceImpl implements BookingActivityService {
                 dto.getActivityDate(), dto.getFromTime(), dto.getUntilTime(), dto.getMeetingPoint(), dto.getTotalPrice()
         );
         BookingActivity saved = bookingActivityRepository.save(entity);
+        // Het totaal is veranderd: een nog niet gestart restant rekent mee.
+        paymentPlanService.recalculateBalance(booking.getBookingId());
         return bookingActivityMapper.toDto(saved);
     }
 
@@ -100,6 +106,8 @@ public class BookingActivityServiceImpl implements BookingActivityService {
                 dto.getActivityDate(), dto.getFromTime(), dto.getUntilTime(), dto.getMeetingPoint(), dto.getTotalPrice()
         );
         BookingActivity saved = bookingActivityRepository.save(updated);
+        // Het totaal is veranderd: een nog niet gestart restant rekent mee.
+        paymentPlanService.recalculateBalance(booking.getBookingId());
         return bookingActivityMapper.toDto(saved);
     }
 
@@ -111,6 +119,8 @@ public class BookingActivityServiceImpl implements BookingActivityService {
         verifyOrganization(existing.getTenantOrganization());
 
         bookingActivityRepository.deleteById(bookingActivityId);
+        // Het totaal is veranderd: een nog niet gestart restant rekent mee.
+        paymentPlanService.recalculateBalance(existing.getBooking().getBookingId());
     }
 
     private boolean isAdmin() {

@@ -11,7 +11,13 @@ export interface MolliePayment {
   modifiedAt: string;
   modifiedBy: string;
   tenantOrganization: string;
+  /** voorschot, restant en definitief maakt het systeem bij het bevestigen; overig legt een medewerker vast. */
+  paymentType?: PaymentType;
+  /** Uiterlijke betaaldatum (jjjj-mm-dd), of leeg. */
+  dueDate?: string | null;
 }
+
+export type PaymentType = 'voorschot' | 'restant' | 'definitief' | 'overig';
 
 export interface MolliePaymentStatusEntry {
   molliePaymentStatusEntryId: string;

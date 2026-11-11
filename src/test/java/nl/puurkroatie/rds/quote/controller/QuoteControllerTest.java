@@ -37,12 +37,15 @@ class QuoteControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("name", "Offertemail",
                                 "subject", "Offerte ${booking.bookingNumber} (${booking.bookingStatus})",
-                                "bodyHtml", "<p>Beste ${prospect.fullName}, bijgaand uw offerte.</p>"))))
+                                "bodyHtml", "<p>Beste ${prospect.fullName}, bijgaand uw offerte.</p><p>Totaal ${booking.totalSum?string(\"0.00\")}</p>"))))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
 
         Map<String, Object> settings = new HashMap<>();
         settings.put("quoteDocumentTemplateId", objectMapper.readTree(documentBody).get("documentTemplateId").asText());
         settings.put("quoteEmailTemplateId", objectMapper.readTree(emailBody).get("emailTemplateId").asText());
+        settings.put("depositPercentage", 30);
+        settings.put("depositWeeksBeforeDeparture", 12);
+        settings.put("balanceWeeksBeforeDeparture", 6);
         mockMvc.perform(put("/api/organization-settings/mine").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(settings)))
                 .andExpect(status().isOk());
@@ -100,6 +103,8 @@ class QuoteControllerTest extends AbstractBookingControllerTest {
         assertEquals(1, quotePdfs(token));
         JsonNode latest = sentEmails(token).get(0);
         assertTrue(latest.get("attachmentName").asText().endsWith(".pdf"));
+        // na de statuswissel in dezelfde transactie ziet de mail nog steeds de verblijven en activiteiten
+        assertTrue(latest.get("bodyHtml").asText().contains("Totaal 1685,00"), latest.get("bodyHtml").asText());
         assertTrue(latest.get("attachmentDocumentId").isTextual());
     }
 

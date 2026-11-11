@@ -91,6 +91,31 @@ describe('PaymentsCardComponent', () => {
     expect(text(el.querySelector('svg text'))).toBe('100%');
   });
 
+  it('toont bij een open betaling uit het betalingsschema de soort en de uiterlijke betaaldatum', () => {
+    const service = portalServiceSpy();
+    service.getPayments.and.returnValue(of([
+      { ...PAYMENTS[0], paymentType: 'voorschot', dueDate: '2026-10-20' },
+      { ...PAYMENTS[1], description: 'Restant BK-2026-00042', paymentType: 'restant', dueDate: '2027-05-01' },
+    ]));
+    const { el } = setup(service);
+    const rows = el.querySelectorAll('.row');
+
+    expect(text(rows[1])).toContain('Restant BK-2026-00042');
+    expect(text(rows[1])).toContain('restant');
+    expect(text(rows[1].querySelector('.due-date'))).toContain('uiterlijk 1 mei 2027');
+    // een betaalde betaling toont geen vervaldatum meer
+    expect(rows[0].querySelector('.due-date')).toBeNull();
+  });
+
+  it('toont geen soort bij een handmatige (overige) betaling', () => {
+    const service = portalServiceSpy();
+    service.getPayments.and.returnValue(of([{ ...PAYMENTS[1], paymentType: 'overig', dueDate: null }]));
+    const { el } = setup(service);
+
+    expect(el.querySelector('.row .type')).toBeNull();
+    expect(el.querySelector('.row .due-date')).toBeNull();
+  });
+
   it('toont een lege toestand zonder betalingen', () => {
     const service = portalServiceSpy();
     service.getPayments.and.returnValue(of([]));
