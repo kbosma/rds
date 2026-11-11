@@ -16,6 +16,7 @@ describe('BookingService', () => {
     fromDate: '2026-07-01',
     untilDate: '2026-07-14',
     totalSum: 2450,
+    quoteConfirmed: false, quoteConfirmedAt: null,
     tenantOrganization: 'org-1',
     createdAt: '2026-01-01T10:00:00',
     createdBy: 'user-1',

@@ -21,6 +21,9 @@ public class BookingDto {
     private LocalDate fromDate;
     private LocalDate untilDate;
     private BigDecimal totalSum;
+    private boolean quoteConfirmed;
+    /** Alleen-lezen: de server zet het moment van bevestigen. */
+    private LocalDateTime quoteConfirmedAt;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -28,7 +31,7 @@ public class BookingDto {
     private UUID tenantOrganization;
 
     @Default
-    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
+    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, boolean quoteConfirmed, LocalDateTime quoteConfirmedAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, UUID tenantOrganization) {
         this.bookingId = bookingId;
         this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
@@ -36,6 +39,8 @@ public class BookingDto {
         this.fromDate = fromDate;
         this.untilDate = untilDate;
         this.totalSum = totalSum;
+        this.quoteConfirmed = quoteConfirmed;
+        this.quoteConfirmedAt = quoteConfirmedAt;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -44,7 +49,7 @@ public class BookingDto {
     }
 
     @JsonCreator
-    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public BookingDto(UUID bookingId, UUID bookerId, String bookingNumber, String bookingStatus, LocalDate fromDate, LocalDate untilDate, BigDecimal totalSum, Boolean quoteConfirmed, LocalDateTime quoteConfirmedAt, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.bookingId = bookingId;
         this.bookerId = bookerId;
         this.bookingNumber = bookingNumber;
@@ -52,6 +57,9 @@ public class BookingDto {
         this.fromDate = fromDate;
         this.untilDate = untilDate;
         this.totalSum = totalSum;
+        // ontbreekt het veld in de JSON (oudere clients), dan is de offerte niet bevestigd
+        this.quoteConfirmed = Boolean.TRUE.equals(quoteConfirmed);
+        this.quoteConfirmedAt = quoteConfirmedAt;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -84,6 +92,14 @@ public class BookingDto {
 
     public BigDecimal getTotalSum() {
         return totalSum;
+    }
+
+    public boolean isQuoteConfirmed() {
+        return quoteConfirmed;
+    }
+
+    public LocalDateTime getQuoteConfirmedAt() {
+        return quoteConfirmedAt;
     }
 
     public LocalDateTime getCreatedAt() {

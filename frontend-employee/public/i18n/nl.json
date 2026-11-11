@@ -111,6 +111,10 @@
     "roles": "Rollen"
   },
   "bookings": {
+    "quoteConfirmed": "Offerte bevestigd",
+    "quoteConfirmedOn": "Offerte bevestigd op",
+    "quoteConfirmHint": "Bevestigen kan als de status Offerte is en er een hoofdboeker is. De status wordt dan Boeking.",
+    "quoteConfirmEffect": "Na opslaan wordt de status Boeking.",
     "title": "Boekingen",
     "newBooking": "Nieuwe boeking",
     "searchPlaceholder": "Zoek op boekingnummer, booker...",
@@ -343,9 +347,7 @@
     "registerTitle": "Prospect registreren",
     "registered": "Prospect geregistreerd",
     "registerError": "Fout bij registreren prospect",
-    "noProspectsFound": "Geen prospects gevonden.",
-    "makeBooker": "Maak boeker",
-    "promoted": "Prospect is nu een boeker"
+    "noProspectsFound": "Geen prospects gevonden."
   },
   "bookers": {
     "title": "Boekers",

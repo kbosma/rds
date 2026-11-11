@@ -76,13 +76,10 @@ describe('BookerDialogComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('makeBooker() should set status to "active" and close with true', () => {
-    const { component } = setup(prospect);
+  it('heeft geen knop "Maak boeker": de status volgt uit de boekingen', () => {
+    const { fixture } = setup(prospect);
 
-    component.makeBooker();
-
-    expect(serviceSpy.update).toHaveBeenCalledWith('p-1', jasmine.objectContaining({ status: 'active' }));
-    expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
+    expect(fixture.nativeElement.textContent).not.toContain('how_to_reg');
   });
 
   it('onSubmit() should save without changing the status', () => {
@@ -104,7 +101,7 @@ describe('BookerDialogComponent', () => {
       component.onSubmit();
 
       expect(serviceSpy.update).not.toHaveBeenCalled();
-      expect(serviceSpy.create).toHaveBeenCalledWith(jasmine.objectContaining({ firstname: 'Nieuw', status: 'active' }));
+      expect(serviceSpy.create).toHaveBeenCalledWith(jasmine.objectContaining({ firstname: 'Nieuw' }));
       expect(dialogRefSpy.close).toHaveBeenCalledWith(jasmine.objectContaining({ bookerId: 'b-new' }));
       expect(fixture.nativeElement.querySelector('app-address-editor')).toBeNull(); // adressen pas na het aanmaken
     });
@@ -197,7 +194,6 @@ describe('BookerDialogComponent', () => {
     const { component } = setup(prospect, true);
 
     component.onSubmit();
-    component.makeBooker();
 
     expect(serviceSpy.update).not.toHaveBeenCalled();
     expect(component.form.disabled).toBeTrue();

@@ -188,7 +188,7 @@ class BookerControllerTest extends AbstractBookingControllerTest {
 
     // EMPLOYEE: POST /api/bookers zonder status — default active
     @Test
-    void employee_createBooker_defaultsToActiveStatus() throws Exception {
+    void employee_createBooker_startsAsProspect() throws Exception {
         String token = employeeToken();
 
         String json = "{\"firstname\":\"Act\",\"lastname\":\"Ive\"," +
@@ -199,7 +199,7 @@ class BookerControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("active"));
+                .andExpect(jsonPath("$.status").value("prospect"));
     }
 
     // EMPLOYEE: GET /api/bookers?status=prospect — alleen prospects
@@ -231,7 +231,7 @@ class BookerControllerTest extends AbstractBookingControllerTest {
 
     // MANAGER: POST /api/bookers met de status 'nietactief' — 201 en de waarde komt lowercase terug
     @Test
-    void manager_createBooker_withStatusNietactief_returns201() throws Exception {
+    void manager_createBooker_withStatusNietactief_ignoresChosenStatus() throws Exception {
         String json = "{\"firstname\":\"Oud\",\"prefix\":null,\"lastname\":\"Klant\"," +
                 "\"callsign\":\"Oud\",\"telephone\":\"0611111111\"," +
                 "\"emailaddress\":\"oud@example.com\",\"gender\":\"" + GENDER_MAN + "\"," +
@@ -242,6 +242,6 @@ class BookerControllerTest extends AbstractBookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("nietactief"));
+                .andExpect(jsonPath("$.status").value("prospect"));
     }
 }

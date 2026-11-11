@@ -126,6 +126,12 @@ interface BookingMolliePaymentLink {
                   <span class="info-label">{{ 'bookings.totalComputed' | translate }}</span>
                   <span class="info-value total">{{ currentTotalSum() | currency:'EUR':'symbol':'1.2-2' }}</span>
                 </div>
+                @if (currentBooking()?.quoteConfirmed) {
+                  <div class="info-item quote-confirmed">
+                    <span class="info-label">{{ 'bookings.quoteConfirmedOn' | translate }}</span>
+                    <span class="info-value">{{ currentBooking()!.quoteConfirmedAt | date:'dd-MM-yyyy HH:mm' }}</span>
+                  </div>
+                }
               </div>
             } @else {
               <div class="info-grid">
@@ -964,11 +970,13 @@ export class BookingDetailComponent implements OnInit {
     if (!this.bookingId || !this.booker()) return;
     if (!await this.confirmService.confirm(this.translate.instant('bookings.removeBookerConfirm'))) return;
 
-    this.bookingService.update(this.bookingId, { bookerId: null as unknown as string })
+    // De hele boeking meesturen: een PUT vervangt alles (zonder status zou de server weigeren).
+    this.bookingService.update(this.bookingId, { ...this.currentBooking()!, bookerId: null as unknown as string })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.booker.set(null);
+          this.currentBooking.update(b => (b ? { ...b, bookerId: null as unknown as string } : b));
           this.snackBar.open(this.translate.instant('bookings.bookerRemoved'), this.translate.instant('common.close'), { duration: 3000 });
         },
         error: () => {
@@ -985,10 +993,11 @@ export class BookingDetailComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((selectedBookerId: string | undefined) => {
         if (selectedBookerId) {
-          this.bookingService.update(this.bookingId!, { bookerId: selectedBookerId })
+          this.bookingService.update(this.bookingId!, { ...this.currentBooking()!, bookerId: selectedBookerId })
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
               next: () => {
+                this.currentBooking.update(b => (b ? { ...b, bookerId: selectedBookerId } : b));
                 this.bookerService.getById(selectedBookerId)
                   .pipe(takeUntilDestroyed(this.destroyRef))
                   .subscribe({

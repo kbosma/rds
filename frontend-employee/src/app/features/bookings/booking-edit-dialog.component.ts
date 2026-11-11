@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,6 +23,7 @@ export interface BookingEditDialogData {
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
@@ -62,6 +64,17 @@ export interface BookingEditDialogData {
           }
         </mat-select>
       </mat-form-field>
+
+      <div class="quote">
+        <mat-checkbox [formControl]="quoteConfirmedControl" class="quote-confirmed">{{ 'bookings.quoteConfirmed' | translate }}</mat-checkbox>
+        @if (data.booking.quoteConfirmed) {
+          <span class="hint confirmed-on">{{ 'bookings.quoteConfirmedOn' | translate }} {{ data.booking.quoteConfirmedAt | date:'dd-MM-yyyy HH:mm' }}</span>
+        } @else if (!canConfirm) {
+          <span class="hint confirm-hint">{{ 'bookings.quoteConfirmHint' | translate }}</span>
+        } @else if (quoteConfirmedControl.value) {
+          <span class="hint confirm-effect">{{ 'bookings.quoteConfirmEffect' | translate }}</span>
+        }
+      </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>
@@ -104,6 +117,8 @@ export interface BookingEditDialogData {
     }
     .full-width { width: 100%; }
     .status-field { margin-top: 8px; }
+    .quote { display: flex; flex-direction: column; gap: 4px; }
+    .hint { font-size: 12px; color: #5d7a85; }
   `],
 })
 export class BookingEditDialogComponent {
@@ -118,6 +133,28 @@ export class BookingEditDialogComponent {
   saving = signal(false);
 
   statusControl = this.fb.control(this.data.booking.bookingStatus, Validators.required);
+
+  /**
+   * De hoofdboeker bevestigt de offerte: kan alleen in status Offerte en met een hoofdboeker. Eenmaal bevestigd blijft
+   * het vinkje staan (terugzetten gaat later via de status, met een reden).
+   */
+  readonly canConfirm = !this.data.booking.quoteConfirmed
+    && this.data.booking.bookingStatus === 'offerte'
+    && !!this.data.booking.bookerId;
+  quoteConfirmedControl = this.fb.nonNullable.control({ value: this.data.booking.quoteConfirmed, disabled: !this.canConfirm });
+
+  constructor() {
+    // Bevestigen zet de status op Boeking (dat doet de server); de keuzelijst toont dat alvast en staat dan vast.
+    this.quoteConfirmedControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((confirmed) => {
+      if (confirmed) {
+        this.statusControl.setValue('boeking');
+        this.statusControl.disable();
+      } else {
+        this.statusControl.setValue(this.data.booking.bookingStatus);
+        this.statusControl.enable();
+      }
+    });
+  }
 
   statuses = [
     { value: 'aanvraag', labelKey: 'bookings.status_aanvraag' },
@@ -134,8 +171,11 @@ export class BookingEditDialogComponent {
     if (this.statusControl.invalid) return;
     this.saving.set(true);
 
+    // Altijd de hele boeking meesturen: een PUT vervangt alles, dus zonder bookerId zou de hoofdboeker loskomen.
     this.bookingService.update(this.data.booking.bookingId, {
-      bookingStatus: this.statusControl.value!,
+      ...this.data.booking,
+      bookingStatus: this.quoteConfirmedControl.value ? this.data.booking.bookingStatus : this.statusControl.value!,
+      quoteConfirmed: this.quoteConfirmedControl.value,
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.saving.set(false);

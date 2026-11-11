@@ -44,6 +44,12 @@ public class Booking {
     @Column(name = "booking_status", nullable = false)
     private BookingStatus bookingStatus;
 
+    @Column(name = "quote_confirmed", nullable = false)
+    private boolean quoteConfirmed;
+
+    @Column(name = "quote_confirmed_at")
+    private LocalDateTime quoteConfirmedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -67,6 +73,17 @@ public class Booking {
         this.booker = booker;
         this.bookingNumber = bookingNumber;
         this.bookingStatus = bookingStatus;
+    }
+
+    /** Bijgewerkte boeking: neemt de onveranderlijke gegevens (aanmaak en organisatie) van de bestaande over. */
+    public Booking(UUID bookingId, Booker booker, String bookingNumber, BookingStatus bookingStatus, boolean quoteConfirmed, LocalDateTime quoteConfirmedAt,
+                   LocalDateTime createdAt, UUID createdBy, UUID tenantOrganization) {
+        this(bookingId, booker, bookingNumber, bookingStatus);
+        this.quoteConfirmed = quoteConfirmed;
+        this.quoteConfirmedAt = quoteConfirmedAt;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.tenantOrganization = tenantOrganization;
     }
 
     public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus) {
@@ -157,6 +174,14 @@ public class Booking {
 
     public List<BookingActivity> getBookingActivities() {
         return bookingActivities;
+    }
+
+    public boolean isQuoteConfirmed() {
+        return quoteConfirmed;
+    }
+
+    public LocalDateTime getQuoteConfirmedAt() {
+        return quoteConfirmedAt;
     }
 
     public LocalDateTime getCreatedAt() {

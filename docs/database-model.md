@@ -1,9 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V16**, 20-10-2026).
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V17**, 26-10-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -253,6 +253,8 @@ Hoofdentiteit voor boekingen. Multi-tenant.
 | booker_id | UUID | FK → booker | Gekoppelde booker |
 | booking_number | VARCHAR | NOT NULL | Boekingnummer |
 | booking_status | VARCHAR | NOT NULL, CHECK `booking_status_check` (V9), enum BookingStatus | Status |
+| quote_confirmed | BOOLEAN | NOT NULL, default FALSE (V17) | de hoofdboeker heeft de offerte bevestigd |
+| quote_confirmed_at | TIMESTAMP | CHECK `booking_quote_confirmed_check`: gevuld precies als `quote_confirmed` (V17) | moment van bevestigen, gezet door de server |
 | tenant_organization | UUID | NOT NULL, immutable | Tenant |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
@@ -316,7 +318,7 @@ Boeker/opdrachtgever. Multi-tenant.
 
 **Enum Gender:** `MAN`, `VROUW`, `ANDERS`
 
-**Enum BookerStatus:** `PROSPECT` (potentiële klant, nog geen boeking), `ACTIVE` (reguliere boeker), `NIETACTIEF` (niet meer actief; de UI heeft hier nog geen keuzeveld voor, de API wel). Een prospect is dus **geen aparte tabel** maar een Booker met status `PROSPECT`; bestaande bookers zijn bij V4 `ACTIVE` geworden. `GET /api/bookers?status=prospect` filtert.
+**Enum BookerStatus:** `PROSPECT` (potentiële klant, nog geen boeking), `ACTIVE` (reguliere boeker), `NIETACTIEF` (alle boekingen afgerond). De status wordt **afgeleid** uit de boekingen (`BookerStatusUpdater`, V17): geen boeking `PROSPECT`, een niet-afgeronde boeking `ACTIVE`, alles afgerond `NIETACTIEF`; de API negeert een meegestuurde status. Een prospect is dus **geen aparte tabel** maar een Booker met status `PROSPECT`; bestaande bookers zijn bij V4 `ACTIVE` geworden. `GET /api/bookers?status=prospect` filtert.
 
 **Backend bestanden:**
 - Entity: `booking/entity/Booker.java`

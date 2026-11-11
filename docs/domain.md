@@ -47,15 +47,22 @@ DocumentTemplate, EmailTemplate, EmailImage   (per organisatie, los van een boek
 
 De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-constraint); er is geen afgedwongen toestandsmachine: de medewerker zet de status. In de API en UI is de waarde lowercase (`aanvraag`, …), in het template-model de hoofdletter-naam (`BOEKING`).
 
+![Stroomdiagram boekingsstatussen](img/boeking-statusflow.svg)
+
+Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd is alleen stap 1: een nieuwe boeking start als `AANVRAAG` en het vinkje *Offerte bevestigd* zet `BOEKING`; de overige overgangen zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
+
 ### Booker, prospect en het aanmeldproces
 
-Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSPECT` (kolom `booker.status`, migratie V4; waarden `PROSPECT`, `ACTIVE`). Zo blijft het datamodel klein en kan een prospect zonder verhuizing een gewone boeker worden.
+Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSPECT` (kolom `booker.status`, migratie V4; waarden `PROSPECT`, `ACTIVE`, `NIETACTIEF`). Zo blijft het datamodel klein en kan een prospect zonder verhuizing een gewone boeker worden.
 
 1. Medewerker registreert een potentiële klant op het scherm *Prospects* (status `PROSPECT`, nog geen boeking).
 2. Mail met een e-mailtemplate versturen: mail-icoon op de regel in het scherm *Prospects* (template kiezen, voorbeeld bekijken, verzenden).
-3. In het booker-dialoog zet **Maak boeker** de status op `ACTIVE`.
-4. Vanaf een boeker (rij-icoon) of via de boekingenlijst een **concept-boeking** starten.
-5. **Een prospect met een boeking is een echte boeker:** zodra een boeking voor een prospect wordt aangemaakt (de concept-boeking wordt vastgelegd door een accommodatie, reiziger of ander onderdeel toe te voegen) of een prospect aan een bestaande boeking wordt gekoppeld, zet de backend de status automatisch op `ACTIVE` (`BookingServiceImpl.activateIfProspect`). Een boeker met een andere status (bv. `NIETACTIEF`) wordt niet vanzelf weer actief. Het boekingsscherm laadt de boeker daarna opnieuw.
+3. Vanaf een boeker (rij-icoon) of via de boekingenlijst een **concept-boeking** starten. **Een boeking ontstaat alleen vanuit een bestaande boeker** (de API weigert een boeking zonder `bookerId`, en een nieuwe boeking begint altijd als `AANVRAAG`); in het keuzevenster staat dus geen *Nieuwe boeker* meer.
+4. **De status van een boeker volgt uit zijn boekingen** en is niet te kiezen (`BookerStatusUpdater`, sinds V17): geen boeking `PROSPECT`, minstens één boeking die nog niet is afgerond `ACTIVE`, alle boekingen afgerond `NIETACTIEF`. Elke nieuwe boeker begint als `PROSPECT`; een `status` in het verzoek wordt genegeerd. De backend rekent de status opnieuw na aanmaken, koppelen, ontkoppelen, een statuswijziging en verwijderen van een boeking. De knop *Maak boeker* is vervallen.
+
+### Offerte bevestigen
+
+De hoofdboeker bevestigt de (laatste) offerte van een **boeking**: `booking.quote_confirmed` met `quote_confirmed_at` (V17). Een medewerker zet het vinkje *Offerte bevestigd* in de dialoog *Boekinggegevens*. Dat kan alleen in status `OFFERTE` en met een hoofdboeker; de server zet dan het moment (`now()`) en de status op `BOEKING`. Uitvinken kan niet (`400`); terugzetten gaat later via een statuswijziging met reden.
 
 ### Concept-boeking
 
