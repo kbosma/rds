@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.entity.Booking;
+import nl.puurkroatie.rds.booking.entity.Document;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -45,6 +46,11 @@ public class SentEmail {
     @Column(name = "body_html", nullable = false, updatable = false)
     private String bodyHtml;
 
+    /** Het document dat als bijlage is meegestuurd (bv. de offerte-PDF); leeg bij een mail zonder bijlage. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attachment_document_id", updatable = false)
+    private Document attachmentDocument;
+
     @Column(name = "resent_from_id", updatable = false)
     private UUID resentFromId;
 
@@ -61,6 +67,12 @@ public class SentEmail {
     }
 
     public SentEmail(Booking booking, String fromAddress, String toAddress, String subject, String bodyHtml, UUID resentFromId) {
+        this(booking, fromAddress, toAddress, subject, bodyHtml, resentFromId, null);
+    }
+
+    public SentEmail(Booking booking, String fromAddress, String toAddress, String subject, String bodyHtml, UUID resentFromId,
+                     Document attachmentDocument) {
+        this.attachmentDocument = attachmentDocument;
         this.booking = booking;
         this.fromAddress = fromAddress;
         this.toAddress = toAddress;
@@ -83,6 +95,7 @@ public class SentEmail {
     public String getSubject() { return subject; }
     public String getBodyHtml() { return bodyHtml; }
     public UUID getResentFromId() { return resentFromId; }
+    public Document getAttachmentDocument() { return attachmentDocument; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public UUID getCreatedBy() { return createdBy; }
     public UUID getTenantOrganization() { return tenantOrganization; }

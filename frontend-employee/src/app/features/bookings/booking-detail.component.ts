@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -133,6 +133,18 @@ interface BookingMolliePaymentLink {
                   </div>
                 }
               </div>
+              @if (canSendQuote()) {
+                <div class="quote-actions">
+                  <button mat-stroked-button class="act-send send-quote-btn"
+                          [disabled]="sendingQuote() || !booker()?.emailaddress"
+                          (click)="sendQuote()">
+                    <mat-icon>send</mat-icon> {{ 'bookings.sendQuote' | translate }}
+                  </button>
+                  @if (!booker()?.emailaddress) {
+                    <span class="quote-hint">{{ 'bookings.sendQuoteNeedsBooker' | translate }}</span>
+                  }
+                </div>
+              }
             } @else {
               <div class="info-grid">
                 <div class="info-item">
@@ -454,6 +466,8 @@ interface BookingMolliePaymentLink {
     }
   `,
   styles: [`
+    .quote-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
+    .quote-hint { font-size: 13px; color: var(--ui-text-secondary, #666); }
     .back-link {
       display: inline-flex;
       align-items: center;
@@ -703,6 +717,43 @@ export class BookingDetailComponent implements OnInit {
 
   currentPaymentStatus(molliePaymentId: string): string {
     return this.paymentStatusMap()[molliePaymentId] ?? '';
+  }
+
+  sendingQuote = signal(false);
+
+  /** Een offerte versturen kan bij een aanvraag, en opnieuw zolang de offerte nog niet bevestigd is. */
+  canSendQuote = computed(() => !this.isNew() && this.can('QUOTE_SEND')
+    && ['aanvraag', 'offerte'].includes(this.currentBookingStatus())
+    && !this.currentBooking()?.quoteConfirmed);
+
+  async sendQuote() {
+    const email = this.booker()?.emailaddress;
+    if (!this.bookingId || !email) return;
+    const message = this.translate.instant(
+      this.currentBookingStatus() === 'offerte' ? 'bookings.resendQuoteConfirm' : 'bookings.sendQuoteConfirm', { email });
+    if (!await this.confirmService.confirm(message, {
+      title: this.translate.instant('bookings.sendQuote'),
+      confirmLabel: this.translate.instant('bookings.sendQuoteAction'),
+    })) return;
+
+    this.sendingQuote.set(true);
+    this.bookingService.sendQuote(this.bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.sendingQuote.set(false);
+          this.reloadBookingData();
+          this.loadDocuments();
+          this.loadSentEmails();
+          this.snackBar.open(this.translate.instant('bookings.quoteSent', { to: result.to }),
+            this.translate.instant('common.close'), { duration: 4000 });
+        },
+        error: (err) => {
+          this.sendingQuote.set(false);
+          this.snackBar.open(this.translate.instant('bookings.quoteSendError', { message: err?.error?.message ?? '' }),
+            this.translate.instant('common.close'), { duration: 8000 });
+        },
+      });
   }
 
   /** Een wijzigende actie is alleen toegestaan met de authority én buiten alleen-inzien. */

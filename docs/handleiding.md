@@ -78,7 +78,7 @@ Lokaal draaien de apps op poort 4200 (medewerkers) en 4300 (klanten); de backend
 
 `aanvraag → offerte → boeking → voorschot → betaald → op reis → weer thuis → afgerond`
 
-De status is een keuzelijst: er is **geen afgedwongen volgorde**. De medewerker zet de status via *Bewerken* in het boekingsdetail. De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
+De status is grotendeels een keuzelijst: de medewerker zet hem via *Bewerken* in het boekingsdetail. Een paar overgangen doet het systeem zelf: een nieuwe boeking begint als *aanvraag*, **Offerte versturen** zet *offerte* en het vinkje **Offerte bevestigd** zet *boeking*. Het doelontwerp met alle automatische overgangen staat in [domain.md](domain.md#levenscyclus-van-een-boeking). De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
 
 ### 1.4 Twee vaste werkregels
 
@@ -93,7 +93,7 @@ In de schermen *Templates* en *E-mailtemplates* maak en beheer je alleen de temp
 
 Dit hoofdstuk beschrijft hoe toegang werkt en hoe deze **op dit moment** is ingericht.
 
-> **Bron en geldigheid.** De inrichting hieronder is afgeleid uit de Flyway-migraties `V2` (basis), `V6` (`EMAIL_SEND`), `V10` (`PAYMENT_CORRECT`), `V12` (`PAYMENT_RELINK`) en `V16` (haalt `DOCUMENT_DELETE` weg). Dat is de **standaardconfiguratie** van elke nieuwe database. Rol↔authority-koppelingen staan in de database en kunnen via het scherm *Rollen* gewijzigd zijn; de live database is bij het schrijven van deze handleiding niet uitgelezen (geen toegang). Controleer de werkelijke stand in *Rollen → rol openen → Authorities*.
+> **Bron en geldigheid.** De inrichting hieronder is afgeleid uit de Flyway-migraties `V2` (basis), `V6` (`EMAIL_SEND`), `V10` (`PAYMENT_CORRECT`), `V12` (`PAYMENT_RELINK`), `V16` (haalt `DOCUMENT_DELETE` weg) en `V18` (`ORGANIZATION_SETTINGS_*`, `QUOTE_SEND`). Dat is de **standaardconfiguratie** van elke nieuwe database. Rol↔authority-koppelingen staan in de database en kunnen via het scherm *Rollen* gewijzigd zijn; de live database is bij het schrijven van deze handleiding niet uitgelezen (geen toegang). Controleer de werkelijke stand in *Rollen → rol openen → Authorities*.
 
 ### 2.1 De keten van toegang
 
@@ -121,7 +121,7 @@ ORGANIZATION ──< PERSON ──< ACCOUNT ──< ACCOUNT_ROLE >── ROLE �
 | `PAYMENT_CORRECT` | de status van een betaling handmatig corrigeren |
 | `PAYMENT_RELINK` | een betaling met reden aan een andere boeking hangen |
 
-Er zijn in totaal **62 authorities**: 60 uit de basismigratie (`V2`) plus `EMAIL_SEND` (`V6`), `PAYMENT_CORRECT` (`V10`) en `PAYMENT_RELINK` (`V12`), min `DOCUMENT_DELETE` dat in `V16` is vervallen (een document wordt nooit verwijderd).
+Er zijn in totaal **65 authorities**: 60 uit de basismigratie (`V2`) plus `EMAIL_SEND` (`V6`), `PAYMENT_CORRECT` (`V10`), `PAYMENT_RELINK` (`V12`) en `ORGANIZATION_SETTINGS_READ`, `ORGANIZATION_SETTINGS_UPDATE` en `QUOTE_SEND` (`V18`), min `DOCUMENT_DELETE` dat in `V16` is vervallen (een document wordt nooit verwijderd).
 
 ### 2.3 De drie rollen
 
@@ -136,7 +136,7 @@ Aantallen in de standaardconfiguratie: ADMIN **28** authorities, MANAGER **48**,
 
 ### 2.4 Volledige matrix: authority × rol
 
-Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12` en `V16`. De kolom *Endpoints* noemt de API-resources die de authority gebruiken (uit de `@PreAuthorize`-annotaties).
+Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12`, `V16` en `V18`. De kolom *Endpoints* noemt de API-resources die de authority gebruiken (uit de `@PreAuthorize`-annotaties).
 
 | # | Authority | Wat het toestaat | ADMIN | MANAGER | EMPLOYEE | Endpoints (resources) |
 |--:|---|---|:--:|:--:|:--:|---|
@@ -202,7 +202,10 @@ Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12` en `V16`. De kolom *Endpoi
 | 60 | `TEMPLATE_DELETE` | Word-templates, e-mailtemplates en afbeeldingen: verwijderen | – | ✓ | – | `/api/document-templates`, `/api/email-images`, `/api/email-templates` |
 | 61 | `TEMPLATE_READ` | Word-templates, e-mailtemplates en afbeeldingen: bekijken (lijst en detail) | – | ✓ | ✓ | `/api/document-templates`, `/api/email-templates` |
 | 62 | `TEMPLATE_UPDATE` | Word-templates, e-mailtemplates en afbeeldingen: wijzigen | – | ✓ | – | `/api/document-templates`, `/api/email-images`, `/api/email-templates` |
-| | **Totaal: 62** | | **28** | **48** | **18** | |
+| 63 | `ORGANIZATION_SETTINGS_READ` | organisatie-instellingen van de eigen organisatie: bekijken (V18) | – | ✓ | ✓ | `/api/organization-settings` |
+| 64 | `ORGANIZATION_SETTINGS_UPDATE` | organisatie-instellingen van de eigen organisatie: wijzigen (V18) | – | ✓ | – | `/api/organization-settings` |
+| 65 | `QUOTE_SEND` | offerte versturen: PDF maken en mailen naar de hoofdboeker (V18) | – | ✓ | ✓ | `/api/bookings/{id}/send-quote` |
+| | **Totaal: 65** | | **28** | **51** | **20** | |
 
 ### 2.5 Dezelfde matrix per domein (leesversie)
 
@@ -228,6 +231,8 @@ Letters: **C**reate, **R**ead, **U**pdate, **D**elete, **S** = versturen. Een st
 | `TEMPLATE` | – | C R U D | R | Word-templates, e-mailtemplates, afbeeldingenbibliotheek |
 | `EMAIL_SEND` | – | S | S | e-mail versturen en opnieuw versturen |
 | `ORGANIZATION_THEME` | – | C R U D | – | huisstijl van de eigen organisatie |
+| `ORGANIZATION_SETTINGS` | – | R U | R | organisatie-instellingen (offertetemplate en offertemail) |
+| `QUOTE_SEND` | – | S | S | offerte versturen |
 | `BOOKER_PORTAL` | – | – | – | alleen via BOOKER-token (zie §2.7) |
 
 \* `PAYMENT_UPDATE` is alleen bruikbaar zolang een betaling nog niet bij Mollie bestaat. `PAYMENT_DELETE` bestaat als authority, maar er is **geen enkel endpoint** dat een betaling verwijdert (zie §8.3); de authority heeft dus geen effect.
@@ -260,6 +265,7 @@ Het zijmenu toont een item als de gebruiker **minstens één** van de genoemde a
 | Rollen (`/admin/roles`) | `ROLE_CREATE`/`_UPDATE`/`_DELETE` | ✓ | – | – |
 | Rechten (`/admin/authorities`) | `AUTHORITY_CREATE`/`_UPDATE`/`_DELETE` | ✓ | – | – |
 | Huisstijl (`/admin/theme`) | `ORGANIZATION_THEME_UPDATE` | – | ✓ | – |
+| Instellingen (`/organization-settings`) | `ORGANIZATION_SETTINGS_READ` | – | ✓ | ✓ (alleen lezen) |
 | *Sectie MIJN BEHEER* — Mijn gegevens (`/profile`) | `PERSON_UPDATE` | ✓ | ✓ | ✓ |
 | Wachtwoord (`/change-password`) | `ACCOUNT_UPDATE` | ✓ | ✓ | ✓ |
 | 2FA Instellingen (`/totp-settings`) | – | ✓ | ✓ | ✓ |
@@ -443,7 +449,7 @@ Titel: *Boeking bewerken — BK-…* (of *Boeking inzien* in alleen-lezen-modus)
 
 | Kaart | Inhoud | Acties (vereist recht) |
 |---|---|---|
-| **Boekinggegevens** | boekingsnummer, status, berekende periode en totaalbedrag, en *Offerte bevestigd op* zodra de offerte is bevestigd | **Bewerken**: status kiezen en **Offerte bevestigd** aanvinken (`BOOKING_UPDATE`). Bevestigen kan alleen in status *Offerte* met een hoofdboeker; de status wordt dan *Boeking* en het moment wordt vastgelegd. Uitvinken kan niet. |
+| **Boekinggegevens** | boekingsnummer, status, berekende periode en totaalbedrag, en *Offerte bevestigd op* zodra de offerte is bevestigd | **Bewerken**: status kiezen en **Offerte bevestigd** aanvinken (`BOOKING_UPDATE`). Bevestigen kan alleen in status *Offerte* met een hoofdboeker; de status wordt dan *Boeking* en het moment wordt vastgelegd. Uitvinken kan niet. **Offerte versturen** (`QUOTE_SEND`, onderin de kaart, alleen in status *Aanvraag* of *Offerte* en zolang de offerte niet bevestigd is): na bevestigen maakt het systeem met de offertetemplate een PDF (zichtbaar in het portaal), mailt die als bijlage met de offertemail naar de hoofdboeker en zet de status op *Offerte*. Opnieuw versturen maakt een nieuwe PDF; de vorige blijft bewaard. Zonder hoofdboeker met e-mailadres is de knop uitgeschakeld; zonder gekozen templates (zie *Instellingen*, §4.15) meldt het systeem dat. |
 | **Hoofdboeker** | naam, roepnaam, telefoon, e-mail, geboortedatum | *Toevoegen* (koppelen, `BOOKING_CREATE`); *Bewerken* van de boekergegevens (`BOOKING_UPDATE`); *Verwijderen* = ontkoppelen van de boeking (`BOOKING_DELETE`, de boeker zelf blijft bestaan) |
 | **Accommodaties** (boekingsregels) | accommodatie, leverancier, van, tot, prijs | toevoegen/bewerken/verwijderen (`BOOKING_CREATE`/`_UPDATE`/`_DELETE`) |
 | **Activiteiten** | activiteit, datum en tijden, trefpunt, totaalprijs | toevoegen/bewerken/verwijderen |
@@ -579,6 +585,8 @@ Afronden maakt alles aan: *"Onboarding succesvol afgerond!"*
 
 **Rollen** en **Rechten** (alleen ADMIN in het menu). *Rollen* toont per rol de kaart *Authorities* met koppelen en ontkoppelen (met bevestiging). *Rechten* beheert de authority-namen zelf. Zie §2.10.
 
+**Instellingen** (menu *Instellingen*, scherm *Organisatie-instellingen*; lezen met `ORGANIZATION_SETTINGS_READ`, wijzigen met `ORGANIZATION_SETTINGS_UPDATE`, alleen MANAGER). Onder *Offerte* kies je het **Offertedocument** (een Word-template) en de **Offertemail** (een e-mailtemplate). Beide zijn nodig voor *Offerte versturen*. Je kunt alleen templates van de eigen organisatie kiezen; wordt een gekozen template verwijderd, dan vervalt alleen die keuze. Een EMPLOYEE ziet de keuzes maar kan ze niet wijzigen.
+
 **Huisstijl** (MANAGER, `ORGANIZATION_THEME_UPDATE`). *Thema-instellingen*: **Primaire kleur**, **Accentkleur**, **Kaart-titel kleur** (hexcode `#rrggbb`) en **Logo URL** (maximaal 500 tekens), met een voorbeeld. De kleuren sturen de hele interface: balk, actief menu-item, tabelkoppen, knoppen. Zonder thema is de standaardkleur teal `#0e8f8a`.
 
 ### 4.16 Afbeeldingenbibliotheek (in de editor)
@@ -657,14 +665,14 @@ De oude adressen (`/payments`, `/itinerary`, `/documents`, `/accommodations`, `/
 | 2 | EMPLOYEE/MANAGER | **Prospects → mail-icoon** → template kiezen → voorbeeld → **Verstuur** |
 | 3 | EMPLOYEE/MANAGER | de prospect wordt vanzelf een actieve boeker zodra er een boeking voor ontstaat |
 | 4 | EMPLOYEE/MANAGER | **Boekers → rij-icoon** (concept-boeking) of **Boekingen → Nieuwe boeking** |
-| 5 | EMPLOYEE/MANAGER | in de boeking: **Accommodaties** (verblijven), **Activiteiten**, **Reizigers** toevoegen; status op `offerte` |
-| 6 | EMPLOYEE/MANAGER | **Document genereren** (offerte/bevestiging) met *Zichtbaar in het boekerportaal* aan |
-| 7 | EMPLOYEE/MANAGER | **E-mail aan hoofdboeker** met de boekingsgegevens; status `boeking` |
+| 5 | EMPLOYEE/MANAGER | in de boeking: **Accommodaties** (verblijven), **Activiteiten**, **Reizigers** toevoegen |
+| 6 | EMPLOYEE/MANAGER | **Offerte versturen**: het systeem maakt de offerte-PDF (zichtbaar in het portaal), mailt hem naar de hoofdboeker en zet de status op `offerte` (eenmalig vooraf: de MANAGER kiest de templates bij *Instellingen*) |
+| 7 | EMPLOYEE/MANAGER | de klant gaat akkoord: **Bewerken → Offerte bevestigd**; de status wordt `boeking` |
 | 8 | EMPLOYEE/MANAGER | **Nieuwe betaling** (voorschot, restant); status `voorschot` |
 | 9 | klant | logt in op het portaal en **betaalt** |
 | 10 | EMPLOYEE/MANAGER | status `betaald`, later `opreis`, `weerthuis`, `afgerond` |
 
-De statussen volgen **niet automatisch** op betalingen: de medewerker zet ze.
+De statussen na `boeking` volgen (nog) **niet automatisch** op betalingen: de medewerker zet ze.
 
 ### 6.2 Een nieuwe organisatie in gebruik nemen (ADMIN)
 
@@ -926,6 +934,8 @@ curl -X POST "$BASE/api/email-templates/<id>/send?bookerId=<id>"    -H "Authoriz
 | GET | `/api/organization-themes` | `ORGANIZATION_THEME_READ` | Lijst |
 | GET | `/api/organization-themes/{id}` | `ORGANIZATION_THEME_READ` | Eén opvragen |
 | GET | `/api/organization-themes/my-theme` | `ORGANIZATION_THEME_READ` | Thema van de eigen organisatie |
+| GET | `/api/organization-settings/mine` | `ORGANIZATION_SETTINGS_READ` | Instellingen van de eigen organisatie (lege keuzes als er niets is opgeslagen) |
+| PUT | `/api/organization-settings/mine` | `ORGANIZATION_SETTINGS_UPDATE` | Instellingen van de eigen organisatie opslaan (alleen eigen templates; `400` anders) |
 | POST | `/api/organization-themes` | `ORGANIZATION_THEME_CREATE` | Aanmaken |
 | PUT | `/api/organization-themes/{id}` | `ORGANIZATION_THEME_UPDATE` | Wijzigen |
 | DELETE | `/api/organization-themes/{id}` | `ORGANIZATION_THEME_DELETE` | Verwijderen |
@@ -969,6 +979,7 @@ curl -X POST "$BASE/api/email-templates/<id>/send?bookerId=<id>"    -H "Authoriz
 | POST | `/api/bookings` | `BOOKING_CREATE` | Aanmaken |
 | PUT | `/api/bookings/{id}` | `BOOKING_UPDATE` | Wijzigen |
 | DELETE | `/api/bookings/{id}` | `BOOKING_DELETE` | Verwijderen |
+| POST | `/api/bookings/{id}/send-quote` | `QUOTE_SEND` | Offerte versturen: status `offerte`, PDF bij de boeking, mail met bijlage naar de hoofdboeker (`400` buiten aanvraag/offerte, na bevestigen, zonder hoofdboeker of zonder ingestelde templates) |
 | GET | `/api/bookers` | `BOOKING_READ` | Lijst |
 | GET | `/api/bookers/{id}` | `BOOKING_READ` | Eén opvragen |
 | POST | `/api/bookers` | `BOOKING_CREATE` | Aanmaken |

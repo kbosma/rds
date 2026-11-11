@@ -26,3 +26,5 @@ export * from './email-template.model';
 export * from './template-image.model';
 export * from './activity.model';
 export * from './booking-activity.model';
+export * from './organization-settings.model';
+export * from './quote.model';

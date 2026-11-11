@@ -49,7 +49,7 @@ De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-co
 
 ![Stroomdiagram boekingsstatussen](img/boeking-statusflow.svg)
 
-Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd is alleen stap 1: een nieuwe boeking start als `AANVRAAG` en het vinkje *Offerte bevestigd* zet `BOEKING`; de overige overgangen zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
+Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd zijn stap 1 en 2: een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE` en het vinkje *Offerte bevestigd* zet `BOEKING`; de overige overgangen zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
 
 ### Booker, prospect en het aanmeldproces
 
@@ -63,6 +63,20 @@ Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSP
 ### Offerte bevestigen
 
 De hoofdboeker bevestigt de (laatste) offerte van een **boeking**: `booking.quote_confirmed` met `quote_confirmed_at` (V17). Een medewerker zet het vinkje *Offerte bevestigd* in de dialoog *Boekinggegevens*. Dat kan alleen in status `OFFERTE` en met een hoofdboeker; de server zet dan het moment (`now()`) en de status op `BOEKING`. Uitvinken kan niet (`400`); terugzetten gaat later via een statuswijziging met reden.
+
+### Offerte versturen
+
+`POST /api/bookings/{id}/send-quote` (`QUOTE_SEND`, EMPLOYEE en MANAGER; `QuoteService`, sinds V18). Kan in status `AANVRAAG` of `OFFERTE`, zolang de offerte niet bevestigd is, en alleen met een hoofdboeker met e-mailadres. In één transactie:
+
+1. de status wordt `OFFERTE` (eerst, zodat document en mail die status al tonen);
+2. met de **offertetemplate** uit de organisatie-instellingen wordt een PDF gemaakt en als document bij de boeking bewaard, **zichtbaar in het portaal**;
+3. de **offertemail** gaat naar de hoofdboeker met die PDF als bijlage; de verzonden mail wordt bewaard met een verwijzing naar het document (`sent_email.attachment_document_id`), zodat *Opnieuw versturen* dezelfde PDF weer meestuurt.
+
+Mislukt een stap (PDF, mail), dan wordt alles teruggedraaid. Opnieuw versturen in `OFFERTE` maakt een nieuwe PDF en mail; eerdere offertes blijven staan.
+
+### Organisatie-instellingen
+
+`organization_settings` (V18): per organisatie één rij met keuzes die het systeem nodig heeft. Nu: `quote_document_template_id` en `quote_email_template_id` (beide optioneel; zonder beide kan geen offerte verstuurd worden). Een gekozen template moet van de eigen organisatie zijn; verwijderen van de template maakt de keuze leeg (`ON DELETE SET NULL`). Later komen hier de betalingsinstellingen bij (voorschotpercentage, termijnen, betaalmail). API: `GET`/`PUT /api/organization-settings/mine`.
 
 ### Concept-boeking
 

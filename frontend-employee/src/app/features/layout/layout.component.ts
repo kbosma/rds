@@ -190,6 +190,7 @@ export class LayoutComponent {
     { labelKey: 'nav.roles', route: '/admin/roles', icon: 'admin_panel_settings', authority: ['ROLE_CREATE', 'ROLE_UPDATE', 'ROLE_DELETE'] },
     { labelKey: 'nav.authorities', route: '/admin/authorities', icon: 'security', authority: ['AUTHORITY_CREATE', 'AUTHORITY_UPDATE', 'AUTHORITY_DELETE'] },
     { labelKey: 'nav.theme', route: '/admin/theme', icon: 'palette', authority: ['ORGANIZATION_THEME_UPDATE'] },
+    { labelKey: 'nav.organizationSettings', route: '/organization-settings', icon: 'tune', authority: 'ORGANIZATION_SETTINGS_READ' },
     { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', authority: 'PERSON_UPDATE', sectionKey: 'nav.myAdmin' },
     { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', authority: 'ACCOUNT_UPDATE' },
     { labelKey: 'nav.totpSettings', route: '/totp-settings', icon: 'security' },

@@ -1,9 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V17**, 26-10-2026).
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V18**, 11-11-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -67,6 +67,22 @@ Huisstijl per organisatie (één rij per organisatie). De UI gebruikt de kleuren
 | created_at / created_by / modified_at / modified_by | | | audit |
 
 **Bestanden:** `auth/entity/OrganizationTheme.java`, `auth/controller/OrganizationThemeController.java` (`GET /api/organization-themes/my-theme` voor de eigen organisatie); frontend `features/admin/organization-theme.component.ts`, `theme.service.ts`.
+
+---
+
+### organization_settings *(V18)*
+
+Instellingen per organisatie (één rij per organisatie), nodig om het systeem zelf iets te laten doen. Geen rij = alle keuzes leeg.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| organization_settings_id | UUID | PK | |
+| organization_id | UUID | FK → organization ON DELETE CASCADE, NOT NULL, **UNIQUE** | Organisatie |
+| quote_document_template_id | UUID | FK → document_template ON DELETE SET NULL | Word-template van de offerte |
+| quote_email_template_id | UUID | FK → email_template ON DELETE SET NULL | e-mail die de offerte begeleidt |
+| created_at / created_by / modified_at / modified_by | | | audit |
+
+**Bestanden:** `settings/entity/OrganizationSettings.java`, `OrganizationSettingsService(+Impl)`, `OrganizationSettingsController` (`GET`/`PUT /api/organization-settings/mine`); frontend `features/organization-settings/*`. Gebruikt door `quote/service/QuoteService` (offerte versturen).
 
 ---
 
@@ -796,6 +812,7 @@ Verzonden e-mail aan de hoofdboeker van een boeking, bewaard zoals verstuurd.
 | subject | TEXT | NOT NULL | gemergd onderwerp |
 | body_html | TEXT | NOT NULL | gemergde HTML met absolute afbeeldings-URL's |
 | resent_from_id | UUID | FK → sent_email | gevuld bij opnieuw versturen |
+| attachment_document_id | UUID | FK → document ON DELETE RESTRICT (V18) | document dat als bijlage meeging (bv. de offerte-PDF); leeg zonder bijlage |
 | created_at / created_by | | NOT NULL / | wie en wanneer |
 | tenant_organization | UUID | NOT NULL | uit de boeking |
 

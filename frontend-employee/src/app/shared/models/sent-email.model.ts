@@ -8,6 +8,9 @@ export interface SentEmail {
   bodyHtml: string;
   /** Gevuld als dit een opnieuw verzonden kopie is van een eerdere mail. */
   resentFromId: string | null;
+  /** Het document dat als bijlage is meegestuurd (bv. de offerte-PDF); leeg zonder bijlage. */
+  attachmentDocumentId?: string | null;
+  attachmentName?: string | null;
   createdAt: string;
   createdBy: string | null;
   createdByName: string | null;

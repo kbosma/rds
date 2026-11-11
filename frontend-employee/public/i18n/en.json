@@ -72,7 +72,8 @@
     "admin": "ADMIN",
     "bookingAdmin": "ORGANIZATION ADMIN",
     "myAdmin": "MY SETTINGS",
-    "activities": "Activities"
+    "activities": "Activities",
+    "organizationSettings": "Settings"
   },
   "auth": {
     "username": "Username",
@@ -175,7 +176,14 @@
     "status_afgerond": "Completed",
     "sendEmail": "Send email",
     "deleteCascadeWarning": "All related travelers, booking lines, activities, documents and payment links are deleted too.",
-    "viewBookingTitle": "View booking"
+    "viewBookingTitle": "View booking",
+    "sendQuote": "Send quote",
+    "sendQuoteAction": "Send",
+    "sendQuoteNeedsBooker": "Link a main booker with an email address first",
+    "sendQuoteConfirm": "The quote is generated as PDF and emailed to {{email}}. The booking moves to Quote.",
+    "resendQuoteConfirm": "A new quote is generated as PDF and emailed to {{email}}. The previous quote stays with the booking.",
+    "quoteSent": "Quote sent to {{to}}",
+    "quoteSendError": "Sending the quote failed. {{message}}"
   },
   "bookingLine": {
     "editTitle": "Edit accommodation",
@@ -829,5 +837,20 @@
     "resendDone": "Email sent again",
     "resendError": "Sending again failed",
     "internal": "internal only"
+  },
+  "orgSettings": {
+    "title": "Organization settings",
+    "quoteTitle": "Quote",
+    "quoteIntro": "Choose which Word template is the quote and which email sends it to the main booker. Without both choices no quote can be sent.",
+    "quoteDocumentTemplate": "Quote document (Word template)",
+    "quoteDocumentHint": "Generated as PDF on every send and kept with the booking.",
+    "quoteEmailTemplate": "Quote email (email template)",
+    "quoteEmailHint": "The email to the main booker; the quote PDF is attached.",
+    "none": "— not chosen —",
+    "modifiedAt": "Last changed on",
+    "readOnly": "Only a manager can change these settings.",
+    "saved": "Settings saved",
+    "saveError": "Saving failed",
+    "loadError": "Loading settings failed"
   }
 }

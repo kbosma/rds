@@ -22,7 +22,10 @@ public class LoggingEmailSender implements EmailSender {
                         + "  Afzender : {}\n"
                         + "  Ontvanger: {}\n"
                         + "  Subject  : {}\n"
+                        + "  Bijlagen : {}\n"
                         + "  Body     :\n{}",
-                message.getFrom(), message.getTo(), message.getSubject(), message.getBodyHtml());
+                message.getFrom(), message.getTo(), message.getSubject(),
+                message.getAttachments().stream().map(a -> a.filename() + " (" + a.content().length + " bytes)").toList(),
+                message.getBodyHtml());
     }
 }

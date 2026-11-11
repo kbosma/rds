@@ -1,10 +1,12 @@
 package nl.puurkroatie.rds.email.service.impl;
 
 import jakarta.mail.internet.MimeMessage;
+import nl.puurkroatie.rds.email.service.EmailAttachment;
 import nl.puurkroatie.rds.email.service.EmailMessage;
 import nl.puurkroatie.rds.email.service.EmailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
@@ -29,11 +31,15 @@ public class SmtpEmailSender implements EmailSender {
     public void send(EmailMessage message) {
         try {
             MimeMessage mime = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mime, StandardCharsets.UTF_8.name());
+            boolean multipart = !message.getAttachments().isEmpty();
+            MimeMessageHelper helper = new MimeMessageHelper(mime, multipart, StandardCharsets.UTF_8.name());
             helper.setFrom(message.getFrom());
             helper.setTo(message.getTo());
             helper.setSubject(message.getSubject());
             helper.setText(message.getBodyHtml(), true); // true = HTML-body
+            for (EmailAttachment attachment : message.getAttachments()) {
+                helper.addAttachment(attachment.filename(), new ByteArrayResource(attachment.content()), attachment.mimeType());
+            }
             mailSender.send(mime);
             log.info("E-mail verstuurd naar {} (afzender {})", message.getTo(), message.getFrom());
         } catch (Exception e) {

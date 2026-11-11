@@ -72,7 +72,8 @@
     "admin": "BEHEER",
     "bookingAdmin": "ORGANISATIE BEHEER",
     "myAdmin": "MIJN BEHEER",
-    "activities": "Activiteiten"
+    "activities": "Activiteiten",
+    "organizationSettings": "Instellingen"
   },
   "auth": {
     "username": "Gebruikersnaam",
@@ -175,7 +176,14 @@
     "status_afgerond": "Afgerond",
     "sendEmail": "E-mail versturen",
     "deleteCascadeWarning": "Alle bijbehorende reizigers, boekingsregels, activiteiten, documenten en betalingskoppelingen worden ook verwijderd.",
-    "viewBookingTitle": "Boeking inzien"
+    "viewBookingTitle": "Boeking inzien",
+    "sendQuote": "Offerte versturen",
+    "sendQuoteAction": "Versturen",
+    "sendQuoteNeedsBooker": "Koppel eerst een hoofdboeker met een e-mailadres",
+    "sendQuoteConfirm": "De offerte wordt als PDF gemaakt en naar {{email}} gemaild. De boeking komt op Offerte te staan.",
+    "resendQuoteConfirm": "Er wordt een nieuwe offerte als PDF gemaakt en naar {{email}} gemaild. De vorige offerte blijft bij de boeking bewaard.",
+    "quoteSent": "Offerte verstuurd naar {{to}}",
+    "quoteSendError": "Offerte versturen mislukt. {{message}}"
   },
   "bookingLine": {
     "editTitle": "Accommodatie bewerken",
@@ -829,5 +837,20 @@
     "resendDone": "E-mail opnieuw verstuurd",
     "resendError": "Opnieuw versturen is mislukt",
     "internal": "alleen intern"
+  },
+  "orgSettings": {
+    "title": "Organisatie-instellingen",
+    "quoteTitle": "Offerte",
+    "quoteIntro": "Kies welke Word-template de offerte is en met welke e-mail hij naar de hoofdboeker gaat. Zonder beide keuzes kan er geen offerte verstuurd worden.",
+    "quoteDocumentTemplate": "Offertedocument (Word-template)",
+    "quoteDocumentHint": "Wordt bij elke verzending als PDF gemaakt en bij de boeking bewaard.",
+    "quoteEmailTemplate": "Offertemail (e-mailtemplate)",
+    "quoteEmailHint": "De mail aan de hoofdboeker; de offerte-PDF gaat als bijlage mee.",
+    "none": "— niet gekozen —",
+    "modifiedAt": "Laatst gewijzigd op",
+    "readOnly": "Alleen een manager kan deze instellingen wijzigen.",
+    "saved": "Instellingen opgeslagen",
+    "saveError": "Opslaan mislukt",
+    "loadError": "Instellingen laden mislukt"
   }
 }
