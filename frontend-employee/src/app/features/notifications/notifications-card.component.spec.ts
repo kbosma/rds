@@ -72,6 +72,16 @@ describe('NotificationsCardComponent', () => {
     expect(el.querySelector('.booking-link')).toBeNull();
   });
 
+  it('meldt het afhandelen, zodat de boeking haar (mogelijk afgeronde) status opnieuw kan laden', () => {
+    const el = setup(['NOTIFICATION_READ', 'NOTIFICATION_UPDATE'], 'b-1');
+    const handled = jasmine.createSpy('handled');
+    fixture.componentInstance.handled.subscribe(handled);
+
+    (el.querySelector('.handle-btn') as HTMLButtonElement).click();
+
+    expect(handled).toHaveBeenCalledWith(jasmine.objectContaining({ notificationId: 'n-4', handled: true }));
+  });
+
   it('biedt afhandelen niet aan zonder NOTIFICATION_UPDATE', () => {
     const el = setup(['NOTIFICATION_READ']);
 

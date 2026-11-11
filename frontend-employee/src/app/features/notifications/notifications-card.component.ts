@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -94,6 +94,8 @@ export class NotificationsCardComponent implements OnInit {
 
   /** Bij een boeking: alleen die notificaties; leeg = de openstaande van de organisatie (dashboard). */
   readonly bookingId = input<string | null>(null);
+  /** Na afhandelen: de boeking kan daardoor zijn afgerond (weer thuis en geen open meldingen meer). */
+  readonly handled = output<BookingNotification>();
 
   items = signal<BookingNotification[]>([]);
   busy = signal<string | null>(null);
@@ -123,6 +125,7 @@ export class NotificationsCardComponent implements OnInit {
     this.notificationService.handle(n.notificationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (handled) => {
         this.busy.set(null);
+        this.handled.emit(handled);
         this.items.update((list) => this.bookingId()
           ? list.map((x) => (x.notificationId === handled.notificationId ? handled : x))
           : list.filter((x) => x.notificationId !== handled.notificationId));

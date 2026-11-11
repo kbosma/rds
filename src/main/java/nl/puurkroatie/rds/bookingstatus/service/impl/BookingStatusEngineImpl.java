@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.entity.BookingStatus;
 import nl.puurkroatie.rds.booking.repository.BookingLineRepository;
 import nl.puurkroatie.rds.booking.repository.BookingMolliePaymentRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
+import nl.puurkroatie.rds.booking.service.BookerStatusUpdater;
 import nl.puurkroatie.rds.bookingstatus.entity.Notification;
 import nl.puurkroatie.rds.bookingstatus.entity.NotificationKind;
 import nl.puurkroatie.rds.bookingstatus.repository.NotificationRepository;
@@ -45,6 +46,7 @@ public class BookingStatusEngineImpl implements BookingStatusEngine {
     private final PaymentStates paymentStates;
     private final NotificationRepository notificationRepository;
     private final BookingStatusRecorder recorder;
+    private final BookerStatusUpdater bookerStatusUpdater;
     private final Clock clock;
 
     public BookingStatusEngineImpl(BookingRepository bookingRepository,
@@ -53,6 +55,7 @@ public class BookingStatusEngineImpl implements BookingStatusEngine {
                                    PaymentStates paymentStates,
                                    NotificationRepository notificationRepository,
                                    BookingStatusRecorder recorder,
+                                   BookerStatusUpdater bookerStatusUpdater,
                                    Clock clock) {
         this.bookingRepository = bookingRepository;
         this.bookingLineRepository = bookingLineRepository;
@@ -60,6 +63,7 @@ public class BookingStatusEngineImpl implements BookingStatusEngine {
         this.paymentStates = paymentStates;
         this.notificationRepository = notificationRepository;
         this.recorder = recorder;
+        this.bookerStatusUpdater = bookerStatusUpdater;
         this.clock = clock;
     }
 
@@ -81,13 +85,32 @@ public class BookingStatusEngineImpl implements BookingStatusEngine {
         BookingStatus target = StatusTarget.of(current, paidPerRelevantPayment(bookingId),
                 bookingLineRepository.firstFromDateByBookingId(bookingId),
                 bookingLineRepository.lastUntilDateByBookingId(bookingId), today);
-        if (target == current) {
+        Booking result = booking;
+        if (target != current) {
+            result = bookingRepository.saveAndRefresh(booking.withStatus(target));
+            recorder.record(result, current, target, true, reason(current, target));
+            notify(result, current, target);
+            log.info("Status van boeking {}: {} -> {}", result.getBookingNumber(), current, target);
+        }
+        completeIfDone(result);
+    }
+
+    /**
+     * Stap 5: een boeking die weer thuis is en geen openstaande notificaties meer heeft, is klaar en wordt AFGEROND.
+     * De WEER_THUIS-notificatie zelf moet dus eerst afgehandeld zijn.
+     */
+    private void completeIfDone(Booking booking) {
+        if (booking.getBookingStatus() != BookingStatus.WEERTHUIS
+                || notificationRepository.existsByBookingBookingIdAndHandledFalse(booking.getBookingId())) {
             return;
         }
-        Booking saved = bookingRepository.saveAndRefresh(booking.withStatus(target));
-        recorder.record(saved, current, target, true, reason(current, target));
-        notify(saved, current, target);
-        log.info("Status van boeking {}: {} -> {}", saved.getBookingNumber(), current, target);
+        Booking completed = bookingRepository.saveAndRefresh(booking.withStatus(BookingStatus.AFGEROND));
+        recorder.record(completed, BookingStatus.WEERTHUIS, BookingStatus.AFGEROND, true,
+                "Systeem: weer thuis en alle meldingen afgehandeld");
+        if (completed.getBooker() != null) {
+            bookerStatusUpdater.refresh(completed.getBooker().getBookerId());
+        }
+        log.info("Boeking {} automatisch afgerond", completed.getBookingNumber());
     }
 
     @Override

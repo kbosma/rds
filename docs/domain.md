@@ -49,7 +49,7 @@ De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-co
 
 ![Stroomdiagram boekingsstatussen](img/boeking-statusflow.svg)
 
-Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd zijn stap 1 t/m 4: een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE`, het vinkje *Offerte bevestigd* zet `BOEKING` en maakt de betalingen aan (zie *Automatische betalingen*), en de statusengine zet daarna `VOORSCHOT`, `BETAALD`, `OPREIS` en `WEERTHUIS` (zie *Statusengine en notificaties*). Afronden doet een MANAGER nu met de hand; automatisch afronden is stap 5. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
+Het diagram toont de **automatische statussen** (stap 1 t/m 5, alle gebouwd): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE`, het vinkje *Offerte bevestigd* zet `BOEKING` en maakt de betalingen aan (zie *Automatische betalingen*), de statusengine zet daarna `VOORSCHOT`, `BETAALD`, `OPREIS` en `WEERTHUIS` en rondt af (`AFGEROND`) zodra de boeking weer thuis is en alle meldingen zijn afgehandeld (zie *Statusengine en notificaties*). Een MANAGER kan ook zelf afronden. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
 
 ### Booker, prospect en het aanmeldproces
 
@@ -112,7 +112,9 @@ Zonder verblijf met een prijs kan niet bevestigd worden (`400`, er verandert nie
 
 "Betaald" kijkt naar de betalingen uit het betalingsschema (voorschot, restant, definitief); heeft een boeking die niet (van vóór stap 3), dan naar alle betalingen. Mislukte, geannuleerde en verlopen betalingen tellen niet mee; zonder betalingen beslist de engine niets. Vertrek = vroegste begindatum, terugkeer = laatste einddatum van de verblijven.
 
-**Wanneer.** Direct na elke nieuwe betaalstatus (Mollie-webhook of correctie, via het event `PaymentStatusRecordedEvent` in dezelfde transactie), bij het **inloggen** van een medewerker (alle boekingen van diens organisatie, eigen transactie; een fout breekt het inloggen niet) en **elke nacht** om 02:15 (alle organisaties). Instelbaar onder `app.status-engine` (`on-login`, `cron`); in tests staat `on-login` uit.
+**Automatisch afronden** (stap 5): staat een boeking op `WEERTHUIS` en heeft ze geen openstaande notificaties meer, dan zet de engine haar op `AFGEROND` (statusgeschiedenis: *Systeem: weer thuis en alle meldingen afgehandeld*) en rekent de status van de boeker opnieuw uit (alle boekingen afgerond = `NIETACTIEF`). De notificatie *Weer thuis* moet dus eerst afgehandeld zijn. Een boeking die al op `WEERTHUIS` stond zonder notificaties (van vóór stap 4) wordt bij de eerstvolgende run afgerond.
+
+**Wanneer.** Direct na het afhandelen van een notificatie (voor die boeking), direct na elke nieuwe betaalstatus (Mollie-webhook of correctie, via het event `PaymentStatusRecordedEvent` in dezelfde transactie), bij het **inloggen** van een medewerker (alle boekingen van diens organisatie, eigen transactie; een fout breekt het inloggen niet) en **elke nacht** om 02:15 (alle organisaties). Instelbaar onder `app.status-engine` (`on-login`, `cron`); in tests staat `on-login` uit.
 
 **Terugboeking.** Meldt Mollie een teruggeboekt bedrag (`amountChargedBack`), dan legt de webhook de betaalstatus `CHARGED_BACK` vast (ook als correctie te registreren). Die betaling telt dan niet meer als betaald en de engine zet de status terug (bv. `BETAALD → VOORSCHOT`).
 

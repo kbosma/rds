@@ -5,6 +5,7 @@ import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.bookingstatus.dto.NotificationDto;
 import nl.puurkroatie.rds.bookingstatus.entity.Notification;
 import nl.puurkroatie.rds.bookingstatus.repository.NotificationRepository;
+import nl.puurkroatie.rds.bookingstatus.service.BookingStatusEngine;
 import nl.puurkroatie.rds.bookingstatus.service.NotificationService;
 import nl.puurkroatie.rds.mollie.service.CreatedByNameResolver;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,9 +26,11 @@ public class NotificationServiceImpl implements NotificationService {
     private final BookingRepository bookingRepository;
     private final CreatedByNameResolver nameResolver;
     private final Clock clock;
+    private final BookingStatusEngine statusEngine;
 
     public NotificationServiceImpl(NotificationRepository notificationRepository, BookingRepository bookingRepository,
-                                   CreatedByNameResolver nameResolver, Clock clock) {
+                                   CreatedByNameResolver nameResolver, Clock clock, BookingStatusEngine statusEngine) {
+        this.statusEngine = statusEngine;
         this.notificationRepository = notificationRepository;
         this.bookingRepository = bookingRepository;
         this.nameResolver = nameResolver;
@@ -57,8 +60,12 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found with id: " + notificationId));
         verifyOrganization(notification.getTenantOrganization());
-        Notification result = notification.isHandled() ? notification
-                : notificationRepository.save(notification.handledBy(TenantContext.getAccountId(), LocalDateTime.now(clock)));
+        Notification result = notification;
+        if (!notification.isHandled()) {
+            result = notificationRepository.save(notification.handledBy(TenantContext.getAccountId(), LocalDateTime.now(clock)));
+            // Was dit de laatste open notificatie van een boeking die weer thuis is, dan rondt de engine haar af.
+            statusEngine.evaluate(notification.getBooking().getBookingId());
+        }
         return toDtos(List.of(result)).get(0);
     }
 

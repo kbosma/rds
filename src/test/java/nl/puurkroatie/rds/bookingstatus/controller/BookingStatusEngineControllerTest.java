@@ -201,6 +201,106 @@ class BookingStatusEngineControllerTest extends AbstractBookingControllerTest {
         assertEquals(kinds.size(), kinds.stream().distinct().count());
     }
 
+    // ---------- automatisch afronden (stap 5) ----------
+
+    private List<String> openNotificationIds(String token, String bookingId) throws Exception {
+        String body = mockMvc.perform(get("/api/notifications/booking/" + bookingId).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        List<String> ids = new ArrayList<>();
+        objectMapper.readTree(body).forEach(n -> {
+            if (!n.get("handled").asBoolean()) {
+                ids.add(n.get("notificationId").asText());
+            }
+        });
+        return ids;
+    }
+
+    private void handle(String token, String notificationId) throws Exception {
+        mockMvc.perform(post("/api/notifications/" + notificationId + "/handle").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void weerThuis_staysUntilTheLastNotificationIsHandled_thenItIsCompletedAutomatically() throws Exception {
+        String token = managerToken();
+        String bookingId = confirmedBooking(token, LocalDate.now().minusDays(20), LocalDate.now().minusDays(13));
+        correct(token, planned(bookingId).get(0), "paid");
+        List<String> open = openNotificationIds(token, bookingId);
+        assertEquals(3, open.size()); // alles betaald, op reis, weer thuis
+
+        handle(token, open.get(0));
+        handle(token, open.get(1));
+        assertEquals("weerthuis", bookingStatus(token, bookingId));
+
+        handle(token, open.get(2));
+        assertEquals("afgerond", bookingStatus(token, bookingId));
+        JsonNode latest = history(token, bookingId).get(0);
+        assertEquals("weerthuis", latest.get("fromStatus").asText());
+        assertEquals("afgerond", latest.get("toStatus").asText());
+        assertTrue(latest.get("automatic").asBoolean());
+    }
+
+    @Test
+    void weerThuisWithoutOpenNotifications_isCompletedByTheEngine() throws Exception {
+        String token = managerToken();
+        String bookingId = confirmedBooking(token, LocalDate.now().minusDays(20), LocalDate.now().minusDays(13));
+        MolliePayment payment = planned(bookingId).get(0);
+        statusEntryRepository.saveAndFlush(new MolliePaymentStatusEntry(payment, MolliePaymentStatus.PAID, null));
+        forceStatus(UUID.fromString(bookingId), "weerthuis"); // bv. een boeking van vóór de notificaties
+
+        engine.evaluate(UUID.fromString(bookingId));
+
+        assertEquals("afgerond", bookingStatus(token, bookingId));
+    }
+
+    @Test
+    void anAutomaticallyCompletedBooking_makesItsOnlyBookerInactive() throws Exception {
+        String token = managerToken();
+        String booker = "{\"firstname\":\"Rita\",\"prefix\":null,\"lastname\":\"Reiziger\",\"callsign\":\"Rita\","
+                + "\"telephone\":\"0622222222\",\"emailaddress\":\"rita@example.com\",\"gender\":\"vrouw\","
+                + "\"birthdate\":\"1980-01-01\",\"initials\":\"R.\"}";
+        String bookerId = objectMapper.readTree(mockMvc.perform(post("/api/bookers").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(booker))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("bookerId").asText();
+        String bookingId = objectMapper.readTree(mockMvc.perform(post("/api/bookings").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"aanvraag\",\"bookerId\":\"" + bookerId + "\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("bookingId").asText();
+        Map<String, Object> line = Map.of("bookingId", bookingId, "accommodationId", ACCOMMODATION.toString(),
+                "supplierId", SUPPLIER.toString(), "fromDate", LocalDate.now().minusDays(20).toString(),
+                "untilDate", LocalDate.now().minusDays(13).toString(), "price", new BigDecimal("800.00"));
+        mockMvc.perform(post("/api/booking-lines").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(line)))
+                .andExpect(status().isCreated());
+        forceStatus(UUID.fromString(bookingId), "offerte");
+        mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + bookerId + "\",\"quoteConfirmed\":true}"))
+                .andExpect(status().isOk());
+        correct(token, planned(bookingId).get(0), "paid");
+
+        for (String id : openNotificationIds(token, bookingId)) {
+            handle(token, id);
+        }
+
+        assertEquals("afgerond", bookingStatus(token, bookingId));
+        mockMvc.perform(get("/api/bookers/" + bookerId).header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.status").value("nietactief"));
+    }
+
+    @Test
+    void handlingANotificationOfABookingStillUnderway_doesNotCompleteIt() throws Exception {
+        String token = managerToken();
+        String bookingId = confirmedBooking(token, LocalDate.now().minusDays(1), LocalDate.now().plusDays(6));
+        correct(token, planned(bookingId).get(0), "paid");
+
+        for (String id : openNotificationIds(token, bookingId)) {
+            handle(token, id);
+        }
+
+        assertEquals("opreis", bookingStatus(token, bookingId));
+    }
+
     // ---------- notificaties ----------
 
     @Test

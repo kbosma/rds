@@ -390,7 +390,8 @@ interface BookingMolliePaymentLink {
 
         <div class="column">
         @if (!isNew() && authService.hasAuthority('NOTIFICATION_READ')) {
-          <app-notifications-card [bookingId]="bookingId" />
+          <!-- afhandelen kan de boeking afronden (weer thuis en geen open meldingen meer): status opnieuw laden -->
+          <app-notifications-card [bookingId]="bookingId" (handled)="reloadBookingData()" />
         }
         <!-- RIGHT TOP: Booker info -->
         <mat-card class="detail-card">
@@ -1276,7 +1277,7 @@ export class BookingDetailComponent implements OnInit {
       });
   }
 
-  private reloadBookingData() {
+  reloadBookingData() {
     if (!this.bookingId) return;
 
     this.bookingService.getById(this.bookingId)

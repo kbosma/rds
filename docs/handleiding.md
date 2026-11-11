@@ -78,7 +78,7 @@ Lokaal draaien de apps op poort 4200 (medewerkers) en 4300 (klanten); de backend
 
 `aanvraag → offerte → boeking → voorschot → betaald → op reis → weer thuis → afgerond`
 
-De status **kies je niet zelf**: het systeem zet hem. Een nieuwe boeking begint als *aanvraag*, **Offerte versturen** zet *offerte*, het vinkje **Offerte bevestigd** zet *boeking*, betalingen zetten *voorschot* en *betaald*, en de reisdatums *op reis* en *weer thuis*. Met de hand kun je alleen **terugzetten** (met reden) en **afronden** (MANAGER). Het doelontwerp met alle automatische overgangen staat in [domain.md](domain.md#levenscyclus-van-een-boeking). De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
+De status **kies je niet zelf**: het systeem zet hem. Een nieuwe boeking begint als *aanvraag*, **Offerte versturen** zet *offerte*, het vinkje **Offerte bevestigd** zet *boeking*, betalingen zetten *voorschot* en *betaald*, en de reisdatums *op reis* en *weer thuis*; is de boeking weer thuis en zijn alle meldingen afgehandeld, dan zet het systeem haar op *afgerond*. Met de hand kun je alleen **terugzetten** (met reden) en **afronden** (MANAGER). Het doelontwerp met alle automatische overgangen staat in [domain.md](domain.md#levenscyclus-van-een-boeking). De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
 
 ### 1.4 Twee vaste werkregels
 
@@ -683,7 +683,7 @@ De oude adressen (`/payments`, `/itinerary`, `/documents`, `/accommodations`, `/
 | 9 | klant | logt in op het portaal en **betaalt** |
 | 10 | systeem | na betaling `voorschot` en `betaald` (met de melding *Alles betaald*), daarna op de reisdatums `opreis` en `weerthuis` (elk met een melding) |
 | 11 | EMPLOYEE/MANAGER | meldingen **afhandelen** (dashboard of boeking) |
-| 12 | MANAGER | **Afronden** |
+| 12 | systeem | is de boeking *weer thuis* en zijn alle meldingen afgehandeld, dan rondt het systeem haar af (`afgerond`); een MANAGER kan ook eerder zelf **Afronden** |
 
 Gaat er iets mis (de klant wil een andere periode, een betaling wordt teruggeboekt), dan zet je de status terug met **Status terugzetten** en een reden; een terugboeking zet het systeem zelf terug.
 
