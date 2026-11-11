@@ -13,7 +13,7 @@ import { MolliePayment } from '../../shared/models';
 import { reasonHasText } from '../../shared/utils/reason.validator';
 
 /** Statussen die een medewerker met de hand mag registreren; de rest (pending, authorized, expired) komt van Mollie. */
-export const PAYMENT_CORRECTION_STATUSES = ['paid', 'canceled', 'failed', 'open'];
+export const PAYMENT_CORRECTION_STATUSES = ['paid', 'canceled', 'failed', 'open', 'charged_back'];
 
 export interface MolliePaymentCorrectionDialogData {
   payment: MolliePayment;

@@ -24,4 +24,8 @@ public interface BookingLineRepository extends JpaRepository<BookingLine, UUID> 
     /** De vertrekdatum: de vroegste begindatum van de verblijven. */
     @Query("SELECT MIN(l.fromDate) FROM BookingLine l WHERE l.booking.bookingId = :bookingId")
     LocalDate firstFromDateByBookingId(UUID bookingId);
+
+    /** De terugkeerdatum: de laatste einddatum van de verblijven. */
+    @Query("SELECT MAX(l.untilDate) FROM BookingLine l WHERE l.booking.bookingId = :bookingId")
+    LocalDate lastUntilDateByBookingId(UUID bookingId);
 }

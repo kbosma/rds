@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.mollie.service.impl;
 
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentStatusEntryDto;
+import nl.puurkroatie.rds.mollie.event.PaymentStatusRecordedEvent;
 import nl.puurkroatie.rds.mollie.entity.MolliePayment;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatusEntry;
@@ -10,6 +11,7 @@ import nl.puurkroatie.rds.mollie.repository.MolliePaymentRepository;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
 import nl.puurkroatie.rds.mollie.service.CreatedByNameResolver;
 import nl.puurkroatie.rds.mollie.service.MolliePaymentStatusEntryService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,11 +31,14 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
     private final MolliePaymentRepository molliePaymentRepository;
     private final MolliePaymentStatusEntryMapper statusEntryMapper;
     private final CreatedByNameResolver createdByNameResolver;
+    private final ApplicationEventPublisher eventPublisher;
 
     public MolliePaymentStatusEntryServiceImpl(MolliePaymentStatusEntryRepository statusEntryRepository,
                                                 MolliePaymentRepository molliePaymentRepository,
                                                 MolliePaymentStatusEntryMapper statusEntryMapper,
-                                                CreatedByNameResolver createdByNameResolver) {
+                                                CreatedByNameResolver createdByNameResolver,
+                                                ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
         this.statusEntryRepository = statusEntryRepository;
         this.molliePaymentRepository = molliePaymentRepository;
         this.statusEntryMapper = statusEntryMapper;
@@ -76,7 +81,8 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
 
     /** Statussen die een medewerker met de hand mag registreren; PENDING, AUTHORIZED en EXPIRED bepaalt alleen Mollie. */
     static final Set<MolliePaymentStatus> CORRECTION_STATUSES = EnumSet.of(
-            MolliePaymentStatus.OPEN, MolliePaymentStatus.PAID, MolliePaymentStatus.FAILED, MolliePaymentStatus.CANCELED);
+            MolliePaymentStatus.OPEN, MolliePaymentStatus.PAID, MolliePaymentStatus.FAILED, MolliePaymentStatus.CANCELED,
+            MolliePaymentStatus.CHARGED_BACK);
 
     @Override
     public MolliePaymentStatusEntryDto createCorrection(UUID molliePaymentId, String statusValue, String reason) {
@@ -98,6 +104,7 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
 
         MolliePaymentStatusEntry saved = statusEntryRepository.save(MolliePaymentStatusEntry.correction(
                 payment, status, TenantContext.getAccountId(), reason.trim()));
+        eventPublisher.publishEvent(new PaymentStatusRecordedEvent(molliePaymentId, status));
         return withCreatedByNames(List.of(statusEntryMapper.toDto(saved))).get(0);
     }
 
@@ -116,6 +123,7 @@ public class MolliePaymentStatusEntryServiceImpl implements MolliePaymentStatusE
                 .orElseThrow(() -> new RuntimeException("MolliePayment not found with id: " + molliePaymentId));
         MolliePaymentStatusEntry entry = new MolliePaymentStatusEntry(payment, status, null);
         statusEntryRepository.save(entry);
+        eventPublisher.publishEvent(new PaymentStatusRecordedEvent(molliePaymentId, status));
     }
 
     private boolean isAdmin() {

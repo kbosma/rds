@@ -1,10 +1,29 @@
 package nl.puurkroatie.rds.booking.controller;
 
+import jakarta.persistence.EntityManager;
 import nl.puurkroatie.rds.common.controller.AbstractControllerTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.UUID;
 
 public abstract class AbstractBookingControllerTest extends AbstractControllerTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private EntityManager entityManager;
+
+    /**
+     * Testopzet: zet de status van een boeking rechtstreeks in de database. De API staat dat bewust niet toe (offerte
+     * versturen, bevestigen, betalingen en datums zetten de status); een test die een boeking in een bepaalde status
+     * nodig heeft, gebruikt dit. Lowercase of hoofdletters.
+     */
+    protected void forceStatus(UUID bookingId, String status) {
+        entityManager.flush();
+        jdbcTemplate.update("UPDATE booking SET booking_status = ? WHERE booking_id = ?", status.toUpperCase(), bookingId);
+        entityManager.clear();
+    }
 
     // Booking UUIDs uit data.sql (Puurkroatie: 001-003, TechPartner: 004-006)
     protected static final UUID BOOKING_PK_1 = UUID.fromString("01000000-0000-0000-0000-000000000001");

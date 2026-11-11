@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.ApplicationEventPublisher;
+import nl.puurkroatie.rds.auth.event.EmployeeLoggedInEvent;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,13 +48,17 @@ public class AuthController {
     private final AccountService accountService;
     private final TotpService totpService;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     public AuthController(AuthenticationManager authenticationManager,
                           JwtTokenProvider jwtTokenProvider,
                           AccountRepository accountRepository,
                           AccountRoleRepository accountRoleRepository,
                           RoleAuthorityRepository roleAuthorityRepository,
                           AccountService accountService,
-                          TotpService totpService) {
+                          TotpService totpService,
+                          ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.accountRepository = accountRepository;
@@ -164,6 +170,8 @@ public class AuthController {
     }
 
     private LoginResponseDto buildFullLoginResponse(Account account) {
+        eventPublisher.publishEvent(new EmployeeLoggedInEvent(account.getAccountId(),
+                account.getPerson().getOrganization().getOrganizationId()));
         List<AccountRole> accountRoles = accountRoleRepository.findByAccount(account);
 
         List<String> authorities = accountRoles.stream()

@@ -17,6 +17,7 @@ import { TranslatePipe } from '@ngx-translate/core';
     .status-badge[data-status="failed"] { background-color: #ffebee; color: #c62828; }
     .status-badge[data-status="canceled"] { background-color: #f3e5f5; color: #7b1fa2; }
     .status-badge[data-status="expired"] { background-color: #efebe9; color: #4e342e; }
+    .status-badge[data-status="charged_back"] { background-color: #fce4ec; color: #ad1457; }
     .status-badge[data-status="authorized"] { background-color: #e3f2fd; color: #1565c0; }
   `],
 })

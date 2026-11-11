@@ -1,9 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V19**, 11-11-2026).
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V20**, 11-11-2026).
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`, V19 `mollie_payment.payment_type`/`due_date` en de betalingsinstellingen in `organization_settings`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`, V19 `mollie_payment.payment_type`/`due_date` en de betalingsinstellingen in `organization_settings`, V20 `notification`, `booking_status_change` (alleen-toevoegen), betaalstatus `CHARGED_BACK` en de authorities `NOTIFICATION_READ`/`_UPDATE`, `BOOKING_STATUS_REVERT`(`_PAID`) en `BOOKING_COMPLETE`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -821,6 +821,38 @@ Verzonden e-mail aan de hoofdboeker van een boeking, bewaard zoals verstuurd.
 | tenant_organization | UUID | NOT NULL | uit de boeking |
 
 Triggers `forbid_sent_email_change` (UPDATE/DELETE/TRUNCATE). Backend: `email/entity/SentEmail`, `SentEmailRepository`, `SentEmailService(+Impl)`, `SentEmailController`, `SentEmailDto`.
+
+### notification *(V20)*
+
+Notificatie bij een boeking: iets dat een medewerker moet oppakken. Wordt afgehandeld, nooit verwijderd.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| notification_id | UUID | PK | |
+| booking_id | UUID | FK → booking ON DELETE RESTRICT, NOT NULL | |
+| kind | VARCHAR(30) | NOT NULL, CHECK `ALLES_BETAALD`, `OP_REIS`, `WEER_THUIS`, `TERUGBOEKING` | soort |
+| title | VARCHAR(255) | NOT NULL | titel |
+| notified_at | TIMESTAMP | NOT NULL | datum |
+| handled | BOOLEAN | NOT NULL, default FALSE; CHECK gevuld precies als handled_at | afgehandeld |
+| handled_at / handled_by | TIMESTAMP / UUID | | wanneer en door wie afgehandeld |
+| created_at / created_by / tenant_organization | | | audit en tenant |
+
+Backend: `bookingstatus/entity/Notification`, `NotificationService(+Impl)`, `NotificationController` (`/api/notifications/open`, `/booking/{id}`, `/{id}/handle`).
+
+### booking_status_change *(alleen-toevoegen, V20)*
+
+Statusgeschiedenis van een boeking. Triggers weigeren `UPDATE`/`DELETE`/`TRUNCATE`.
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| booking_status_change_id | UUID | PK | |
+| booking_id | UUID | FK → booking ON DELETE RESTRICT, NOT NULL | |
+| from_status / to_status | VARCHAR(20) | NOT NULL, verschillend | van en naar |
+| automatic | BOOLEAN | NOT NULL | door het systeem (true) of een medewerker |
+| reason | TEXT | NOT NULL, minstens 5 tekens | reden |
+| created_at / created_by / tenant_organization | | | wie en wanneer |
+
+Backend: `bookingstatus/entity/BookingStatusChange`, `BookingStatusRecorder`, `BookingStatusService(+Impl)`, `BookingStatusController`.
 
 ### booking_mollie_payment *(koppeltabel)*
 

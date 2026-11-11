@@ -499,7 +499,8 @@
       "definitief": "Full payment",
       "overig": "Other"
     },
-    "dueDate": "Due"
+    "dueDate": "Due",
+    "status_charged_back": "Charged back"
   },
   "organizations": {
     "title": "Organizations",
@@ -873,5 +874,34 @@
     "weeksOrder": "The deposit must be due before the balance.",
     "paymentEmailTemplate": "Payment email (email template)",
     "paymentEmailHint": "Sent to the main booker once the payments are created. Not chosen: no email."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No open notifications.",
+    "handle": "Handle",
+    "handledBy": "handled by {{name}} on {{date}}",
+    "handleError": "Handling failed"
+  },
+  "bookingStatus": {
+    "setBySystem": "The system sets the status: sending the quote, confirming it, payments and travel dates. Use \"Revert status\" to go back.",
+    "revert": "Revert status",
+    "revertTitle": "Revert status",
+    "revertIntro": "The booking is now {{status}}. Choose an earlier status and give a reason.",
+    "target": "Back to",
+    "reason": "Reason",
+    "reasonHint": "At least 5 characters; recorded in the status history.",
+    "unconfirmWarning": "This also undoes the quote confirmation; the customer has to confirm again.",
+    "reverted": "Status reverted",
+    "revertError": "Reverting failed",
+    "revertForbidden": "Something has been paid: only a manager can revert the status.",
+    "revertPaidHint": "Something has been paid: only a manager can revert.",
+    "complete": "Complete",
+    "completeConfirm": "The booking will be completed. Continue?",
+    "completed": "Booking completed",
+    "completeError": "Completing failed",
+    "history": "Status history",
+    "historyTitle": "Status history",
+    "historyEmpty": "No status changes recorded yet.",
+    "bySystem": "system"
   }
 }

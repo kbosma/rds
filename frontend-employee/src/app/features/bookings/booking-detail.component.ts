@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -23,6 +23,9 @@ import { BookingActivityService } from './booking-activity.service';
 import { BookingLineDialogComponent, BookingLineDialogData } from './booking-line-dialog.component';
 import { BookingActivityDialogComponent, BookingActivityDialogData } from './booking-activity-dialog.component';
 import { BookingEditDialogComponent, BookingEditDialogData } from './booking-edit-dialog.component';
+import { BookingStatusRevertDialogComponent, BookingStatusRevertDialogData } from './booking-status-revert-dialog.component';
+import { BookingStatusHistoryDialogComponent, BookingStatusHistoryDialogData } from './booking-status-history-dialog.component';
+import { NotificationsCardComponent } from '../notifications/notifications-card.component';
 import { BookerDialogComponent, BookerDialogData } from '../bookers/booker-dialog.component';
 import { BookerSelectDialogComponent } from '../bookers/booker-select-dialog.component';
 import { BookerService } from '../bookers/booker.service';
@@ -59,6 +62,7 @@ interface BookingMolliePaymentLink {
     ReactiveFormsModule,
     RouterLink,
     BookingMessagesCardComponent,
+    NotificationsCardComponent,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -133,6 +137,27 @@ interface BookingMolliePaymentLink {
                   </div>
                 }
               </div>
+              @if (canRevert() || canComplete() || authService.hasAuthority('BOOKING_READ')) {
+                <div class="status-actions">
+                  @if (canRevert()) {
+                    <button mat-stroked-button class="act-update revert-status-btn" [disabled]="revertBlocked()"
+                            (click)="openRevertDialog()">
+                      <mat-icon>undo</mat-icon> {{ 'bookingStatus.revert' | translate }}
+                    </button>
+                  }
+                  @if (canComplete()) {
+                    <button mat-stroked-button class="act-update complete-btn" (click)="completeBooking()">
+                      <mat-icon>done_all</mat-icon> {{ 'bookingStatus.complete' | translate }}
+                    </button>
+                  }
+                  <button mat-button class="history-btn" (click)="openStatusHistory()">
+                    <mat-icon>history</mat-icon> {{ 'bookingStatus.history' | translate }}
+                  </button>
+                  @if (canRevert() && revertBlocked()) {
+                    <span class="quote-hint revert-hint">{{ 'bookingStatus.revertPaidHint' | translate }}</span>
+                  }
+                </div>
+              }
               @if (canSendQuote()) {
                 <div class="quote-actions">
                   <button mat-stroked-button class="act-send send-quote-btn"
@@ -364,6 +389,9 @@ interface BookingMolliePaymentLink {
         </div>
 
         <div class="column">
+        @if (!isNew() && authService.hasAuthority('NOTIFICATION_READ')) {
+          <app-notifications-card [bookingId]="bookingId" />
+        }
         <!-- RIGHT TOP: Booker info -->
         <mat-card class="detail-card">
           <mat-card-header>
@@ -472,6 +500,7 @@ interface BookingMolliePaymentLink {
   `,
   styles: [`
     .payment-type { font-size: 12px; color: var(--ui-text-secondary, #666); }
+    .status-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
     .quote-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
     .quote-hint { font-size: 13px; color: var(--ui-text-secondary, #666); }
     .back-link {
@@ -726,6 +755,44 @@ export class BookingDetailComponent implements OnInit {
   }
 
   sendingQuote = signal(false);
+  private notificationsCard = viewChild(NotificationsCardComponent);
+
+  /** Terugzetten kan vanaf Offerte, met BOOKING_STATUS_REVERT (zolang niets betaald is) of _PAID. */
+  canRevert = computed(() => !this.isNew() && this.currentBookingStatus() !== 'aanvraag'
+    && (this.can('BOOKING_STATUS_REVERT') || this.can('BOOKING_STATUS_REVERT_PAID')));
+  /** Er is al iets betaald en de gebruiker mag dan niet terugzetten (alleen een manager). */
+  revertBlocked = computed(() => Object.values(this.paymentStatusMap()).includes('paid') && !this.can('BOOKING_STATUS_REVERT_PAID'));
+  canComplete = computed(() => !this.isNew() && this.currentBookingStatus() !== 'afgerond' && this.can('BOOKING_COMPLETE'));
+
+  openRevertDialog() {
+    const booking = this.currentBooking();
+    if (!booking) return;
+    const data: BookingStatusRevertDialogData = { booking };
+    this.dialog.open(BookingStatusRevertDialogComponent, { data, width: '480px' })
+      .afterClosed().pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((changed) => { if (changed) this.reloadBookingData(); });
+  }
+
+  async completeBooking() {
+    if (!this.bookingId) return;
+    if (!await this.confirmService.confirm(this.translate.instant('bookingStatus.completeConfirm'), {
+      title: this.translate.instant('bookingStatus.complete'),
+      confirmLabel: this.translate.instant('bookingStatus.complete'),
+    })) return;
+    this.bookingService.complete(this.bookingId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.reloadBookingData();
+        this.snackBar.open(this.translate.instant('bookingStatus.completed'), this.translate.instant('common.close'), { duration: 3000 });
+      },
+      error: () => this.snackBar.open(this.translate.instant('bookingStatus.completeError'), this.translate.instant('common.close'), { duration: 5000 }),
+    });
+  }
+
+  openStatusHistory() {
+    if (!this.bookingId) return;
+    const data: BookingStatusHistoryDialogData = { bookingId: this.bookingId, bookingNumber: this.currentBookingNumber() };
+    this.dialog.open(BookingStatusHistoryDialogComponent, { data, width: '560px' });
+  }
 
   /** Een offerte versturen kan bij een aanvraag, en opnieuw zolang de offerte nog niet bevestigd is. */
   canSendQuote = computed(() => !this.isNew() && this.can('QUOTE_SEND')
@@ -946,7 +1013,13 @@ export class BookingDetailComponent implements OnInit {
       width: '640px',
       maxWidth: '95vw',
     }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((changed) => {
-      if (changed) this.loadPayments(); // een correctie wijzigt de status, een herkoppeling haalt de betaling bij deze boeking weg
+      if (changed) {
+        // een correctie wijzigt de betaalstatus (en via de statusengine mogelijk de boekingsstatus en notificaties),
+        // een herkoppeling haalt de betaling bij deze boeking weg
+        this.loadPayments();
+        this.reloadBookingData();
+        this.notificationsCard()?.load();
+      }
     });
   }
 

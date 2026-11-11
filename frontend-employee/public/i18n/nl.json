@@ -499,7 +499,8 @@
       "definitief": "Volledige betaling",
       "overig": "Overig"
     },
-    "dueDate": "Uiterlijk"
+    "dueDate": "Uiterlijk",
+    "status_charged_back": "Teruggeboekt"
   },
   "organizations": {
     "title": "Organisaties",
@@ -873,5 +874,34 @@
     "weeksOrder": "Het voorschot moet eerder vervallen dan het restant.",
     "paymentEmailTemplate": "Betaalmail (e-mailtemplate)",
     "paymentEmailHint": "Gaat naar de hoofdboeker zodra de betalingen zijn aangemaakt. Niet gekozen: geen mail."
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "empty": "Geen openstaande meldingen.",
+    "handle": "Afhandelen",
+    "handledBy": "afgehandeld door {{name}} op {{date}}",
+    "handleError": "Afhandelen mislukt"
+  },
+  "bookingStatus": {
+    "setBySystem": "De status zet het systeem: offerte versturen, offerte bevestigen, betalingen en reisdatums. Terugzetten gaat via \"Status terugzetten\".",
+    "revert": "Status terugzetten",
+    "revertTitle": "Status terugzetten",
+    "revertIntro": "De boeking staat nu op {{status}}. Kies een eerdere status en geef een reden.",
+    "target": "Terug naar",
+    "reason": "Reden",
+    "reasonHint": "Minimaal 5 tekens; komt in de statusgeschiedenis.",
+    "unconfirmWarning": "Dit maakt ook de bevestiging van de offerte ongedaan; de klant moet opnieuw bevestigen.",
+    "reverted": "Status teruggezet",
+    "revertError": "Terugzetten mislukt",
+    "revertForbidden": "Er is al betaald: alleen een manager kan de status terugzetten.",
+    "revertPaidHint": "Er is al betaald: alleen een manager kan terugzetten.",
+    "complete": "Afronden",
+    "completeConfirm": "De boeking wordt afgerond. Doorgaan?",
+    "completed": "Boeking afgerond",
+    "completeError": "Afronden mislukt",
+    "history": "Statusgeschiedenis",
+    "historyTitle": "Statusgeschiedenis",
+    "historyEmpty": "Nog geen statuswijzigingen vastgelegd.",
+    "bySystem": "systeem"
   }
 }

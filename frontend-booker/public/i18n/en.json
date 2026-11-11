@@ -111,7 +111,8 @@
         "paid": "Paid",
         "failed": "Failed",
         "canceled": "Cancelled",
-        "expired": "Expired"
+        "expired": "Expired",
+        "charged_back": "Charged back"
       },
       "dueBy": "due by {{date}}",
       "types": {

@@ -7,9 +7,10 @@ import { BookingEditDialogComponent } from './booking-edit-dialog.component';
 import { Booking, BookingService } from './booking.service';
 
 /*
- * In de boekingsdialoog zet je de status en bevestig je de offerte namens de hoofdboeker. Bevestigen kan alleen in
- * status Offerte met een hoofdboeker; de server maakt de status dan Boeking. De dialoog stuurt altijd de hele boeking
- * mee, zodat een PUT de hoofdboeker niet loskoppelt.
+ * In de boekingsdialoog bevestig je de offerte namens de hoofdboeker. De status kies je hier niet: die zet het systeem
+ * (offerte versturen, bevestigen, betalingen, reisdatums); terugzetten gaat via "Status terugzetten". Bevestigen kan
+ * alleen in status Offerte met een hoofdboeker. De dialoog stuurt de hele boeking mee, zodat een PUT de hoofdboeker
+ * niet loskoppelt.
  */
 describe('BookingEditDialogComponent', () => {
   let serviceSpy: jasmine.SpyObj<BookingService>;
@@ -40,42 +41,38 @@ describe('BookingEditDialogComponent', () => {
     return { fixture, component: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
   }
 
-  it('stuurt bij een statuswijziging de hele boeking mee (ook de hoofdboeker)', () => {
-    const { component } = setup(booking({ bookingStatus: 'aanvraag' }));
+  it('heeft geen keuzelijst voor de status meer; de status wordt alleen getoond', () => {
+    const { el } = setup(booking({ bookingStatus: 'aanvraag' }));
 
-    component.statusControl.setValue('offerte');
-    component.onSave();
-
-    expect(serviceSpy.update).toHaveBeenCalledWith('b-1', jasmine.objectContaining({
-      bookingStatus: 'offerte', bookerId: 'bk-1', quoteConfirmed: false,
-    }));
-    expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
+    expect(el.querySelector('mat-select')).toBeNull();
+    expect(el.querySelector('.current-status')).not.toBeNull();
+    expect(el.querySelector('.status-hint')).not.toBeNull();
   });
 
-  it('kan de offerte bevestigen in status Offerte met een hoofdboeker; de keuzelijst toont dan Boeking', () => {
+  it('bevestigt de offerte in status Offerte met een hoofdboeker en stuurt de hele boeking mee', () => {
     const { fixture, component, el } = setup(booking());
     expect(component.canConfirm).toBeTrue();
-    expect(component.quoteConfirmedControl.disabled).toBeFalse();
+    expect(component.confirming()).toBeFalse();
 
     component.quoteConfirmedControl.setValue(true);
     fixture.detectChanges();
 
     expect(el.querySelector('.confirm-effect')).not.toBeNull();
-    expect(component.statusControl.value).toBe('boeking');
-    expect(component.statusControl.disabled).toBeTrue();
+    expect(el.querySelector('.next-status')).not.toBeNull();
     component.onSave();
     // de server controleert de huidige status (Offerte) en zet zelf Boeking en het moment van bevestigen
-    expect(serviceSpy.update).toHaveBeenCalledWith('b-1', jasmine.objectContaining({ bookingStatus: 'offerte', quoteConfirmed: true }));
+    expect(serviceSpy.update).toHaveBeenCalledWith('b-1', jasmine.objectContaining({
+      bookingStatus: 'offerte', bookerId: 'bk-1', quoteConfirmed: true,
+    }));
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
   });
 
-  it('weer uitvinken voor het opslaan zet de oorspronkelijke status terug', () => {
+  it('slaat niets op zolang er niet bevestigd wordt', () => {
     const { component } = setup(booking());
 
-    component.quoteConfirmedControl.setValue(true);
-    component.quoteConfirmedControl.setValue(false);
+    component.onSave();
 
-    expect(component.statusControl.value).toBe('offerte');
-    expect(component.statusControl.enabled).toBeTrue();
+    expect(serviceSpy.update).not.toHaveBeenCalled();
   });
 
   it('bevestigen kan niet buiten status Offerte en legt uit waarom', () => {

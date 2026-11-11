@@ -59,7 +59,9 @@ Toelichting:
 
 ## Statussen en enums
 
-`MolliePaymentStatus`: `OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED` (spiegel van Mollie).
+`MolliePaymentStatus`: `OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED` (spiegel van Mollie) en `CHARGED_BACK` (V20): Mollie laat bij een terugboeking de status op `paid` staan en meldt `amountChargedBack`; de webhook legt dan `CHARGED_BACK` vast. Ook als correctie te registreren.
+
+Na elke nieuwe status (webhook of correctie) publiceert de statusservice `PaymentStatusRecordedEvent`; de statusengine (pakket `bookingstatus`) werkt daarop de boekingsstatus bij. Zo blijft het pakket `mollie` boeking-agnostisch.
 `MolliePaymentMethod`: `IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY`.
 Beide: naam in de database, lowercase in JSON, hoofdletterongevoelig parsen.
 

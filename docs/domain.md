@@ -45,11 +45,11 @@ DocumentTemplate, EmailTemplate, EmailImage   (per organisatie, los van een boek
 
 `AANVRAAG → OFFERTE → BOEKING → VOORSCHOT → BETAALD → OPREIS → WEERTHUIS → AFGEROND`
 
-De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-constraint); er is geen afgedwongen toestandsmachine: de medewerker zet de status. In de API en UI is de waarde lowercase (`aanvraag`, …), in het template-model de hoofdletter-naam (`BOEKING`).
+De status is een enum (`BookingStatus`, in de database bewaakt door een CHECK-constraint). **De status kies je niet vrij**: `PUT /api/bookings/{id}` met een andere status geeft `400`. Het systeem zet hem (offerte versturen, offerte bevestigen, betalingen, reisdatums); een medewerker kan alleen terugzetten (met reden) en afronden. In de API en UI is de waarde lowercase (`aanvraag`, …), in het template-model de hoofdletter-naam (`BOEKING`).
 
 ![Stroomdiagram boekingsstatussen](img/boeking-statusflow.svg)
 
-Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd zijn stap 1 t/m 3: een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE`, het vinkje *Offerte bevestigd* zet `BOEKING` en maakt de betalingen aan (zie *Automatische betalingen*); de statussen na `BOEKING` zet de medewerker nog zelf. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
+Het diagram toont het **doelontwerp** (stap 1 t/m 5 van de automatische statussen): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Gebouwd zijn stap 1 t/m 4: een nieuwe boeking start als `AANVRAAG`, *Offerte versturen* zet `OFFERTE`, het vinkje *Offerte bevestigd* zet `BOEKING` en maakt de betalingen aan (zie *Automatische betalingen*), en de statusengine zet daarna `VOORSCHOT`, `BETAALD`, `OPREIS` en `WEERTHUIS` (zie *Statusengine en notificaties*). Afronden doet een MANAGER nu met de hand; automatisch afronden is stap 5. *Terugzetten met reden* kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (`BETAALD → VOORSCHOT`, `VOORSCHOT → BOEKING`).
 
 ### Booker, prospect en het aanmeldproces
 
@@ -97,6 +97,30 @@ Zonder verblijf met een prijs kan niet bevestigd worden (`400`, er verandert nie
 ### Concept-boeking
 
 `/bookings/new?bookerId=…` opent het boekingsdetail voorgevuld met de hoofdboeker, maar **persisteert niets**. De boeking wordt pas aangemaakt (`ensureBookingPersisted`) zodra de eerste onderdelen worden toegevoegd (reiziger, boekingsregel, activiteit, betaling, …). Is er al een lopende (niet-afgeronde) boeking voor die boeker, dan vraagt het scherm eerst bevestiging. Een nieuwe boeking zonder boeker wordt teruggestuurd naar het overzicht.
+
+### Statusengine en notificaties
+
+`BookingStatusEngine` (pakket `bookingstatus`) bepaalt de status van een bevestigde boeking (status `BOEKING` t/m `WEERTHUIS`; `AANVRAAG`, `OFFERTE` en `AFGEROND` laat hij met rust) met een pure berekening (`StatusTarget`):
+
+| Betalingen | Datum (vandaag) | Status |
+|---|---|---|
+| niets betaald | – | `BOEKING` |
+| een deel betaald (het voorschot) | – | `VOORSCHOT` |
+| alles betaald | vóór de vertrekdatum | `BETAALD` |
+| alles betaald | vanaf de vertrekdatum t/m de terugkeerdatum | `OPREIS` |
+| alles betaald | na de terugkeerdatum | `WEERTHUIS` |
+
+"Betaald" kijkt naar de betalingen uit het betalingsschema (voorschot, restant, definitief); heeft een boeking die niet (van vóór stap 3), dan naar alle betalingen. Mislukte, geannuleerde en verlopen betalingen tellen niet mee; zonder betalingen beslist de engine niets. Vertrek = vroegste begindatum, terugkeer = laatste einddatum van de verblijven.
+
+**Wanneer.** Direct na elke nieuwe betaalstatus (Mollie-webhook of correctie, via het event `PaymentStatusRecordedEvent` in dezelfde transactie), bij het **inloggen** van een medewerker (alle boekingen van diens organisatie, eigen transactie; een fout breekt het inloggen niet) en **elke nacht** om 02:15 (alle organisaties). Instelbaar onder `app.status-engine` (`on-login`, `cron`); in tests staat `on-login` uit.
+
+**Terugboeking.** Meldt Mollie een teruggeboekt bedrag (`amountChargedBack`), dan legt de webhook de betaalstatus `CHARGED_BACK` vast (ook als correctie te registreren). Die betaling telt dan niet meer als betaald en de engine zet de status terug (bv. `BETAALD → VOORSCHOT`).
+
+**Notificaties** (`notification`, V20): bij het bereiken van `BETAALD` (*Alles betaald: de reisgegevens kunnen verstuurd worden*), `OPREIS`, `WEERTHUIS`, en bij een terugval (*Betaling teruggedraaid*). Springt de status over een mijlpaal heen (bv. in één keer betaald tijdens de reis), dan komen alle bijbehorende notificaties. Geen dubbele: zolang er een open notificatie van dezelfde soort is, komt er geen nieuwe. Een medewerker handelt een notificatie af (wie en wanneer); verwijderd wordt er niets. Wat de knop *Reisgegevens versturen* moet doen is nog niet bepaald.
+
+**Terugzetten en afronden.** `POST /api/bookings/{id}/status-revert` met `{targetStatus, reason}` (reden 5–500 tekens) zet terug naar een eerdere status: met `BOOKING_STATUS_REVERT` (EMPLOYEE, MANAGER) zolang er niets betaald is, daarna alleen met `BOOKING_STATUS_REVERT_PAID` (MANAGER; anders `403`). Terug naar `AANVRAAG` of `OFFERTE` maakt de bevestiging van de offerte ongedaan (opnieuw bevestigen maakt geen nieuwe betalingen: het schema bestaat al). Let op: zet je terug binnen `BOEKING`–`WEERTHUIS`, dan rekent de engine bij de volgende gelegenheid de status opnieuw uit. `POST /api/bookings/{id}/complete` (`BOOKING_COMPLETE`, MANAGER) rondt af, met optionele toelichting.
+
+**Statusgeschiedenis** (`booking_status_change`, V20, alleen-toevoegen): elke statuswijziging met van, naar, door het systeem of een medewerker, reden, wie en wanneer. `GET /api/bookings/{id}/status-changes` (`BOOKING_READ`).
 
 ## Documenten en templates
 

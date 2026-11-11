@@ -51,7 +51,9 @@ class QuoteControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isOk());
     }
 
+    /** Testopzet: de status rechtstreeks zetten (de API staat dat niet toe), daarna hoofdboeker en bevestiging via PUT. */
     private void setBooking(String token, String bookingStatus, String bookerId, boolean quoteConfirmed) throws Exception {
+        forceStatus(BOOKING_TP_4, bookingStatus);
         String booker = bookerId == null ? "null" : "\"" + bookerId + "\"";
         mockMvc.perform(put("/api/bookings/" + BOOKING_TP_4).header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

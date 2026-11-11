@@ -132,7 +132,8 @@ export class PaymentsCardComponent {
       case 'paid': return 'ok';
       case 'failed':
       case 'canceled':
-      case 'expired': return 'bad';
+      case 'expired':
+      case 'charged_back': return 'bad';
       default: return 'wait';
     }
   }

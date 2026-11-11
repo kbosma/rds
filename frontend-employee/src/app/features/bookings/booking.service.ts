@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { environment } from '../../../environments/environment';
-import { Booking, QuoteSendResult } from '../../shared/models';
+import { Booking, BookingStatusChange, QuoteSendResult } from '../../shared/models';
 
 export type { Booking } from '../../shared/models';
 
@@ -36,5 +36,20 @@ export class BookingService {
   /** Verstuurt de offerte (PDF als bijlage) naar de hoofdboeker; de boeking komt op Offerte te staan. */
   sendQuote(id: string): Observable<QuoteSendResult> {
     return this.http.post<QuoteSendResult>(`${environment.apiUrl}/${this.endpoint}/${id}/send-quote`, null);
+  }
+
+  /** Zet de status terug naar een eerdere status, met reden (na een betaling alleen een manager). */
+  revertStatus(id: string, targetStatus: string, reason: string): Observable<Booking> {
+    return this.http.post<Booking>(`${environment.apiUrl}/${this.endpoint}/${id}/status-revert`, { targetStatus, reason });
+  }
+
+  /** Rondt de boeking af. */
+  complete(id: string, reason?: string): Observable<Booking> {
+    return this.http.post<Booking>(`${environment.apiUrl}/${this.endpoint}/${id}/complete`, { reason: reason ?? null });
+  }
+
+  /** De statusgeschiedenis, nieuwste eerst. */
+  statusChanges(id: string): Observable<BookingStatusChange[]> {
+    return this.http.get<BookingStatusChange[]>(`${environment.apiUrl}/${this.endpoint}/${id}/status-changes`);
   }
 }

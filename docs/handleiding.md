@@ -78,7 +78,7 @@ Lokaal draaien de apps op poort 4200 (medewerkers) en 4300 (klanten); de backend
 
 `aanvraag → offerte → boeking → voorschot → betaald → op reis → weer thuis → afgerond`
 
-De status is grotendeels een keuzelijst: de medewerker zet hem via *Bewerken* in het boekingsdetail. Een paar overgangen doet het systeem zelf: een nieuwe boeking begint als *aanvraag*, **Offerte versturen** zet *offerte* en het vinkje **Offerte bevestigd** zet *boeking*. Het doelontwerp met alle automatische overgangen staat in [domain.md](domain.md#levenscyclus-van-een-boeking). De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
+De status **kies je niet zelf**: het systeem zet hem. Een nieuwe boeking begint als *aanvraag*, **Offerte versturen** zet *offerte*, het vinkje **Offerte bevestigd** zet *boeking*, betalingen zetten *voorschot* en *betaald*, en de reisdatums *op reis* en *weer thuis*. Met de hand kun je alleen **terugzetten** (met reden) en **afronden** (MANAGER). Het doelontwerp met alle automatische overgangen staat in [domain.md](domain.md#levenscyclus-van-een-boeking). De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
 
 ### 1.4 Twee vaste werkregels
 
@@ -121,7 +121,7 @@ ORGANIZATION ──< PERSON ──< ACCOUNT ──< ACCOUNT_ROLE >── ROLE �
 | `PAYMENT_CORRECT` | de status van een betaling handmatig corrigeren |
 | `PAYMENT_RELINK` | een betaling met reden aan een andere boeking hangen |
 
-Er zijn in totaal **65 authorities**: 60 uit de basismigratie (`V2`) plus `EMAIL_SEND` (`V6`), `PAYMENT_CORRECT` (`V10`), `PAYMENT_RELINK` (`V12`) en `ORGANIZATION_SETTINGS_READ`, `ORGANIZATION_SETTINGS_UPDATE` en `QUOTE_SEND` (`V18`), min `DOCUMENT_DELETE` dat in `V16` is vervallen (een document wordt nooit verwijderd).
+Er zijn in totaal **70 authorities** (V20 voegt `NOTIFICATION_READ`, `NOTIFICATION_UPDATE`, `BOOKING_STATUS_REVERT`, `BOOKING_STATUS_REVERT_PAID` en `BOOKING_COMPLETE` toe): 60 uit de basismigratie (`V2`) plus `EMAIL_SEND` (`V6`), `PAYMENT_CORRECT` (`V10`), `PAYMENT_RELINK` (`V12`) en `ORGANIZATION_SETTINGS_READ`, `ORGANIZATION_SETTINGS_UPDATE` en `QUOTE_SEND` (`V18`), min `DOCUMENT_DELETE` dat in `V16` is vervallen (een document wordt nooit verwijderd).
 
 ### 2.3 De drie rollen
 
@@ -136,7 +136,7 @@ Aantallen in de standaardconfiguratie: ADMIN **28** authorities, MANAGER **48**,
 
 ### 2.4 Volledige matrix: authority × rol
 
-Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12`, `V16` en `V18`. De kolom *Endpoints* noemt de API-resources die de authority gebruiken (uit de `@PreAuthorize`-annotaties).
+Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12`, `V16`, `V18` en `V20`. De kolom *Endpoints* noemt de API-resources die de authority gebruiken (uit de `@PreAuthorize`-annotaties).
 
 | # | Authority | Wat het toestaat | ADMIN | MANAGER | EMPLOYEE | Endpoints (resources) |
 |--:|---|---|:--:|:--:|:--:|---|
@@ -205,7 +205,12 @@ Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12`, `V16` en `V18`. De kolom 
 | 63 | `ORGANIZATION_SETTINGS_READ` | organisatie-instellingen van de eigen organisatie: bekijken (V18) | – | ✓ | ✓ | `/api/organization-settings` |
 | 64 | `ORGANIZATION_SETTINGS_UPDATE` | organisatie-instellingen van de eigen organisatie: wijzigen (V18) | – | ✓ | – | `/api/organization-settings` |
 | 65 | `QUOTE_SEND` | offerte versturen: PDF maken en mailen naar de hoofdboeker (V18) | – | ✓ | ✓ | `/api/bookings/{id}/send-quote` |
-| | **Totaal: 65** | | **28** | **51** | **20** | |
+| 66 | `NOTIFICATION_READ` | notificaties bekijken (V20) | – | ✓ | ✓ | `/api/notifications` |
+| 67 | `NOTIFICATION_UPDATE` | notificaties afhandelen (V20) | – | ✓ | ✓ | `/api/notifications` |
+| 68 | `BOOKING_STATUS_REVERT` | status terugzetten met reden, zolang er niets betaald is (V20) | – | ✓ | ✓ | `/api/bookings/{id}/status-revert` |
+| 69 | `BOOKING_STATUS_REVERT_PAID` | status terugzetten, ook als er al betaald is (V20) | – | ✓ | – | `/api/bookings/{id}/status-revert` |
+| 70 | `BOOKING_COMPLETE` | boeking afronden (V20) | – | ✓ | – | `/api/bookings/{id}/complete` |
+| | **Totaal: 70** | | **28** | **56** | **23** | |
 
 ### 2.5 Dezelfde matrix per domein (leesversie)
 
@@ -233,6 +238,9 @@ Letters: **C**reate, **R**ead, **U**pdate, **D**elete, **S** = versturen. Een st
 | `ORGANIZATION_THEME` | – | C R U D | – | huisstijl van de eigen organisatie |
 | `ORGANIZATION_SETTINGS` | – | R U | R | organisatie-instellingen (offertetemplate en offertemail) |
 | `QUOTE_SEND` | – | S | S | offerte versturen |
+| `NOTIFICATION` | – | R U | R U | notificaties bekijken en afhandelen |
+| `BOOKING_STATUS_REVERT` | – | ✓ | ✓ | status terugzetten zolang er niets betaald is; `_PAID` (ook daarna) alleen MANAGER |
+| `BOOKING_COMPLETE` | – | ✓ | – | boeking afronden |
 | `BOOKER_PORTAL` | – | – | – | alleen via BOOKER-token (zie §2.7) |
 
 \* `PAYMENT_UPDATE` is alleen bruikbaar zolang een betaling nog niet bij Mollie bestaat. `PAYMENT_DELETE` bestaat als authority, maar er is **geen enkel endpoint** dat een betaling verwijdert (zie §8.3); de authority heeft dus geen effect.
@@ -424,6 +432,8 @@ Het dashboard kiest op **authorities**:
 | geen `ORGANIZATION_READ`, wel `ACCOUNT_CREATE` (MANAGER) | **Managerdashboard** (zie hieronder) |
 | anders (EMPLOYEE) | welkomstkaart en een plaatshouder *"Deze pagina wordt binnenkort beschikbaar."* |
 
+Met `NOTIFICATION_READ` (MANAGER en EMPLOYEE) staat onder de welkomstkaart de kaart **Meldingen**: de openstaande notificaties van de organisatie (alles betaald, op reis, weer thuis, terugboeking), elk met een link naar de boeking en, met `NOTIFICATION_UPDATE`, de knop **Afhandelen**.
+
 **Managerdashboard** (lopend jaar):
 
 - *Boekingen {jaar}*: tegels **Totaal**, **Afgerond**, **Actief**, **Toekomstig**; klik opent de boekingenlijst.
@@ -449,7 +459,8 @@ Titel: *Boeking bewerken — BK-…* (of *Boeking inzien* in alleen-lezen-modus)
 
 | Kaart | Inhoud | Acties (vereist recht) |
 |---|---|---|
-| **Boekinggegevens** | boekingsnummer, status, berekende periode en totaalbedrag, en *Offerte bevestigd op* zodra de offerte is bevestigd | **Bewerken**: status kiezen en **Offerte bevestigd** aanvinken (`BOOKING_UPDATE`). Bevestigen kan alleen in status *Offerte* met een hoofdboeker en een verblijf met een prijs; de status wordt dan *Boeking*, het moment wordt vastgelegd en het systeem maakt de **betalingen** aan (voorschot en restant, of één volledige betaling als de restanttermijn al voorbij is) en mailt ze naar de hoofdboeker als er een betaalmail is gekozen. Uitvinken kan niet. **Offerte versturen** (`QUOTE_SEND`, onderin de kaart, alleen in status *Aanvraag* of *Offerte* en zolang de offerte niet bevestigd is): na bevestigen maakt het systeem met de offertetemplate een PDF (zichtbaar in het portaal), mailt die als bijlage met de offertemail naar de hoofdboeker en zet de status op *Offerte*. Opnieuw versturen maakt een nieuwe PDF; de vorige blijft bewaard. Zonder hoofdboeker met e-mailadres is de knop uitgeschakeld; zonder gekozen templates (zie *Instellingen*, §4.15) meldt het systeem dat. |
+| **Boekinggegevens** | boekingsnummer, status, berekende periode en totaalbedrag, en *Offerte bevestigd op* zodra de offerte is bevestigd | **Status terugzetten** (`BOOKING_STATUS_REVERT`; na een betaling alleen `BOOKING_STATUS_REVERT_PAID`): eerdere status kiezen en een reden geven. **Afronden** (`BOOKING_COMPLETE`). **Statusgeschiedenis**: alle statuswijzigingen met wie (of het systeem), wanneer en waarom. **Bewerken**: alleen nog **Offerte bevestigd** aanvinken (`BOOKING_UPDATE`); de status zelf is niet te kiezen. Bevestigen kan alleen in status *Offerte* met een hoofdboeker en een verblijf met een prijs; de status wordt dan *Boeking*, het moment wordt vastgelegd en het systeem maakt de **betalingen** aan (voorschot en restant, of één volledige betaling als de restanttermijn al voorbij is) en mailt ze naar de hoofdboeker als er een betaalmail is gekozen. Uitvinken kan niet. **Offerte versturen** (`QUOTE_SEND`, onderin de kaart, alleen in status *Aanvraag* of *Offerte* en zolang de offerte niet bevestigd is): na bevestigen maakt het systeem met de offertetemplate een PDF (zichtbaar in het portaal), mailt die als bijlage met de offertemail naar de hoofdboeker en zet de status op *Offerte*. Opnieuw versturen maakt een nieuwe PDF; de vorige blijft bewaard. Zonder hoofdboeker met e-mailadres is de knop uitgeschakeld; zonder gekozen templates (zie *Instellingen*, §4.15) meldt het systeem dat. |
+| **Meldingen** (bovenaan rechts, met `NOTIFICATION_READ`, alleen als er meldingen zijn) | de notificaties van deze boeking, open bovenaan | **Afhandelen** (`NOTIFICATION_UPDATE`) |
 | **Hoofdboeker** | naam, roepnaam, telefoon, e-mail, geboortedatum | *Toevoegen* (koppelen, `BOOKING_CREATE`); *Bewerken* van de boekergegevens (`BOOKING_UPDATE`); *Verwijderen* = ontkoppelen van de boeking (`BOOKING_DELETE`, de boeker zelf blijft bestaan) |
 | **Accommodaties** (boekingsregels) | accommodatie, leverancier, van, tot, prijs | toevoegen/bewerken/verwijderen (`BOOKING_CREATE`/`_UPDATE`/`_DELETE`) |
 | **Activiteiten** | activiteit, datum en tijden, trefpunt, totaalprijs | toevoegen/bewerken/verwijderen |
@@ -668,11 +679,13 @@ De oude adressen (`/payments`, `/itinerary`, `/documents`, `/accommodations`, `/
 | 5 | EMPLOYEE/MANAGER | in de boeking: **Accommodaties** (verblijven), **Activiteiten**, **Reizigers** toevoegen |
 | 6 | EMPLOYEE/MANAGER | **Offerte versturen**: het systeem maakt de offerte-PDF (zichtbaar in het portaal), mailt hem naar de hoofdboeker en zet de status op `offerte` (eenmalig vooraf: de MANAGER kiest de templates bij *Instellingen*) |
 | 7 | EMPLOYEE/MANAGER | de klant gaat akkoord: **Bewerken → Offerte bevestigd**; de status wordt `boeking`, het systeem maakt voorschot en restant aan (met uiterlijke betaaldatum) en mailt ze naar de hoofdboeker |
-| 8 | EMPLOYEE/MANAGER | wijzigt het totaal nog (verblijf of activiteit), dan rekent het restant automatisch mee zolang de klant het nog niet is gaan betalen; na betaling van het voorschot de status op `voorschot` |
+| 8 | EMPLOYEE/MANAGER | wijzigt het totaal nog (verblijf of activiteit), dan rekent het restant automatisch mee zolang de klant het nog niet is gaan betalen |
 | 9 | klant | logt in op het portaal en **betaalt** |
-| 10 | EMPLOYEE/MANAGER | status `betaald`, later `opreis`, `weerthuis`, `afgerond` |
+| 10 | systeem | na betaling `voorschot` en `betaald` (met de melding *Alles betaald*), daarna op de reisdatums `opreis` en `weerthuis` (elk met een melding) |
+| 11 | EMPLOYEE/MANAGER | meldingen **afhandelen** (dashboard of boeking) |
+| 12 | MANAGER | **Afronden** |
 
-De statussen na `boeking` volgen (nog) **niet automatisch** op betalingen: de medewerker zet ze.
+Gaat er iets mis (de klant wil een andere periode, een betaling wordt teruggeboekt), dan zet je de status terug met **Status terugzetten** en een reden; een terugboeking zet het systeem zelf terug.
 
 ### 6.2 Een nieuwe organisatie in gebruik nemen (ADMIN)
 
@@ -979,6 +992,12 @@ curl -X POST "$BASE/api/email-templates/<id>/send?bookerId=<id>"    -H "Authoriz
 | POST | `/api/bookings` | `BOOKING_CREATE` | Aanmaken |
 | PUT | `/api/bookings/{id}` | `BOOKING_UPDATE` | Wijzigen |
 | DELETE | `/api/bookings/{id}` | `BOOKING_DELETE` | Verwijderen |
+| POST | `/api/bookings/{id}/status-revert` | `BOOKING_STATUS_REVERT` of `_PAID` | Terugzetten naar een eerdere status `{targetStatus, reason}`; na een betaling alleen met `_PAID` (`403`) |
+| POST | `/api/bookings/{id}/complete` | `BOOKING_COMPLETE` | Afronden `{reason?}` |
+| GET | `/api/bookings/{id}/status-changes` | `BOOKING_READ` | Statusgeschiedenis, nieuwste eerst |
+| GET | `/api/notifications/open` | `NOTIFICATION_READ` | Openstaande notificaties van de eigen organisatie |
+| GET | `/api/notifications/booking/{bookingId}` | `NOTIFICATION_READ` | Notificaties van een boeking |
+| POST | `/api/notifications/{id}/handle` | `NOTIFICATION_UPDATE` | Afhandelen |
 | POST | `/api/bookings/{id}/send-quote` | `QUOTE_SEND` | Offerte versturen: status `offerte`, PDF bij de boeking, mail met bijlage naar de hoofdboeker (`400` buiten aanvraag/offerte, na bevestigen, zonder hoofdboeker of zonder ingestelde templates) |
 | GET | `/api/bookers` | `BOOKING_READ` | Lijst |
 | GET | `/api/bookers/{id}` | `BOOKING_READ` | Eén opvragen |

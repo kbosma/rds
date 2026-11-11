@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.bookingstatus.service.BookingStatusRecorder;
 import nl.puurkroatie.rds.paymentplan.service.PaymentPlanService;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingDto;
@@ -34,9 +35,11 @@ public class BookingServiceImpl implements BookingService {
     private final DeletionGuard deletionGuard;
     private final BookerStatusUpdater bookerStatusUpdater;
     private final PaymentPlanService paymentPlanService;
+    private final BookingStatusRecorder statusRecorder;
 
     public BookingServiceImpl(BookingRepository bookingRepository, BookerRepository bookerRepository, BookingMapper bookingMapper, BookingNumberGenerator bookingNumberGenerator, DeletionGuard deletionGuard, BookerStatusUpdater bookerStatusUpdater,
-                              PaymentPlanService paymentPlanService) {
+                              PaymentPlanService paymentPlanService, BookingStatusRecorder statusRecorder) {
+        this.statusRecorder = statusRecorder;
         this.bookingRepository = bookingRepository;
         this.bookerRepository = bookerRepository;
         this.bookingMapper = bookingMapper;
@@ -75,6 +78,11 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("A confirmed quote cannot be unconfirmed");
         }
         boolean newlyConfirmed = !confirmed && dto.isQuoteConfirmed();
+        if (!newlyConfirmed && status != existing.getBookingStatus()) {
+            throw new IllegalArgumentException("De status wijzig je niet via bewerken: offerte versturen, offerte bevestigen,"
+                    + " betalingen en reisdatums zetten haar, en terugzetten gaat met een reden (status-revert)");
+        }
+        BookingStatus previousStatus = existing.getBookingStatus();
         if (newlyConfirmed) {
             verifyConfirmable(existing, booker);
             confirmed = true;
@@ -90,6 +98,7 @@ public class BookingServiceImpl implements BookingService {
             bookerStatusUpdater.refresh(previousBookerId);
         }
         if (newlyConfirmed) {
+            statusRecorder.record(saved, previousStatus, saved.getBookingStatus(), false, "Offerte bevestigd door de hoofdboeker");
             // Net bevestigd: het systeem maakt de betalingen aan en stuurt de betaalmail (zelfde transactie).
             paymentPlanService.createFor(id);
         }

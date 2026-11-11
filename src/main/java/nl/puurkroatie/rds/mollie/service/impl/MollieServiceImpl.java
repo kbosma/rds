@@ -132,7 +132,10 @@ public class MollieServiceImpl implements MollieService {
         if (response != null) {
             molliePaymentRepository.findByMolliePaymentExternalId(request.getId())
                     .ifPresent(existing -> {
-                        MolliePaymentStatus status = response.getStatus() != null ? MolliePaymentStatus.fromValue(response.getStatus()) : null;
+                        // Een terugboeking (chargeback) laat de Mollie-status op "paid" staan; wij leggen haar vast als
+                        // CHARGED_BACK, zodat de betaling niet meer als betaald telt.
+                        MolliePaymentStatus status = response.isChargedBack() ? MolliePaymentStatus.CHARGED_BACK
+                                : response.getStatus() != null ? MolliePaymentStatus.fromValue(response.getStatus()) : null;
                         if (status != null) {
                             statusEntryService.createStatusFromWebhook(existing.getMolliePaymentId(), status);
                         }
