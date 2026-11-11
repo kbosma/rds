@@ -45,7 +45,7 @@ Migratie: `V5__email_template.sql`.
 
 ## Verzonden e-mails bewaren
 
-Een mail die voor een **boeking** wordt verstuurd (dus naar de hoofdboeker) wordt na het succesvol versturen bewaard in `sent_email` (migratie V14): van, aan, onderwerp, HTML zoals verstuurd, wie en wanneer. Mislukt het versturen, dan wordt er niets bewaard. Een mail voor een booker/prospect (zonder boeking) wordt niet bewaard. De tabel is alleen-toevoegen (triggers weigeren `UPDATE`/`DELETE`/`TRUNCATE`) en een boeking met verzonden e-mails kan niet worden verwijderd (`ON DELETE RESTRICT` en `DeletionGuard`, 409). Opnieuw versturen maakt een nieuwe regel; het origineel blijft staan.
+Een mail die voor een **boeking** wordt verstuurd (dus naar de hoofdboeker) wordt na het succesvol versturen bewaard in `sent_email` (migratie V14): van, aan, onderwerp, HTML zoals verstuurd, wie en wanneer, en (V18) het document dat als bijlage meeging (`attachment_document_id`; *Opnieuw versturen* stuurt die bijlage weer mee, de tijdlijn toont de bestandsnaam). Mislukt het versturen, dan wordt er niets bewaard. Een mail voor een booker/prospect (zonder boeking) wordt niet bewaard. De tabel is alleen-toevoegen (triggers weigeren `UPDATE`/`DELETE`/`TRUNCATE`) en een boeking met verzonden e-mails kan niet worden verwijderd (`ON DELETE RESTRICT` en `DeletionGuard`, 409). Opnieuw versturen maakt een nieuwe regel; het origineel blijft staan.
 
 ## Templating / merge (FreeMarker)
 
@@ -306,7 +306,7 @@ Frontend (frontend-employee): `features/email-templates/*` (lijst, editor-dialog
 ## Beperkingen / toekomst
 
 - **Geen eigen wachtrij/retry**: aflevering en herpogingen zijn de verantwoordelijkheid van de relay. Mislukt de SMTP-verbinding, dan komt dat als fout terug op de send-call.
-- **Geen bijlagen** en geen CC/BCC (alleen subject + HTML-body naar één ontvanger). Afbeeldingen zijn geen bijlagen maar links naar een publieke URL (geen `cid:`-inbedding).
+- **Bijlagen alleen vanuit het systeem**: een mail voor een boeking kan één document van die boeking als bijlage hebben (nu alleen de offerte-PDF via *Offerte versturen*, zie [domain.md](domain.md#offerte-versturen)). In de dialoog *E-mail aan hoofdboeker* kun je zelf geen bijlage kiezen. Geen CC/BCC. Afbeeldingen zijn geen bijlagen maar links naar een publieke URL (geen `cid:`-inbedding).
 - **Geen automatisch opruimen**: een geüploade afbeelding blijft staan tot iemand hem in de bibliotheek verwijdert (alleen als ongebruikt).
 - **Geen koppeling afbeelding ↔ template**: de relatie zit alleen als pad in de HTML.
 - **Geen tracking** (opens/clicks) — dat zou via de relay/provider moeten.

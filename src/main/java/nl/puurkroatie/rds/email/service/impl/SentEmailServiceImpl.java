@@ -6,6 +6,9 @@ import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.email.dto.SentEmailDto;
 import nl.puurkroatie.rds.email.entity.SentEmail;
 import nl.puurkroatie.rds.email.repository.SentEmailRepository;
+import nl.puurkroatie.rds.booking.entity.Document;
+import nl.puurkroatie.rds.email.service.EmailAttachment;
+import nl.puurkroatie.rds.email.service.EmailAttachments;
 import nl.puurkroatie.rds.email.service.EmailMessage;
 import nl.puurkroatie.rds.email.service.EmailSender;
 import nl.puurkroatie.rds.email.service.SentEmailService;
@@ -53,10 +56,13 @@ public class SentEmailServiceImpl implements SentEmailService {
     @Override
     public SentEmailDto resend(UUID sentEmailId) {
         SentEmail original = load(sentEmailId);
+        // Een bijlage (bv. de offerte) gaat opnieuw mee: hetzelfde document, niet opnieuw gegenereerd.
+        Document attachment = original.getAttachmentDocument();
+        List<EmailAttachment> attachments = attachment == null ? List.of() : List.of(EmailAttachments.of(attachment));
         emailSender.send(new EmailMessage(original.getFromAddress(), original.getToAddress(),
-                original.getSubject(), original.getBodyHtml()));
+                original.getSubject(), original.getBodyHtml(), attachments));
         SentEmail copy = sentEmailRepository.save(new SentEmail(original.getBooking(), original.getFromAddress(),
-                original.getToAddress(), original.getSubject(), original.getBodyHtml(), original.getSentEmailId()));
+                original.getToAddress(), original.getSubject(), original.getBodyHtml(), original.getSentEmailId(), attachment));
         return toDtos(List.of(copy)).get(0);
     }
 
@@ -71,7 +77,10 @@ public class SentEmailServiceImpl implements SentEmailService {
         Map<UUID, String> names = createdByNameResolver.resolve(emails.stream().map(SentEmail::getCreatedBy).toList());
         return emails.stream()
                 .map(e -> new SentEmailDto(e.getSentEmailId(), e.getBooking().getBookingId(), e.getFromAddress(),
-                        e.getToAddress(), e.getSubject(), e.getBodyHtml(), e.getResentFromId(), e.getCreatedAt(),
+                        e.getToAddress(), e.getSubject(), e.getBodyHtml(), e.getResentFromId(),
+                        e.getAttachmentDocument() == null ? null : e.getAttachmentDocument().getDocumentId(),
+                        e.getAttachmentDocument() == null ? null : e.getAttachmentDocument().getDisplayname(),
+                        e.getCreatedAt(),
                         e.getCreatedBy(), names.get(e.getCreatedBy())))
                 .toList();
     }

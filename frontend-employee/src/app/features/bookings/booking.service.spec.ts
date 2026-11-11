@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { BookingService } from './booking.service';
 import { ApiService } from '../../core/services/api.service';
 import { Booking } from '../../shared/models';
@@ -27,7 +30,7 @@ describe('BookingService', () => {
   beforeEach(() => {
     apiSpy = jasmine.createSpyObj('ApiService', ['getAll', 'getById', 'create', 'update', 'delete']);
     TestBed.configureTestingModule({
-      providers: [{ provide: ApiService, useValue: apiSpy }],
+      providers: [{ provide: ApiService, useValue: apiSpy }, provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(BookingService);
   });
@@ -62,5 +65,17 @@ describe('BookingService', () => {
     apiSpy.delete.and.returnValue(of(void 0));
     service.delete('b-1').subscribe();
     expect(apiSpy.delete).toHaveBeenCalledWith('bookings', 'b-1');
+  });
+
+  it('sendQuote() posts to /bookings/{id}/send-quote', () => {
+    const http = TestBed.inject(HttpTestingController);
+    let result: unknown;
+    service.sendQuote('b-1').subscribe((r) => (result = r));
+
+    const req = http.expectOne(`${environment.apiUrl}/bookings/b-1/send-quote`);
+    expect(req.request.method).toBe('POST');
+    req.flush({ bookingId: 'b-1', bookingStatus: 'offerte', documentId: 'd-1', documentName: 'Offerte.pdf', to: 'a@b.nl', subject: 'Offerte' });
+    expect((result as { bookingStatus: string }).bookingStatus).toBe('offerte');
+    http.verify();
   });
 });

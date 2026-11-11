@@ -10,6 +10,7 @@ import { BookingLineService } from './booking-line.service';
 import { BookerService } from '../bookers/booker.service';
 import { TravelerService } from '../travelers/traveler.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
+import { TranslateService } from '@ngx-translate/core';
 import { Booking, Booker, Traveler, BookingLine, MolliePayment } from '../../shared/models';
 
 describe('BookingDetailComponent', () => {
@@ -65,7 +66,7 @@ describe('BookingDetailComponent', () => {
     queryBookerId = null;
     queryReadonly = null;
 
-    bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll', 'getById', 'create', 'update', 'delete']);
+    bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll', 'getById', 'create', 'update', 'delete', 'sendQuote']);
     bookingLineServiceSpy = jasmine.createSpyObj('BookingLineService', ['getByBookingId']);
     bookerServiceSpy = jasmine.createSpyObj('BookerService', ['getById']);
     travelerServiceSpy = jasmine.createSpyObj('TravelerService', ['getAll']);
@@ -340,6 +341,88 @@ describe('BookingDetailComponent', () => {
       }
     }
   }));
+
+  describe('offerte versturen', () => {
+    const sendQuoteButton = () => (fixture.nativeElement as HTMLElement).querySelector('button.send-quote-btn') as HTMLButtonElement | null;
+    // Het component heeft MatSnackBarModule in zijn imports, dus de eigen snackbar telt (niet die uit de providers).
+    let snackOpen: jasmine.Spy;
+    let instant: jasmine.Spy;
+
+    function render(booking: Partial<Booking> = {}, authorities: string[] = ['QUOTE_SEND', 'BOOKING_UPDATE']) {
+      bookingServiceSpy.getById.and.returnValue(of({ ...mockBooking, ...booking }));
+      createComponent();
+      spyOn(component.authService, 'hasAuthority').and.callFake((a: string) => authorities.includes(a));
+      snackOpen = spyOn((component as unknown as { snackBar: MatSnackBar }).snackBar, 'open');
+      instant = spyOn((component as unknown as { translate: TranslateService }).translate, 'instant').and.callThrough();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+    }
+
+    it('toont de knop bij een aanvraag, in de kleur van versturen', fakeAsync(() => {
+      render();
+
+      expect(sendQuoteButton()).not.toBeNull();
+      expect(sendQuoteButton()!.classList).toContain('act-send');
+      expect(sendQuoteButton()!.disabled).toBeFalse();
+    }));
+
+    it('toont de knop ook in status Offerte (opnieuw versturen)', fakeAsync(() => {
+      render({ bookingStatus: 'offerte' });
+
+      expect(sendQuoteButton()).not.toBeNull();
+    }));
+
+    it('verbergt de knop na bevestiging, in een latere status of zonder QUOTE_SEND', fakeAsync(() => {
+      render({ bookingStatus: 'boeking', quoteConfirmed: true, quoteConfirmedAt: '2026-10-21T14:30:00' });
+      expect(sendQuoteButton()).toBeNull();
+    }));
+
+    it('verbergt de knop zonder de authority QUOTE_SEND', fakeAsync(() => {
+      render({}, ['BOOKING_UPDATE']);
+      expect(sendQuoteButton()).toBeNull();
+    }));
+
+    it('vraagt bevestiging met het adres, verstuurt en laadt de boeking opnieuw', fakeAsync(() => {
+      render();
+      bookingServiceSpy.sendQuote.and.returnValue(of({
+        bookingId: 'b-1', bookingStatus: 'offerte', documentId: 'd-1', documentName: 'Offerte.pdf', to: 'klaas@example.com', subject: 'Offerte',
+      }));
+      bookingServiceSpy.getById.calls.reset();
+
+      component.sendQuote();
+      tick();
+
+      expect(confirmServiceSpy.confirm).toHaveBeenCalled();
+      expect(instant).toHaveBeenCalledWith('bookings.sendQuoteConfirm', { email: 'klaas@example.com' });
+      expect(bookingServiceSpy.sendQuote).toHaveBeenCalledWith('b-1');
+      expect(bookingServiceSpy.getById).toHaveBeenCalledWith('b-1');
+      expect(snackOpen).toHaveBeenCalled();
+    }));
+
+    it('verstuurt niets als de gebruiker annuleert', fakeAsync(() => {
+      render();
+      confirmServiceSpy.confirm.and.returnValue(Promise.resolve(false));
+
+      component.sendQuote();
+      tick();
+
+      expect(bookingServiceSpy.sendQuote).not.toHaveBeenCalled();
+    }));
+
+    it('toont de melding van de server als versturen mislukt', fakeAsync(() => {
+      render();
+      bookingServiceSpy.sendQuote.and.returnValue(throwError(() => ({ error: { message: 'Kies eerst bij Organisatie-instellingen een offertedocument' } })));
+
+      component.sendQuote();
+      tick();
+
+      expect(snackOpen).toHaveBeenCalled();
+      expect(instant).toHaveBeenCalledWith('bookings.quoteSendError',
+        { message: 'Kies eerst bij Organisatie-instellingen een offertedocument' });
+      expect(component.sendingQuote()).toBeFalse();
+    }));
+  });
 
   describe('alleen inzien (?readonly=true)', () => {
     it('is standaard uit', fakeAsync(() => {

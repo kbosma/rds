@@ -1,5 +1,7 @@
 package nl.puurkroatie.rds.email.service;
 
+import java.util.List;
+
 /**
  * Immutable waarde-object met een verzendklare e-mail: de (gemergde) subject en
  * HTML-body plus afzender en ontvanger. Dit is geen REST-DTO, maar interne
@@ -11,12 +13,18 @@ public class EmailMessage {
     private final String to;
     private final String subject;
     private final String bodyHtml;
+    private final List<EmailAttachment> attachments;
 
     public EmailMessage(String from, String to, String subject, String bodyHtml) {
+        this(from, to, subject, bodyHtml, List.of());
+    }
+
+    public EmailMessage(String from, String to, String subject, String bodyHtml, List<EmailAttachment> attachments) {
         this.from = from;
         this.to = to;
         this.subject = subject;
         this.bodyHtml = bodyHtml;
+        this.attachments = List.copyOf(attachments);
     }
 
     public String getFrom() {
@@ -33,5 +41,9 @@ public class EmailMessage {
 
     public String getBodyHtml() {
         return bodyHtml;
+    }
+
+    public List<EmailAttachment> getAttachments() {
+        return attachments;
     }
 }

@@ -67,6 +67,9 @@ type Filter = 'all' | TimelineKind;
                       <div class="title">{{ item.source.subject }}</div>
                       <div class="sub">{{ item.at | date:'dd-MM-yyyy HH:mm' }} · {{ 'messages.to' | translate }} {{ item.source.toAddress }}
                         @if (item.source.createdByName) { · {{ item.source.createdByName }} }</div>
+                      @if (item.source.attachmentName) {
+                        <div class="sub attachment"><mat-icon inline>attach_file</mat-icon> {{ item.source.attachmentName }}</div>
+                      }
                     }
                     @case ('document') {
                       <div class="title">{{ item.source.displayname }}</div>
@@ -115,6 +118,8 @@ type Filter = 'all' | TimelineKind;
       background: transparent; color: var(--ui-primary-strong); }
     .kind-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .what { flex: 1; min-width: 0; }
+    .attachment { display: flex; align-items: center; gap: 2px; }
+    .attachment mat-icon { font-size: 14px; width: 14px; height: 14px; }
     .title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sub { font-size: 12px; color: var(--ui-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pills { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-start; flex: 0 0 190px; }

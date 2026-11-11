@@ -4,12 +4,15 @@ import nl.puurkroatie.rds.auth.entity.Organization;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.Booking;
+import nl.puurkroatie.rds.booking.entity.Document;
 import nl.puurkroatie.rds.booking.repository.BookerRepository;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.email.dto.EmailRenderDto;
 import nl.puurkroatie.rds.email.dto.EmailSendResultDto;
 import nl.puurkroatie.rds.email.entity.SentEmail;
 import nl.puurkroatie.rds.email.repository.SentEmailRepository;
+import nl.puurkroatie.rds.email.service.EmailAttachment;
+import nl.puurkroatie.rds.email.service.EmailAttachments;
 import nl.puurkroatie.rds.email.service.EmailMessage;
 import nl.puurkroatie.rds.email.service.EmailNotConfiguredException;
 import nl.puurkroatie.rds.email.service.EmailImageUrlResolver;
@@ -19,6 +22,7 @@ import nl.puurkroatie.rds.email.service.EmailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -59,12 +63,12 @@ public class EmailSendServiceImpl implements EmailSendService {
                 .orElseThrow(() -> new RuntimeException("Booker not found with id: " + bookerId));
 
         return deliver(rendered, booker.getEmailaddress(), booker.getTenantOrganization(),
-                "Booker heeft geen e-mailadres: " + bookerId);
+                "Booker heeft geen e-mailadres: " + bookerId, List.of());
     }
 
     @Override
     @Transactional
-    public EmailSendResultDto sendForBooking(UUID templateId, UUID bookingId) {
+    public EmailSendResultDto sendForBooking(UUID templateId, UUID bookingId, Document attachment) {
         // De tenant-controle op template én boeking gebeurt in renderForBooking().
         EmailRenderDto rendered = emailRenderService.renderForBooking(templateId, bookingId);
 
@@ -75,15 +79,21 @@ public class EmailSendServiceImpl implements EmailSendService {
             throw new EmailNotConfiguredException("Boeking heeft geen hoofdboeker om naar te mailen: " + bookingId);
         }
 
+        if (attachment != null && !attachment.getBooking().getBookingId().equals(bookingId)) {
+            throw new IllegalArgumentException("De bijlage hoort niet bij deze boeking");
+        }
+        List<EmailAttachment> attachments = attachment == null ? List.of() : List.of(EmailAttachments.of(attachment));
         EmailSendResultDto result = deliver(rendered, booker.getEmailaddress(), booking.getTenantOrganization(),
-                "De hoofdboeker van de boeking heeft geen e-mailadres: " + bookingId);
+                "De hoofdboeker van de boeking heeft geen e-mailadres: " + bookingId, attachments);
         // Wat naar de hoofdboeker gaat blijft bewaard, zodat het in de tijdlijn van de boeking staat.
-        sentEmailRepository.save(new SentEmail(booking, result.getFrom(), result.getTo(), result.getSubject(), result.getBodyHtml(), null));
+        sentEmailRepository.save(new SentEmail(booking, result.getFrom(), result.getTo(), result.getSubject(), result.getBodyHtml(),
+                null, attachment));
         return result;
     }
 
     /** Gemeenschappelijk deel: afzender van de organisatie, ontvanger controleren, en versturen. */
-    private EmailSendResultDto deliver(EmailRenderDto rendered, String to, UUID organizationId, String noRecipientMessage) {
+    private EmailSendResultDto deliver(EmailRenderDto rendered, String to, UUID organizationId, String noRecipientMessage,
+                                       List<EmailAttachment> attachments) {
         if (to == null || to.isBlank()) {
             throw new EmailNotConfiguredException(noRecipientMessage);
         }
@@ -100,7 +110,7 @@ public class EmailSendServiceImpl implements EmailSendService {
         // Afbeeldingen staan in de template als relatief pad; een ontvanger heeft een absolute,
         // publiek bereikbare URL nodig, dus die vullen we pas nu in.
         String bodyHtml = imageUrlResolver.toAbsolute(rendered.getBodyHtml());
-        emailSender.send(new EmailMessage(from, to, rendered.getSubject(), bodyHtml));
+        emailSender.send(new EmailMessage(from, to, rendered.getSubject(), bodyHtml, attachments));
         return new EmailSendResultDto(to, from, rendered.getSubject(), bodyHtml);
     }
 }

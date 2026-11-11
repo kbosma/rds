@@ -12,6 +12,8 @@ public record SentEmailDto(
         String subject,
         String bodyHtml,
         UUID resentFromId,
+        UUID attachmentDocumentId,
+        String attachmentName,
         LocalDateTime createdAt,
         UUID createdBy,
         String createdByName) {

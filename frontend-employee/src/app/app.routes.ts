@@ -211,6 +211,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'organization-settings',
+        loadComponent: () =>
+          import('./features/organization-settings/organization-settings.component').then(
+            (m) => m.OrganizationSettingsComponent
+          ),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/my-profile.component').then(

@@ -1,12 +1,16 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
-import { Booking } from '../../shared/models';
+import { environment } from '../../../environments/environment';
+import { Booking, QuoteSendResult } from '../../shared/models';
 
 export type { Booking } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
   private api = inject(ApiService);
+  private http = inject(HttpClient);
   private readonly endpoint = 'bookings';
 
   getAll() {
@@ -27,5 +31,10 @@ export class BookingService {
 
   delete(id: string) {
     return this.api.delete(this.endpoint, id);
+  }
+
+  /** Verstuurt de offerte (PDF als bijlage) naar de hoofdboeker; de boeking komt op Offerte te staan. */
+  sendQuote(id: string): Observable<QuoteSendResult> {
+    return this.http.post<QuoteSendResult>(`${environment.apiUrl}/${this.endpoint}/${id}/send-quote`, null);
   }
 }

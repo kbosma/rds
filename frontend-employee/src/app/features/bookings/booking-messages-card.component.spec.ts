@@ -40,6 +40,19 @@ describe('BookingMessagesCardComponent', () => {
     expect(getComputedStyle(third).backgroundColor).toBe('rgba(0, 0, 0, 0)');
   });
 
+  it('toont bij een e-mail met bijlage (zoals de offerte) de naam van de bijlage', async () => {
+    const withAttachment = { ...email, attachmentDocumentId: 'd-9', attachmentName: 'Offerte - BK-2026-00004.pdf' };
+    const { el } = await setup({ emails: [withAttachment] });
+
+    expect(el.querySelector('.attachment')?.textContent).toContain('Offerte - BK-2026-00004.pdf');
+  });
+
+  it('toont geen bijlage bij een e-mail zonder bijlage', async () => {
+    const { el } = await setup();
+
+    expect(el.querySelector('.attachment')).toBeNull();
+  });
+
   it('toont alle soorten in één lijst met een pictogram per soort', async () => {
     const { el } = await setup();
 
