@@ -850,7 +850,8 @@
     "resend": "Send again",
     "resendDone": "Email sent again",
     "resendError": "Sending again failed",
-    "internal": "internal only"
+    "internal": "internal only",
+    "attachment": "Attachment"
   },
   "orgSettings": {
     "title": "Organization settings",

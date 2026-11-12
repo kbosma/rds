@@ -850,7 +850,8 @@
     "resend": "Opnieuw versturen",
     "resendDone": "E-mail opnieuw verstuurd",
     "resendError": "Opnieuw versturen is mislukt",
-    "internal": "alleen intern"
+    "internal": "alleen intern",
+    "attachment": "Bijlage"
   },
   "orgSettings": {
     "title": "Organisatie-instellingen",

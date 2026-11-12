@@ -255,7 +255,7 @@ interface BookingMolliePaymentLink {
                       <mat-icon class="activity-icon">local_activity</mat-icon>
                       <div>
                         <div class="activity-name">{{ ba.activityName }}</div>
-                        <div class="activity-type">{{ 'activity.' + ba.activityType | translate }}</div>
+                        <div class="activity-type">{{ 'activity.' + ba.activityType?.toLowerCase() | translate }}</div>
                       </div>
                     </div>
                   </td>

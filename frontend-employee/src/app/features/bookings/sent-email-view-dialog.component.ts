@@ -31,6 +31,9 @@ export interface SentEmailViewDialogData {
         <dt>{{ 'messages.to' | translate }}</dt><dd>{{ data.email.toAddress }}</dd>
         <dt>{{ 'messages.sentOn' | translate }}</dt><dd>{{ data.email.createdAt | date:'dd-MM-yyyy HH:mm' }}</dd>
         <dt>{{ 'messages.sentBy' | translate }}</dt><dd>{{ data.email.createdByName || ('messages.unknown' | translate) }}</dd>
+        @if (data.email.attachmentName) {
+          <dt>{{ 'messages.attachment' | translate }}</dt><dd class="attachment">{{ data.email.attachmentName }}</dd>
+        }
       </dl>
       <iframe class="body" sandbox="" [srcdoc]="body"></iframe>
     </mat-dialog-content>

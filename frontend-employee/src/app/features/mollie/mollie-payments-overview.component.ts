@@ -1,3 +1,4 @@
+import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
 import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe, DatePipe } from '@angular/common';
@@ -32,7 +33,7 @@ interface BookingMolliePaymentLink {
 @Component({
   selector: 'app-mollie-payments-overview',
   standalone: true,
-  imports: [
+  imports: [PaymentStatusBadgeComponent, 
     DecimalPipe,
     DatePipe,
     FormsModule,
@@ -148,9 +149,9 @@ interface BookingMolliePaymentLink {
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="status-badge" [attr.data-status]="paymentStatusMap()[row.molliePaymentId]">
-                {{ paymentStatusMap()[row.molliePaymentId] }}
-              </span>
+              @if (paymentStatusMap()[row.molliePaymentId]; as st) {
+                <app-payment-status-badge [status]="st" />
+              }
             </td>
           </ng-container>
 
