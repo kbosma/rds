@@ -65,15 +65,33 @@ Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onde
 
 ### Design (compact en kleurrijk)
 
-Het gedeelde ontwerp (inclusief de actiekleuren `act-*` en de lijsttint `zebra-rows`) staat in `src/styles.scss` van **beide** apps (de bestanden zijn gelijk; wijzig ze samen). Het bouwt voort op het prebuilt Material-thema `azure-blue`, maar overschrijft de Material-tokens op `html`:
+Het ontwerp (inclusief de actiekleuren `act-*` en de lijsttint `zebra-rows`) staat in `src/styles.scss`. Kleuren, actiekleuren en tabelstijl zijn in **beide** apps gelijk; de **dichtheid en de gedeelde pagina-opbouw** hieronder gelden alleen voor `frontend-employee` (het boekerportaal is voor klanten, ook op de telefoon, en blijft ruimer). Wijzig gemeenschappelijke onderdelen (kleuren, `act-*`, tabellen) in beide bestanden. Het bouwt voort op het prebuilt Material-thema `azure-blue`, maar overschrijft de Material-tokens op `html`:
 
-- **Kleur volgt de organisatie.** `--mat-sys-primary` e.d. wijzen naar `--theme-primary`; afgeleide tinten (`--ui-primary-faint/soft/hover/strong/deep`) worden met `color-mix` berekend. Gebruik die i.p.v. vaste blauwtinten. Standaard (zonder organisatiethema) is teal `#0e8f8a`.
-- **Compact:** velden 40px (tekst 14px, regelhoogte 20px, padding 10px, zodat tekst nooit wordt afgeknipt), tabelrijen en -kop 40px, knoppen 36px. Wijzig de hoogte via `--mat-form-field-container-height` en `--mat-form-field-container-vertical-padding` (samen: hoogte = regelhoogte + 2 × padding).
-- **Tabellen:** getinte, hoofdletter-kop; om-en-om gekleurde rijen en hover komen globaal uit `.mat-mdc-row`; zet dus geen eigen `alt-row`-stijl meer in componenten. De om-en-om tint is bewust zacht (`--ui-primary-faint`, 5% van de organisatiekleur; de kop is 12%, hover 18%). Een lijst die geen tabel is (zoals de tijdlijn *Berichten en documenten* in het boekingdetail) krijgt dezelfde tint en hover met de klasse `zebra-rows` op de lijst; de directe kinderen zijn de regels (`shared/components/row-stripes.spec.ts` bewaakt dat de tint zacht blijft).
-- **Zijbalk:** donker (`--ui-primary-deep`), actief item in `--theme-primary`.
-- **Kaarten:** de inhoud van een kaart met header krijgt `padding-top: 12px`, anders staat de eerste regel (bv. "Naam") bijna tegen de titel.
+- **Kleur volgt de organisatie.** `--mat-sys-primary` e.d. wijzen naar `--theme-primary`; afgeleide tinten (`--ui-primary-faint/soft/hover/strong/deep`) worden met `color-mix` berekend. Gebruik die i.p.v. vaste blauwtinten. Standaard (zonder organisatiethema) is teal `#0e8f8a`. Grijze tekst is altijd `var(--ui-text-muted)`, geen losse `#888`/`#666`.
+- **Compact (medewerkersportaal):** basistekst 13px; velden 36px (tekst 13px, regelhoogte 20px, padding 8px, zodat tekst nooit wordt afgeknipt), tabelrijen en -kop 34px, knoppen 32px (label 13px, icoon 18px), icoonknoppen 32px met een icoon van 20px, knoppengroepen (`mat-button-toggle`) 30px. Wijzig de veldhoogte via `--mat-form-field-container-height` en `--mat-form-field-container-vertical-padding` (samen: hoogte = regelhoogte + 2 × padding). Datum- en tijdvelden krijgen expliciet `height: 20px`, anders maakt de browser ze te laag en vallen de cijfers onderaan weg.
+- **Tabellen:** getinte, hoofdletter-kop; om-en-om gekleurde rijen en hover komen globaal uit `.mat-mdc-row`; zet dus geen eigen `alt-row`-stijl meer in componenten. De om-en-om tint is bewust zacht (`--ui-primary-faint`, 5% van de organisatiekleur; de kop is 12%, hover 18%). Een lijst die geen tabel is (zoals de tijdlijn *Berichten en documenten* in het boekingdetail) krijgt dezelfde tint en hover met de klasse `zebra-rows` op de lijst; de directe kinderen zijn de regels (`shared/components/row-stripes.spec.ts` bewaakt dat de tint zacht blijft). `app-row-actions` is een blok-element, anders reserveert de cel ruimte voor letterstaarten en wordt de rij hoger.
+- **Zijbalk:** donker (`--ui-primary-deep`), actief item in `--theme-primary`, 212px breed. Met de knop links in de werkbalk klap je hem in tot 56px (alleen iconen; de naam verschijnt als tooltip via `title`). De keuze wordt per browser onthouden (`localStorage` `rds_sidenav_collapsed`). Gebruik in de layout geen `MatTooltip`: die trekt ~70 kB overlay-code de startbundel in (budget 700 kB).
+- **Kaarten:** binnenruimte 12px boven/onder en 16px opzij; titel 15px/600. De inhoud van een kaart met header krijgt extra `padding-top`, anders staat de eerste regel (bv. "Naam") bijna tegen de titel.
 - **Dialoog:** Material geeft de inhoud direct na de titel geen ruimte erboven, waardoor het zwevende label van het eerste veld werd afgesneden; `styles.scss` zet daar `padding-top: 8px`.
 - De uitklappijl van `mat-select` is 24px en wordt in `styles.scss` op 20px gezet, anders is een select 4px hoger dan een tekstveld.
+- **Zoek- en filtervelden** (`.filter-field`, `.search-field`, binnen `.filter-bar`/`.filter-row`) reserveren geen lege hint-ruimte onder het veld; zet zoeken en filters waar het past op één regel (zie de boekingenlijst).
+
+**Gedeelde pagina-opbouw (medewerkersportaal).** Elk scherm gebruikt dezelfde klassen uit `styles.scss`; definieer ze **niet** opnieuw in een component (dan wint de lokale variant en lopen schermen weer uiteen):
+
+| Klasse | Gebruik |
+|---|---|
+| `h1` / `.page-title` | paginatitel (20px/600) |
+| `.page-header` | kopregel: optionele terugknop + `h1` + knoppen rechts |
+| `.back-link` | link "terug naar …" boven de titel |
+| `.detail-card` | kaart met formulier of gegevens (max. 760px); in het boekingdetail zonder maximum |
+| `.section-card` | tweede en volgende kaart onder elkaar (12px ertussen) |
+| `.card-grid` | kaarten naast elkaar op brede schermen |
+| `.row` + `.flex-1/2/3` | velden naast elkaar in een formulier |
+| `.actions` | knoppenbalk onder een formulier, rechts uitgelijnd |
+| `.filter-bar`, `.filter-field`, `.search-field`, `.table-container`, `.no-data`, `.count-text`, `.actions-header`, `.actions-cell` | lijstschermen |
+| `.loading`, `.empty-text`, `.muted`, `.error-text` | status- en hulpteksten |
+
+**Controle op afgekapte tekst.** Na een wijziging aan maten of opbouw: loop alle schermen en dialogen langs (bv. 1280×800 en 1440×900, zijbalk in- en uitgeklapt) en controleer dat geen label, invoerveld, knop of tabelcel tekst afkapt (boven, onder of opzij), dat hints niet over knoppen vallen en dat de regelhoogte nergens kleiner is dan ±1,15 × de lettergrootte. Meet in dialogen pas na de openingsanimatie (die schaalt het venster).
 
 ### Betalingen in een boeking
 
@@ -210,5 +228,6 @@ Lokaal bekijken zonder backend: een eigen proxy-config (`ng serve --proxy-config
 2. Service in de feature-map (gebruik `ApiService`).
 3. Component(en) standalone; route in `app.routes.ts` (lazy).
 4. Menu-item in `layout.component.ts` met de juiste **authority**.
-5. Vertalingen in `nl.json` en `en.json`.
-6. Spec-bestand naast het component; draai `ng test` en `ng build`.
+5. Opbouw met de gedeelde klassen (`page-header`, `detail-card`, `row`, `actions`, …; zie *Design*), geen eigen kopieën ervan in het component.
+6. Vertalingen in `nl.json` en `en.json`.
+7. Spec-bestand naast het component; draai `ng test` en `ng build`.
