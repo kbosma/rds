@@ -55,7 +55,7 @@ export interface AccommodationView {
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'accommodations.title' | translate }}</h1>
       @if (canCreate) {
         <button mat-raised-button color="primary" routerLink="/accommodations/new">
@@ -130,41 +130,6 @@ export interface AccommodationView {
     }
   `,
   styles: [`
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
-    .filter-field {
-      width: 100%;
-    }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .full-width { width: 100%; }
-    .alt-row { background-color: #fafafa; }
-    .actions-header { text-align: right; }
-    .actions-cell { width: 1%; }
-    .no-data { text-align: center; padding: 24px; color: #888; }
-    .count-text {
-      margin-top: 16px;
-      color: #888;
-      font-size: 14px;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
-    }
   `],
 })
 export class AccommodationListComponent implements OnInit {

@@ -82,12 +82,11 @@ interface OrgOverview {
     }
   `,
   styles: [`
-    .welcome-card { margin-bottom: 24px; }
-    .welcome-content { display: flex; align-items: center; gap: 16px; padding: 8px 0; }
-    .welcome-icon { font-size: 48px; width: 48px; height: 48px; color: #7b1fa2; }
-    .welcome-title { margin: 0; font-size: 20px; font-weight: 500; }
-    .welcome-detail { margin: 4px 0 0; color: #666; font-size: 14px; }
-    .loading { display: flex; justify-content: center; padding: 40px; }
+    .welcome-card { margin-bottom: 12px; }
+    .welcome-content { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
+    .welcome-icon { font-size: 36px; width: 36px; height: 36px; color: #7b1fa2; }
+    .welcome-title { margin: 0; font-size: 17px; font-weight: 600; }
+    .welcome-detail { margin: 2px 0 0; color: var(--ui-text-muted); font-size: 13px; }
     .overview-card { border-radius: 12px; }
     .header-icon {
       vertical-align: middle;
@@ -143,7 +142,7 @@ interface OrgOverview {
     }
     .org-stat-label {
       font-size: 13px;
-      color: #888;
+      color: var(--ui-text-muted);
     }
     .role-chips {
       display: flex;

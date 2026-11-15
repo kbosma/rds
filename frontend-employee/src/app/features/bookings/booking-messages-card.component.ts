@@ -127,7 +127,6 @@ type Filter = 'all' | TimelineKind;
     .pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
     .pill-ok { background: #e8f5e9; color: #2e7d32; }
     .pill-neutral { background: var(--ui-canvas); color: var(--ui-text-muted); }
-    .empty-text { color: var(--ui-text-muted); margin: 8px 0 0; }
   `],
 })
 export class BookingMessagesCardComponent {

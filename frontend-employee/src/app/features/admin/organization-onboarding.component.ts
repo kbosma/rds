@@ -34,7 +34,7 @@ import { RoleService } from './role.service';
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'onboarding.title' | translate }}</h1>
     </div>
 
@@ -175,14 +175,6 @@ import { RoleService } from './role.service';
     </mat-stepper>
   `,
   styles: [`
-    .header {
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
     .onboarding-stepper {
       background: white;
       border-radius: 8px;
@@ -194,9 +186,6 @@ import { RoleService } from './role.service';
       flex-direction: column;
       max-width: 500px;
       padding-top: 16px;
-    }
-    .full-width {
-      width: 100%;
     }
     .checkbox-field {
       margin-bottom: 16px;

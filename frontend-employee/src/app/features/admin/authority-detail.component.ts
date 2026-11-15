@@ -25,7 +25,7 @@ import { AuthorityService } from './authority.service';
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
       <h1>{{ (isNew() ? 'authorities.newAuthority' : 'authorities.editTitle') | translate }}</h1>
     </div>
@@ -47,10 +47,6 @@ import { AuthorityService } from './authority.service';
     </mat-card>
   `,
   styles: [`
-    .header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-    h1 { margin: 0; font-size: 24px; font-weight: 500; }
-    .full-width { width: 100%; }
-    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   `],
 })
 export class AuthorityDetailComponent implements OnInit {

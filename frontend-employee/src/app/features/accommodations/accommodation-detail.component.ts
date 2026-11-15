@@ -269,55 +269,6 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
     }
   `,
   styles: [`
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--theme-primary);
-      text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .back-link:hover { text-decoration: underline; }
-    .page-title {
-      font-size: 22px;
-      font-weight: 500;
-      margin: 8px 0 24px;
-    }
-    .detail-card {
-      border-radius: 12px;
-      max-width: 700px;
-    }
-    .detail-card mat-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .card-header-btn {
-      margin-left: auto;
-    }
-    .section-card {
-      margin-top: 24px;
-    }
-    .full-width { width: 100%; }
-    .row {
-      display: flex;
-      gap: 16px;
-    }
-    .flex-1 { flex: 1; }
-    .flex-2 { flex: 2; }
-    .flex-3 { flex: 3; }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
-    }
     .address-form-container {
       padding: 8px 0 16px;
     }
@@ -325,7 +276,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
       font-size: 15px;
       font-weight: 500;
       margin: 0 0 12px;
-      color: #555;
+      color: var(--ui-text-muted);
     }
     .form-divider {
       margin-bottom: 16px;
@@ -366,16 +317,12 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
       color: #333;
     }
     .address-line.secondary {
-      color: #666;
+      color: var(--ui-text-muted);
       font-size: 13px;
     }
     .address-actions {
       display: flex;
       gap: 4px;
-    }
-    .empty-text {
-      color: #888;
-      font-style: italic;
     }
   `],
 })

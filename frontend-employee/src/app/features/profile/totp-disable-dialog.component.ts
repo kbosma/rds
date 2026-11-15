@@ -47,8 +47,6 @@ import { AuthService } from '../../core/auth/auth.service';
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    .error-text { color: #c62828; font-size: 13px; margin-bottom: 8px; }
   `],
 })
 export class TotpDisableDialogComponent {

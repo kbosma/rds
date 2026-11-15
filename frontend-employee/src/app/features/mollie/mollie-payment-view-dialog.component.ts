@@ -123,14 +123,13 @@ export interface MolliePaymentViewDialogData {
   `,
   styles: [`
     .details { display: grid; grid-template-columns: 160px 1fr; gap: 6px 12px; margin: 0 0 16px; }
-    .details dt { font-weight: 600; color: #555; }
+    .details dt { font-weight: 600; color: var(--ui-text-muted); }
     .details dd { margin: 0; word-break: break-all; }
     h3 { margin: 8px 0; font-size: 15px; }
     .history { width: 100%; border-collapse: collapse; font-size: 13px; }
     .history th, .history td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eee; }
-    .no-data { color: #888; }
     .correction-tag { margin-left: 6px; font-size: 11px; color: #8d6e00; background: #fff8e1; border-radius: 8px; padding: 1px 6px; }
-    .reason { color: #555; font-style: italic; }
+    .reason { color: var(--ui-text-muted); font-style: italic; }
   `],
 })
 export class MolliePaymentViewDialogComponent implements OnInit {

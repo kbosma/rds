@@ -117,7 +117,7 @@ import { TotpSetupResponse } from '../../shared/models';
     }
     .manual-key-label {
       font-size: 13px;
-      color: #666;
+      color: var(--ui-text-muted);
       margin-bottom: 4px;
     }
     .manual-key {
@@ -132,14 +132,6 @@ import { TotpSetupResponse } from '../../shared/models';
     }
     .verify-form {
       margin-top: 16px;
-    }
-    .full-width {
-      width: 100%;
-    }
-    .error-text {
-      color: #c62828;
-      font-size: 13px;
-      margin-bottom: 8px;
     }
     .recovery-warning {
       display: flex;

@@ -171,18 +171,7 @@ interface DateWarning {
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    .row {
-      display: flex;
-      gap: 16px;
-    }
-    .flex-1 { flex: 1; }
-    .hint { font-size: 13px; color: #888; margin: 0 0 8px; }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 24px;
-    }
+    .hint { font-size: 13px; color: var(--ui-text-muted); margin: 0 0 8px; }
     .resolved-field {
       display: flex;
       flex-direction: column;
@@ -190,7 +179,7 @@ interface DateWarning {
     }
     .resolved-label {
       font-size: 12px;
-      color: #888;
+      color: var(--ui-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }

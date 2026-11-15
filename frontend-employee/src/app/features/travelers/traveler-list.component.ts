@@ -10,6 +10,6 @@ import { TranslatePipe } from '@ngx-translate/core';
     <h1>{{ 'travelers.title' | translate }}</h1>
     <p class="placeholder">{{ 'common.placeholderPage' | translate }}</p>
   `,
-  styles: [`.placeholder { color: #888; font-style: italic; }`],
+  styles: [`.placeholder { color: var(--ui-text-muted); font-style: italic; }`],
 })
 export class TravelerListComponent {}

@@ -44,7 +44,7 @@ import { Booker, Booking } from '../../shared/models';
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'bookers.title' | translate }}</h1>
     </div>
 
@@ -116,46 +116,8 @@ import { Booker, Booking } from '../../shared/models';
     }
   `,
   styles: [`
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
-    .filter-field {
-      width: 100%;
-    }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .full-width {
-      width: 100%;
-    }
-    .alt-row {
-      background-color: #fafafa;
-    }
     .email-link {
       color: var(--theme-primary);
-    }
-    .actions-header { text-align: right; }
-    .actions-cell { width: 1%; }
-    .no-data {
-      text-align: center;
-      padding: 24px;
-      color: #888;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
     }
   `],
 })

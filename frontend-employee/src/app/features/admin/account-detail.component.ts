@@ -165,29 +165,9 @@ interface PersonOption {
     }
   `,
   styles: [`
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--theme-primary);
-      text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .back-link:hover { text-decoration: underline; }
-    .page-title {
-      font-size: 22px;
-      font-weight: 500;
-      margin: 8px 0 24px;
-    }
-    .detail-card {
-      border-radius: 12px;
-      max-width: 700px;
-    }
     .sub-card {
-      margin-top: 24px;
+      margin-top: 12px;
     }
-    .full-width { width: 100%; }
     .checkbox-row {
       display: flex;
       gap: 24px;
@@ -200,23 +180,12 @@ interface PersonOption {
     }
     .readonly-label {
       font-size: 12px;
-      color: #666;
+      color: var(--ui-text-muted);
       margin-bottom: 4px;
     }
     .readonly-value {
       font-size: 16px;
       color: #333;
-    }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
     }
     .add-junction-row {
       display: flex;
@@ -224,7 +193,6 @@ interface PersonOption {
       align-items: flex-start;
       margin-bottom: 16px;
     }
-    .flex-1 { flex: 1; }
     .sub-item {
       display: flex;
       justify-content: space-between;
@@ -238,10 +206,6 @@ interface PersonOption {
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-    .empty-text {
-      color: #888;
-      font-style: italic;
     }
   `],
 })

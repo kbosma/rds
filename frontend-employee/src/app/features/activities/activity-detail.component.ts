@@ -40,7 +40,7 @@ import { Activity } from '../../shared/models';
     @if (loading()) {
       <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
     } @else {
-      <mat-card class="form-card">
+      <mat-card class="detail-card">
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
@@ -83,26 +83,6 @@ import { Activity } from '../../shared/models';
     }
   `,
   styles: [`
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--theme-primary);
-      text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .back-link:hover { text-decoration: underline; }
-    .page-title { font-size: 22px; font-weight: 500; margin: 8px 0 24px; }
-    .form-card { border-radius: 12px; max-width: 600px; }
-    .full-width { width: 100%; }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
-    .loading { display: flex; justify-content: center; padding: 40px; }
   `],
 })
 export class ActivityDetailComponent implements OnInit {

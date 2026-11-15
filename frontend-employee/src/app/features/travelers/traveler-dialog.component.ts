@@ -71,7 +71,7 @@ export interface TravelerDialogData {
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.full-width { width: 100%; } form { display: flex; flex-direction: column; gap: 4px; min-width: 350px; }`],
+  styles: [`form { display: flex; flex-direction: column; gap: 4px; min-width: 350px; }`],
 })
 export class TravelerDialogComponent implements OnInit {
   data = inject<TravelerDialogData>(MAT_DIALOG_DATA);

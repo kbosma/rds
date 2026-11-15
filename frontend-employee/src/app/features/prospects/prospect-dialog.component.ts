@@ -104,9 +104,6 @@ import { Booker } from '../../shared/models';
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    .row { display: flex; gap: 16px; }
-    .flex-1 { flex: 1; }
   `],
 })
 export class ProspectDialogComponent {

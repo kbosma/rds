@@ -223,25 +223,11 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
     }
   `,
   styles: [`
-    .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--theme-primary); text-decoration: none; font-size: 14px; margin-bottom: 8px; }
-    .back-link:hover { text-decoration: underline; }
-    .page-title { font-size: 22px; font-weight: 500; margin: 8px 0 24px; }
-    .detail-card { border-radius: 12px; max-width: 700px; }
-    .detail-card mat-card-header { display: flex; justify-content: space-between; align-items: center; }
-    .card-header-btn { margin-left: auto; }
-    .section-card { margin-top: 24px; }
-    .full-width { width: 100%; }
-    .row { display: flex; gap: 16px; }
-    .flex-1 { flex: 1; } .flex-2 { flex: 2; } .flex-3 { flex: 3; }
-    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-    .loading { display: flex; justify-content: center; padding: 40px; }
     .address-form { padding: 8px 0 16px; }
-    .address-form h4 { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: #555; }
+    .address-form h4 { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: var(--ui-text-muted); }
     .list-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 16px; margin-bottom: 10px; }
     .item-info { display: flex; flex-direction: column; gap: 2px; }
-    .muted { color: #777; font-size: 13px; }
     .role-badge { display: inline-block; background: #e3f2fd; color: #1565c0; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; width: fit-content; }
-    .empty-text { color: #888; font-style: italic; }
     .link-row { align-items: flex-start; }
     .link-btn { margin-top: 4px; height: 56px; }
   `],

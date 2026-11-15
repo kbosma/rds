@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
@@ -18,37 +19,39 @@ import { PersonService } from '../admin/person.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
     MatSnackBarModule,
     TranslatePipe,
   ],
   template: `
     <h1>{{ 'profile.title' | translate }}</h1>
-    <mat-card>
+    <mat-card class="detail-card">
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="save()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'profile.firstname' | translate }}</mat-label>
-            <input matInput formControlName="firstname" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'profile.prefix' | translate }}</mat-label>
-            <input matInput formControlName="prefix" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'profile.lastname' | translate }}</mat-label>
-            <input matInput formControlName="lastname" />
-          </mat-form-field>
-          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || form.pristine">
-            {{ 'common.save' | translate }}
-          </button>
+          <div class="row">
+            <mat-form-field appearance="outline" class="flex-2">
+              <mat-label>{{ 'profile.firstname' | translate }}</mat-label>
+              <input matInput formControlName="firstname" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>{{ 'profile.prefix' | translate }}</mat-label>
+              <input matInput formControlName="prefix" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="flex-2">
+              <mat-label>{{ 'profile.lastname' | translate }}</mat-label>
+              <input matInput formControlName="lastname" />
+            </mat-form-field>
+          </div>
+          <div class="actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || form.pristine">
+              <mat-icon>save</mat-icon> {{ 'common.save' | translate }}
+            </button>
+          </div>
         </form>
       </mat-card-content>
     </mat-card>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    mat-card { max-width: 500px; }
-    form { display: flex; flex-direction: column; gap: 8px; }
   `],
 })
 export class MyProfileComponent implements OnInit {

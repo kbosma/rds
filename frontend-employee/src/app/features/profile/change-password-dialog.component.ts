@@ -48,7 +48,6 @@ import { AuthService } from '../../core/auth/auth.service';
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
     form { display: flex; flex-direction: column; gap: 8px; min-width: 350px; }
     .error { color: #f44336; font-size: 13px; margin: 0; }
   `],

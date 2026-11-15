@@ -104,39 +104,8 @@ import { Organization, Person } from '../../shared/models';
     }
   `,
   styles: [`
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--theme-primary);
-      text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .back-link:hover { text-decoration: underline; }
-    .page-title {
-      font-size: 22px;
-      font-weight: 500;
-      margin: 8px 0 24px;
-    }
-    .detail-card {
-      border-radius: 12px;
-      max-width: 700px;
-    }
     .sub-card {
-      margin-top: 24px;
-    }
-    .full-width { width: 100%; }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
+      margin-top: 12px;
     }
     .sub-item {
       display: flex;
@@ -158,11 +127,7 @@ import { Organization, Person } from '../../shared/models';
       gap: 12px;
     }
     .sub-item-arrow {
-      color: #999;
-    }
-    .empty-text {
-      color: #888;
-      font-style: italic;
+      color: var(--ui-text-muted);
     }
   `],
 })

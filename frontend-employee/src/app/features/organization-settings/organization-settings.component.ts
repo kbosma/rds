@@ -134,16 +134,9 @@ function weeksOrder(group: AbstractControl): ValidationErrors | null {
     }
   `,
   styles: [`
-    .page-title { font-size: 22px; font-weight: 500; margin: 8px 0 24px; }
-    .loading { display: flex; justify-content: center; padding: 40px; }
-    .detail-card { border-radius: 12px; max-width: 700px; }
-    .section-card { margin-top: 24px; }
     .intro { color: var(--ui-text-muted); margin: 0 0 16px; }
-    .full-width { width: 100%; margin-bottom: 8px; }
-    .row { display: flex; flex-wrap: wrap; gap: 0 16px; }
-    .flex-1 { flex: 1 1 160px; }
     .form-error { color: var(--act-delete); font-size: 12px; margin: 0 0 12px; }
-    .actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; }
+    .actions { justify-content: space-between; }
     .hint { font-size: 12px; color: var(--ui-text-muted); }
   `],
 })

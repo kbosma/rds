@@ -58,7 +58,6 @@ export const BOOKING_STATUS_ORDER = ['aanvraag', 'offerte', 'boeking', 'voorscho
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
     .intro { margin-top: 0; }
     .warning { font-size: 13px; color: var(--act-update, #6a1b9a); margin: -8px 0 12px; }
   `],

@@ -121,8 +121,6 @@ export interface EmailTemplatePreviewDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .loading { display: flex; justify-content: center; padding: 24px; }
-    .no-data { color: #888; text-align: center; padding: 24px; }
     .controls {
       display: flex;
       gap: 12px;
@@ -130,11 +128,6 @@ export interface EmailTemplatePreviewDialogData {
     }
     .wide-field { width: 100%; }
     .fixed-target { flex: 1; font-weight: 600; }
-    .error-text {
-      color: #c62828;
-      font-size: 13px;
-      margin: 8px 0;
-    }
     .preview { margin-top: 12px; }
     .subject-line {
       margin: 12px 0;

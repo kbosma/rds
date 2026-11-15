@@ -33,7 +33,7 @@ import { Organization } from '../../shared/models';
     DatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'organizations.title' | translate }}</h1>
       <div class="header-actions">
         <button mat-raised-button (click)="navigateToOnboarding()">
@@ -98,52 +98,9 @@ import { Organization } from '../../shared/models';
     }
   `,
   styles: [`
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
     .header-actions {
       display: flex;
       gap: 8px;
-    }
-    .filter-bar {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      margin-bottom: 8px;
-    }
-    .search-field {
-      flex: 1;
-      min-width: 300px;
-    }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .full-width {
-      width: 100%;
-    }
-    .alt-row {
-      background-color: #fafafa;
-    }
-    .no-data {
-      text-align: center;
-      padding: 24px;
-      color: #888;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
     }
   `],
 })

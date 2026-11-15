@@ -73,7 +73,7 @@ const KIND_ICONS: Record<string, string> = {
     .notifications-card { margin-bottom: 16px; }
     .count { display: inline-block; margin-left: 8px; padding: 0 8px; border-radius: 10px; font-size: 12px;
       background: var(--theme-accent, #ff9800); color: #fff; vertical-align: middle; }
-    .empty { color: var(--ui-text-secondary, #666); margin: 0; }
+    .empty { color: var(--ui-text-muted); margin: 0; }
     .list { list-style: none; margin: 0; padding: 0; }
     .item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 6px; }
     .item.handled { opacity: 0.6; }
@@ -81,7 +81,7 @@ const KIND_ICONS: Record<string, string> = {
     .item[data-kind="terugboeking"] .kind-icon { color: var(--act-delete, #c62828); }
     .what { flex: 1; min-width: 0; }
     .title { font-weight: 500; }
-    .sub { font-size: 12px; color: var(--ui-text-secondary, #666); }
+    .sub { font-size: 12px; color: var(--ui-text-muted); }
     .handle-btn { flex: none; }
   `],
 })
