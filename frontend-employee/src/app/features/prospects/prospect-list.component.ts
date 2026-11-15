@@ -25,6 +25,7 @@ import { ConfirmService } from '../../shared/services/confirm.service';
 import { deleteErrorKey } from '../../shared/utils/delete-error';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Booker } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 /**
  * Overzicht van potentiële bookers (status PROSPECT) met registratie en bewerken.
@@ -34,6 +35,7 @@ import { Booker } from '../../shared/models';
   selector: 'app-prospect-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     DatePipe,
     MatTableModule,
     MatPaginatorModule,
@@ -109,12 +111,13 @@ import { Booker } from '../../shared/models';
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'prospects.noProspectsFound' | translate }}
+              <app-empty-state icon="person_add" [filtered]="dataSource.data.length > 0" [message]="'prospects.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="register()"><mat-icon>person_add</mat-icon> {{ 'prospects.register' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>

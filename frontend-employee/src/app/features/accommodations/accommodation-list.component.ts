@@ -27,6 +27,7 @@ import {
   AccommodationSupplier, AccommodationAddress, SupplierAddress,
 } from '../../shared/models';
 import { AccommodationDetailDialogComponent, AccommodationDetailData } from './accommodation-detail-dialog.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 export interface AccommodationView {
   accommodation: Accommodation;
@@ -41,6 +42,7 @@ export interface AccommodationView {
   selector: 'app-accommodation-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     RouterLink,
     MatTableModule,
     MatPaginatorModule,
@@ -107,12 +109,15 @@ export interface AccommodationView {
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'accommodations.noAccommodationsFound' | translate }}
+              <app-empty-state icon="hotel" [filtered]="allViews().length > 0" [message]="'accommodations.emptyState' | translate">
+                @if (canCreate) {
+                  <button mat-stroked-button class="act-create" routerLink="/accommodations/new"><mat-icon>add</mat-icon> {{ 'accommodations.newAccommodation' | translate }}</button>
+                }
+              </app-empty-state>
             </td>
           </tr>
         </table>
@@ -126,7 +131,6 @@ export interface AccommodationView {
         showFirstLastButtons>
       </mat-paginator>
 
-      <p class="count-text">{{ 'accommodations.countFound' | translate: { count: filtered().length } }}</p>
     }
   `,
   styles: [`

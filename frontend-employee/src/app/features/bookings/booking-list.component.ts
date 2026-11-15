@@ -26,11 +26,13 @@ import { deleteErrorKey } from '../../shared/utils/delete-error';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { BookingStatusBadgeComponent } from '../../shared/components/booking-status-badge.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 @Component({
   selector: 'app-booking-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MoneyPipe,
     BookingStatusBadgeComponent,
     DatePipe,
@@ -143,7 +145,9 @@ import { BookingStatusBadgeComponent } from '../../shared/components/booking-sta
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'bookings.noBookingsFound' | translate }}
+              <app-empty-state icon="book_online" [filtered]="allBookings.length > 0" [message]="'bookings.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'bookings.newBooking' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>

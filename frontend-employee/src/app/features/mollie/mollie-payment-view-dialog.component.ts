@@ -71,7 +71,7 @@ export interface MolliePaymentViewDialogData {
               <tr>
                 <td>
                   <app-payment-status-badge [status]="entry.status" />
-                  @if (entry.correction) { <span class="correction-tag">{{ 'payments.correction' | translate }}</span> }
+                  @if (entry.correction) { <span class="badge badge-update correction-tag">{{ 'payments.correction' | translate }}</span> }
                 </td>
                 <td>{{ entry.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
                 <td>{{ entry.createdByName ?? (entry.createdBy ? ('common.unknown' | translate) : ('common.system' | translate)) }}</td>
@@ -128,8 +128,8 @@ export interface MolliePaymentViewDialogData {
     .details dd { margin: 0; word-break: break-all; }
     h3 { margin: 8px 0; font-size: 15px; }
     .history { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .history th, .history td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eee; }
-    .correction-tag { margin-left: 6px; font-size: 11px; color: #8d6e00; background: #fff8e1; border-radius: 8px; padding: 1px 6px; }
+    .history th, .history td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--ui-line); }
+    .correction-tag { margin-left: 6px; }
     .reason { color: var(--ui-text-muted); font-style: italic; }
   `],
 })

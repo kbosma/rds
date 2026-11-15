@@ -18,6 +18,7 @@ import { OrganizationService } from './organization.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Person } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 interface PersonRow extends Person {
   organizationName: string;
@@ -33,6 +34,7 @@ interface OrgChip {
   selector: 'app-person-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -109,12 +111,13 @@ interface OrgChip {
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'persons.noPersonsFound' | translate }}
+              <app-empty-state icon="people" [filtered]="dataSource.data.length > 0" [message]="'persons.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'persons.newPerson' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>

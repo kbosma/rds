@@ -42,7 +42,8 @@
     "deleted": "Deleted",
     "deleteError": "Deleting failed",
     "saveError": "Saving failed",
-    "deleteBlocked": "Cannot be deleted: documents or payments are linked to it. They are kept as history."
+    "deleteBlocked": "Cannot be deleted: documents or payments are linked to it. They are kept as history.",
+    "noResults": "Nothing found. Adjust your search or filters."
   },
   "app": {
     "title": "RDS",
@@ -185,7 +186,8 @@
     "sendQuoteConfirm": "The quote is generated as PDF and emailed to {{email}}. The booking moves to Quote.",
     "resendQuoteConfirm": "A new quote is generated as PDF and emailed to {{email}}. The previous quote stays with the booking.",
     "quoteSent": "Quote sent to {{to}}",
-    "quoteSendError": "Sending the quote failed. {{message}}"
+    "quoteSendError": "Sending the quote failed. {{message}}",
+    "emptyState": "No bookings yet. You create a booking for an existing booker."
   },
   "bookingLine": {
     "editTitle": "Edit accommodation",
@@ -243,7 +245,10 @@
     "roleRemoved": "Role removed",
     "roleRemoveError": "Error removing role",
     "roleRemoveForbidden": "You are not allowed to remove this role. Only an administrator can.",
-    "removeRoleConfirm": "Are you sure you want to remove the role \"{{role}}\"?"
+    "removeRoleConfirm": "Are you sure you want to remove the role \"{{role}}\"?",
+    "emptyState": "No accounts yet. Create one so an employee can sign in.",
+    "filterRole": "Filter by role",
+    "filterOrganization": "Filter by organization"
   },
   "emailTemplates": {
     "title": "Email templates",
@@ -274,7 +279,8 @@
     "selectTemplate": "Choose a template",
     "forProspect": "Prospect / booker",
     "forBooking": "Booking",
-    "sendConfirmBooking": "Send the email to the main booker of booking {{number}}?"
+    "sendConfirmBooking": "Send the email to the main booker of booking {{number}}?",
+    "emptyState": "No email templates yet. Create one to send email from a booking or prospect."
   },
   "templateEditor": {
     "font": "Font",
@@ -364,7 +370,8 @@
     "registerTitle": "Register prospect",
     "registered": "Prospect registered",
     "registerError": "Error registering prospect",
-    "noProspectsFound": "No prospects found."
+    "noProspectsFound": "No prospects found.",
+    "emptyState": "No prospects yet. Register a new customer to send a quote."
   },
   "bookers": {
     "title": "Bookers",
@@ -388,7 +395,8 @@
     "multipleBookingsFor": "There are multiple bookings for {{name}}:",
     "newBookingForBooker": "New booking for this booker",
     "newTitle": "New booker",
-    "newBooker": "New booker"
+    "newBooker": "New booker",
+    "emptyState": "No bookers yet. Register new customers under Prospects."
   },
   "accommodations": {
     "title": "Accommodations",
@@ -396,7 +404,6 @@
     "searchPlaceholder": "Search by name, code or supplier...",
     "noSupplier": "No supplier",
     "noAddress": "No address",
-    "countFound": "{{count}} accommodations found",
     "editTitle": "Edit accommodation",
     "newTitle": "New accommodation",
     "details": "Accommodation details",
@@ -448,7 +455,8 @@
     "noAccommodationsFound": "No accommodations found.",
     "deleteCascadeWarning": "Booking lines that refer to this accommodation are deleted too.",
     "newSupplier": "New supplier",
-    "supplierCreatedAndLinked": "Supplier created and linked"
+    "supplierCreatedAndLinked": "Supplier created and linked",
+    "emptyState": "No accommodations yet. Add one to use it in bookings."
   },
   "payments": {
     "title": "Payments",
@@ -503,7 +511,8 @@
       "overig": "Other"
     },
     "dueDate": "Due",
-    "status_charged_back": "Charged back"
+    "status_charged_back": "Charged back",
+    "emptyState": "No payments yet. Payments are created when a quote is confirmed."
   },
   "organizations": {
     "title": "Organizations",
@@ -526,7 +535,8 @@
     "noPersonsLinked": "No persons linked to this organization.",
     "emailFrom": "Sender email address",
     "emailFromHint": "Sender address for emails to prospects and bookers.",
-    "emailFromInvalid": "Enter a valid email address."
+    "emailFromInvalid": "Enter a valid email address.",
+    "emptyState": "No organizations yet."
   },
   "persons": {
     "title": "Persons",
@@ -549,7 +559,8 @@
     "created": "Person created",
     "createError": "Error creating person",
     "notFound": "Person not found",
-    "noAccountsLinked": "No accounts linked to this person."
+    "noAccountsLinked": "No accounts linked to this person.",
+    "emptyState": "No people yet. Add a person to create an account for them."
   },
   "onboarding": {
     "title": "Organization onboarding",
@@ -605,7 +616,8 @@
     "authorityRemoveError": "Error removing authority",
     "removeAuthorityConfirm": "Are you sure you want to remove the authority \"{{authority}}\"?",
     "authorities": "Authorities",
-    "selectAuthority": "Select an authority"
+    "selectAuthority": "Select an authority",
+    "emptyState": "No roles yet."
   },
   "authorities": {
     "title": "Authorities",
@@ -623,7 +635,8 @@
     "notFound": "Authority not found",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "removed": "Authority removed",
-    "removeError": "Error removing authority"
+    "removeError": "Error removing authority",
+    "emptyState": "No authorities yet."
   },
   "profile": {
     "title": "My profile",
@@ -675,7 +688,6 @@
     "removed": "Supplier removed",
     "removeError": "Error removing supplier",
     "searchPlaceholder": "Search by name or code...",
-    "countFound": "{{count}} supplier(s) found",
     "noAddress": "No address",
     "addresses": "Addresses",
     "noAddressesLinked": "No addresses linked.",
@@ -703,7 +715,8 @@
     "address": "Address",
     "deleteCascadeWarning": "Booking lines that refer to this supplier are deleted too.",
     "newAccommodation": "New accommodation",
-    "accommodationCreatedAndLinked": "Accommodation created and linked"
+    "accommodationCreatedAndLinked": "Accommodation created and linked",
+    "emptyState": "No suppliers yet. Add one to link accommodations to it."
   },
   "documents": {
     "displayname": "Document name",
@@ -756,7 +769,8 @@
     "downloadError": "Download failed",
     "type": "Type",
     "typeEditor": "Editor",
-    "typeUpload": "Uploaded file"
+    "typeUpload": "Uploaded file",
+    "emptyState": "No templates yet. Add a Word template for quotes and confirmations."
   },
   "totp": {
     "setupTitle": "Set up two-factor authentication",
@@ -786,7 +800,8 @@
     "noActivitiesFound": "No activities found.",
     "saveError": "Error saving activity",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
-    "deleteCascadeWarning": "Booking activities that refer to this activity are deleted too."
+    "deleteCascadeWarning": "Booking activities that refer to this activity are deleted too.",
+    "emptyState": "No activities yet. Add one, such as a ticket or transfer."
   },
   "bookingActivity": {
     "title": "Activities",

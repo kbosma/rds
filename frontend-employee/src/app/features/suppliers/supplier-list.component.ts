@@ -19,6 +19,7 @@ import { SupplierAddressService } from '../accommodations/supplier-address.servi
 import { AddressService } from '../accommodations/address.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Supplier, Address } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 export interface SupplierView {
   supplier: Supplier;
@@ -29,6 +30,7 @@ export interface SupplierView {
   selector: 'app-supplier-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MatTableModule,
     MatPaginatorModule,
     MatFormFieldModule,
@@ -88,12 +90,15 @@ export interface SupplierView {
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'suppliers.noSuppliersFound' | translate }}
+              <app-empty-state icon="business" [filtered]="allViews().length > 0" [message]="'suppliers.emptyState' | translate">
+                @if (canCreate) {
+                  <button mat-stroked-button class="act-create" (click)="newSupplier()"><mat-icon>add</mat-icon> {{ 'suppliers.newSupplier' | translate }}</button>
+                }
+              </app-empty-state>
             </td>
           </tr>
         </table>
@@ -107,7 +112,6 @@ export interface SupplierView {
         showFirstLastButtons>
       </mat-paginator>
 
-      <p class="count-text">{{ 'suppliers.countFound' | translate: { count: filtered().length } }}</p>
     }
   `,
   styles: [`

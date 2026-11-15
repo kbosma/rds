@@ -412,6 +412,8 @@ $act-colors: (
 }
 .no-data p, .empty-state p { margin: 0; }
 .no-data .mat-mdc-button-base, .empty-state .mat-mdc-button-base { margin-top: 12px; }
+/* Een lege toestand in een tabelrij heeft zelf al binnenruimte. */
+.no-data:has(> .empty-state) { padding: 0 !important; }
 
 /* Statuslabels: tekst in de kleur van de betekenis op een lichte tint daarvan. Kies de variant naar betekenis
    (info, success, warning, danger, update, neutral); de kleuren komen uit het act-*-palet. */

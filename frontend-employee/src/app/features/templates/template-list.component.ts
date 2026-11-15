@@ -18,11 +18,13 @@ import { AuthService } from '../../core/auth/auth.service';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { DocumentTemplate } from '../../shared/models';
 import { TemplateDialogComponent } from './template-dialog.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 @Component({
   selector: 'app-template-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     DatePipe,
     MatTableModule,
     MatPaginatorModule,
@@ -100,12 +102,15 @@ import { TemplateDialogComponent } from './template-dialog.component';
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'templates.noTemplatesFound' | translate }}
+              <app-empty-state icon="description" [filtered]="allTemplates().length > 0" [message]="'templates.emptyState' | translate">
+                @if (canCreate) {
+                  <button mat-stroked-button class="act-create" (click)="openDialog()"><mat-icon>add</mat-icon> {{ 'templates.newTemplate' | translate }}</button>
+                }
+              </app-empty-state>
             </td>
           </tr>
         </table>

@@ -25,6 +25,7 @@ import { MolliePayment } from '../../shared/models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 interface BookingMolliePaymentLink {
   bookingId: string;
@@ -34,7 +35,7 @@ interface BookingMolliePaymentLink {
 @Component({
   selector: 'app-mollie-payments-overview',
   standalone: true,
-  imports: [MoneyPipe, PaymentStatusBadgeComponent, 
+  imports: [EmptyStateComponent, MoneyPipe, PaymentStatusBadgeComponent, 
     DatePipe,
     FormsModule,
     MatCardModule,
@@ -53,42 +54,42 @@ interface BookingMolliePaymentLink {
   template: `
     <h1>{{ 'payments.title' | translate }}</h1>
 
-    <div class="summary-cards">
-      <mat-card class="summary-card">
-        <mat-card-content class="summary-content">
-          <mat-icon class="summary-icon total-icon">receipt_long</mat-icon>
+    <div class="kpi-cards">
+      <mat-card class="kpi-card kpi-neutral">
+        <mat-card-content>
+          <mat-icon class="kpi-icon">receipt_long</mat-icon>
           <div>
-            <div class="summary-label">{{ 'common.total' | translate }}</div>
-            <div class="summary-value">{{ totalAmount() | money }}</div>
+            <div class="kpi-label">{{ 'common.total' | translate }}</div>
+            <div class="kpi-value">{{ totalAmount() | money }}</div>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="summary-card summary-green">
-        <mat-card-content class="summary-content">
-          <mat-icon class="summary-icon paid-icon">check_circle</mat-icon>
+      <mat-card class="kpi-card kpi-success">
+        <mat-card-content>
+          <mat-icon class="kpi-icon">check_circle</mat-icon>
           <div>
-            <div class="summary-label">{{ 'common.paid' | translate }}</div>
-            <div class="summary-value paid-value">{{ paidAmount() | money }}</div>
+            <div class="kpi-label">{{ 'common.paid' | translate }}</div>
+            <div class="kpi-value">{{ paidAmount() | money }}</div>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="summary-card summary-orange">
-        <mat-card-content class="summary-content">
-          <mat-icon class="summary-icon open-icon">schedule</mat-icon>
+      <mat-card class="kpi-card kpi-warning">
+        <mat-card-content>
+          <mat-icon class="kpi-icon">schedule</mat-icon>
           <div>
-            <div class="summary-label">{{ 'common.outstanding' | translate }}</div>
-            <div class="summary-value open-value">{{ openAmount() | money }}</div>
+            <div class="kpi-label">{{ 'common.outstanding' | translate }}</div>
+            <div class="kpi-value">{{ openAmount() | money }}</div>
           </div>
         </mat-card-content>
       </mat-card>
     </div>
 
-    <mat-form-field class="search-field" appearance="outline">
+    <mat-form-field class="filter-field" appearance="outline">
       <mat-label>{{ 'common.search' | translate }}</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
       <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" [placeholder]="'bookers.searchPlaceholder' | translate">
-      <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
     @if (loading()) {
@@ -107,14 +108,14 @@ interface BookingMolliePaymentLink {
 
           <ng-container matColumnDef="bookingNumber">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'bookings.bookingNumber' | translate }}</th>
-            <td mat-cell *matCellDef="let row">
+            <td mat-cell *matCellDef="let row" class="cell-nowrap">
               <span class="booking-number">{{ bookingNumberMap().get(row.molliePaymentId) ?? '—' }}</span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="createdAt">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.date' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.createdAt | date:'dd-MM-yyyy' }}</td>
+            <td mat-cell *matCellDef="let row" class="cell-nowrap">{{ row.createdAt | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="description">
@@ -129,21 +130,21 @@ interface BookingMolliePaymentLink {
 
           <ng-container matColumnDef="dueDate">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'payments.dueDate' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.dueDate ? (row.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
+            <td mat-cell *matCellDef="let row" class="cell-nowrap">{{ row.dueDate ? (row.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="method">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.method' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               @if (row.method) {
-                <span class="method-badge">{{ row.method }}</span>
+                <span class="badge badge-neutral">{{ row.method }}</span>
               }
             </td>
           </ng-container>
 
           <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.amount' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.amount | money }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="cell-num">{{ 'common.amount' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="cell-num">{{ row.amount | money }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">
@@ -166,12 +167,12 @@ interface BookingMolliePaymentLink {
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'payments.noPaymentsFound' | translate }}
+              <app-empty-state icon="credit_card" [filtered]="payments().length > 0" [message]="'payments.emptyState' | translate">
+              </app-empty-state>
             </td>
           </tr>
         </table>
@@ -188,50 +189,8 @@ interface BookingMolliePaymentLink {
   `,
   styles: [`
     .payment-type { font-size: 12px; color: var(--ui-text-muted); }
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .summary-card {
-      border-radius: 12px;
-    }
-    .summary-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 2px 0;
-    }
-    .summary-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-    }
-    .total-icon { color: var(--theme-primary); }
-    .paid-icon { color: #388e3c; }
-    .open-icon { color: #f57c00; }
-    .summary-label {
-      font-size: 13px;
-      color: var(--ui-text-muted);
-    }
-    .summary-value {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 26px;
-    }
-    .paid-value { color: #388e3c; }
-    .open-value { color: #f57c00; }
-    .summary-green {
-      border-left: 4px solid #388e3c;
-    }
-    .summary-orange {
-      border-left: 4px solid #f57c00;
-    }
-    .search-field {
-      width: 100%;
-      margin-bottom: 12px;
-    }
+    /* Omschrijving krijgt genoeg breedte, anders loopt "Betaling BK-…" over drie regels. */
+    .mat-column-description { min-width: 200px; }
     .mollie-id {
       color: var(--theme-primary);
       font-family: monospace;
@@ -240,46 +199,6 @@ interface BookingMolliePaymentLink {
     .booking-number {
       color: var(--theme-primary);
       font-weight: 500;
-    }
-    .method-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      background: #e8eaf6;
-      color: #3949ab;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .status-badge[data-status="paid"] {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-    .status-badge[data-status="open"], .status-badge[data-status="pending"] {
-      background-color: #fff3e0;
-      color: #e65100;
-    }
-    .status-badge[data-status="failed"] {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-    .status-badge[data-status="canceled"] {
-      background-color: #f3e5f5;
-      color: #7b1fa2;
-    }
-    .status-badge[data-status="expired"] {
-      background-color: #efebe9;
-      color: #4e342e;
-    }
-    @media (max-width: 900px) {
-      .summary-cards {
-        grid-template-columns: 1fr;
-      }
     }
   `],
 })
