@@ -98,7 +98,7 @@ function weeksOrder(group: AbstractControl): ValidationErrors | null {
               <p class="form-error weeks-order-error">{{ 'orgSettings.weeksOrder' | translate }}</p>
             }
 
-            <mat-form-field appearance="outline" class="full-width">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
               <mat-label>{{ 'orgSettings.paymentEmailTemplate' | translate }}</mat-label>
               <mat-select formControlName="paymentEmailTemplateId" class="payment-email-template">
                 <mat-option [value]="null">{{ 'orgSettings.none' | translate }}</mat-option>
