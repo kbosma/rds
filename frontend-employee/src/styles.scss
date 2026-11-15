@@ -24,9 +24,11 @@ html, body { height: 100%; }
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.45;
   color: var(--ui-text);
   background: var(--ui-canvas);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Material volgt de organisatiekleur i.p.v. het vaste azure-blue palet. */
@@ -39,44 +41,97 @@ html {
   --mat-sys-on-secondary-container: var(--ui-primary-strong);
   --mat-sys-surface-tint: var(--theme-primary);
 
-  /* Compacte velden: 40px hoog, 14px tekst met ruime regelhoogte zodat niets afgeknipt wordt. */
-  --mat-form-field-container-height: 40px;
-  --mat-form-field-container-vertical-padding: 10px;
-  --mat-form-field-container-text-size: 14px;
+  /* Dichtheid: alles compact zodat er veel op één scherm past. Basistekst 13px; velden, rijen en knoppen 32–36px.
+     Regelhoogtes zijn bewust ruim (≥ 18px bij 13px tekst) zodat letters met staart of accent niet worden afgeknipt. */
+  --mat-sys-body-medium-size: 13px;
+  --mat-sys-body-large-size: 13px;
+
+  /* Velden: 36px hoog (8px boven en onder + 20px regel). */
+  --mat-form-field-container-height: 36px;
+  --mat-form-field-container-vertical-padding: 8px;
+  --mat-form-field-container-text-size: 13px;
   --mat-form-field-container-text-line-height: 20px;
-  --mat-form-field-outlined-label-text-populated-size: 12px;
+  --mat-form-field-outlined-label-text-size: 13px;
+  --mat-form-field-outlined-label-text-populated-size: 11.5px;
+  --mat-form-field-subscript-text-size: 11.5px;
+  --mat-form-field-subscript-text-line-height: 16px;
   --mat-form-field-outlined-outline-color: #c8d9de;
   --mat-form-field-outlined-hover-outline-color: var(--theme-primary);
   --mat-form-field-outlined-container-shape: var(--ui-radius);
-  --mat-select-trigger-text-size: 14px;
+  --mat-select-trigger-text-size: 13px;
   --mat-select-trigger-text-line-height: 20px;
   --mat-select-trigger-text-weight: 400;
+  --mat-option-label-text-size: 13px;
+  --mat-menu-item-label-text-size: 13px;
 
-  /* Compacte tabellen. */
-  --mat-table-header-container-height: 40px;
-  --mat-table-row-item-container-height: 40px;
-  --mat-table-footer-container-height: 44px;
-  --mat-table-row-item-label-text-size: 14px;
+  /* Tabellen: rijen van 34px. */
+  --mat-table-header-container-height: 34px;
+  --mat-table-row-item-container-height: 34px;
+  --mat-table-footer-container-height: 38px;
+  --mat-table-row-item-label-text-size: 13px;
   --mat-table-row-item-outline-color: var(--ui-line);
   --mat-table-background-color: #ffffff;
+  --mat-paginator-container-size: 40px;
+  --mat-paginator-container-text-size: 12px;
+  --mat-paginator-select-trigger-text-size: 12px;
 
-  /* Compacte knoppen. */
-  --mat-button-filled-container-height: 36px;
-  --mat-button-protected-container-height: 36px;
-  --mat-button-outlined-container-height: 36px;
-  --mat-button-text-container-height: 36px;
+  /* Knoppen: 32px hoog, 13px label; icoonknoppen 32px met een icoon van 20px. */
+  --mat-button-filled-container-height: 32px;
+  --mat-button-protected-container-height: 32px;
+  --mat-button-outlined-container-height: 32px;
+  --mat-button-text-container-height: 32px;
+  --mat-button-filled-label-text-size: 13px;
+  --mat-button-protected-label-text-size: 13px;
+  --mat-button-outlined-label-text-size: 13px;
+  --mat-button-text-label-text-size: 13px;
   --mat-button-filled-container-shape: var(--ui-radius);
   --mat-button-protected-container-shape: var(--ui-radius);
   --mat-button-outlined-container-shape: var(--ui-radius);
+  --mat-icon-button-state-layer-size: 32px;
+  --mat-icon-button-icon-size: 20px;
+  --mat-icon-button-touch-target-display: none;
 
+  /* Keuzevakjes, rondjes en schakelaars zonder extra aanraakmarge (desktop-applicatie). */
+  --mat-checkbox-state-layer-size: 32px;
+  --mat-checkbox-touch-target-display: none;
+  --mat-radio-state-layer-size: 32px;
+  --mat-slide-toggle-touch-target-display: none;
+
+  /* Kaarten, dialogen, tabbladen, stappen en uitklappanelen. */
   --mat-card-elevated-container-color: #ffffff;
   --mat-card-outlined-container-color: #ffffff;
+  --mat-card-title-text-size: 15px;
+  --mat-card-title-text-line-height: 22px;
+  --mat-card-subtitle-text-size: 12.5px;
   --mat-dialog-container-shape: 12px;
-  --mat-paginator-container-size: 44px;
+  --mat-dialog-subhead-size: 17px;
+  --mat-dialog-subhead-line-height: 24px;
+  --mat-dialog-supporting-text-size: 13px;
+  --mat-dialog-content-padding: 16px 20px;
+  --mat-dialog-with-actions-content-padding: 16px 20px 4px;
+  --mat-dialog-actions-padding: 8px 16px 12px;
+  --mat-tab-container-height: 40px;
+  --mat-stepper-header-height: 56px;
+  --mat-expansion-header-collapsed-state-height: 40px;
+  --mat-expansion-header-expanded-state-height: 44px;
+  --mat-chip-container-height: 26px;
+  --mat-button-toggle-height: 30px;
+  --mat-button-toggle-label-text-size: 13px;
+  --mat-button-toggle-label-text-line-height: 18px;
+  --mat-button-toggle-shape: var(--ui-radius);
+  --mat-list-list-item-label-text-size: 13px;
 }
 
 mat-card-title, .mat-mdc-card-title {
   color: var(--theme-card-title) !important;
+}
+
+/* Datum- en tijdvelden krijgen van de browser een eigen (te lage) hoogte; dan vallen de cijfers onderaan weg. */
+input.mat-mdc-input-element[type='date'],
+input.mat-mdc-input-element[type='time'],
+input.mat-mdc-input-element[type='datetime-local'] {
+  height: 20px;
+  line-height: 20px;
 }
 
 /* De uitklappijl is standaard 24px en maakt een select 4px hoger dan een tekstveld. */
@@ -91,17 +146,26 @@ mat-card-title, .mat-mdc-card-title {
   padding-top: 8px;
 }
 
-/* Kaarten: vlak met een fijne rand i.p.v. een zware schaduw. */
+/* Kaarten: vlak met een fijne rand i.p.v. een zware schaduw; compacte binnenruimte (12px boven/onder, 16px opzij). */
 .mat-mdc-card {
   border: 1px solid var(--ui-line);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 1px 2px rgba(16, 40, 48, 0.04);
+}
+.mat-mdc-card-header {
+  padding: 12px 16px 0;
+}
+.mat-mdc-card-title {
+  font-weight: 600 !important;
+}
+.mat-mdc-card-content:last-child {
+  padding-bottom: 12px;
 }
 
 /* Kaart met een header: Material geeft de inhoud geen ruimte erboven, waardoor de eerste regel bijna tegen de titel
-   aan stond (4px). 12px extra geeft ~16px tussen titel en inhoud. */
+   aan stond. 10px extra geeft ruimte tussen titel en inhoud. */
 .mat-mdc-card-header + .mat-mdc-card-content {
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 /* Tabellen: kopregel met tint, om-en-om gekleurde rijen, duidelijke hover. */
@@ -136,6 +200,16 @@ mat-card-title, .mat-mdc-card-title {
 /* Acties-iconen in een cel (bewerken, verwijderen, ...) staan altijd naast elkaar op één regel, ook in een smalle kolom. */
 .mat-mdc-cell:has(> button[mat-icon-button]) {
   white-space: nowrap;
+}
+.mat-mdc-cell > .mat-mdc-icon-button {
+  vertical-align: middle;
+}
+/* Icoonknoppen zijn 32px met 6px binnenruimte: het icoon moet dan 20px zijn, anders steekt het eruit. */
+.mat-mdc-icon-button .mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  line-height: 20px;
 }
 .mat-mdc-paginator {
   background: transparent;
@@ -179,4 +253,121 @@ $act-colors: (
     --mat-button-outlined-state-layer-color: var(--act-#{$kind});
     --mat-button-outlined-ripple-color: color-mix(in srgb, var(--act-#{$kind}) 12%, transparent);
   }
+}
+
+/* ============================================================================================================
+   Gedeelde pagina-opbouw. Elk scherm gebruikt dezelfde bouwstenen, zodat titel, kaarten, formulieren en acties
+   overal hetzelfde ogen. Componenten definiëren deze klassen NIET zelf opnieuw (dan wint de lokale variant).
+     .page-header    kopregel: (terugknop) + h1 + knoppen rechts
+     h1/.page-title  paginatitel
+     .back-link      link "terug naar …" boven de titel
+     .detail-card    kaart met een formulier of gegevens (max. leesbare breedte)
+     .section-card   tweede en volgende kaart onder elkaar
+     .card-grid      kaarten naast elkaar op brede schermen
+     .row/.flex-N    velden naast elkaar in een formulier
+     .actions        knoppenbalk onder een formulier (rechts uitgelijnd)
+     .table-container, .filter-bar, .filter-field, .search-field, .no-data, .count-text   lijstschermen
+     .loading, .empty-text, .muted, .error-text   status- en hulpteksten
+   ============================================================================================================ */
+.main-content h1,
+.page-title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ui-text);
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+.page-header h1 {
+  margin: 0;
+  flex: 1 1 auto;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+  color: var(--theme-primary);
+  text-decoration: none;
+}
+.back-link:hover { text-decoration: underline; }
+.back-link .mat-icon { width: 18px; height: 18px; font-size: 18px; }
+
+.detail-card { max-width: 760px; }
+.detail-card mat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-header-btn { margin-left: auto; }
+.section-card { margin-top: 12px; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.card-grid > .section-card { margin-top: 0; }
+
+.full-width { width: 100%; }
+.row { display: flex; gap: 12px; }
+.flex-1 { flex: 1; min-width: 0; }
+.flex-2 { flex: 2; min-width: 0; }
+.flex-3 { flex: 3; min-width: 0; }
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Lijstschermen */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0 12px;
+  margin-bottom: 4px;
+}
+.filter-field { width: 100%; margin-bottom: 12px; }
+.search-field { flex: 1; min-width: 260px; }
+.filter-bar, .filter-row { margin-bottom: 12px; }
+/* Zoek- en filtervelden hebben geen hint of foutmelding: dan ook geen lege ruimte eronder reserveren. */
+:is(.filter-field, .search-field, .filter-bar, .filter-row) .mat-mdc-form-field-subscript-wrapper:not(:has(.mat-mdc-form-field-hint, .mat-mdc-form-field-error)) {
+  display: none;
+}
+.table-container {
+  background: #ffffff;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius);
+  overflow: hidden;
+}
+.actions-header { text-align: right; }
+.actions-cell { width: 1%; white-space: nowrap; }
+.no-data { padding: 20px; text-align: center; color: var(--ui-text-muted); }
+.count-text { margin-top: 8px; text-align: center; font-size: 12px; color: var(--ui-text-muted); }
+
+/* Status- en hulpteksten */
+.loading { display: flex; justify-content: center; padding: 32px; }
+.empty-text { color: var(--ui-text-muted); font-style: italic; }
+.muted { color: var(--ui-text-muted); font-size: 12px; }
+.error-text { margin: 8px 0; font-size: 12px; color: var(--act-delete); }
+
+/* Iconen in knoppen met tekst: iets kleiner, zodat ze bij het 13px-label passen. */
+.mat-mdc-button > .mat-icon,
+.mat-mdc-unelevated-button > .mat-icon,
+.mat-mdc-raised-button > .mat-icon,
+.mat-mdc-outlined-button > .mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
 }
