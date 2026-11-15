@@ -94,7 +94,7 @@ rds/
 ├── src/test/java/…                    # backend-tests (unit + MockMvc-integratie)
 ├── frontend-employee/           # Angular-app voor medewerkers
 ├── frontend-booker/             # Angular-app voor klanten
-├── deploy/nginx/rds.conf        # versioneerde NGINX-config
+├── deploy/nginx/               # NGINX-config rds.kbtg.nl + install-script (Let's Encrypt)
 ├── deploy/scripts/              # build+deploy-scripts (backend, beide frontends)
 ├── start/scripts/               # lokale Mollie-tunnel (cloudflared)
 └── docs/                        # deze documentatie

@@ -151,7 +151,7 @@ In de template-editor staat naast de variabelen een tab **Afbeeldingen**: de bib
 
 **Lijst zonder bytes:** de lijst-query leest alleen metadata (projectie), zodat tientallen afbeeldingen van elk 2 MB niet in het geheugen worden geladen.
 
-> **Publiek bereikbaar maken (NGINX, jij past dit zelf toe).** Op het publieke IP stond alleen de Mollie-webhook open. Voor afbeeldingen is in [deploy/nginx/rds.conf](../deploy/nginx/rds.conf) een smalle location toegevoegd: alleen exact `/api/public/email-images/<uuid>`, alleen GET/HEAD, met rate-limit (zone `email_image_limit` hoort in het `http{}`-blok). Zonder deze stap zijn afbeeldingen in verstuurde mail **niet zichtbaar** voor ontvangers.
+> **Publiek bereikbaar maken (NGINX, jij past dit zelf toe).** In [deploy/nginx/rds.kbtg.nl.conf](../deploy/nginx/rds.kbtg.nl.conf) staat een smalle location: alleen exact `/api/public/email-images/<uuid>`, alleen GET/HEAD, met rate-limit (zone `rds_email_image`). `app.email.public-api-base-url` moet daarvoor naar `https://rds.kbtg.nl/api` wijzen. Zonder deze stap zijn afbeeldingen in verstuurde mail **niet zichtbaar** voor ontvangers.
 >
 > Let op: het publieke adres is nu **http** (IP, geen certificaat). Mailclients laden dat meestal prima, maar een eigen domein met TLS is de nette eindsituatie; wijzig dan alleen `app.email.public-api-base-url`.
 

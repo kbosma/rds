@@ -100,7 +100,7 @@ app:
     # staat de standaard op de remote server; lokaal heeft dit alleen effect bij echt
     # versturen (de preview gebruikt het relatieve pad en werkt dus overal).
     # Deze URL moet in NGINX openstaan voor /api/public/email-images/{uuid}.
-    public-api-base-url: http://178.104.163.88/api
+    public-api-base-url: http://rds.kbtg.nl/api
     image:
       # Maximale grootte van een geüploade afbeelding (bytes). Gelijk houden aan
       # spring.servlet.multipart.max-file-size.
@@ -114,4 +114,4 @@ app:
     urls:
       webhook: http://178.104.163.88/api/mollie/payments/webhook
       # redirect: http://178.104.163.88:5003/payments
-      # redirect: https://software.kbtg/booker/payments
+      # redirect: https://rds.kbtg.nl/booker/payments

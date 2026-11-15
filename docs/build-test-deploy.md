@@ -78,18 +78,29 @@ npx ng test --watch=false --browsers=FirefoxHeadless \
 
 ## Deployen
 
-Scripts staan in `deploy/scripts/` en gebruiken `ssh`/`scp` naar `root@software.kbtg`:
+Scripts staan in `deploy/scripts/` en gebruiken `ssh`/`scp` naar `root@kbtg.nl` (centraal in `deploy/scripts/remote.sh`, eenmalig te overschrijven met `REMOTE=root@<host>`). Dat is een publieke DNS-naam: geen HOSTS-regel nodig, vertrouwen loopt via je SSH-sleutel en de host key in `known_hosts`:
 
 | Script | Wat |
 |---|---|
 | `build-deploy-backend.sh` | `mvn clean package -DskipTests`, `systemctl stop rds`, jar naar `/opt/rds`, `systemctl start rds` |
 | `build-deploy-frontend-employee.sh` | `ng build --configuration production --base-href /rds/`, kopieert naar `/var/www/rds`, `systemctl reload nginx` |
 | `build-deploy-frontend-booker.sh` | idem met `--base-href /booker/` naar `/var/www/booker` |
-| `build-deploy-all.sh` | alle drie achter elkaar |
+| `deploy-nginx.sh` | NGINX-config voor `rds.kbtg.nl` + Let's Encrypt-certificaat (zie hieronder) |
+| `build-deploy-all.sh` | `deploy-nginx.sh` en daarna de drie builds achter elkaar |
 
-**NGINX** (`deploy/nginx/rds.conf`, versioneerde kopie): `/rds/` → employee-app, `/booker/` → booker-app, `/api/` → `http://127.0.0.1:8666/rds/api/`, rate-limits op login/OTP/webhook/afbeeldingen, scanner-blokkade en `/monitoring` alleen voor beheer-IP's. **Het toepassen van die config op de server doet de gebruiker zelf** (kopiëren naar `sites-available`, `nginx -t`, reload). De `limit_req_zone`-regels horen in het `http{}`-blok van `nginx.conf`.
+**NGINX — `https://rds.kbtg.nl`** (`deploy/nginx/`). DNS (Hetzner DNS): `@` en wildcard `*` → `178.104.163.88` (A) en `2a01:4f8:c2c:f8fc::1` (AAAA), dus elk subdomein komt bij de server uit. De configs luisteren daarom op IPv4 én IPv6. Certificaat van Let's Encrypt, geen self-signed meer.
 
-**Publiek IP (`178.104.163.88`)**: staat alleen open voor de Mollie-webhook en de publieke e-mailafbeeldingen (`/api/public/email-images/<uuid>`); `app.email.public-api-base-url` en `app.mollie.urls.webhook` verwijzen daarheen. Dat adres is nu **http**; een eigen domein met TLS is de nette eindsituatie (dan alleen die twee instellingen aanpassen).
+| Bestand | Op de server | Wat |
+|---|---|---|
+| `rds.kbtg.nl.conf` | `/etc/nginx/sites-available/rds.kbtg.nl` (+ symlink) | `/` → `/rds/`, `/rds/` en `/booker/` (assets 7 dagen cache, `index.html` niet), `/api/` → `http://127.0.0.1:8666/rds/api/`, Mollie-webhook en e-mailafbeeldingen publiek met rate-limit, login/TOTP/herstel/booker-OTP rate-limited, scanner-blokkade (444), `/monitoring` alleen voor beheer-IP's, HSTS. Poort 80 → HTTPS, behalve de ACME-challenge. |
+| `rds-zones.conf` | `/etc/nginx/conf.d/rds-zones.conf` | Rate-limit-zones `rds_login`, `rds_mollie`, `rds_email_image` (eigen namen, botsen niet met andere sites) |
+| `rds.kbtg.nl.bootstrap.conf` | tijdelijk | Alleen poort 80 + ACME, om het eerste certificaat op te halen (de echte config verwijst naar certificaatbestanden die er dan nog niet zijn) |
+| `catch-all.conf` | `/etc/nginx/sites-available/00-catch-all` (+ symlink) | `default_server` voor poort 80/443 (IPv4 en IPv6): onbekende hostnamen en het kale IP krijgen geen antwoord (`444`, TLS-handshake geweigerd). Nodig door het wildcard-DNS-record `*.kbtg.nl`. Geldt voor de hele NGINX-server. Een ander subdomein toestaan = eigen site-config met `server_name` (gaat altijd voor). Vereist NGINX ≥ 1.19.4 |
+| `install.sh` | draait op de server | Plaatst bovenstaande; faalt `nginx -t`, dan wordt de vorige versie teruggezet |
+
+`deploy-nginx.sh` controleert eerst of `rds.kbtg.nl` publiek naar de server wijst (Let's Encrypt kijkt niet naar je HOSTS-bestand). De **eerste keer** vraagt certbot interactief om een e-mailadres en akkoord met de voorwaarden van Let's Encrypt; daarna is het script idempotent. De catch-all wordt de eerste keer alleen geplaatst met `./deploy-nginx.sh --with-catch-all` (daarna altijd bijgewerkt); doe dat pas als de Mollie-webhook en de e-mailafbeeldingen niet meer via het kale IP lopen, want die verzoeken krijgen dan geen antwoord meer. `install.sh` stopt vooraf als er al een andere `default_server` is. Vernieuwen gaat automatisch (`certbot.timer`, met `systemctl reload nginx` als deploy-hook). Vereist op de server: `apt install certbot` en poort 80 open in de Hetzner-firewall.
+
+**Publieke URL's van de backend**: `app.email.public-api-base-url` en `app.mollie.urls.webhook` staan in `application.yaml` nog op `http://178.104.163.88/...`. Op de server worden ze overschreven; met Let's Encrypt horen ze naar `https://rds.kbtg.nl/api` resp. `https://rds.kbtg.nl/api/mollie/payments/webhook` te wijzen.
 
 **Serverconfig** (SMTP, geheimen) hoort in omgevingsvariabelen (`SPRING_MAIL_HOST`, …), niet in de repository.
 
