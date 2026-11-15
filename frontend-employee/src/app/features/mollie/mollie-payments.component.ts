@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DecimalPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,12 +11,13 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { MolliePaymentService } from './mollie-payment.service';
 import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-mollie-payments',
   standalone: true,
   imports: [
-    DecimalPipe,
+    MoneyPipe,
     DatePipe,
     RouterLink,
     MatCardModule,
@@ -46,21 +47,21 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       <mat-card class="summary-card">
         <mat-card-content class="summary-content">
           <div class="summary-label">{{ 'payments.totalBooking' | translate }}</div>
-          <div class="summary-value">&euro; {{ totalAmount() | number:'1.2-2' }}</div>
+          <div class="summary-value">{{ totalAmount() | money }}</div>
         </mat-card-content>
       </mat-card>
 
       <mat-card class="summary-card summary-green">
         <mat-card-content class="summary-content">
           <div class="summary-label">{{ 'common.paid' | translate }}</div>
-          <div class="summary-value">&euro; {{ paidAmount() | number:'1.2-2' }}</div>
+          <div class="summary-value">{{ paidAmount() | money }}</div>
         </mat-card-content>
       </mat-card>
 
       <mat-card class="summary-card summary-orange">
         <mat-card-content class="summary-content">
           <div class="summary-label">{{ 'common.outstanding' | translate }}</div>
-          <div class="summary-value">&euro; {{ openAmount() | number:'1.2-2' }}</div>
+          <div class="summary-value">{{ openAmount() | money }}</div>
         </mat-card-content>
       </mat-card>
     </div>
@@ -100,7 +101,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.amount' | translate }}</th>
-            <td mat-cell *matCellDef="let row">&euro; {{ row.amount | number:'1.2-2' }}</td>
+            <td mat-cell *matCellDef="let row">{{ row.amount | money }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">

@@ -8,8 +8,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Booking, BookingService } from './booking.service';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 export interface BookingEditDialogData {
   booking: Booking;
@@ -19,6 +20,7 @@ export interface BookingEditDialogData {
   selector: 'app-booking-edit-dialog',
   standalone: true,
   imports: [
+    MoneyPipe,
     ReactiveFormsModule,
     MatDialogModule,
     MatCheckboxModule,
@@ -27,7 +29,6 @@ export interface BookingEditDialogData {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     TranslatePipe,
-    CurrencyPipe,
     DatePipe,
   ],
   template: `
@@ -48,7 +49,7 @@ export interface BookingEditDialogData {
         </div>
         <div class="info-item">
           <span class="info-label">{{ 'bookings.totalComputed' | translate }}</span>
-          <span class="info-value total">{{ data.booking.totalSum | currency:'EUR':'symbol':'1.2-2' }}</span>
+          <span class="info-value total">{{ data.booking.totalSum | money }}</span>
         </div>
       </div>
 

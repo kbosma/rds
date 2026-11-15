@@ -1,5 +1,5 @@
 import { Component, computed, input, output, signal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,7 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
 import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
 import { Document, MolliePayment, SentEmail } from '../../shared/models';
 import { TimelineItem, TimelineKind, buildTimeline, documentFormat } from './booking-timeline';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 type Filter = 'all' | TimelineKind;
 
@@ -21,7 +22,7 @@ type Filter = 'all' | TimelineKind;
 @Component({
   selector: 'app-booking-messages-card',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, MatButtonModule, MatButtonToggleModule, MatCardModule, MatIconModule, MatMenuModule,
+  imports: [MoneyPipe, DatePipe, MatButtonModule, MatButtonToggleModule, MatCardModule, MatIconModule, MatMenuModule,
     RowActionsComponent, PaymentStatusBadgeComponent, TranslatePipe],
   template: `
     <mat-card class="messages-card">
@@ -76,7 +77,7 @@ type Filter = 'all' | TimelineKind;
                       <div class="sub">{{ item.at | date:'dd-MM-yyyy' }}</div>
                     }
                     @case ('payment') {
-                      <div class="title">&euro; {{ item.source.amount | number:'1.2-2' }} — {{ item.source.description }}</div>
+                      <div class="title">{{ item.source.amount | money }} — {{ item.source.description }}</div>
                       <div class="sub">{{ item.at | date:'dd-MM-yyyy' }}</div>
                     }
                   }

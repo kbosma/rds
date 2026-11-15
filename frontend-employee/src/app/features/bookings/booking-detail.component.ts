@@ -45,10 +45,11 @@ import {
 } from '../email-templates/email-template-preview-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { Booker, Traveler, BookingLine, BookingActivity, MolliePayment, Document, SentEmail } from '../../shared/models';
-import { CurrencyPipe, DatePipe, DecimalPipe, Location } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { forkJoin } from 'rxjs';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 interface BookingMolliePaymentLink {
   bookingId: string;
@@ -59,6 +60,7 @@ interface BookingMolliePaymentLink {
   selector: 'app-booking-detail',
   standalone: true,
   imports: [
+    MoneyPipe,
     ReactiveFormsModule,
     RouterLink,
     BookingMessagesCardComponent,
@@ -75,9 +77,7 @@ interface BookingMolliePaymentLink {
     MatTableModule,
     MatDividerModule,
     MatDialogModule,
-    CurrencyPipe,
     DatePipe,
-    DecimalPipe,
     TranslatePipe,
   ],
   template: `
@@ -128,7 +128,7 @@ interface BookingMolliePaymentLink {
                 </div>
                 <div class="info-item">
                   <span class="info-label">{{ 'bookings.totalComputed' | translate }}</span>
-                  <span class="info-value total">{{ currentTotalSum() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                  <span class="info-value total">{{ currentTotalSum() | money }}</span>
                 </div>
                 @if (currentBooking()?.quoteConfirmed) {
                   <div class="info-item quote-confirmed">
@@ -215,7 +215,7 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="price">
                   <th mat-header-cell *matHeaderCellDef>{{ 'common.price' | translate }}</th>
                   <td mat-cell *matCellDef="let line">
-                    <span class="price-value">{{ line.price | currency:'EUR':'symbol':'1.2-2' }}</span>
+                    <span class="price-value">{{ line.price | money }}</span>
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
@@ -275,7 +275,7 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="totalPrice">
                   <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.totalPrice' | translate }}</th>
                   <td mat-cell *matCellDef="let ba">
-                    <span class="price-value">{{ ba.totalPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                    <span class="price-value">{{ ba.totalPrice | money }}</span>
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="activityActions">
@@ -355,7 +355,7 @@ interface BookingMolliePaymentLink {
 
                   <ng-container matColumnDef="amount">
                     <th mat-header-cell *matHeaderCellDef>{{ 'common.amount' | translate }}</th>
-                    <td mat-cell *matCellDef="let p">&euro; {{ p.amount | number:'1.2-2' }}</td>
+                    <td mat-cell *matCellDef="let p">{{ p.amount | money }}</td>
                   </ng-container>
 
                   <ng-container matColumnDef="status">

@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -24,13 +24,14 @@ import { ConfirmService } from '../../shared/services/confirm.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { deleteErrorKey } from '../../shared/utils/delete-error';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-booking-list',
   standalone: true,
   imports: [
+    MoneyPipe,
     DatePipe,
-    DecimalPipe,
     FormsModule,
     MatTableModule,
     MatPaginatorModule,
@@ -126,7 +127,7 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
 
           <ng-container matColumnDef="totalSum">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.amount' | translate }}</th>
-            <td mat-cell *matCellDef="let row">&euro; {{ row.totalSum | number:'1.2-2' }}</td>
+            <td mat-cell *matCellDef="let row">{{ row.totalSum | money }}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">

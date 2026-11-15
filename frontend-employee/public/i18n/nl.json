@@ -106,7 +106,7 @@
     "paidAmount": "Betaald {{year}}",
     "outstandingAmount": "Openstaand",
     "topBookedAccommodations": "Top 5 meest geboekte accommodaties {{year}}",
-    "topRevenueAccommodations": "Top 5 meeste omzet accommodaties {{year}}",
+    "topRevenueAccommodations": "Top 5 accommodaties op omzet {{year}}",
     "timesBooked": "{{count}}x geboekt",
     "organizationsOverview": "Organisaties overzicht",
     "persons": "Personen",
@@ -906,5 +906,13 @@
     "historyTitle": "Statusgeschiedenis",
     "historyEmpty": "Nog geen statuswijzigingen vastgelegd.",
     "bySystem": "systeem"
+  },
+  "paginator": {
+    "itemsPerPage": "Per pagina:",
+    "of": "van",
+    "nextPage": "Volgende pagina",
+    "previousPage": "Vorige pagina",
+    "firstPage": "Eerste pagina",
+    "lastPage": "Laatste pagina"
   }
 }

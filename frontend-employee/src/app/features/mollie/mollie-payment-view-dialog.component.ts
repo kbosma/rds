@@ -1,6 +1,6 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,7 @@ import { MolliePaymentCorrectionDialogComponent } from './mollie-payment-correct
 import { MolliePaymentRelinkDialogComponent } from './mollie-payment-relink-dialog.component';
 import { MolliePaymentService } from './mollie-payment.service';
 import { MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 export interface MolliePaymentViewDialogData {
   payment: MolliePayment;
@@ -31,7 +32,7 @@ export interface MolliePaymentViewDialogData {
 @Component({
   selector: 'app-mollie-payment-view-dialog',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, MatDialogModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, PaymentStatusBadgeComponent, TranslatePipe],
+  imports: [MoneyPipe, DatePipe, MatDialogModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, PaymentStatusBadgeComponent, TranslatePipe],
   template: `
     <h2 mat-dialog-title>{{ 'payments.viewTitle' | translate }}</h2>
     <mat-dialog-content>
@@ -43,7 +44,7 @@ export interface MolliePaymentViewDialogData {
         <dt>{{ 'common.description' | translate }}</dt>
         <dd>{{ data.payment.description || '—' }}</dd>
         <dt>{{ 'common.amount' | translate }}</dt>
-        <dd>{{ data.payment.currency || '€' }} {{ data.payment.amount | number:'1.2-2' }}</dd>
+        <dd>{{ data.payment.amount | money: data.payment.currency }}</dd>
         <dt>{{ 'common.method' | translate }}</dt>
         <dd>{{ data.payment.method || '—' }}</dd>
         <dt>{{ 'common.date' | translate }}</dt>

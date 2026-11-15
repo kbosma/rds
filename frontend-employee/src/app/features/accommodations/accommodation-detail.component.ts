@@ -135,7 +135,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                 <div class="address-card">
                   <div class="address-card-header">
                     <div class="address-info">
-                      <span class="role-badge supplier-badge">{{ sup.key }}</span>
+                      <span class="badge badge-success">{{ sup.key }}</span>
                       <div class="address-line">{{ sup.name }}</div>
                     </div>
                     @if (canEditAddresses) {
@@ -243,7 +243,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                 <div class="address-card">
                   <div class="address-card-header">
                     <div class="address-info">
-                      <span class="role-badge">{{ addr.addressrole }}</span>
+                      <span class="badge badge-info">{{ addr.addressrole }}</span>
                       <div class="address-line">{{ formatAddress(addr) }}</div>
                       <div class="address-line secondary">{{ addr.postalcode }} {{ addr.city }}, {{ addr.country }}</div>
                     </div>
@@ -296,21 +296,6 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
       display: flex;
       flex-direction: column;
       gap: 4px;
-    }
-    .role-badge {
-      display: inline-block;
-      background: #e3f2fd;
-      color: #1565c0;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 12px;
-      text-transform: uppercase;
-      width: fit-content;
-    }
-    .supplier-badge {
-      background: #e8f5e9;
-      color: #2e7d32;
     }
     .address-line {
       font-size: 14px;

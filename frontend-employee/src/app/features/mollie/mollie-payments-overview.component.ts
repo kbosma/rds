@@ -1,7 +1,7 @@
 import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
 import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DecimalPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -24,6 +24,7 @@ import { MolliePaymentEditDialogComponent } from './mollie-payment-edit-dialog.c
 import { MolliePayment } from '../../shared/models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 interface BookingMolliePaymentLink {
   bookingId: string;
@@ -33,8 +34,7 @@ interface BookingMolliePaymentLink {
 @Component({
   selector: 'app-mollie-payments-overview',
   standalone: true,
-  imports: [PaymentStatusBadgeComponent, 
-    DecimalPipe,
+  imports: [MoneyPipe, PaymentStatusBadgeComponent, 
     DatePipe,
     FormsModule,
     MatCardModule,
@@ -59,7 +59,7 @@ interface BookingMolliePaymentLink {
           <mat-icon class="summary-icon total-icon">receipt_long</mat-icon>
           <div>
             <div class="summary-label">{{ 'common.total' | translate }}</div>
-            <div class="summary-value">&euro; {{ totalAmount() | number:'1.2-2' }}</div>
+            <div class="summary-value">{{ totalAmount() | money }}</div>
           </div>
         </mat-card-content>
       </mat-card>
@@ -69,7 +69,7 @@ interface BookingMolliePaymentLink {
           <mat-icon class="summary-icon paid-icon">check_circle</mat-icon>
           <div>
             <div class="summary-label">{{ 'common.paid' | translate }}</div>
-            <div class="summary-value paid-value">&euro; {{ paidAmount() | number:'1.2-2' }}</div>
+            <div class="summary-value paid-value">{{ paidAmount() | money }}</div>
           </div>
         </mat-card-content>
       </mat-card>
@@ -79,7 +79,7 @@ interface BookingMolliePaymentLink {
           <mat-icon class="summary-icon open-icon">schedule</mat-icon>
           <div>
             <div class="summary-label">{{ 'common.outstanding' | translate }}</div>
-            <div class="summary-value open-value">&euro; {{ openAmount() | number:'1.2-2' }}</div>
+            <div class="summary-value open-value">{{ openAmount() | money }}</div>
           </div>
         </mat-card-content>
       </mat-card>
@@ -143,7 +143,7 @@ interface BookingMolliePaymentLink {
 
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.amount' | translate }}</th>
-            <td mat-cell *matCellDef="let row">&euro; {{ row.amount | number:'1.2-2' }}</td>
+            <td mat-cell *matCellDef="let row">{{ row.amount | money }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">

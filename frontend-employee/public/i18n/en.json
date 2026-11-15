@@ -106,7 +106,7 @@
     "paidAmount": "Paid {{year}}",
     "outstandingAmount": "Outstanding",
     "topBookedAccommodations": "Top 5 most booked accommodations {{year}}",
-    "topRevenueAccommodations": "Top 5 revenue accommodations {{year}}",
+    "topRevenueAccommodations": "Top 5 accommodations by revenue {{year}}",
     "timesBooked": "{{count}}x booked",
     "organizationsOverview": "Organizations overview",
     "persons": "Persons",
@@ -906,5 +906,13 @@
     "historyTitle": "Status history",
     "historyEmpty": "No status changes recorded yet.",
     "bySystem": "system"
+  },
+  "paginator": {
+    "itemsPerPage": "Per page:",
+    "of": "of",
+    "nextPage": "Next page",
+    "previousPage": "Previous page",
+    "firstPage": "First page",
+    "lastPage": "Last page"
   }
 }

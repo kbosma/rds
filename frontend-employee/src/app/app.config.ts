@@ -1,13 +1,20 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeNl from '@angular/common/locales/nl';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from './core/i18n/translate-loader.factory';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { TranslatedPaginatorIntl } from './shared/paginator-intl';
+
+/* Getallen en bedragen in Nederlandse notatie (8.790,75), ook als de interface in het Engels staat. */
+registerLocaleData(localeNl);
 
 const DD_MM_YYYY_FORMATS = {
   parse: { dateInput: 'dd-MM-yyyy' },
@@ -26,7 +33,9 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
+    { provide: LOCALE_ID, useValue: 'nl-NL' },
     { provide: MAT_DATE_LOCALE, useValue: 'nl-NL' },
+    { provide: MatPaginatorIntl, useClass: TranslatedPaginatorIntl },
     { provide: MAT_DATE_FORMATS, useValue: DD_MM_YYYY_FORMATS },
     provideTranslateService({
       lang: 'nl',

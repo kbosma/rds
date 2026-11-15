@@ -83,7 +83,7 @@ import { Address } from '../models';
     @for (address of addresses(); track address.addressId) {
       <div class="list-item address-item">
         <div class="item-info">
-          <span class="role-badge">{{ address.addressrole }}</span>
+          <span class="badge badge-info">{{ address.addressrole }}</span>
           <span>{{ formatAddress(address) }}</span>
           <span class="muted">{{ address.postalcode }} {{ address.city }}, {{ address.country }}</span>
         </div>
@@ -110,7 +110,6 @@ import { Address } from '../models';
     .list-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
     .item-info { display: flex; flex-direction: column; gap: 2px; }
     .muted { color: #777; font-size: 13px; }
-    .role-badge { display: inline-block; background: #e3f2fd; color: #1565c0; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; width: fit-content; }
     .empty-text { color: #888; font-style: italic; margin: 4px 0; }
   `],
 })

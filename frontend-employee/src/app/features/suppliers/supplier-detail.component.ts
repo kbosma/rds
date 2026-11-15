@@ -157,7 +157,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
             @for (address of addresses(); track address.addressId) {
               <div class="list-item address-item">
                 <div class="item-info">
-                  <span class="role-badge">{{ address.addressrole }}</span>
+                  <span class="badge badge-info">{{ address.addressrole }}</span>
                   <span>{{ formatAddress(address) }}</span>
                   <span class="muted">{{ address.postalcode }} {{ address.city }}, {{ address.country }}</span>
                 </div>
@@ -186,7 +186,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
               </button>
             }
             @if (canLinkAccommodations() && availableAccommodations().length > 0) {
-              <div class="row link-row">
+              <div class="row">
                 <mat-form-field appearance="outline" class="flex-1">
                   <mat-label>{{ 'suppliers.selectAccommodation' | translate }}</mat-label>
                   <mat-select [formControl]="accommodationControl">
@@ -195,7 +195,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
                     }
                   </mat-select>
                 </mat-form-field>
-                <button mat-raised-button color="primary" class="link-btn" [disabled]="!accommodationControl.value"
+                <button mat-raised-button color="primary" [disabled]="!accommodationControl.value"
                         (click)="linkAccommodation()">
                   <mat-icon>link</mat-icon> {{ 'suppliers.linkAccommodation' | translate }}
                 </button>
@@ -227,9 +227,6 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
     .address-form h4 { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: var(--ui-text-muted); }
     .list-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 16px; margin-bottom: 10px; }
     .item-info { display: flex; flex-direction: column; gap: 2px; }
-    .role-badge { display: inline-block; background: #e3f2fd; color: #1565c0; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; width: fit-content; }
-    .link-row { align-items: flex-start; }
-    .link-btn { margin-top: 4px; height: 56px; }
   `],
 })
 export class SupplierDetailComponent implements OnInit {
