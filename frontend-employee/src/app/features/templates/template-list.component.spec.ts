@@ -89,7 +89,7 @@ describe('TemplateListComponent', () => {
     const config = open.calls.mostRecent().args[1] as { data: { template: DocumentTemplate; readOnly: boolean }; width: string };
     expect(config.data.readOnly).toBe(true);
     expect(config.data.template).toBe(templates[0]);
-    expect(config.width).toBe('980px'); // een template uit de editor krijgt de brede dialoog
+    expect(config.width).toBe('1100px'); // een template uit de editor krijgt de brede dialoog
   }));
 
   it('inzien van een geüploade template gebruikt de smalle dialoog', fakeAsync(() => {

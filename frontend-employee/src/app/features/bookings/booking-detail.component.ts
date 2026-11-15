@@ -123,7 +123,7 @@ interface BookingMolliePaymentLink {
                 <dt>{{ 'bookings.totalComputed' | translate }}</dt>
                 <dd class="total">{{ currentTotalSum() | money }}</dd>
                 @if (currentBooking()?.quoteConfirmed) {
-                  <dt class="quote-confirmed">{{ 'bookings.quoteConfirmedOn' | translate }}</dt>
+                  <dt>{{ 'bookings.quoteConfirmedOn' | translate }}</dt>
                   <dd class="quote-confirmed">{{ currentBooking()!.quoteConfirmedAt | date:'dd-MM-yyyy HH:mm' }}</dd>
                 }
               </dl>
@@ -353,7 +353,7 @@ interface BookingMolliePaymentLink {
 
                   <ng-container matColumnDef="dueDate">
                     <th mat-header-cell *matHeaderCellDef>{{ 'payments.dueDate' | translate }}</th>
-                    <td mat-cell *matCellDef="let p" class="cell-nowrap">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
+                    <td mat-cell *matCellDef="let p" class="due-date cell-nowrap">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
                   </ng-container>
 
                   <ng-container matColumnDef="actions">

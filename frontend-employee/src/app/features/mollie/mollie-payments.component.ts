@@ -114,7 +114,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <app-payment-status-badge [status]="paymentStatusMap()[row.molliePaymentId] ?? ''" />
+              <app-payment-status-badge [status]="paymentStatusMap()[row.molliePaymentId]" />
             </td>
           </ng-container>
 
