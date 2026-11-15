@@ -78,6 +78,11 @@ spring:
 #      # mail.smtp.writetimeout: 5000
 
 app:
+  # Statusengine: zet bevestigde boekingen op voorschot/betaald/op reis/weer thuis. Draait na elke betaalstatus,
+  # bij het inloggen van een medewerker (voor diens organisatie) en elke nacht (cron, Europe/Amsterdam).
+  status-engine:
+    on-login: true
+    cron: "0 15 2 * * *"
   jwt:
     secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgSldUIHNpZ25pbmcgMjU2Yml0
 #    1 uur

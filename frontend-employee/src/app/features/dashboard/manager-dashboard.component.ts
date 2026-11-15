@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { NotificationsCardComponent } from '../notifications/notifications-card.component';
 import { BookingService } from '../bookings/booking.service';
 import { BookingLineService } from '../bookings/booking-line.service';
 import { MolliePaymentService } from '../mollie/mollie-payment.service';
@@ -17,7 +18,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
-  imports: [
+  imports: [NotificationsCardComponent, 
     DecimalPipe,
     RouterLink,
     MatCardModule,
@@ -42,6 +43,9 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
         </mat-card-content>
       </mat-card>
     </div>
+    @if (auth.hasAuthority('NOTIFICATION_READ')) {
+      <app-notifications-card />
+    }
 
     @if (loading()) {
       <div class="loading">

@@ -3,11 +3,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { NotificationsCardComponent } from '../notifications/notifications-card.component';
 
 @Component({
   selector: 'app-employee-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, TranslatePipe],
+  imports: [NotificationsCardComponent, MatCardModule, MatIconModule, TranslatePipe],
   template: `
     <div class="welcome-card">
       <mat-card>
@@ -24,6 +25,9 @@ import { AuthService } from '../../core/auth/auth.service';
         </mat-card-content>
       </mat-card>
     </div>
+    @if (auth.hasAuthority('NOTIFICATION_READ')) {
+      <app-notifications-card />
+    }
     <mat-card class="placeholder-card">
       <mat-card-content class="placeholder-content">
         <mat-icon class="placeholder-icon">construction</mat-icon>

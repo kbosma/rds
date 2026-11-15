@@ -6,7 +6,9 @@ import nl.puurkroatie.rds.common.EnumValues;
 
 public enum MolliePaymentStatus {
 
-    OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED;
+    OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED,
+    /** Betaald, maar daarna teruggeboekt (Mollie-chargeback of een correctie): telt niet meer als betaald. */
+    CHARGED_BACK;
 
     @JsonValue
     public String toValue() {

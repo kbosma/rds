@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.quote.service.impl;
 
+import nl.puurkroatie.rds.bookingstatus.service.BookingStatusRecorder;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
@@ -36,12 +37,15 @@ public class QuoteServiceImpl implements QuoteService {
     private final OrganizationSettingsService settingsService;
     private final DocumentGenerationService documentGenerationService;
     private final EmailSendService emailSendService;
+    private final BookingStatusRecorder statusRecorder;
 
     public QuoteServiceImpl(BookingRepository bookingRepository,
                             DocumentRepository documentRepository,
                             OrganizationSettingsService settingsService,
                             DocumentGenerationService documentGenerationService,
-                            EmailSendService emailSendService) {
+                            EmailSendService emailSendService,
+                            BookingStatusRecorder statusRecorder) {
+        this.statusRecorder = statusRecorder;
         this.bookingRepository = bookingRepository;
         this.documentRepository = documentRepository;
         this.settingsService = settingsService;
@@ -61,9 +65,9 @@ public class QuoteServiceImpl implements QuoteService {
         // Eerst de status, zodat document en mail al "OFFERTE" tonen. Gaat daarna iets mis (PDF, mail), dan wordt
         // alles in deze transactie teruggedraaid, ook de status.
         if (booking.getBookingStatus() != BookingStatus.OFFERTE) {
-            bookingRepository.saveAndRefresh(new Booking(booking.getBookingId(), booking.getBooker(), booking.getBookingNumber(),
-                    BookingStatus.OFFERTE, booking.isQuoteConfirmed(), booking.getQuoteConfirmedAt(),
-                    booking.getCreatedAt(), booking.getCreatedBy(), booking.getTenantOrganization()));
+            BookingStatus previous = booking.getBookingStatus();
+            Booking saved = bookingRepository.saveAndRefresh(booking.withStatus(BookingStatus.OFFERTE));
+            statusRecorder.record(saved, previous, BookingStatus.OFFERTE, false, "Offerte verstuurd naar de hoofdboeker");
         }
 
         DocumentDto generated = documentGenerationService.generate(settings.getQuoteDocumentTemplateId(), bookingId, PDF, true);

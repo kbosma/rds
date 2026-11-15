@@ -46,6 +46,11 @@ class BookingProspectActivationControllerTest extends AbstractBookingControllerT
         return objectMapper.readTree(body).get("bookingId").asText();
     }
 
+    private void complete(String token, String bookingId) throws Exception {
+        mockMvc.perform(post("/api/bookings/" + bookingId + "/complete").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
     private void updateBooking(String token, String bookingId, String bookerId, String bookingStatus) throws Exception {
         String booker = bookerId == null ? "null" : "\"" + bookerId + "\"";
         mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
@@ -125,10 +130,7 @@ class BookingProspectActivationControllerTest extends AbstractBookingControllerT
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("bookingId").asText();
         assertEquals("active", bookerStatus(token, bookerId));
 
-        mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"bookerId\":\"" + bookerId + "\",\"bookingStatus\":\"afgerond\"}"))
-                .andExpect(status().isOk());
+        complete(token, bookingId);
         assertEquals("nietactief", bookerStatus(token, bookerId));
 
         createBookingFor(token, bookerId);
@@ -219,10 +221,13 @@ class BookingProspectActivationControllerTest extends AbstractBookingControllerT
         String token = managerToken();
         String bookerId = createBooker(token, "prospect");
         String bookingId = createBookingIdFor(token, bookerId);
-        updateBooking(token, bookingId, bookerId, "afgerond");
+        complete(token, bookingId);
         assertEquals("nietactief", bookerStatus(token, bookerId));
 
-        updateBooking(token, bookingId, bookerId, "weerthuis");
+        mockMvc.perform(post("/api/bookings/" + bookingId + "/status-revert").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"targetStatus\":\"aanvraag\",\"reason\":\"Klant wil toch nog op reis\"}"))
+                .andExpect(status().isOk());
 
         assertEquals("active", bookerStatus(token, bookerId));
     }

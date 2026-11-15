@@ -42,7 +42,8 @@ describe('ManagerDashboardComponent', () => {
         { provide: BookingService, useValue: { getAll: () => of(mockBookings) } },
         { provide: BookingLineService, useValue: { getAll: () => of([]) } },
         { provide: MolliePaymentService, useValue: { getAll: () => of([]), getAllStatusEntries: () => of([]) } },
-        { provide: AuthService, useValue: { currentUser: () => ({ personName: 'Manager', organizationName: 'Org', roles: ['MANAGER'] }) } },
+        // zonder NOTIFICATION_READ: de meldingenkaart heeft zijn eigen spec
+        { provide: AuthService, useValue: { currentUser: () => ({ personName: 'Manager', organizationName: 'Org', roles: ['MANAGER'] }), hasAuthority: () => false } },
       ],
     }).compileComponents();
 

@@ -67,9 +67,7 @@ class PaymentPlanControllerTest extends AbstractBookingControllerTest {
 
     private void confirm(String token, String bookingId) throws Exception {
         String booking = "{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + BOOKER_TP_4 + "\"";
-        mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON).content(booking + "}"))
-                .andExpect(status().isOk());
+        forceStatus(UUID.fromString(bookingId), "offerte");
         mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(booking + ",\"quoteConfirmed\":true}"))
                 .andExpect(status().isOk())
@@ -157,9 +155,7 @@ class PaymentPlanControllerTest extends AbstractBookingControllerTest {
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         String bookingId = objectMapper.readTree(body).get("bookingId").asText();
         String booking = "{\"bookingStatus\":\"offerte\",\"bookerId\":\"" + BOOKER_TP_4 + "\"";
-        mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON).content(booking + "}"))
-                .andExpect(status().isOk());
+        forceStatus(UUID.fromString(bookingId), "offerte");
 
         mockMvc.perform(put("/api/bookings/" + bookingId).header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(booking + ",\"quoteConfirmed\":true}"))

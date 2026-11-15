@@ -230,7 +230,7 @@ export function findNextUp(events: TripEvent[], now: Date): NextUp {
 // ---- betalingen ----
 
 /** Een betaling die niet meer verandert tenzij de klant opnieuw probeert. */
-export const SETTLED_STATUSES = ['paid', 'failed', 'canceled', 'expired'];
+export const SETTLED_STATUSES = ['paid', 'failed', 'canceled', 'expired', 'charged_back'];
 /** Statussen waarin de klant kan (blijven) betalen. */
 export const PAYABLE_STATUSES = ['open', 'failed', 'expired'];
 

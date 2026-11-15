@@ -1,6 +1,7 @@
 package nl.puurkroatie.rds.booking.repository;
 
 import nl.puurkroatie.rds.booking.entity.Booking;
+import nl.puurkroatie.rds.booking.entity.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,12 @@ import java.util.UUID;
 public interface BookingRepository extends JpaRepository<Booking, UUID>, BookingRepositoryCustom {
 
     List<Booking> findByTenantOrganization(UUID tenantOrganization);
+
+    @Query("SELECT b.bookingId FROM Booking b WHERE b.bookingStatus IN :statuses")
+    List<UUID> findIdsByBookingStatusIn(java.util.Collection<BookingStatus> statuses);
+
+    @Query("SELECT b.bookingId FROM Booking b WHERE b.tenantOrganization = :organizationId AND b.bookingStatus IN :statuses")
+    List<UUID> findIdsByTenantOrganizationAndBookingStatusIn(UUID organizationId, java.util.Collection<BookingStatus> statuses);
 
     Optional<Booking> findByBookingNumberAndBookerEmailaddress(String bookingNumber, String emailaddress);
 

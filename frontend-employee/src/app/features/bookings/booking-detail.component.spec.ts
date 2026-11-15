@@ -66,7 +66,7 @@ describe('BookingDetailComponent', () => {
     queryBookerId = null;
     queryReadonly = null;
 
-    bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll', 'getById', 'create', 'update', 'delete', 'sendQuote']);
+    bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll', 'getById', 'create', 'update', 'delete', 'sendQuote', 'complete', 'revertStatus', 'statusChanges']);
     bookingLineServiceSpy = jasmine.createSpyObj('BookingLineService', ['getByBookingId']);
     bookerServiceSpy = jasmine.createSpyObj('BookerService', ['getById']);
     travelerServiceSpy = jasmine.createSpyObj('TravelerService', ['getAll']);
@@ -362,6 +362,61 @@ describe('BookingDetailComponent', () => {
     expect(paymentRows[1].querySelector('.payment-type')).toBeNull();
     expect(paymentRows[1].querySelector('.due-date')?.textContent).toContain('—');
   }));
+
+  describe('status terugzetten en afronden', () => {
+    function render(booking: Partial<Booking>, authorities: string[]) {
+      bookingServiceSpy.getById.and.returnValue(of({ ...mockBooking, ...booking }));
+      createComponent();
+      spyOn(component.authService, 'hasAuthority').and.callFake((a: string) => authorities.includes(a));
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('biedt terugzetten niet aan in status Aanvraag', fakeAsync(() => {
+      const el = render({ bookingStatus: 'aanvraag' }, ['BOOKING_STATUS_REVERT']);
+
+      expect(component.canRevert()).toBeFalse();
+      expect(el.querySelector('.revert-status-btn')).toBeNull();
+    }));
+
+    it('biedt terugzetten aan vanaf Offerte met BOOKING_STATUS_REVERT, zolang er niets betaald is', fakeAsync(() => {
+      const el = render({ bookingStatus: 'voorschot' }, ['BOOKING_STATUS_REVERT']);
+
+      expect((el.querySelector('.revert-status-btn') as HTMLButtonElement).disabled).toBeFalse();
+
+      component.paymentStatusMap.set({ 'p-1': 'paid' });
+      fixture.detectChanges();
+      expect(component.revertBlocked()).toBeTrue();
+      expect((el.querySelector('.revert-status-btn') as HTMLButtonElement).disabled).toBeTrue();
+      expect(el.querySelector('.revert-hint')).not.toBeNull();
+    }));
+
+    it('een manager (BOOKING_STATUS_REVERT_PAID) kan ook na een betaling terugzetten', fakeAsync(() => {
+      render({ bookingStatus: 'voorschot' }, ['BOOKING_STATUS_REVERT', 'BOOKING_STATUS_REVERT_PAID']);
+      component.paymentStatusMap.set({ 'p-1': 'paid' });
+
+      expect(component.revertBlocked()).toBeFalse();
+    }));
+
+    it('biedt afronden niet aan zonder BOOKING_COMPLETE', fakeAsync(() => {
+      const el = render({ bookingStatus: 'weerthuis' }, []);
+
+      expect(el.querySelector('.complete-btn')).toBeNull();
+    }));
+
+    it('rondt af na bevestiging met BOOKING_COMPLETE', fakeAsync(() => {
+      const el = render({ bookingStatus: 'weerthuis' }, ['BOOKING_COMPLETE']);
+      bookingServiceSpy.complete.and.returnValue(of({ ...mockBooking, bookingStatus: 'afgerond' }));
+      expect(el.querySelector('.complete-btn')).not.toBeNull();
+      component.completeBooking();
+      tick();
+
+      expect(confirmServiceSpy.confirm).toHaveBeenCalled();
+      expect(bookingServiceSpy.complete).toHaveBeenCalledWith('b-1');
+    }));
+  });
 
   describe('offerte versturen', () => {
     const sendQuoteButton = () => (fixture.nativeElement as HTMLElement).querySelector('button.send-quote-btn') as HTMLButtonElement | null;

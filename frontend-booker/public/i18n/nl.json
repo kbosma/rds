@@ -111,7 +111,8 @@
         "paid": "Betaald",
         "failed": "Mislukt",
         "canceled": "Geannuleerd",
-        "expired": "Verlopen"
+        "expired": "Verlopen",
+        "charged_back": "Teruggeboekt"
       },
       "dueBy": "uiterlijk {{date}}",
       "types": {

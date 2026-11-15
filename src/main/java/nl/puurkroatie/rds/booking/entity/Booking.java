@@ -86,6 +86,17 @@ public class Booking {
         this.tenantOrganization = tenantOrganization;
     }
 
+    /** Kopie met een andere status; de bevestiging van de offerte blijft. */
+    public Booking withStatus(BookingStatus newStatus) {
+        return new Booking(bookingId, booker, bookingNumber, newStatus, quoteConfirmed, quoteConfirmedAt, createdAt, createdBy,
+                tenantOrganization);
+    }
+
+    /** Kopie met een andere status en zonder bevestigde offerte (terugzetten naar aanvraag of offerte). */
+    public Booking withStatusUnconfirmed(BookingStatus newStatus) {
+        return new Booking(bookingId, booker, bookingNumber, newStatus, false, null, createdAt, createdBy, tenantOrganization);
+    }
+
     public Booking(Booker booker, String bookingNumber, BookingStatus bookingStatus) {
         this.booker = booker;
         this.bookingNumber = bookingNumber;

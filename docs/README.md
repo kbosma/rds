@@ -20,7 +20,7 @@
 | Hoe is de backend opgebouwd (lagen, pakketten, patronen)? | [architecture.md](architecture.md) |
 | Hoe zijn de twee Angular-apps opgebouwd, welke conventies? | [frontend.md](frontend.md) |
 | Welke entiteiten/tabellen, relaties, enums? | [database-model.md](database-model.md) |
-| Wat is een boeking, de levenscyclus, prospect → boeker, offerte versturen, organisatie-instellingen, concept-boeking? | [domain.md](domain.md) |
+| Wat is een boeking, de levenscyclus, statusengine en notificaties, terugzetten, prospect → boeker, offerte versturen, automatische betalingen, organisatie-instellingen, concept-boeking? | [domain.md](domain.md) |
 | JWT, rollen, authorities, TOTP, tenant-isolatie, afscherming? | [security.md](security.md) |
 | Alle REST-endpoints met benodigde authority + voorbeelden? | [api-examples.md](api-examples.md) |
 | Booker-portal (klant) en OTP-login? | [bookerportal.md](bookerportal.md) |

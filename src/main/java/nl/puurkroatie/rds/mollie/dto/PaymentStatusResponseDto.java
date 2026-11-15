@@ -12,6 +12,8 @@ public class PaymentStatusResponseDto {
     private Amount amount;
     private String paidAt;
     private Map<String, String> metadata;
+    /** Door Mollie teruggeboekt bedrag (chargeback); alleen aanwezig als er een terugboeking is. */
+    private Amount amountChargedBack;
 
     public PaymentStatusResponseDto() {
     }
@@ -42,6 +44,22 @@ public class PaymentStatusResponseDto {
 
     public Map<String, String> getMetadata() {
         return metadata;
+    }
+
+    public Amount getAmountChargedBack() {
+        return amountChargedBack;
+    }
+
+    /** Of Mollie een terugboeking meldt (een teruggeboekt bedrag groter dan nul). */
+    public boolean isChargedBack() {
+        if (amountChargedBack == null || amountChargedBack.getValue() == null) {
+            return false;
+        }
+        try {
+            return new java.math.BigDecimal(amountChargedBack.getValue()).signum() > 0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
