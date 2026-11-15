@@ -15,7 +15,8 @@
 | Ik wil weten… | Open |
 |---|---|
 | Wat doet het systeem, wie gebruikt het, wat zijn de schermen? | [overview.md](overview.md) |
-| Alle functionaliteit per scherm, werkprocessen, rollen en authorities (volledige gebruikershandleiding)? | [handleiding.md](handleiding.md) |
+| Alle functionaliteit per scherm, werkprocessen, rollen en authorities (technische handleiding)? | [handleiding.md](handleiding.md) |
+| Handleiding voor medewerkers en managers, niet-technisch, met schermen en printklaar (A4, ook als PDF)? | [gebruikershandleiding/index.html](gebruikershandleiding/index.html) ([PDF](gebruikershandleiding/RDS-gebruikershandleiding.pdf)) |
 | Woorden als *prospect*, *hoofdboeker*, *tenant*, *herhaalde tabel*? | [glossary.md](glossary.md) |
 | Hoe is de backend opgebouwd (lagen, pakketten, patronen)? | [architecture.md](architecture.md) |
 | Hoe zijn de twee Angular-apps opgebouwd, welke conventies? | [frontend.md](frontend.md) |
