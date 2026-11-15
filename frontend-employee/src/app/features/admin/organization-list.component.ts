@@ -15,11 +15,13 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { OrganizationService } from './organization.service';
 import { Organization } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 @Component({
   selector: 'app-organization-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -83,12 +85,13 @@ import { Organization } from '../../shared/models';
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'organizations.noOrganizationsFound' | translate }}
+              <app-empty-state icon="business" [filtered]="dataSource.data.length > 0" [message]="'organizations.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'organizations.newOrganization' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>

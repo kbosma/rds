@@ -41,6 +41,20 @@ html {
   --mat-sys-on-secondary-container: var(--ui-primary-strong);
   --mat-sys-surface-tint: var(--theme-primary);
 
+  /* Vlakken: het prebuilt thema geeft dialogen, keuzelijsten, menu's en gevulde velden een lavendeltint die niet bij
+     de organisatiekleur past. Hier wit, het canvas en de lijnkleur van het portaal. */
+  --mat-sys-background: var(--ui-canvas);
+  --mat-sys-on-surface: var(--ui-text);
+  --mat-sys-surface: #ffffff;
+  --mat-sys-surface-bright: #ffffff;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #ffffff;
+  --mat-sys-surface-container: #ffffff;
+  --mat-sys-surface-container-high: #ffffff;
+  --mat-sys-surface-container-highest: var(--ui-primary-faint);
+  --mat-sys-surface-variant: var(--ui-primary-faint);
+  --mat-sys-outline-variant: var(--ui-line);
+
   /* Dichtheid: alles compact zodat er veel op één scherm past. Basistekst 13px; velden, rijen en knoppen 32–36px.
      Regelhoogtes zijn bewust ruim (≥ 18px bij 13px tekst) zodat letters met staart of accent niet worden afgeknipt. */
   --mat-sys-body-medium-size: 13px;
@@ -74,6 +88,9 @@ html {
   --mat-paginator-container-size: 40px;
   --mat-paginator-container-text-size: 12px;
   --mat-paginator-select-trigger-text-size: 12px;
+  /* Paginaformaat-keuze: 32px hoog (6px + 20px + 6px) i.p.v. 40px. */
+  --mat-paginator-form-field-container-height: 32px;
+  --mat-paginator-form-field-container-vertical-padding: 6px;
 
   /* Knoppen: 32px hoog, 13px label; icoonknoppen 32px met een icoon van 20px. */
   --mat-button-filled-container-height: 32px;
@@ -87,6 +104,17 @@ html {
   --mat-button-filled-container-shape: var(--ui-radius);
   --mat-button-protected-container-shape: var(--ui-radius);
   --mat-button-outlined-container-shape: var(--ui-radius);
+  /* De hoofdactie (mat-raised-button: Opslaan, Nieuwe …) is gevuld in de organisatiekleur, zonder schaduw, zodat
+     hij zich onderscheidt van Annuleren en de knoppen met rand. */
+  --mat-button-protected-container-color: var(--theme-primary);
+  --mat-button-protected-label-text-color: #ffffff;
+  --mat-button-protected-state-layer-color: #ffffff;
+  --mat-button-protected-ripple-color: rgba(255, 255, 255, 0.2);
+  --mat-button-protected-container-elevation-shadow: none;
+  --mat-button-protected-hover-container-elevation-shadow: none;
+  --mat-button-protected-focus-container-elevation-shadow: none;
+  --mat-button-protected-pressed-container-elevation-shadow: none;
+  --mat-button-protected-disabled-container-elevation-shadow: none;
   --mat-icon-button-state-layer-size: 32px;
   --mat-icon-button-icon-size: 20px;
   --mat-icon-button-touch-target-display: none;
@@ -122,8 +150,9 @@ html {
   --mat-list-list-item-label-text-size: 13px;
 }
 
+/* Kaarttitel in de kaarttitel-kleur van de organisatie; een gekleurde kaart (.tone-card) zet --card-title-color. */
 mat-card-title, .mat-mdc-card-title {
-  color: var(--theme-card-title) !important;
+  color: var(--card-title-color, var(--theme-card-title)) !important;
 }
 
 /* Datum- en tijdvelden krijgen van de browser een eigen (te lage) hoogte; dan vallen de cijfers onderaan weg. */
@@ -144,6 +173,11 @@ input.mat-mdc-input-element[type='datetime-local'] {
    winnen van de standaardregel van Material. */
 .mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content.mdc-dialog__content {
   padding-top: 8px;
+}
+/* Groot dialoog met een editor (templates, e-mailtemplates): open met panelClass 'editor-dialog'. De inhoud mag dan
+   bijna het hele venster gebruiken (Material begrenst op 65vh), zodat de editor ruimte krijgt. */
+.editor-dialog .mat-mdc-dialog-content {
+  max-height: calc(92vh - 120px);
 }
 
 /* Kaarten: vlak met een fijne rand i.p.v. een zware schaduw; compacte binnenruimte (12px boven/onder, 16px opzij). */
@@ -289,6 +323,11 @@ $act-colors: (
   margin: 0;
   flex: 1 1 auto;
 }
+/* Grijze regel onder de paginatitel (bv. organisatie en rol op het dashboard). */
+.page-subtitle {
+  margin: 2px 0 0;
+  color: var(--ui-text-muted);
+}
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -318,7 +357,8 @@ $act-colors: (
 .card-grid > .section-card { margin-top: 0; }
 
 .full-width { width: 100%; }
-.row { display: flex; gap: 12px; }
+/* flex-start: een knop naast een veld (bv. Koppelen) rekt anders mee tot de hoogte van veld + hint-ruimte. */
+.row { display: flex; gap: 12px; align-items: flex-start; }
 .flex-1 { flex: 1; min-width: 0; }
 .flex-2 { flex: 2; min-width: 0; }
 .flex-3 { flex: 3; min-width: 0; }
@@ -353,8 +393,105 @@ $act-colors: (
 }
 .actions-header { text-align: right; }
 .actions-cell { width: 1%; white-space: nowrap; }
-.no-data { padding: 20px; text-align: center; color: var(--ui-text-muted); }
+/* Cellen: datums, codes en statussen breken niet af; bedragen staan rechts met cijfers van gelijke breedte. */
+.mat-mdc-table { font-variant-numeric: tabular-nums; }
+.cell-nowrap { white-space: nowrap; }
+.cell-num { white-space: nowrap; text-align: right !important; }
+.mat-mdc-header-cell.cell-num .mat-sort-header-container { justify-content: flex-end; }
 .count-text { margin-top: 8px; text-align: center; font-size: 12px; color: var(--ui-text-muted); }
+
+/* Lege toestand: in een tabel (td.no-data via *matNoDataRow) of los (.empty-state). Eén zin die zegt wat er is,
+   en bij een echt lege lijst de knop om iets aan te maken. */
+.no-data, .empty-state {
+  padding: 28px 16px !important;
+  text-align: center !important;
+  color: var(--ui-text-muted);
+}
+.no-data > .mat-icon, .empty-state > .mat-icon {
+  display: block;
+  margin: 0 auto 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 32px;
+  color: color-mix(in srgb, var(--theme-primary) 45%, white);
+}
+.no-data p, .empty-state p { margin: 0; }
+.no-data .mat-mdc-button-base, .empty-state .mat-mdc-button-base { margin-top: 12px; }
+/* Een lege toestand in een tabelrij heeft zelf al binnenruimte. */
+.no-data:has(> .empty-state) { padding: 0 !important; }
+
+/* Statuslabels: tekst in de kleur van de betekenis op een lichte tint daarvan. Kies de variant naar betekenis
+   (info, success, warning, danger, update, neutral); de kleuren komen uit het act-*-palet. */
+.badge {
+  --badge-color: var(--ui-text-muted);
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  color: var(--badge-color);
+  background: color-mix(in srgb, var(--badge-color) 11%, white);
+}
+.badge-info { --badge-color: var(--act-info); }
+.badge-success { --badge-color: var(--act-create); }
+.badge-update { --badge-color: var(--act-update); }
+.badge-warning { --badge-color: var(--act-send); }
+.badge-danger { --badge-color: var(--act-delete); }
+.badge-neutral { --badge-color: var(--ui-text-muted); }
+/* Ruwe waarde uit de database (bv. adresrol 'woon'): met hoofdletter tonen. */
+.badge-cap { text-transform: capitalize; }
+
+/* Gegevens als label + waarde (kaarten en alleen-lezen dialogen). Gebruik <dl class="kv-list"> met dt/dd. */
+.kv-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 20px;
+  margin: 0;
+}
+.kv-list dt { color: var(--ui-text-muted); }
+.kv-list dd { margin: 0; overflow-wrap: anywhere; }
+
+/* KPI-tegels: wit, met een rand links en het bedrag in de kleur van de betekenis (--kpi-color). */
+.kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.kpi-card {
+  --kpi-color: var(--theme-primary);
+  border-left: 4px solid var(--kpi-color) !important;
+}
+.kpi-card.kpi-success { --kpi-color: var(--act-create); }
+.kpi-card.kpi-warning { --kpi-color: var(--act-send); }
+.kpi-card .mat-mdc-card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+}
+.kpi-card .kpi-icon { width: 28px; height: 28px; font-size: 28px; color: var(--kpi-color); }
+.kpi-card .kpi-label { color: var(--ui-text-muted); }
+.kpi-card .kpi-value { font-size: 20px; line-height: 26px; font-weight: 600; color: var(--kpi-color); white-space: nowrap; }
+.kpi-card.kpi-neutral .kpi-value { color: var(--ui-text); }
+a.kpi-card, .kpi-card[routerLink] { cursor: pointer; }
+.kpi-card[routerLink]:hover { border-color: var(--kpi-color); }
+
+/* Gekleurde kaart (bv. top-5 op het dashboard): vlak in een donkere tint van de organisatiekleur met witte tekst.
+   De tinten zijn donker genoeg voor wit, ook bij een lichte organisatiekleur. */
+.tone-card {
+  --tone-bg: color-mix(in srgb, var(--theme-primary) 60%, #0b1f26);
+  --card-title-color: #ffffff;
+  color: #ffffff;
+  background: var(--tone-bg) !important;
+  border-color: transparent !important;
+}
+.tone-card.tone-deep { --tone-bg: var(--ui-primary-deep); }
 
 /* Status- en hulpteksten */
 .loading { display: flex; justify-content: center; padding: 32px; }
@@ -363,11 +500,23 @@ $act-colors: (
 .error-text { margin: 8px 0; font-size: 12px; color: var(--act-delete); }
 
 /* Iconen in knoppen met tekst: iets kleiner, zodat ze bij het 13px-label passen. */
-.mat-mdc-button > .mat-icon,
-.mat-mdc-unelevated-button > .mat-icon,
-.mat-mdc-raised-button > .mat-icon,
-.mat-mdc-outlined-button > .mat-icon {
+.mat-mdc-button .mat-icon,
+.mat-mdc-unelevated-button .mat-icon,
+.mat-mdc-raised-button .mat-icon,
+.mat-mdc-outlined-button .mat-icon {
   width: 18px;
   height: 18px;
   font-size: 18px;
+}
+/* Een icoon binnen @if/@else komt in het label terecht in plaats van in het icoonvak van Material: zet het dan zelf
+   op de regel en geef het dezelfde ruimte tot de tekst. */
+.mdc-button__label > .mat-icon {
+  display: inline-block;
+  vertical-align: -4px;
+  margin: 0 6px 0 -4px;
+}
+
+/* Een gevulde knop met color="warn" (bv. Verwijderen, 2FA uitzetten) is rood; Material's warn is in dit thema niet rood. */
+.mat-mdc-raised-button.mat-warn {
+  --mat-button-protected-container-color: var(--act-delete);
 }

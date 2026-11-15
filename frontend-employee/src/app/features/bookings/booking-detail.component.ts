@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
+import { BookingStatusBadgeComponent } from '../../shared/components/booking-status-badge.component';
 import { MolliePaymentViewDialogComponent } from '../mollie/mollie-payment-view-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -45,10 +46,11 @@ import {
 } from '../email-templates/email-template-preview-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { Booker, Traveler, BookingLine, BookingActivity, MolliePayment, Document, SentEmail } from '../../shared/models';
-import { CurrencyPipe, DatePipe, DecimalPipe, Location } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { forkJoin } from 'rxjs';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 
 interface BookingMolliePaymentLink {
   bookingId: string;
@@ -59,6 +61,7 @@ interface BookingMolliePaymentLink {
   selector: 'app-booking-detail',
   standalone: true,
   imports: [
+    MoneyPipe,
     ReactiveFormsModule,
     RouterLink,
     BookingMessagesCardComponent,
@@ -69,15 +72,14 @@ interface BookingMolliePaymentLink {
     MatButtonModule,
     RowActionsComponent,
     PaymentStatusBadgeComponent,
+    BookingStatusBadgeComponent,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTableModule,
     MatDividerModule,
     MatDialogModule,
-    CurrencyPipe,
     DatePipe,
-    DecimalPipe,
     TranslatePipe,
   ],
   template: `
@@ -109,34 +111,22 @@ interface BookingMolliePaymentLink {
           </mat-card-header>
           <mat-card-content>
             @if (!isNew()) {
-              <div class="info-grid info-grid-wide">
-                <div class="info-item">
-                  <span class="info-label">{{ 'bookings.bookingNumber' | translate }}</span>
-                  <span class="info-value">{{ currentBookingNumber() }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'common.status' | translate }}</span>
-                  <span class="info-value">{{ statuses[currentBookingStatus()] | translate }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'bookings.fromDateComputed' | translate }}</span>
-                  <span class="info-value">{{ currentFromDate() | date:'dd-MM-yyyy' }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'bookings.untilDateComputed' | translate }}</span>
-                  <span class="info-value">{{ currentUntilDate() | date:'dd-MM-yyyy' }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'bookings.totalComputed' | translate }}</span>
-                  <span class="info-value total">{{ currentTotalSum() | currency:'EUR':'symbol':'1.2-2' }}</span>
-                </div>
+              <dl class="kv-list">
+                <dt>{{ 'bookings.bookingNumber' | translate }}</dt>
+                <dd>{{ currentBookingNumber() }}</dd>
+                <dt>{{ 'common.status' | translate }}</dt>
+                <dd><app-booking-status-badge [status]="currentBookingStatus()" /></dd>
+                <dt>{{ 'bookings.fromDateComputed' | translate }}</dt>
+                <dd>{{ currentFromDate() | date:'dd-MM-yyyy' }}</dd>
+                <dt>{{ 'bookings.untilDateComputed' | translate }}</dt>
+                <dd>{{ currentUntilDate() | date:'dd-MM-yyyy' }}</dd>
+                <dt>{{ 'bookings.totalComputed' | translate }}</dt>
+                <dd class="total">{{ currentTotalSum() | money }}</dd>
                 @if (currentBooking()?.quoteConfirmed) {
-                  <div class="info-item quote-confirmed">
-                    <span class="info-label">{{ 'bookings.quoteConfirmedOn' | translate }}</span>
-                    <span class="info-value">{{ currentBooking()!.quoteConfirmedAt | date:'dd-MM-yyyy HH:mm' }}</span>
-                  </div>
+                  <dt>{{ 'bookings.quoteConfirmedOn' | translate }}</dt>
+                  <dd class="quote-confirmed">{{ currentBooking()!.quoteConfirmedAt | date:'dd-MM-yyyy HH:mm' }}</dd>
                 }
-              </div>
+              </dl>
               @if (canRevert() || canComplete() || authService.hasAuthority('BOOKING_READ')) {
                 <div class="status-actions">
                   @if (canRevert()) {
@@ -171,13 +161,11 @@ interface BookingMolliePaymentLink {
                 </div>
               }
             } @else {
-              <div class="info-grid">
-                <div class="info-item">
-                  <span class="info-label">{{ 'common.status' | translate }}</span>
-                  <span class="info-value">{{ statuses[currentBookingStatus()] | translate }}</span>
-                </div>
-                <p class="concept-note">{{ 'bookings.conceptNotice' | translate }}</p>
-              </div>
+              <dl class="kv-list">
+                <dt>{{ 'common.status' | translate }}</dt>
+                <dd><app-booking-status-badge [status]="currentBookingStatus()" /></dd>
+              </dl>
+              <p class="concept-note">{{ 'bookings.conceptNotice' | translate }}</p>
             }
           </mat-card-content>
         </mat-card>
@@ -209,14 +197,12 @@ interface BookingMolliePaymentLink {
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="period">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.from' | translate }} — {{ 'common.until' | translate }}</th>
-                  <td mat-cell *matCellDef="let line">{{ line.fromDate | date:'dd-MM-yyyy' }} — {{ line.untilDate | date:'dd-MM-yyyy' }}</td>
+                  <th mat-header-cell *matHeaderCellDef>{{ 'bookingLine.period' | translate }}</th>
+                  <td mat-cell *matCellDef="let line" class="cell-nowrap">{{ line.fromDate | date:'dd-MM-yyyy' }} – {{ line.untilDate | date:'dd-MM-yyyy' }}</td>
                 </ng-container>
                 <ng-container matColumnDef="price">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'common.price' | translate }}</th>
-                  <td mat-cell *matCellDef="let line">
-                    <span class="price-value">{{ line.price | currency:'EUR':'symbol':'1.2-2' }}</span>
-                  </td>
+                  <th mat-header-cell *matHeaderCellDef class="cell-num">{{ 'common.price' | translate }}</th>
+                  <td mat-cell *matCellDef="let line" class="cell-num">{{ line.price | money }}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
@@ -235,7 +221,7 @@ interface BookingMolliePaymentLink {
         </mat-card>
 
       @if (!isNew()) {
-        <mat-card class="middle-card">
+        <mat-card class="detail-card">
           <mat-card-header>
             <mat-card-title>{{ 'bookingActivity.title' | translate }}</mat-card-title>
             @if (!readOnly()) {
@@ -262,21 +248,21 @@ interface BookingMolliePaymentLink {
                 </ng-container>
                 <ng-container matColumnDef="period">
                   <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.dateAndTimes' | translate }}</th>
-                  <td mat-cell *matCellDef="let ba" class="activity-when">
+                  <td mat-cell *matCellDef="let ba" class="cell-nowrap">
                     <div>{{ ba.activityDate | date:'dd-MM-yyyy' }}</div>
-                    <div class="activity-type">
-                      {{ ba.fromTime?.substring(0, 5) }} — {{ ba.untilTime?.substring(0, 5) }}
-                      @if (ba.untilTime < ba.fromTime) {
-                        {{ 'bookingActivity.nextDay' | translate }}
-                      }
-                    </div>
+                    @if (hasTimes(ba)) {
+                      <div class="activity-type">
+                        {{ ba.fromTime?.substring(0, 5) }} – {{ ba.untilTime?.substring(0, 5) }}
+                        @if (ba.untilTime < ba.fromTime) {
+                          {{ 'bookingActivity.nextDay' | translate }}
+                        }
+                      </div>
+                    }
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="totalPrice">
-                  <th mat-header-cell *matHeaderCellDef>{{ 'bookingActivity.totalPrice' | translate }}</th>
-                  <td mat-cell *matCellDef="let ba">
-                    <span class="price-value">{{ ba.totalPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
-                  </td>
+                  <th mat-header-cell *matHeaderCellDef class="cell-num">{{ 'bookingActivity.totalPrice' | translate }}</th>
+                  <td mat-cell *matCellDef="let ba" class="cell-num">{{ ba.totalPrice | money }}</td>
                 </ng-container>
                 <ng-container matColumnDef="activityActions">
                   <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
@@ -294,7 +280,7 @@ interface BookingMolliePaymentLink {
           </mat-card-content>
         </mat-card>
 
-          <mat-card class="middle-card">
+          <mat-card class="detail-card">
             <mat-card-header>
               <mat-card-title>{{ 'bookings.payments' | translate }}</mat-card-title>
               @if (!readOnly()) {
@@ -321,7 +307,7 @@ interface BookingMolliePaymentLink {
                       </mat-form-field>
                     </div>
                     <div class="actions">
-                      <button mat-button type="button" (click)="showNewPaymentForm.set(false)"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+                      <button mat-button type="button" (click)="showNewPaymentForm.set(false)">{{ 'common.cancel' | translate }}</button>
                       <button mat-raised-button color="primary" type="submit"
                               [disabled]="creatingPayment() || newPaymentForm.invalid">
                         @if (creatingPayment()) {
@@ -354,8 +340,8 @@ interface BookingMolliePaymentLink {
                   </ng-container>
 
                   <ng-container matColumnDef="amount">
-                    <th mat-header-cell *matHeaderCellDef>{{ 'common.amount' | translate }}</th>
-                    <td mat-cell *matCellDef="let p">&euro; {{ p.amount | number:'1.2-2' }}</td>
+                    <th mat-header-cell *matHeaderCellDef class="cell-num">{{ 'common.amount' | translate }}</th>
+                    <td mat-cell *matCellDef="let p" class="cell-num">{{ p.amount | money }}</td>
                   </ng-container>
 
                   <ng-container matColumnDef="status">
@@ -367,7 +353,7 @@ interface BookingMolliePaymentLink {
 
                   <ng-container matColumnDef="dueDate">
                     <th mat-header-cell *matHeaderCellDef>{{ 'payments.dueDate' | translate }}</th>
-                    <td mat-cell *matCellDef="let p" class="due-date">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
+                    <td mat-cell *matCellDef="let p" class="due-date cell-nowrap">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
                   </ng-container>
 
                   <ng-container matColumnDef="actions">
@@ -420,28 +406,18 @@ interface BookingMolliePaymentLink {
           </mat-card-header>
           <mat-card-content>
             @if (booker()) {
-              <div class="info-grid">
-                <div class="info-item">
-                  <span class="info-label">{{ 'common.name' | translate }}</span>
-                  <span class="info-value">{{ booker()!.firstname }} {{ booker()!.prefix }} {{ booker()!.lastname }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'bookings.callsign' | translate }}</span>
-                  <span class="info-value">{{ booker()!.callsign }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'common.telephone' | translate }}</span>
-                  <span class="info-value">{{ booker()!.telephone }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'common.email' | translate }}</span>
-                  <span class="info-value email">{{ booker()!.emailaddress }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">{{ 'common.birthdate' | translate }}</span>
-                  <span class="info-value">{{ booker()!.birthdate | date:'dd-MM-yyyy' }}</span>
-                </div>
-              </div>
+              <dl class="kv-list">
+                <dt>{{ 'common.name' | translate }}</dt>
+                <dd>{{ booker()!.firstname }} {{ booker()!.prefix }} {{ booker()!.lastname }}</dd>
+                <dt>{{ 'bookings.callsign' | translate }}</dt>
+                <dd>{{ booker()!.callsign }}</dd>
+                <dt>{{ 'common.telephone' | translate }}</dt>
+                <dd>{{ booker()!.telephone }}</dd>
+                <dt>{{ 'common.email' | translate }}</dt>
+                <dd class="email">{{ booker()!.emailaddress }}</dd>
+                <dt>{{ 'common.birthdate' | translate }}</dt>
+                <dd>{{ booker()!.birthdate | date:'dd-MM-yyyy' }}</dd>
+              </dl>
             } @else {
               <p class="empty-text">{{ 'bookings.noBookerLinked' | translate }}</p>
             }
@@ -503,12 +479,16 @@ interface BookingMolliePaymentLink {
     .payment-type { font-size: 12px; color: var(--ui-text-muted); }
     .status-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
     .quote-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
-    .quote-hint { font-size: 13px; color: var(--ui-text-muted); }
+    .quote-hint { color: var(--ui-text-muted); }
+    /* Links staan de tabellen (accommodaties, activiteiten, betalingen): die kolom krijgt de meeste ruimte. */
     .detail-columns {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
       gap: 12px;
       align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .detail-columns { grid-template-columns: minmax(0, 1fr); }
     }
     .column {
       display: flex;
@@ -523,106 +503,37 @@ interface BookingMolliePaymentLink {
       margin-left: auto;
     }
     .row mat-form-field { flex: 1; }
-    .info-grid {
-      display: grid;
-      gap: 8px;
-    }
-    .info-grid-wide {
-      --label-width: 180px;
-    }
-    .info-item {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    .info-label {
-      font-size: 13px;
-      color: var(--ui-text-muted);
-      width: var(--label-width, 130px);
-      flex-shrink: 0;
-    }
-    .info-label::after {
-      content: ':';
-    }
-    .info-value {
-      font-size: 14px;
-    }
-    .info-value.email {
-      color: var(--theme-primary);
-    }
-    .info-value.total {
-      font-weight: 600;
-      color: #2e7d32;
-    }
+    .kv-list .email { color: var(--theme-primary); }
+    .kv-list .total { font-weight: 600; }
     .concept-note {
-      color: #e65100;
-      font-size: 13px;
-      font-style: italic;
       margin: 8px 0 0;
-    }
-    .middle-card {
-      border-radius: 12px;
-    }
-    .middle-card mat-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      font-style: italic;
+      color: var(--act-send);
     }
     .loading-inline {
       display: flex;
       justify-content: center;
       padding: 24px;
     }
-    .accommodation-cell {
+    .accommodation-cell, .activity-cell {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .accommodation-icon {
+    .accommodation-icon, .activity-icon {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      font-size: 20px;
       color: var(--theme-primary);
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
     }
-    .accommodation-name {
-      font-weight: 500;
-    }
-    .accommodation-supplier {
-      color: var(--ui-text-muted);
+    .accommodation-name, .activity-name { font-weight: 500; }
+    .accommodation-supplier, .activity-type {
       font-size: 12px;
-    }
-    .price-value {
-      font-weight: 600;
-      color: #2e7d32;
-    }
-    .activity-when {
-      white-space: nowrap;
-    }
-
-    .activity-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .activity-icon {
-      color: #7b1fa2;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-    .activity-name {
-      font-weight: 500;
-    }
-    .activity-type {
       color: var(--ui-text-muted);
-      font-size: 12px;
     }
-    .new-payment-form {
-      padding: 16px 0;
-    }
-    .form-divider {
-      margin-bottom: 16px;
-    }
+    .new-payment-form { padding: 16px 0; }
+    .form-divider { margin-bottom: 16px; }
   `],
 })
 export class BookingDetailComponent implements OnInit {
@@ -667,16 +578,6 @@ export class BookingDetailComponent implements OnInit {
   currentUntilDate = signal<string | null>(null);
   currentTotalSum = signal<number>(0);
 
-  statuses: Record<string, string> = {
-    aanvraag: 'bookings.status_aanvraag',
-    offerte: 'bookings.status_offerte',
-    boeking: 'bookings.status_boeking',
-    voorschot: 'bookings.status_voorschot',
-    betaald: 'bookings.status_betaald',
-    opreis: 'bookings.status_opreis',
-    weerthuis: 'bookings.status_weerthuis',
-    afgerond: 'bookings.status_afgerond',
-  };
   booker = signal<Booker | null>(null);
   travelers = signal<Traveler[]>([]);
   bookingLines = signal<BookingLine[]>([]);
@@ -779,6 +680,13 @@ export class BookingDetailComponent implements OnInit {
             this.translate.instant('common.close'), { duration: 8000 });
         },
       });
+  }
+
+  /** Een activiteit zonder tijden (00:00–00:00, bv. een ticket voor de hele dag) toont alleen de datum. */
+  hasTimes(ba: BookingActivity): boolean {
+    const from = ba.fromTime?.substring(0, 5);
+    const until = ba.untilTime?.substring(0, 5);
+    return !!from && !!until && !(from === '00:00' && until === '00:00');
   }
 
   /** Een wijzigende actie is alleen toegestaan met de authority én buiten alleen-inzien. */

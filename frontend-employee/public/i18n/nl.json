@@ -42,12 +42,12 @@
     "deleted": "Verwijderd",
     "deleteError": "Verwijderen is mislukt",
     "saveError": "Opslaan is mislukt",
-    "deleteBlocked": "Kan niet verwijderd worden: er hangen documenten of betalingen aan. Die blijven bewaard als geschiedenis."
+    "deleteBlocked": "Kan niet verwijderd worden: er hangen documenten of betalingen aan. Die blijven bewaard als geschiedenis.",
+    "noResults": "Niets gevonden. Pas de zoekterm of filters aan."
   },
   "app": {
     "title": "RDS",
-    "subtitle": "Reis Dossier Systeem",
-    "toolbarTitle": "RDS - Reis Dossier Systeem"
+    "subtitle": "Reis Dossier Systeem"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -69,9 +69,9 @@
     "templates": "Templates",
     "emailTemplates": "E-mailtemplates",
     "theme": "Huisstijl",
-    "admin": "BEHEER",
-    "bookingAdmin": "ORGANISATIE BEHEER",
-    "myAdmin": "MIJN BEHEER",
+    "admin": "Beheer",
+    "bookingAdmin": "Organisatiebeheer",
+    "myAdmin": "Mijn account",
     "activities": "Activiteiten",
     "organizationSettings": "Instellingen",
     "expandMenu": "Menu uitklappen",
@@ -106,7 +106,7 @@
     "paidAmount": "Betaald {{year}}",
     "outstandingAmount": "Openstaand",
     "topBookedAccommodations": "Top 5 meest geboekte accommodaties {{year}}",
-    "topRevenueAccommodations": "Top 5 meeste omzet accommodaties {{year}}",
+    "topRevenueAccommodations": "Top 5 accommodaties op omzet {{year}}",
     "timesBooked": "{{count}}x geboekt",
     "organizationsOverview": "Organisaties overzicht",
     "persons": "Personen",
@@ -185,7 +185,8 @@
     "sendQuoteConfirm": "De offerte wordt als PDF gemaakt en naar {{email}} gemaild. De boeking komt op Offerte te staan.",
     "resendQuoteConfirm": "Er wordt een nieuwe offerte als PDF gemaakt en naar {{email}} gemaild. De vorige offerte blijft bij de boeking bewaard.",
     "quoteSent": "Offerte verstuurd naar {{to}}",
-    "quoteSendError": "Offerte versturen mislukt. {{message}}"
+    "quoteSendError": "Offerte versturen mislukt. {{message}}",
+    "emptyState": "Nog geen boekingen. Een boeking maak je voor een bestaande boeker."
   },
   "bookingLine": {
     "editTitle": "Accommodatie bewerken",
@@ -204,7 +205,8 @@
     "newAccommodation": "Nieuwe accommodatie",
     "newSupplier": "Nieuwe leverancier",
     "noSupplierLinked": "Aan deze accommodatie is nog geen leverancier gekoppeld: kies er een of maak er een aan. De koppeling wordt bij opslaan vastgelegd.",
-    "createError": "Fout bij aanmaken"
+    "createError": "Fout bij aanmaken",
+    "period": "Periode"
   },
   "accounts": {
     "title": "Accounts",
@@ -242,7 +244,10 @@
     "roleRemoved": "Rol verwijderd",
     "roleRemoveError": "Fout bij verwijderen rol",
     "roleRemoveForbidden": "Je mag deze rol niet verwijderen. Alleen een beheerder kan dat.",
-    "removeRoleConfirm": "Weet je zeker dat je de rol \"{{role}}\" wilt verwijderen?"
+    "removeRoleConfirm": "Weet je zeker dat je de rol \"{{role}}\" wilt verwijderen?",
+    "emptyState": "Nog geen accounts. Maak een account aan zodat een medewerker kan inloggen.",
+    "filterRole": "Filter op rol",
+    "filterOrganization": "Filter op organisatie"
   },
   "emailTemplates": {
     "title": "E-mailtemplates",
@@ -273,7 +278,8 @@
     "selectTemplate": "Kies een template",
     "forProspect": "Prospect / boeker",
     "forBooking": "Boeking",
-    "sendConfirmBooking": "E-mail versturen naar de hoofdboeker van boeking {{number}}?"
+    "sendConfirmBooking": "E-mail versturen naar de hoofdboeker van boeking {{number}}?",
+    "emptyState": "Nog geen e-mailtemplates. Maak er een om vanuit een boeking of prospect te mailen."
   },
   "templateEditor": {
     "font": "Lettertype",
@@ -363,7 +369,8 @@
     "registerTitle": "Prospect registreren",
     "registered": "Prospect geregistreerd",
     "registerError": "Fout bij registreren prospect",
-    "noProspectsFound": "Geen prospects gevonden."
+    "noProspectsFound": "Geen prospects gevonden.",
+    "emptyState": "Nog geen prospects. Registreer een nieuwe klant om een offerte te sturen."
   },
   "bookers": {
     "title": "Boekers",
@@ -387,7 +394,8 @@
     "multipleBookingsFor": "Er zijn meerdere boekingen voor {{name}}:",
     "newBookingForBooker": "Nieuwe boeking voor deze boeker",
     "newTitle": "Nieuwe booker",
-    "newBooker": "Nieuwe boeker"
+    "newBooker": "Nieuwe boeker",
+    "emptyState": "Nog geen boekers. Nieuwe klanten registreer je bij Prospects."
   },
   "accommodations": {
     "title": "Accommodaties",
@@ -395,7 +403,6 @@
     "searchPlaceholder": "Zoek op naam, code of leverancier...",
     "noSupplier": "Geen leverancier",
     "noAddress": "Geen adres",
-    "countFound": "{{count}} accommodaties gevonden",
     "editTitle": "Accommodatie bewerken",
     "newTitle": "Nieuwe accommodatie",
     "details": "Accommodatiegegevens",
@@ -447,7 +454,8 @@
     "noAccommodationsFound": "Geen accommodaties gevonden.",
     "deleteCascadeWarning": "Boekingsregels die naar deze accommodatie verwijzen worden ook verwijderd.",
     "newSupplier": "Nieuwe leverancier",
-    "supplierCreatedAndLinked": "Leverancier aangemaakt en gekoppeld"
+    "supplierCreatedAndLinked": "Leverancier aangemaakt en gekoppeld",
+    "emptyState": "Nog geen accommodaties. Voeg er een toe om die in boekingen te gebruiken."
   },
   "payments": {
     "title": "Betalingen",
@@ -502,7 +510,8 @@
       "overig": "Overig"
     },
     "dueDate": "Uiterlijk",
-    "status_charged_back": "Teruggeboekt"
+    "status_charged_back": "Teruggeboekt",
+    "emptyState": "Nog geen betalingen. Betalingen ontstaan bij het bevestigen van een offerte."
   },
   "organizations": {
     "title": "Organisaties",
@@ -525,7 +534,8 @@
     "noPersonsLinked": "Geen personen gekoppeld aan deze organisatie.",
     "emailFrom": "Afzender-e-mailadres",
     "emailFromHint": "Afzenderadres voor e-mails naar prospects en bookers.",
-    "emailFromInvalid": "Voer een geldig e-mailadres in."
+    "emailFromInvalid": "Voer een geldig e-mailadres in.",
+    "emptyState": "Nog geen organisaties."
   },
   "persons": {
     "title": "Personen",
@@ -548,7 +558,8 @@
     "created": "Persoon aangemaakt",
     "createError": "Fout bij aanmaken persoon",
     "notFound": "Persoon niet gevonden",
-    "noAccountsLinked": "Geen accounts gekoppeld aan deze persoon."
+    "noAccountsLinked": "Geen accounts gekoppeld aan deze persoon.",
+    "emptyState": "Nog geen personen. Voeg een persoon toe om er een account voor te maken."
   },
   "onboarding": {
     "title": "Organisatie onboarding",
@@ -604,7 +615,8 @@
     "authorityRemoveError": "Fout bij verwijderen authority",
     "removeAuthorityConfirm": "Weet je zeker dat je de authority \"{{authority}}\" wilt verwijderen?",
     "authorities": "Authorities",
-    "selectAuthority": "Authority kiezen"
+    "selectAuthority": "Authority kiezen",
+    "emptyState": "Nog geen rollen."
   },
   "authorities": {
     "title": "Authorities",
@@ -622,7 +634,8 @@
     "notFound": "Authority niet gevonden",
     "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
     "removed": "Authority verwijderd",
-    "removeError": "Fout bij verwijderen authority"
+    "removeError": "Fout bij verwijderen authority",
+    "emptyState": "Nog geen rechten."
   },
   "profile": {
     "title": "Mijn gegevens",
@@ -674,7 +687,6 @@
     "removed": "Leverancier verwijderd",
     "removeError": "Fout bij verwijderen leverancier",
     "searchPlaceholder": "Zoek op naam of code...",
-    "countFound": "{{count}} leverancier(s) gevonden",
     "noAddress": "Geen adres",
     "addresses": "Adressen",
     "noAddressesLinked": "Geen adressen gekoppeld.",
@@ -702,7 +714,8 @@
     "address": "Adres",
     "deleteCascadeWarning": "Boekingsregels die naar deze leverancier verwijzen worden ook verwijderd.",
     "newAccommodation": "Nieuwe accommodatie",
-    "accommodationCreatedAndLinked": "Accommodatie aangemaakt en gekoppeld"
+    "accommodationCreatedAndLinked": "Accommodatie aangemaakt en gekoppeld",
+    "emptyState": "Nog geen leveranciers. Voeg er een toe om accommodaties aan te koppelen."
   },
   "documents": {
     "displayname": "Documentnaam",
@@ -755,7 +768,8 @@
     "downloadError": "Downloaden is mislukt",
     "type": "Soort",
     "typeEditor": "Editor",
-    "typeUpload": "Geüpload bestand"
+    "typeUpload": "Geüpload bestand",
+    "emptyState": "Nog geen templates. Voeg een Word-template toe voor offertes en bevestigingen."
   },
   "totp": {
     "setupTitle": "Twee-factor authenticatie instellen",
@@ -785,7 +799,11 @@
     "noActivitiesFound": "Geen activiteiten gevonden.",
     "saveError": "Fout bij opslaan activiteit",
     "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
-    "deleteCascadeWarning": "Boekingsactiviteiten die naar deze activiteit verwijzen worden ook verwijderd."
+    "deleteCascadeWarning": "Boekingsactiviteiten die naar deze activiteit verwijzen worden ook verwijderd.",
+    "emptyState": "Nog geen activiteiten. Voeg er een toe, zoals een ticket of transfer.",
+    "backToActivities": "Terug naar activiteiten",
+    "editTitle": "Activiteit bewerken",
+    "viewTitle": "Activiteit"
   },
   "bookingActivity": {
     "title": "Activiteiten",
@@ -906,5 +924,13 @@
     "historyTitle": "Statusgeschiedenis",
     "historyEmpty": "Nog geen statuswijzigingen vastgelegd.",
     "bySystem": "systeem"
+  },
+  "paginator": {
+    "itemsPerPage": "Per pagina:",
+    "of": "van",
+    "nextPage": "Volgende pagina",
+    "previousPage": "Vorige pagina",
+    "firstPage": "Eerste pagina",
+    "lastPage": "Laatste pagina"
   }
 }

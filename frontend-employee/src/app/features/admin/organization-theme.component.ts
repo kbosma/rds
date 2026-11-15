@@ -34,7 +34,7 @@ import { OrganizationTheme } from '../../shared/models';
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="save()">
             <div class="color-fields">
-              <mat-form-field>
+              <mat-form-field appearance="outline">
                 <mat-label>{{ 'theme.primaryColor' | translate }}</mat-label>
                 <input matInput formControlName="primaryColor" type="text" />
               </mat-form-field>
@@ -45,7 +45,7 @@ import { OrganizationTheme } from '../../shared/models';
             </div>
 
             <div class="color-fields">
-              <mat-form-field>
+              <mat-form-field appearance="outline">
                 <mat-label>{{ 'theme.accentColor' | translate }}</mat-label>
                 <input matInput formControlName="accentColor" type="text" />
               </mat-form-field>
@@ -56,7 +56,7 @@ import { OrganizationTheme } from '../../shared/models';
             </div>
 
             <div class="color-fields">
-              <mat-form-field>
+              <mat-form-field appearance="outline">
                 <mat-label>{{ 'theme.cardTitleColor' | translate }}</mat-label>
                 <input matInput formControlName="cardTitleColor" type="text" />
               </mat-form-field>
@@ -66,7 +66,7 @@ import { OrganizationTheme } from '../../shared/models';
                      class="color-picker" />
             </div>
 
-            <mat-form-field class="full-width">
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ 'theme.logoUrl' | translate }}</mat-label>
               <input matInput formControlName="logoUrl" type="text" />
             </mat-form-field>
@@ -126,27 +126,28 @@ import { OrganizationTheme } from '../../shared/models';
     .theme-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 12px;
+      align-items: start;
     }
+    /* Kleurvak even hoog als het veld ernaast (36px), bovenaan uitgelijnd zodat de hint-ruimte eronder valt. */
     .color-fields {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
-      margin-bottom: 8px;
     }
     .color-fields mat-form-field {
       flex: 1;
     }
     .color-picker {
-      width: 48px;
-      height: 48px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--ui-line);
+      border-radius: var(--ui-radius);
       cursor: pointer;
       padding: 2px;
     }
     .preview-container {
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--ui-line);
       border-radius: 8px;
       overflow: hidden;
     }

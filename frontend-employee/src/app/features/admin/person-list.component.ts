@@ -18,6 +18,7 @@ import { OrganizationService } from './organization.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Person } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 interface PersonRow extends Person {
   organizationName: string;
@@ -33,6 +34,7 @@ interface OrgChip {
   selector: 'app-person-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -80,19 +82,9 @@ interface OrgChip {
     } @else {
       <div class="table-container">
         <table mat-table [dataSource]="dataSource" matSort class="full-width">
-          <ng-container matColumnDef="firstname">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'persons.firstname' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.firstname }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="prefix">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'persons.prefix' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.prefix }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="lastname">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'persons.lastname' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.lastname }}</td>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.name' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ fullName(row) }}</td>
           </ng-container>
 
           <ng-container matColumnDef="organization">
@@ -109,12 +101,13 @@ interface OrgChip {
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'persons.noPersonsFound' | translate }}
+              <app-empty-state icon="people" [filtered]="dataSource.data.length > 0" [message]="'persons.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'persons.newPerson' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>
@@ -156,8 +149,8 @@ export class PersonListComponent implements OnInit {
   /** Organisaties tonen/kiezen: alleen wie ze mag zien (ORGANIZATION_READ), niet op basis van een rol. */
   canSeeOrganizations = this.authService.hasAuthority('ORGANIZATION_READ');
   displayedColumns = this.canSeeOrganizations
-    ? ['firstname', 'prefix', 'lastname', 'organization', 'actions']
-    : ['firstname', 'prefix', 'lastname', 'actions'];
+    ? ['name', 'organization', 'actions']
+    : ['name', 'actions'];
   dataSource = new MatTableDataSource<PersonRow>();
   loading = signal(true);
   activeOrgChip = signal('ALL');
@@ -195,11 +188,19 @@ export class PersonListComponent implements OnInit {
         this.loading.set(false);
         setTimeout(() => {
           this.dataSource.paginator = this.paginator;
+          // De kolom Naam sorteert op achternaam (daarna voornaam), zoals in een telefoonboek.
+          this.dataSource.sortingDataAccessor = (row, column) =>
+            column === 'name' ? `${row.lastname} ${row.firstname}`.toLowerCase() : String((row as unknown as Record<string, unknown>)[column] ?? '');
           this.dataSource.sort = this.sort;
         });
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  /** Volledige naam: voornaam, tussenvoegsel en achternaam (zonder dubbele spatie bij een leeg tussenvoegsel). */
+  fullName(person: Person): string {
+    return [person.firstname, person.prefix, person.lastname].filter(Boolean).join(' ');
   }
 
   applyFilter(event: Event) {

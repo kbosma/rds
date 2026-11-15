@@ -51,7 +51,7 @@ export const BOOKING_STATUS_ORDER = ['aanvraag', 'offerte', 'boeking', 'voorscho
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+      <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
       <button mat-flat-button class="act-update revert-btn" [disabled]="form.invalid || saving()" (click)="revert()">
         <mat-icon>undo</mat-icon> {{ 'bookingStatus.revert' | translate }}
       </button>

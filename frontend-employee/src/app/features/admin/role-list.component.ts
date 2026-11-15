@@ -14,11 +14,13 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { RoleService } from './role.service';
 import { Role } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 @Component({
   selector: 'app-role-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -71,12 +73,13 @@ import { Role } from '../../shared/models';
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'roles.noRolesFound' | translate }}
+              <app-empty-state icon="admin_panel_settings" [filtered]="dataSource.data.length > 0" [message]="'roles.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'roles.newRole' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>

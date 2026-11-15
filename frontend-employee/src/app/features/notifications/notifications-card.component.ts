@@ -70,7 +70,7 @@ const KIND_ICONS: Record<string, string> = {
     }
   `,
   styles: [`
-    .notifications-card { margin-bottom: 16px; }
+    .notifications-card { margin-bottom: 12px; }
     .count { display: inline-block; margin-left: 8px; padding: 0 8px; border-radius: 10px; font-size: 12px;
       background: var(--theme-accent, #ff9800); color: #fff; vertical-align: middle; }
     .empty { color: var(--ui-text-muted); margin: 0; }

@@ -204,8 +204,13 @@ export class TemplateDialogComponent {
   setMode(mode: 'upload' | 'editor') {
     this.mode.set(mode);
     this.errorMessage.set('');
-    // De editor heeft meer ruimte nodig dan het uploadformulier.
-    this.dialogRef.updateSize(mode === 'editor' ? '980px' : '500px');
+    // De editor heeft meer ruimte nodig dan het uploadformulier (breder én hoger: zie .editor-dialog in styles.scss).
+    this.dialogRef.updateSize(mode === 'editor' ? '1100px' : '500px');
+    if (mode === 'editor') {
+      this.dialogRef.addPanelClass('editor-dialog');
+    } else {
+      this.dialogRef.removePanelClass('editor-dialog');
+    }
   }
 
   canSave(): boolean {

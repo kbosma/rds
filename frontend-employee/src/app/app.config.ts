@@ -1,4 +1,6 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, Injector, LOCALE_ID, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeNl from '@angular/common/locales/nl';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -8,6 +10,9 @@ import { provideTranslateHttpLoader } from './core/i18n/translate-loader.factory
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+
+/* Getallen en bedragen in Nederlandse notatie (8.790,75), ook als de interface in het Engels staat. */
+registerLocaleData(localeNl);
 
 const DD_MM_YYYY_FORMATS = {
   parse: { dateInput: 'dd-MM-yyyy' },
@@ -26,7 +31,13 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
+    { provide: LOCALE_ID, useValue: 'nl-NL' },
     { provide: MAT_DATE_LOCALE, useValue: 'nl-NL' },
+    // Paginator-teksten vertalen; dynamisch geladen zodat de paginator niet in de startbundel komt.
+    provideAppInitializer(() => {
+      const injector = inject(Injector);
+      void import('./shared/paginator-intl').then(m => m.translatePaginator(injector));
+    }),
     { provide: MAT_DATE_FORMATS, useValue: DD_MM_YYYY_FORMATS },
     provideTranslateService({
       lang: 'nl',

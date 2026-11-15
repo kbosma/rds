@@ -17,6 +17,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { EmailTemplate } from '../../shared/models';
 import { EmailTemplateDialogComponent } from './email-template-dialog.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 /**
  * Beheer van e-mailtemplates (subject + HTML-body) die per organisatie worden
@@ -26,6 +27,7 @@ import { EmailTemplateDialogComponent } from './email-template-dialog.component'
   selector: 'app-email-template-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     DatePipe,
     MatTableModule,
     MatPaginatorModule,
@@ -92,12 +94,15 @@ import { EmailTemplateDialogComponent } from './email-template-dialog.component'
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'emailTemplates.noTemplatesFound' | translate }}
+              <app-empty-state icon="mail" [filtered]="allTemplates().length > 0" [message]="'emailTemplates.emptyState' | translate">
+                @if (canCreate) {
+                  <button mat-stroked-button class="act-create" (click)="openDialog()"><mat-icon>add</mat-icon> {{ 'emailTemplates.new' | translate }}</button>
+                }
+              </app-empty-state>
             </td>
           </tr>
         </table>
@@ -169,8 +174,9 @@ export class EmailTemplateListComponent implements OnInit {
   openDialog(template?: EmailTemplate) {
     const dialogRef = this.dialog.open(EmailTemplateDialogComponent, {
       data: { template },
-      width: '860px',
-      maxWidth: '95vw',
+      width: '1100px',
+      maxWidth: '92vw',
+      panelClass: 'editor-dialog',
     });
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) {
@@ -182,8 +188,9 @@ export class EmailTemplateListComponent implements OnInit {
   viewTemplate(template: EmailTemplate) {
     this.dialog.open(EmailTemplateDialogComponent, {
       data: { template, readOnly: true },
-      width: '860px',
-      maxWidth: '95vw',
+      width: '1100px',
+      maxWidth: '92vw',
+      panelClass: 'editor-dialog',
     });
   }
 

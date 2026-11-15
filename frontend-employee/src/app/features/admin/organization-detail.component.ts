@@ -65,7 +65,7 @@ import { Organization, Person } from '../../shared/models';
             </mat-form-field>
 
             <div class="actions">
-              <a mat-button routerLink="/admin/organizations"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</a>
+              <a mat-button routerLink="/admin/organizations">{{ 'common.cancel' | translate }}</a>
               <button mat-raised-button color="primary" type="submit"
                       [disabled]="saving() || form.invalid">
                 @if (saving()) {

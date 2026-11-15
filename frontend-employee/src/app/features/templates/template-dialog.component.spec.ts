@@ -31,7 +31,7 @@ describe('TemplateDialogComponent', () => {
     serviceSpy = jasmine.createSpyObj('TemplateService', ['create', 'update']);
     serviceSpy.create.and.returnValue(of(saved));
     serviceSpy.update.and.returnValue(of(saved));
-    dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close', 'updateSize']);
+    dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close', 'updateSize', 'addPanelClass', 'removePanelClass']);
     const imageSpy = jasmine.createSpyObj('TemplateImageService', ['upload', 'list']);
     imageSpy.list.and.returnValue(of([]));
     const authSpy = jasmine.createSpyObj('AuthService', ['hasAuthority']);
@@ -71,7 +71,7 @@ describe('TemplateDialogComponent', () => {
       const { component } = await setup({});
 
       component.setMode('editor');
-      expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('980px');
+      expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('1100px');
 
       component.setMode('upload');
       expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('500px');
@@ -248,7 +248,7 @@ describe('TemplateDialogComponent', () => {
 
       expect(fixture.nativeElement.querySelector('app-template-body-editor')).not.toBeNull();
       expect(fixture.nativeElement.querySelector('.switch-warning')).not.toBeNull();
-      expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('980px');
+      expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('1100px');
     });
 
     it('opslaan vanuit de editor vervangt het bestand: stuurt de HTML en geen bytes', async () => {

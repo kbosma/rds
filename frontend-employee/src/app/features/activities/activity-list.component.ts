@@ -17,11 +17,13 @@ import { AuthService } from '../../core/auth/auth.service';
 import { deleteErrorKey } from '../../shared/utils/delete-error';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Activity } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 @Component({
   selector: 'app-activity-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     RouterLink,
     MatCardModule,
     MatFormFieldModule,
@@ -78,11 +80,14 @@ import { Activity } from '../../shared/models';
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'activity.noActivitiesFound' | translate }}
+              <app-empty-state icon="local_activity" [filtered]="allActivities().length > 0" [message]="'activity.emptyState' | translate">
+                @if (canCreate) {
+                  <button mat-stroked-button class="act-create" routerLink="/activities/new"><mat-icon>add</mat-icon> {{ 'activity.newActivity' | translate }}</button>
+                }
+              </app-empty-state>
             </td>
           </tr>
         </table>

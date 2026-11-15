@@ -72,7 +72,6 @@ interface NavItem {
                   [attr.title]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | translate">
             <mat-icon>{{ collapsed() ? 'menu' : 'menu_open' }}</mat-icon>
           </button>
-          <span class="toolbar-title">{{ 'app.toolbarTitle' | translate }}</span>
           <span class="toolbar-spacer"></span>
           @if (userName()) {
             <span class="username">{{ userName() }}</span>
@@ -101,9 +100,13 @@ interface NavItem {
       transition: width 160ms ease;
       overflow-x: hidden;
       --mat-sidenav-container-shape: 0;
-      --mat-list-list-item-label-text-color: #d3e6ea;
+      /* Tinten van de organisatiekleur op de donkere zijbalk (geen vaste teal). */
+      --sidenav-text: color-mix(in srgb, var(--theme-primary) 12%, #ffffff);
+      --sidenav-icon: color-mix(in srgb, var(--theme-primary) 30%, #c9d6da);
+      --sidenav-muted: color-mix(in srgb, var(--theme-primary) 30%, #9fb3b9);
+      --mat-list-list-item-label-text-color: var(--sidenav-text);
       --mat-list-list-item-label-text-size: 13px;
-      --mat-list-list-item-leading-icon-color: #9cc3cb;
+      --mat-list-list-item-leading-icon-color: var(--sidenav-icon);
       --mat-list-list-item-hover-label-text-color: #ffffff;
       --mat-list-list-item-hover-leading-icon-color: #ffffff;
       --mat-list-list-item-hover-state-layer-color: #ffffff;
@@ -138,7 +141,7 @@ interface NavItem {
       display: block;
       font-size: 10.5px;
       line-height: 14px;
-      color: #9cc3cb;
+      color: var(--sidenav-icon);
       white-space: nowrap;
     }
     .nav-list {
@@ -149,13 +152,11 @@ interface NavItem {
       border-top-color: rgba(255, 255, 255, 0.1);
     }
     .section-header {
-      padding: 4px 10px 4px;
-      font-size: 10.5px;
-      line-height: 14px;
+      padding: 4px 10px;
+      font-size: 12px;
+      line-height: 16px;
       font-weight: 600;
-      color: #7fa9b2;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      color: var(--sidenav-muted);
       white-space: nowrap;
     }
     .nav-item {
@@ -193,10 +194,6 @@ interface NavItem {
       background: var(--theme-primary);
       color: white;
       --mat-icon-button-icon-color: #ffffff;
-    }
-    .toolbar-title {
-      font-size: 14px;
-      font-weight: 500;
     }
     .toolbar-spacer {
       flex: 1;

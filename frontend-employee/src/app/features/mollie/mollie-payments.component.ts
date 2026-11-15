@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DecimalPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,12 +11,16 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { MolliePaymentService } from './mollie-payment.service';
 import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { PaymentStatusBadgeComponent } from '../../shared/components/payment-status-badge.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 @Component({
   selector: 'app-mollie-payments',
   standalone: true,
-  imports: [
-    DecimalPipe,
+  imports: [PaymentStatusBadgeComponent, 
+    EmptyStateComponent,
+    MoneyPipe,
     DatePipe,
     RouterLink,
     MatCardModule,
@@ -42,25 +46,29 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       </button>
     </div>
 
-    <div class="summary-cards">
-      <mat-card class="summary-card">
-        <mat-card-content class="summary-content">
-          <div class="summary-label">{{ 'payments.totalBooking' | translate }}</div>
-          <div class="summary-value">&euro; {{ totalAmount() | number:'1.2-2' }}</div>
+    <div class="kpi-cards">
+      <mat-card class="kpi-card kpi-neutral">
+        <mat-card-content>
+          <div>
+            <div class="kpi-label">{{ 'payments.totalBooking' | translate }}</div>
+            <div class="kpi-value">{{ totalAmount() | money }}</div>
+          </div>
         </mat-card-content>
       </mat-card>
-
-      <mat-card class="summary-card summary-green">
-        <mat-card-content class="summary-content">
-          <div class="summary-label">{{ 'common.paid' | translate }}</div>
-          <div class="summary-value">&euro; {{ paidAmount() | number:'1.2-2' }}</div>
+      <mat-card class="kpi-card kpi-success">
+        <mat-card-content>
+          <div>
+            <div class="kpi-label">{{ 'common.paid' | translate }}</div>
+            <div class="kpi-value">{{ paidAmount() | money }}</div>
+          </div>
         </mat-card-content>
       </mat-card>
-
-      <mat-card class="summary-card summary-orange">
-        <mat-card-content class="summary-content">
-          <div class="summary-label">{{ 'common.outstanding' | translate }}</div>
-          <div class="summary-value">&euro; {{ openAmount() | number:'1.2-2' }}</div>
+      <mat-card class="kpi-card kpi-warning">
+        <mat-card-content>
+          <div>
+            <div class="kpi-label">{{ 'common.outstanding' | translate }}</div>
+            <div class="kpi-value">{{ openAmount() | money }}</div>
+          </div>
         </mat-card-content>
       </mat-card>
     </div>
@@ -81,7 +89,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 
           <ng-container matColumnDef="createdAt">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.createdAt | date:'dd-MM-yyyy' }}</td>
+            <td mat-cell *matCellDef="let row" class="cell-nowrap">{{ row.createdAt | date:'dd-MM-yyyy' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="description">
@@ -93,22 +101,20 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
             <th mat-header-cell *matHeaderCellDef>{{ 'common.method' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               @if (row.method) {
-                <span class="method-badge">{{ row.method }}</span>
+                <span class="badge badge-neutral">{{ row.method }}</span>
               }
             </td>
           </ng-container>
 
           <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef>{{ 'common.amount' | translate }}</th>
-            <td mat-cell *matCellDef="let row">&euro; {{ row.amount | number:'1.2-2' }}</td>
+            <th mat-header-cell *matHeaderCellDef class="cell-num">{{ 'common.amount' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="cell-num">{{ row.amount | money }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="status-badge" [attr.data-status]="paymentStatusMap()[row.molliePaymentId]">
-                {{ 'payments.status_' + paymentStatusMap()[row.molliePaymentId] | translate }}
-              </span>
+              <app-payment-status-badge [status]="paymentStatusMap()[row.molliePaymentId]" />
             </td>
           </ng-container>
 
@@ -141,7 +147,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
                         @for (entry of statusEntries(); track entry.molliePaymentStatusEntryId) {
                           <tr>
                             <td>
-                              <span class="status-badge" [attr.data-status]="entry.status">{{ 'payments.status_' + entry.status | translate }}</span>
+                              <app-payment-status-badge [status]="entry.status" />
                             </td>
                             <td>{{ entry.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
                             <td>{{ entry.createdByName ?? (entry.createdBy ? ('common.unknown' | translate) : ('common.system' | translate)) }}</td>
@@ -159,8 +165,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"
               (click)="toggleRow(row)"
               class="clickable-row"></tr>
           <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
@@ -168,7 +173,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'payments.noPaymentsFound' | translate }}
+              <app-empty-state icon="credit_card" [message]="'payments.emptyState' | translate" />
             </td>
           </tr>
         </table>
@@ -204,47 +209,8 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       width: 18px;
       height: 18px;
     }
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .summary-card {
-      border-radius: 12px;
-    }
-    .summary-content {
-      text-align: center;
-      padding: 2px 0;
-      gap: 12px;
-    }
-    .summary-label {
-      font-size: 13px;
-      color: var(--ui-text-muted);
-      margin-bottom: 4px;
-    }
-    .summary-value {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 26px;
-    }
-    .summary-green {
-      border-left: 4px solid #388e3c;
-    }
-    .summary-green .summary-value {
-      color: #388e3c;
-    }
-    .summary-orange {
-      border-left: 4px solid #f57c00;
-    }
-    .summary-orange .summary-value {
-      color: #f57c00;
-    }
     .clickable-row {
       cursor: pointer;
-    }
-    .clickable-row:hover {
-      background-color: #f0f0f0;
     }
     .detail-row {
       height: 0;
@@ -254,44 +220,9 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       font-family: monospace;
       font-size: 13px;
     }
-    .method-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      background: #e8eaf6;
-      color: #3949ab;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .status-badge[data-status="paid"] {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-    .status-badge[data-status="open"], .status-badge[data-status="pending"] {
-      background-color: #fff3e0;
-      color: #e65100;
-    }
-    .status-badge[data-status="failed"] {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-    .status-badge[data-status="canceled"] {
-      background-color: #f3e5f5;
-      color: #7b1fa2;
-    }
-    .status-badge[data-status="expired"] {
-      background-color: #efebe9;
-      color: #4e342e;
-    }
     .status-history {
       padding: 16px 24px;
-      background: #fafafa;
+      background: var(--ui-primary-faint);
     }
     .status-history h4 {
       margin: 0 0 12px;
@@ -307,13 +238,13 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
     .history-table th {
       text-align: left;
       padding: 6px 12px;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid var(--ui-line);
       color: var(--ui-text-muted);
       font-weight: 500;
     }
     .history-table td {
       padding: 6px 12px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--ui-line);
     }
     .legend {
       display: flex;

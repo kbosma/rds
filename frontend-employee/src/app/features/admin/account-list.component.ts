@@ -6,6 +6,7 @@ import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -20,6 +21,7 @@ import { AccountRoleService } from './account-role.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { Account } from '../../shared/models';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 interface AccountRow extends Account {
   personName: string;
@@ -38,12 +40,14 @@ interface FilterChip {
   selector: 'app-account-list',
   standalone: true,
   imports: [
+    EmptyStateComponent,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
@@ -65,26 +69,20 @@ interface FilterChip {
         <input matInput (keyup)="applyFilter($event)" [placeholder]="'accounts.searchPlaceholder' | translate" />
       </mat-form-field>
 
-      <div class="filter-chips">
+      <mat-button-toggle-group class="filter-toggles" [value]="activeRoleChip()" (change)="filterByRole($event.value)"
+                               [attr.aria-label]="'accounts.filterRole' | translate" hideSingleSelectionIndicator>
         @for (chip of roleChips; track chip.value) {
-          <button mat-stroked-button
-                  [class.active-chip]="activeRoleChip() === chip.value"
-                  (click)="filterByRole(chip.value)">
-            {{ chip.labelKey | translate }}
-          </button>
+          <mat-button-toggle [value]="chip.value">{{ chip.labelKey | translate }}</mat-button-toggle>
         }
-      </div>
+      </mat-button-toggle-group>
 
       @if (canSeeOrganizations) {
-        <div class="filter-chips">
+        <mat-button-toggle-group class="filter-toggles" [value]="activeOrgChip()" (change)="filterByOrganization($event.value)"
+                                 [attr.aria-label]="'accounts.filterOrganization' | translate" hideSingleSelectionIndicator>
           @for (chip of orgChips(); track chip.value) {
-            <button mat-stroked-button
-                    [class.active-chip]="activeOrgChip() === chip.value"
-                    (click)="filterByOrganization(chip.value)">
-              {{ chip.labelKey ? (chip.labelKey | translate) : chip.label }}
-            </button>
+            <mat-button-toggle [value]="chip.value">{{ chip.labelKey ? (chip.labelKey | translate) : chip.label }}</mat-button-toggle>
           }
-        </div>
+        </mat-button-toggle-group>
       }
     </div>
 
@@ -113,7 +111,7 @@ interface FilterChip {
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="status-badge" [class.status-active]="!row.locked" [class.status-locked]="row.locked">
+              <span class="badge status-badge" [class.badge-success]="!row.locked" [class.badge-danger]="row.locked">
                 {{ row.locked ? ('accounts.locked' | translate) : ('accounts.active' | translate) }}
               </span>
             </td>
@@ -128,12 +126,13 @@ interface FilterChip {
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-              [class.alt-row]="i % 2 === 1"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              {{ 'accounts.noAccountsFound' | translate }}
+              <app-empty-state icon="manage_accounts" [filtered]="dataSource.data.length > 0" [message]="'accounts.emptyState' | translate">
+                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'accounts.newAccount' | translate }}</button>
+              </app-empty-state>
             </td>
           </tr>
         </table>
@@ -143,40 +142,12 @@ interface FilterChip {
     }
 
     <div class="legend">
-      <span class="legend-item"><span class="status-badge status-active">{{ 'accounts.active' | translate }}</span> {{ 'accounts.legendActive' | translate }}</span>
-      <span class="legend-item"><span class="status-badge status-locked">{{ 'accounts.locked' | translate }}</span> {{ 'accounts.legendLocked' | translate }}</span>
+      <span class="legend-item"><span class="badge badge-success">{{ 'accounts.active' | translate }}</span> {{ 'accounts.legendActive' | translate }}</span>
+      <span class="legend-item"><span class="badge badge-danger">{{ 'accounts.locked' | translate }}</span> {{ 'accounts.legendLocked' | translate }}</span>
     </div>
   `,
   styles: [`
-    .filter-chips {
-      display: flex;
-      gap: 8px;
-      padding-top: 8px;
-      flex-wrap: wrap;
-    }
-    .filter-chips button {
-      border-radius: 20px;
-      font-size: 13px;
-    }
-    .active-chip {
-      background-color: var(--theme-primary) !important;
-      color: white !important;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .status-active {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-    .status-locked {
-      background-color: #ffebee;
-      color: #c62828;
-    }
+    .filter-toggles { flex-wrap: wrap; align-self: center; }
     .legend {
       display: flex;
       gap: 24px;

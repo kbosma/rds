@@ -40,7 +40,7 @@ export interface AccommodationDetailData {
       @if (data.accommodationAddresses.length > 0) {
         @for (addr of data.accommodationAddresses; track addr.addressId) {
           <div class="address-block">
-            <span class="role-badge">{{ addr.addressrole }}</span>
+            <span class="badge badge-info badge-cap">{{ addr.addressrole }}</span>
             <div class="address-line">{{ formatAddress(addr) }}</div>
             <div class="address-line">{{ addr.postalcode }} {{ addr.city }}</div>
             <div class="address-line">{{ addr.country }}</div>
@@ -71,7 +71,7 @@ export interface AccommodationDetailData {
           <h4 class="sub-title">{{ 'accommodations.supplierAddresses' | translate }}</h4>
           @for (addr of data.supplierAddresses; track addr.addressId) {
             <div class="address-block">
-              <span class="role-badge">{{ addr.addressrole }}</span>
+              <span class="badge badge-info badge-cap">{{ addr.addressrole }}</span>
               <div class="address-line">{{ formatAddress(addr) }}</div>
               <div class="address-line">{{ addr.postalcode }} {{ addr.city }}</div>
               <div class="address-line">{{ addr.country }}</div>
@@ -83,7 +83,7 @@ export interface AccommodationDetailData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.close' | translate }}</button>
+      <button mat-button mat-dialog-close>{{ 'common.close' | translate }}</button>
     </mat-dialog-actions>
   `,
   styles: [`
@@ -126,17 +126,6 @@ export interface AccommodationDetailData {
       font-weight: 500;
       margin: 12px 0 6px;
       color: var(--ui-text-muted);
-    }
-    .role-badge {
-      display: inline-block;
-      background: #e3f2fd;
-      color: #1565c0;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 12px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
     }
     .info-grid {
       display: grid;

@@ -41,7 +41,7 @@ export interface QuickCreateResult {
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button type="button" class="cancel-btn" mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+      <button mat-button type="button" class="cancel-btn" mat-dialog-close>{{ 'common.cancel' | translate }}</button>
       <button mat-raised-button color="primary" type="button" class="create-btn" [disabled]="form.invalid" (click)="submit()">
         <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
       </button>

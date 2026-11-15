@@ -1,11 +1,9 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,35 +12,24 @@ import { BookingService } from '../bookings/booking.service';
 import { BookingLineService } from '../bookings/booking-line.service';
 import { MolliePaymentService } from '../mollie/mollie-payment.service';
 import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { WelcomeHeaderComponent } from './welcome-header.component';
 
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
-  imports: [NotificationsCardComponent, 
-    DecimalPipe,
+  imports: [
+    WelcomeHeaderComponent,
+    NotificationsCardComponent,
+    MoneyPipe,
     RouterLink,
     MatCardModule,
     MatIconModule,
-    MatButtonModule,
     MatProgressSpinnerModule,
     TranslatePipe,
   ],
   template: `
-    <div class="welcome-card">
-      <mat-card>
-        <mat-card-content class="welcome-content">
-          <mat-icon class="welcome-icon">account_circle</mat-icon>
-          <div>
-            <h2 class="welcome-title">{{ 'dashboard.welcome' | translate }}, {{ auth.currentUser()?.personName }}</h2>
-            <p class="welcome-detail">
-              <strong>{{ 'dashboard.organization' | translate }}:</strong> {{ auth.currentUser()?.organizationName }}
-              <span class="separator">|</span>
-              <strong>{{ 'dashboard.role' | translate }}:</strong> {{ auth.currentUser()?.roles?.join(', ') }}
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+    <app-welcome-header />
     @if (auth.hasAuthority('NOTIFICATION_READ')) {
       <app-notifications-card />
     }
@@ -52,7 +39,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
         <mat-spinner diameter="40"></mat-spinner>
       </div>
     } @else {
-      <!-- Bookings overview tile -->
+      <!-- Boekingen dit jaar -->
       <mat-card class="bookings-tile clickable" routerLink="/bookings">
         <mat-card-header>
           <mat-card-title>{{ 'dashboard.bookingsOverview' | translate: { year: currentYear } }}</mat-card-title>
@@ -60,22 +47,22 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
         <mat-card-content>
           <div class="booking-stats">
             <div class="booking-stat">
-              <mat-icon class="stat-icon stat-icon-blue">book_online</mat-icon>
+              <mat-icon class="stat-icon">book_online</mat-icon>
               <div class="stat-number">{{ totalBookings() }}</div>
               <div class="stat-desc">{{ 'dashboard.totalBookings' | translate }}</div>
             </div>
             <div class="booking-stat">
-              <mat-icon class="stat-icon stat-icon-green">check_circle</mat-icon>
+              <mat-icon class="stat-icon">check_circle</mat-icon>
               <div class="stat-number">{{ completedBookings() }}</div>
               <div class="stat-desc">{{ 'dashboard.completedBookings' | translate }}</div>
             </div>
             <div class="booking-stat">
-              <mat-icon class="stat-icon stat-icon-orange">flight_takeoff</mat-icon>
+              <mat-icon class="stat-icon">flight_takeoff</mat-icon>
               <div class="stat-number">{{ activeBookings() }}</div>
               <div class="stat-desc">{{ 'dashboard.activeBookings' | translate }}</div>
             </div>
             <div class="booking-stat">
-              <mat-icon class="stat-icon stat-icon-purple">schedule</mat-icon>
+              <mat-icon class="stat-icon">schedule</mat-icon>
               <div class="stat-number">{{ futureBookings() }}</div>
               <div class="stat-desc">{{ 'dashboard.futureBookings' | translate }}</div>
             </div>
@@ -83,49 +70,49 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
         </mat-card-content>
       </mat-card>
 
-      <!-- Financial tiles -->
-      <div class="stat-cards">
-        <mat-card class="stat-card stat-dark">
-          <mat-card-content class="stat-content">
-            <mat-icon>euro</mat-icon>
+      <!-- Financieel: gedeelde KPI-tegels (styles.scss) -->
+      <div class="kpi-cards">
+        <mat-card class="kpi-card kpi-neutral">
+          <mat-card-content>
+            <mat-icon class="kpi-icon">euro</mat-icon>
             <div>
-              <div class="stat-value">&euro; {{ totalRevenue() | number:'1.2-2' }}</div>
-              <div class="stat-label">{{ 'dashboard.totalRevenue' | translate: { year: currentYear } }}</div>
+              <div class="kpi-label">{{ 'dashboard.totalRevenue' | translate: { year: currentYear } }}</div>
+              <div class="kpi-value">{{ totalRevenue() | money }}</div>
             </div>
           </mat-card-content>
         </mat-card>
 
-        <mat-card class="stat-card stat-teal">
-          <mat-card-content class="stat-content">
-            <mat-icon>check_circle</mat-icon>
+        <mat-card class="kpi-card kpi-success">
+          <mat-card-content>
+            <mat-icon class="kpi-icon">check_circle</mat-icon>
             <div>
-              <div class="stat-value">&euro; {{ paidAmount() | number:'1.2-2' }}</div>
-              <div class="stat-label">{{ 'dashboard.paidAmount' | translate: { year: currentYear } }}</div>
+              <div class="kpi-label">{{ 'dashboard.paidAmount' | translate: { year: currentYear } }}</div>
+              <div class="kpi-value">{{ paidAmount() | money }}</div>
             </div>
           </mat-card-content>
         </mat-card>
 
-        <mat-card class="stat-card stat-orange clickable" routerLink="/payments">
-          <mat-card-content class="stat-content">
-            <mat-icon>warning</mat-icon>
+        <mat-card class="kpi-card kpi-warning clickable" routerLink="/payments">
+          <mat-card-content>
+            <mat-icon class="kpi-icon">schedule</mat-icon>
             <div>
-              <div class="stat-value">&euro; {{ outstandingAmount() | number:'1.2-2' }}</div>
-              <div class="stat-label">{{ 'dashboard.outstandingAmount' | translate }}</div>
+              <div class="kpi-label">{{ 'dashboard.outstandingAmount' | translate }}</div>
+              <div class="kpi-value">{{ outstandingAmount() | money }}</div>
             </div>
           </mat-card-content>
         </mat-card>
       </div>
 
-      <!-- Top 3 tiles -->
+      <!-- Top 5: gekleurde kaarten in tinten van de organisatiekleur (.tone-card) -->
       <div class="top3-cards">
-        <mat-card class="top3-card top3-booked">
+        <mat-card class="tone-card">
           <mat-card-header>
             <mat-card-title>{{ 'dashboard.topBookedAccommodations' | translate: { year: currentYear } }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @for (item of topBookedAccommodations(); track item.name; let i = $index) {
               <div class="top3-row">
-                <span class="top3-rank">{{ i + 1 }}.</span>
+                <span class="top3-rank">{{ i + 1 }}</span>
                 <span class="top3-name">{{ item.name }}</span>
                 <span class="top3-value">{{ 'dashboard.timesBooked' | translate: { count: item.count } }}</span>
               </div>
@@ -135,16 +122,16 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
           </mat-card-content>
         </mat-card>
 
-        <mat-card class="top3-card top3-revenue">
+        <mat-card class="tone-card tone-deep">
           <mat-card-header>
             <mat-card-title>{{ 'dashboard.topRevenueAccommodations' | translate: { year: currentYear } }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @for (item of topRevenueAccommodations(); track item.name; let i = $index) {
               <div class="top3-row">
-                <span class="top3-rank">{{ i + 1 }}.</span>
+                <span class="top3-rank">{{ i + 1 }}</span>
                 <span class="top3-name">{{ item.name }}</span>
-                <span class="top3-value">&euro; {{ item.revenue | number:'1.2-2' }}</span>
+                <span class="top3-value">{{ item.revenue | money }}</span>
               </div>
             } @empty {
               <p class="top3-empty">{{ 'common.noData' | translate }}</p>
@@ -155,194 +142,63 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     }
   `,
   styles: [`
-    .welcome-card {
-      margin-bottom: 12px;
-    }
-    .welcome-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 2px 0;
-    }
-    .welcome-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      color: var(--theme-primary);
-    }
-    .welcome-title {
-      margin: 0;
-      font-size: 17px;
-      font-weight: 600;
-    }
-    .welcome-detail {
-      margin: 2px 0 0;
-      color: var(--ui-text-muted);
-      font-size: 13px;
-    }
-    .separator {
-      margin: 0 8px;
-      color: #ccc;
-    }
-    .bookings-tile {
-      border-radius: 12px;
-      margin-bottom: 12px;
-    }
+    .bookings-tile { margin-bottom: 12px; }
     .booking-stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      padding: 0;
     }
     .booking-stat {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      gap: 4px;
+      gap: 2px;
     }
     .stat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      margin-bottom: 0;
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      color: var(--theme-primary);
     }
-    .stat-icon-blue { color: var(--theme-primary); }
-    .stat-icon-green { color: #388e3c; }
-    .stat-icon-orange { color: #f57c00; }
-    .stat-icon-purple { color: #7b1fa2; }
     .stat-number {
       font-size: 26px;
-      font-weight: 600;
-      color: #333;
       line-height: 32px;
+      font-weight: 600;
+      color: var(--ui-text);
     }
     .stat-desc {
       font-size: 12px;
       color: var(--ui-text-muted);
     }
-    .stat-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .stat-card {
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .stat-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 4px;
-    }
-    .stat-content mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      opacity: 0.9;
-    }
-    .stat-value {
-      font-size: 22px;
-      font-weight: 600;
-      line-height: 28px;
-    }
-    .stat-label {
-      font-size: 12px;
-      opacity: 0.85;
-      margin-top: 2px;
-    }
-    .stat-dark {
-      background: #37474f;
-      color: white;
-    }
-    .stat-teal {
-      background: #00796b;
-      color: white;
-    }
-    .stat-orange {
-      background: #f57c00;
-      color: white;
-    }
-    .clickable {
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .clickable:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+    .clickable { cursor: pointer; }
+    .clickable:hover { border-color: var(--theme-primary); }
+    .kpi-card.clickable:hover { border-color: var(--kpi-color); }
     .top3-cards {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-      margin-top: 12px;
-    }
-    .top3-card {
-      border-radius: 12px;
-      color: white;
-    }
-    .top3-booked {
-      background: linear-gradient(135deg, var(--theme-primary), color-mix(in srgb, var(--theme-primary) 70%, white));
-    }
-    .top3-revenue {
-      background: linear-gradient(135deg, #7b1fa2, #ab47bc);
     }
     .top3-row {
       display: flex;
-      align-items: center;
+      align-items: baseline;
+      gap: 10px;
       padding: 7px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
     }
-    .top3-row:last-child {
-      border-bottom: none;
-    }
+    .top3-row:last-child { border-bottom: none; }
     .top3-rank {
+      width: 16px;
       font-weight: 600;
-      font-size: 14px;
-      opacity: 0.8;
-      width: 24px;
+      opacity: 0.75;
+      font-variant-numeric: tabular-nums;
     }
-    .top3-name {
-      flex: 1;
-      font-size: 13px;
-    }
-    .top3-value {
-      font-weight: 500;
-      font-size: 13px;
-      opacity: 0.9;
-    }
-    .top3-empty {
-      opacity: 0.8;
-      text-align: center;
-      padding: 10px 0;
-    }
-    @media (max-width: 1200px) {
-      .booking-stats {
-        grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      padding: 0;
-    }
-      .stat-cards {
-        grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    }
-    @media (max-width: 700px) {
-      .booking-stats {
-        grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      padding: 0;
-    }
-      .stat-cards {
-        grid-template-columns: 1fr;
-      gap: 12px;
-    }
-      .top3-cards {
-        grid-template-columns: 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
+    .top3-name { flex: 1; min-width: 0; }
+    .top3-value { font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .top3-empty { margin: 0; padding: 10px 0; opacity: 0.85; text-align: center; }
+    @media (max-width: 900px) {
+      .booking-stats { grid-template-columns: repeat(2, 1fr); }
+      .top3-cards { grid-template-columns: 1fr; }
     }
   `],
 })

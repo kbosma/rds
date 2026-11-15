@@ -97,7 +97,7 @@ interface PersonOption {
             </div>
 
             <div class="actions">
-              <a mat-button routerLink="/admin/accounts"><mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
+              <a mat-button routerLink="/admin/accounts">{{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
               @if (!readOnly()) {
                 <button mat-raised-button color="primary" type="submit"
                         [disabled]="saving() || form.invalid || (!isNew() && !form.dirty)">
