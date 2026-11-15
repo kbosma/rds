@@ -73,7 +73,9 @@
     "bookingAdmin": "ORGANIZATION ADMIN",
     "myAdmin": "MY SETTINGS",
     "activities": "Activities",
-    "organizationSettings": "Settings"
+    "organizationSettings": "Settings",
+    "expandMenu": "Expand menu",
+    "collapseMenu": "Collapse menu"
   },
   "auth": {
     "username": "Username",

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -36,21 +36,29 @@ interface NavItem {
     LanguageSwitcherComponent,
   ],
   template: `
-    <mat-sidenav-container class="layout-container">
-      <mat-sidenav mode="side" opened class="sidenav">
+    <mat-sidenav-container class="layout-container" autosize>
+      <mat-sidenav mode="side" opened class="sidenav" [class.collapsed]="collapsed()">
         <div class="sidenav-header">
           <h2 class="brand-title">{{ 'app.title' | translate }}</h2>
-          <span class="brand-subtitle">{{ 'app.subtitle' | translate }}</span>
+          @if (!collapsed()) {
+            <span class="brand-subtitle">{{ 'app.subtitle' | translate }}</span>
+          }
         </div>
         <mat-nav-list class="nav-list">
           @for (item of visibleNavItems(); track item.route) {
             @if (item.sectionKey) {
               <mat-divider></mat-divider>
-              <div class="section-header">{{ item.sectionKey | translate }}</div>
+              @if (!collapsed()) {
+                <div class="section-header">{{ item.sectionKey | translate }}</div>
+              }
             }
-            <a mat-list-item [routerLink]="item.route" routerLinkActive="active-item" class="nav-item">
+            <a mat-list-item [routerLink]="item.route" routerLinkActive="active-item" class="nav-item"
+               [attr.title]="collapsed() ? (item.labelKey | translate) : null"
+               [attr.aria-label]="item.labelKey | translate">
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-              <span matListItemTitle>{{ item.labelKey | translate }}</span>
+              @if (!collapsed()) {
+                <span matListItemTitle>{{ item.labelKey | translate }}</span>
+              }
             </a>
           }
         </mat-nav-list>
@@ -58,13 +66,20 @@ interface NavItem {
 
       <mat-sidenav-content class="content">
         <mat-toolbar class="app-toolbar">
+          <button mat-icon-button class="menu-toggle" (click)="toggleCollapsed()"
+                  [attr.aria-label]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | translate"
+                  [attr.aria-expanded]="!collapsed()"
+                  [attr.title]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | translate">
+            <mat-icon>{{ collapsed() ? 'menu' : 'menu_open' }}</mat-icon>
+          </button>
           <span class="toolbar-title">{{ 'app.toolbarTitle' | translate }}</span>
           <span class="toolbar-spacer"></span>
           @if (userName()) {
             <span class="username">{{ userName() }}</span>
           }
           <app-language-switcher />
-          <button mat-icon-button (click)="auth.logout()" [attr.aria-label]="'auth.logout' | translate">
+          <button mat-icon-button (click)="auth.logout()" [attr.aria-label]="'auth.logout' | translate"
+                  [attr.title]="'auth.logout' | translate">
             <mat-icon>logout</mat-icon>
           </button>
         </mat-toolbar>
@@ -79,12 +94,15 @@ interface NavItem {
       height: 100vh;
     }
     .sidenav {
-      width: 240px;
+      width: 212px;
       background: var(--ui-primary-deep);
       border-right: none;
       border-radius: 0;
+      transition: width 160ms ease;
+      overflow-x: hidden;
       --mat-sidenav-container-shape: 0;
       --mat-list-list-item-label-text-color: #d3e6ea;
+      --mat-list-list-item-label-text-size: 13px;
       --mat-list-list-item-leading-icon-color: #9cc3cb;
       --mat-list-list-item-hover-label-text-color: #ffffff;
       --mat-list-list-item-hover-leading-icon-color: #ffffff;
@@ -92,42 +110,69 @@ interface NavItem {
       --mat-list-list-item-hover-state-layer-opacity: 0.08;
       --mat-list-list-item-focus-state-layer-color: #ffffff;
     }
+    .sidenav.collapsed {
+      width: 56px;
+    }
     .sidenav-header {
-      padding: 20px 16px 14px;
-      text-align: center;
+      height: 48px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     .brand-title {
       margin: 0;
-      font-size: 26px;
+      font-size: 18px;
+      line-height: 22px;
       font-weight: 700;
       color: #ffffff;
       letter-spacing: 2px;
     }
+    .collapsed .brand-title {
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
     .brand-subtitle {
       display: block;
-      font-size: 12px;
+      font-size: 10.5px;
+      line-height: 14px;
       color: #9cc3cb;
-      margin-top: 2px;
+      white-space: nowrap;
     }
     .nav-list {
-      padding: 8px;
+      padding: 6px;
     }
     .nav-list mat-divider {
+      margin: 6px 0;
       border-top-color: rgba(255, 255, 255, 0.1);
     }
     .section-header {
-      padding: 16px 12px 4px;
-      font-size: 11px;
+      padding: 4px 10px 4px;
+      font-size: 10.5px;
+      line-height: 14px;
       font-weight: 600;
       color: #7fa9b2;
       letter-spacing: 1px;
       text-transform: uppercase;
+      white-space: nowrap;
     }
     .nav-item {
-      margin: 2px 0;
+      margin: 1px 0;
       border-radius: 8px;
-      --mat-list-list-item-one-line-container-height: 40px;
+      --mat-list-list-item-one-line-container-height: 34px;
+      --mat-list-list-item-leading-icon-start-space: 10px;
+      --mat-list-list-item-leading-icon-end-space: 12px;
+    }
+    .nav-item .mat-icon {
+      width: 20px;
+      height: 20px;
+      font-size: 20px;
+    }
+    .collapsed .nav-item {
+      --mat-list-list-item-leading-icon-start-space: 12px;
+      --mat-list-list-item-leading-icon-end-space: 0;
     }
     .active-item {
       background-color: var(--theme-primary) !important;
@@ -142,23 +187,27 @@ interface NavItem {
       flex-direction: column;
     }
     .app-toolbar {
+      --mat-toolbar-standard-height: 48px;
+      padding: 0 8px 0 4px;
+      gap: 4px;
       background: var(--theme-primary);
       color: white;
+      --mat-icon-button-icon-color: #ffffff;
     }
     .toolbar-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 500;
     }
     .toolbar-spacer {
       flex: 1;
     }
     .username {
-      margin-right: 16px;
-      font-size: 14px;
+      margin-right: 8px;
+      font-size: 13px;
       opacity: 0.9;
     }
     .main-content {
-      padding: 20px 24px;
+      padding: 16px 20px;
       flex: 1;
       overflow: auto;
       background: var(--ui-canvas);
@@ -169,8 +218,30 @@ export class LayoutComponent {
   auth = inject(AuthService);
   private themeService = inject(ThemeService);
 
+  /** Ingeklapte zijbalk (alleen iconen). De keuze wordt per browser onthouden; zonder opslag start hij uitgeklapt. */
+  collapsed = signal(LayoutComponent.readCollapsed());
+
   constructor() {
     this.themeService.loadAndApplyTheme();
+  }
+
+  toggleCollapsed() {
+    this.collapsed.update((c) => !c);
+    try {
+      localStorage.setItem(LayoutComponent.COLLAPSED_KEY, String(this.collapsed()));
+    } catch {
+      // Opslag niet beschikbaar (privévenster, geblokkeerd): de keuze geldt dan alleen voor deze sessie.
+    }
+  }
+
+  private static readonly COLLAPSED_KEY = 'rds_sidenav_collapsed';
+
+  private static readCollapsed(): boolean {
+    try {
+      return localStorage.getItem(LayoutComponent.COLLAPSED_KEY) === 'true';
+    } catch {
+      return false;
+    }
   }
 
   private allNavItems: NavItem[] = [

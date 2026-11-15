@@ -73,7 +73,9 @@
     "bookingAdmin": "ORGANISATIE BEHEER",
     "myAdmin": "MIJN BEHEER",
     "activities": "Activiteiten",
-    "organizationSettings": "Instellingen"
+    "organizationSettings": "Instellingen",
+    "expandMenu": "Menu uitklappen",
+    "collapseMenu": "Menu inklappen"
   },
   "auth": {
     "username": "Gebruikersnaam",
