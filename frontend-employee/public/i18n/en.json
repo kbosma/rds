@@ -204,7 +204,8 @@
     "newAccommodation": "New accommodation",
     "newSupplier": "New supplier",
     "noSupplierLinked": "This accommodation has no supplier yet: pick one or create one. The link is saved together with the line.",
-    "createError": "Error creating"
+    "createError": "Error creating",
+    "period": "Period"
   },
   "accounts": {
     "title": "Accounts",

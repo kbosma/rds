@@ -81,21 +81,21 @@ type Filter = 'all' | TimelineKind;
                       <div class="sub">{{ item.at | date:'dd-MM-yyyy' }}</div>
                     }
                   }
-                </div>
-                <div class="pills">
-                  @switch (item.kind) {
-                    @case ('email') {
-                      <span class="pill pill-ok">{{ (item.source.resentFromId ? 'messages.resent' : 'messages.sent') | translate }}</span>
+                  <div class="pills">
+                    @switch (item.kind) {
+                      @case ('email') {
+                        <span class="badge badge-success pill-ok">{{ (item.source.resentFromId ? 'messages.resent' : 'messages.sent') | translate }}</span>
+                      }
+                      @case ('document') {
+                        <span class="badge" [class.badge-success]="item.source.visibleInPortal" [class.pill-ok]="item.source.visibleInPortal" [class.badge-neutral]="!item.source.visibleInPortal" [class.pill-neutral]="!item.source.visibleInPortal">{{ (item.source.visibleInPortal ? 'messages.portal' : 'messages.internal') | translate }}</span>
+                        @if (format(item.source.mimeType); as fmt) { <span class="badge badge-neutral pill-neutral">{{ fmt }}</span> }
+                      }
+                      @case ('payment') {
+                        <app-payment-status-badge [status]="paymentStatus()[item.id] ?? ''" />
+                        @if (item.source.method) { <span class="badge badge-neutral pill-neutral">{{ item.source.method }}</span> }
+                      }
                     }
-                    @case ('document') {
-                      <span class="pill" [class.pill-ok]="item.source.visibleInPortal" [class.pill-neutral]="!item.source.visibleInPortal">{{ (item.source.visibleInPortal ? 'messages.portal' : 'messages.internal') | translate }}</span>
-                      @if (format(item.source.mimeType); as fmt) { <span class="pill pill-neutral">{{ fmt }}</span> }
-                    }
-                    @case ('payment') {
-                      <app-payment-status-badge [status]="paymentStatus()[item.id] ?? ''" />
-                      @if (item.source.method) { <span class="pill pill-neutral">{{ item.source.method }}</span> }
-                    }
-                  }
+                  </div>
                 </div>
                 <app-row-actions class="row-actions"
                                  [canView]="canView(item)" [canEdit]="item.kind === 'document' && canEditDocument()"
@@ -110,7 +110,6 @@ type Filter = 'all' | TimelineKind;
     </mat-card>
   `,
   styles: [`
-    .messages-card { border-radius: 12px; }
     .messages-card mat-card-header { display: flex; justify-content: space-between; align-items: center; }
     .filters { margin-bottom: 8px; }
     .timeline { list-style: none; margin: 0; padding: 0; }
@@ -121,13 +120,12 @@ type Filter = 'all' | TimelineKind;
     .what { flex: 1; min-width: 0; }
     .attachment { display: flex; align-items: center; gap: 2px; }
     .attachment mat-icon { font-size: 14px; width: 14px; height: 14px; }
-    .title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sub { font-size: 12px; color: var(--ui-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .pills { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-start; flex: 0 0 190px; }
-    .row-actions { display: flex; justify-content: flex-end; flex: 0 0 96px; }
-    .pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
-    .pill-ok { background: #e8f5e9; color: #2e7d32; }
-    .pill-neutral { background: var(--ui-canvas); color: var(--ui-text-muted); }
+    /* Titel en subregel lopen door over meerdere regels (nooit afkappen); de labels staan eronder. */
+    .title { font-weight: 500; overflow-wrap: anywhere; }
+    .sub { font-size: 12px; color: var(--ui-text-muted); overflow-wrap: anywhere; }
+    .pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .pills:empty { display: none; }
+    .row-actions { display: flex; justify-content: flex-end; flex: none; }
   `],
 })
 export class BookingMessagesCardComponent {

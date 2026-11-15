@@ -25,12 +25,14 @@ import { AuthService } from '../../core/auth/auth.service';
 import { deleteErrorKey } from '../../shared/utils/delete-error';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { BookingStatusBadgeComponent } from '../../shared/components/booking-status-badge.component';
 
 @Component({
   selector: 'app-booking-list',
   standalone: true,
   imports: [
     MoneyPipe,
+    BookingStatusBadgeComponent,
     DatePipe,
     FormsModule,
     MatTableModule,
@@ -119,15 +121,13 @@ import { MoneyPipe } from '../../shared/pipes/money.pipe';
           <ng-container matColumnDef="statusName">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="status-badge" [class]="'status-' + row.bookingStatus">
-                {{ 'bookings.status_' + row.bookingStatus | translate }}
-              </span>
+              <app-booking-status-badge [status]="row.bookingStatus" />
             </td>
           </ng-container>
 
           <ng-container matColumnDef="totalSum">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'common.amount' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.totalSum | money }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="cell-num">{{ 'common.amount' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="cell-num">{{ row.totalSum | money }}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
@@ -168,22 +168,6 @@ import { MoneyPipe } from '../../shared/pipes/money.pipe';
     .status-field {
       flex: 1.2 1 170px;
     }
-    .status-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: capitalize;
-    }
-    .status-aanvraag { background: #fff3e0; color: #e65100; }
-    .status-offerte { background: #e8f5e9; color: #2e7d32; }
-    .status-boeking { background: #e3f2fd; color: #1565c0; }
-    .status-voorschot { background: #e0f2f1; color: #00695c; }
-    .status-betaald { background: #e0f2f1; color: #00695c; }
-    .status-opreis { background: #fff8e1; color: #8d6e00; }
-    .status-weerthuis { background: #e8eaf6; color: #283593; }
-    .status-afgerond { background: #f3e5f5; color: #6a1b9a; }
   `],
 })
 export class BookingListComponent implements OnInit {

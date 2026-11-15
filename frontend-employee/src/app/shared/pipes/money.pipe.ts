@@ -18,6 +18,6 @@ export class MoneyPipe implements PipeTransform {
       return '';
     }
     const symbol = !currency || currency === 'EUR' ? '€' : currency;
-    return `${symbol} ${formatNumber(value, this.locale, '1.2-2')}`;
+    return `${symbol}\u00a0${formatNumber(value, this.locale, '1.2-2')}`;
   }
 }

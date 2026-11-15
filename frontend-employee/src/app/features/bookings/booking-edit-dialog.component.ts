@@ -11,6 +11,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Booking, BookingService } from './booking.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { BookingStatusBadgeComponent } from '../../shared/components/booking-status-badge.component';
 
 export interface BookingEditDialogData {
   booking: Booking;
@@ -21,6 +22,7 @@ export interface BookingEditDialogData {
   standalone: true,
   imports: [
     MoneyPipe,
+    BookingStatusBadgeComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatCheckboxModule,
@@ -34,35 +36,25 @@ export interface BookingEditDialogData {
   template: `
     <h2 mat-dialog-title>{{ 'bookings.editBookingTitle' | translate }}</h2>
     <mat-dialog-content>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">{{ 'bookings.bookingNumber' | translate }}</span>
-          <span class="info-value">{{ data.booking.bookingNumber }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">{{ 'bookings.fromDateComputed' | translate }}</span>
-          <span class="info-value">{{ data.booking.fromDate | date:'dd-MM-yyyy' }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">{{ 'bookings.untilDateComputed' | translate }}</span>
-          <span class="info-value">{{ data.booking.untilDate | date:'dd-MM-yyyy' }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">{{ 'bookings.totalComputed' | translate }}</span>
-          <span class="info-value total">{{ data.booking.totalSum | money }}</span>
-        </div>
-      </div>
-
-      <div class="info-item status-line">
-        <span class="info-label">{{ 'common.status' | translate }}</span>
-        <span class="info-value current-status">
-          {{ 'bookings.status_' + data.booking.bookingStatus | translate }}
+      <dl class="kv-list">
+        <dt>{{ 'bookings.bookingNumber' | translate }}</dt>
+        <dd>{{ data.booking.bookingNumber }}</dd>
+        <dt>{{ 'bookings.fromDateComputed' | translate }}</dt>
+        <dd>{{ data.booking.fromDate | date:'dd-MM-yyyy' }}</dd>
+        <dt>{{ 'bookings.untilDateComputed' | translate }}</dt>
+        <dd>{{ data.booking.untilDate | date:'dd-MM-yyyy' }}</dd>
+        <dt>{{ 'bookings.totalComputed' | translate }}</dt>
+        <dd class="total">{{ data.booking.totalSum | money }}</dd>
+        <dt>{{ 'common.status' | translate }}</dt>
+        <dd class="current-status">
+          <app-booking-status-badge [status]="data.booking.bookingStatus" />
           @if (quoteConfirmedControl.value && canConfirm) {
-            → <strong class="next-status">{{ 'bookings.status_boeking' | translate }}</strong>
+            <span class="arrow">→</span>
+            <app-booking-status-badge class="next-status" status="boeking" />
           }
-        </span>
-        <span class="hint status-hint">{{ 'bookingStatus.setBySystem' | translate }}</span>
-      </div>
+        </dd>
+      </dl>
+      <p class="hint status-hint">{{ 'bookingStatus.setBySystem' | translate }}</p>
 
       <div class="quote">
         <mat-checkbox [formControl]="quoteConfirmedControl" class="quote-confirmed">{{ 'bookings.quoteConfirmed' | translate }}</mat-checkbox>
@@ -91,32 +83,12 @@ export interface BookingEditDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .info-grid {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .info-item {
-      display: flex;
-      flex-direction: column;
-    }
-    .info-label {
-      font-size: 12px;
-      color: var(--ui-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .info-value {
-      font-size: 15px;
-      margin-top: 2px;
-    }
-    .info-value.total {
-      font-weight: 600;
-      color: #2e7d32;
-    }
-    .status-line { margin-bottom: 16px; }
+    .kv-list .total { font-weight: 600; }
+    .current-status { display: flex; align-items: center; gap: 6px; }
+    .arrow { color: var(--ui-text-muted); }
+    .status-hint { margin: 8px 0 16px; }
     .quote { display: flex; flex-direction: column; gap: 4px; }
-    .hint { font-size: 12px; color: #5d7a85; }
+    .hint { font-size: 12px; color: var(--ui-text-muted); }
   `],
 })
 export class BookingEditDialogComponent {

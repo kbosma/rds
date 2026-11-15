@@ -204,7 +204,8 @@
     "newAccommodation": "Nieuwe accommodatie",
     "newSupplier": "Nieuwe leverancier",
     "noSupplierLinked": "Aan deze accommodatie is nog geen leverancier gekoppeld: kies er een of maak er een aan. De koppeling wordt bij opslaan vastgelegd.",
-    "createError": "Fout bij aanmaken"
+    "createError": "Fout bij aanmaken",
+    "period": "Periode"
   },
   "accounts": {
     "title": "Accounts",
