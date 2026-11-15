@@ -443,6 +443,8 @@ $act-colors: (
 .badge-warning { --badge-color: var(--act-send); }
 .badge-danger { --badge-color: var(--act-delete); }
 .badge-neutral { --badge-color: var(--ui-text-muted); }
+/* Ruwe waarde uit de database (bv. adresrol 'woon'): met hoofdletter tonen. */
+.badge-cap { text-transform: capitalize; }
 
 /* Gegevens als label + waarde (kaarten en alleen-lezen dialogen). Gebruik <dl class="kv-list"> met dt/dd. */
 .kv-list {

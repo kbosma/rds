@@ -83,7 +83,7 @@ import { Address } from '../models';
     @for (address of addresses(); track address.addressId) {
       <div class="list-item address-item">
         <div class="item-info">
-          <span class="badge badge-info">{{ address.addressrole }}</span>
+          <span class="badge badge-info badge-cap">{{ address.addressrole }}</span>
           <span>{{ formatAddress(address) }}</span>
           <span class="muted">{{ address.postalcode }} {{ address.city }}, {{ address.country }}</span>
         </div>

@@ -37,7 +37,7 @@ import { Booker } from '../../shared/models';
     <mat-dialog-content>
       <form [formGroup]="form">
         <div class="row">
-          <mat-form-field appearance="outline" class="flex-1">
+          <mat-form-field appearance="outline" class="flex-2">
             <mat-label>{{ 'bookers.firstname' | translate }}</mat-label>
             <input matInput formControlName="firstname" />
           </mat-form-field>
@@ -45,12 +45,11 @@ import { Booker } from '../../shared/models';
             <mat-label>{{ 'bookers.prefix' | translate }}</mat-label>
             <input matInput formControlName="prefix" />
           </mat-form-field>
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>{{ 'bookers.lastname' | translate }}</mat-label>
+            <input matInput formControlName="lastname" />
+          </mat-form-field>
         </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'bookers.lastname' | translate }}</mat-label>
-          <input matInput formControlName="lastname" />
-        </mat-form-field>
 
         <div class="row">
           <mat-form-field appearance="outline" class="flex-1">
@@ -61,19 +60,6 @@ import { Booker } from '../../shared/models';
             <mat-label>{{ 'bookers.initials' | translate }}</mat-label>
             <input matInput formControlName="initials" />
           </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'common.telephone' | translate }}</mat-label>
-          <input matInput formControlName="telephone" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'common.email' | translate }}</mat-label>
-          <input matInput formControlName="emailaddress" type="email" />
-        </mat-form-field>
-
-        <div class="row">
           <mat-form-field appearance="outline" class="flex-1">
             <mat-label>{{ 'bookers.gender' | translate }}</mat-label>
             <mat-select formControlName="gender">
@@ -81,10 +67,25 @@ import { Booker } from '../../shared/models';
               <mat-option value="vrouw">{{ 'bookers.genderFemale' | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
+        </div>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>{{ 'common.telephone' | translate }}</mat-label>
+            <input matInput formControlName="telephone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>{{ 'common.email' | translate }}</mat-label>
+            <input matInput formControlName="emailaddress" type="email" />
+          </mat-form-field>
+        </div>
+
+        <div class="row">
           <mat-form-field appearance="outline" class="flex-1">
             <mat-label>{{ 'common.birthdate' | translate }}</mat-label>
             <input matInput formControlName="birthdate" type="date" />
           </mat-form-field>
+          <span class="flex-2"></span>
         </div>
       </form>
     </mat-dialog-content>

@@ -47,8 +47,7 @@
   },
   "app": {
     "title": "RDS",
-    "subtitle": "Travel Dossier System",
-    "toolbarTitle": "RDS - Travel Dossier System"
+    "subtitle": "Travel Dossier System"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -70,9 +69,9 @@
     "templates": "Templates",
     "emailTemplates": "Email templates",
     "theme": "Brand Style",
-    "admin": "ADMIN",
-    "bookingAdmin": "ORGANIZATION ADMIN",
-    "myAdmin": "MY SETTINGS",
+    "admin": "Administration",
+    "bookingAdmin": "Organization",
+    "myAdmin": "My account",
     "activities": "Activities",
     "organizationSettings": "Settings",
     "expandMenu": "Expand menu",

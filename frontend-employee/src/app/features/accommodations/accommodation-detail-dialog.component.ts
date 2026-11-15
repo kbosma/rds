@@ -40,7 +40,7 @@ export interface AccommodationDetailData {
       @if (data.accommodationAddresses.length > 0) {
         @for (addr of data.accommodationAddresses; track addr.addressId) {
           <div class="address-block">
-            <span class="badge badge-info">{{ addr.addressrole }}</span>
+            <span class="badge badge-info badge-cap">{{ addr.addressrole }}</span>
             <div class="address-line">{{ formatAddress(addr) }}</div>
             <div class="address-line">{{ addr.postalcode }} {{ addr.city }}</div>
             <div class="address-line">{{ addr.country }}</div>
@@ -71,7 +71,7 @@ export interface AccommodationDetailData {
           <h4 class="sub-title">{{ 'accommodations.supplierAddresses' | translate }}</h4>
           @for (addr of data.supplierAddresses; track addr.addressId) {
             <div class="address-block">
-              <span class="badge badge-info">{{ addr.addressrole }}</span>
+              <span class="badge badge-info badge-cap">{{ addr.addressrole }}</span>
               <div class="address-line">{{ formatAddress(addr) }}</div>
               <div class="address-line">{{ addr.postalcode }} {{ addr.city }}</div>
               <div class="address-line">{{ addr.country }}</div>

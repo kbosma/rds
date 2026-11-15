@@ -47,8 +47,7 @@
   },
   "app": {
     "title": "RDS",
-    "subtitle": "Reis Dossier Systeem",
-    "toolbarTitle": "RDS - Reis Dossier Systeem"
+    "subtitle": "Reis Dossier Systeem"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -70,9 +69,9 @@
     "templates": "Templates",
     "emailTemplates": "E-mailtemplates",
     "theme": "Huisstijl",
-    "admin": "BEHEER",
-    "bookingAdmin": "ORGANISATIE BEHEER",
-    "myAdmin": "MIJN BEHEER",
+    "admin": "Beheer",
+    "bookingAdmin": "Organisatiebeheer",
+    "myAdmin": "Mijn account",
     "activities": "Activiteiten",
     "organizationSettings": "Instellingen",
     "expandMenu": "Menu uitklappen",

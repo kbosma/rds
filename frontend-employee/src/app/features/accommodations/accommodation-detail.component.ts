@@ -243,7 +243,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                 <div class="address-card">
                   <div class="address-card-header">
                     <div class="address-info">
-                      <span class="badge badge-info">{{ addr.addressrole }}</span>
+                      <span class="badge badge-info badge-cap">{{ addr.addressrole }}</span>
                       <div class="address-line">{{ formatAddress(addr) }}</div>
                       <div class="address-line secondary">{{ addr.postalcode }} {{ addr.city }}, {{ addr.country }}</div>
                     </div>
