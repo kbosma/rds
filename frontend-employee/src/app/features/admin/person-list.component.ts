@@ -46,7 +46,7 @@ interface OrgChip {
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'persons.title' | translate }}</h1>
       <button mat-raised-button color="primary" (click)="navigateToNew()">
         <mat-icon>add</mat-icon> {{ 'persons.newPerson' | translate }}
@@ -124,28 +124,6 @@ interface OrgChip {
     }
   `,
   styles: [`
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
-    .filter-bar {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .search-field {
-      flex: 1;
-      min-width: 300px;
-    }
     .filter-chips {
       display: flex;
       gap: 8px;
@@ -159,30 +137,6 @@ interface OrgChip {
     .active-chip {
       background-color: var(--theme-primary) !important;
       color: white !important;
-    }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .full-width {
-      width: 100%;
-    }
-    .actions-header { text-align: right; }
-    .actions-cell { width: 1%; }
-    .alt-row {
-      background-color: #fafafa;
-    }
-    .no-data {
-      text-align: center;
-      padding: 24px;
-      color: #888;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
     }
   `],
 })

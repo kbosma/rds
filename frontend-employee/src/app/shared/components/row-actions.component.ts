@@ -43,6 +43,8 @@ import { TranslatePipe } from '@ngx-translate/core';
     </div>
   `,
   styles: [`
+    /* Blok i.p.v. inline: anders reserveert de regel onder de knoppen ruimte voor letterstaarten en wordt de rij hoger. */
+    :host { display: block; }
     .row-actions { display: flex; justify-content: flex-end; align-items: center; white-space: nowrap; }
   `],
 })

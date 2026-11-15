@@ -52,8 +52,8 @@ export interface BookingStatusHistoryDialogData {
     .change { display: flex; gap: 12px; padding: 8px; border-radius: 6px; }
     .who-icon { color: var(--theme-primary); flex: none; }
     .reason { font-size: 13px; }
-    .sub { font-size: 12px; color: var(--ui-text-secondary, #666); }
-    .empty { color: var(--ui-text-secondary, #666); }
+    .sub { font-size: 12px; color: var(--ui-text-muted); }
+    .empty { color: var(--ui-text-muted); }
   `],
 })
 export class BookingStatusHistoryDialogComponent implements OnInit {

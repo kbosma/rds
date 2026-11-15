@@ -156,29 +156,29 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
   `,
   styles: [`
     .welcome-card {
-      margin-bottom: 24px;
+      margin-bottom: 12px;
     }
     .welcome-content {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 8px 0;
+      gap: 12px;
+      padding: 2px 0;
     }
     .welcome-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
       color: var(--theme-primary);
     }
     .welcome-title {
       margin: 0;
-      font-size: 20px;
-      font-weight: 500;
+      font-size: 17px;
+      font-weight: 600;
     }
     .welcome-detail {
-      margin: 4px 0 0;
-      color: #666;
-      font-size: 14px;
+      margin: 2px 0 0;
+      color: var(--ui-text-muted);
+      font-size: 13px;
     }
     .separator {
       margin: 0 8px;
@@ -186,13 +186,13 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     }
     .bookings-tile {
       border-radius: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 12px;
     }
     .booking-stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-      padding: 8px 0;
+      gap: 12px;
+      padding: 0;
     }
     .booking-stat {
       display: flex;
@@ -202,28 +202,29 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
       gap: 4px;
     }
     .stat-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      margin-bottom: 4px;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 0;
     }
     .stat-icon-blue { color: var(--theme-primary); }
     .stat-icon-green { color: #388e3c; }
     .stat-icon-orange { color: #f57c00; }
     .stat-icon-purple { color: #7b1fa2; }
     .stat-number {
-      font-size: 32px;
+      font-size: 26px;
       font-weight: 600;
       color: #333;
+      line-height: 32px;
     }
     .stat-desc {
-      font-size: 13px;
-      color: #888;
+      font-size: 12px;
+      color: var(--ui-text-muted);
     }
     .stat-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      gap: 12px;
     }
     .stat-card {
       border-radius: 12px;
@@ -232,21 +233,22 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     .stat-content {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 16px 8px;
+      gap: 12px;
+      padding: 10px 4px;
     }
     .stat-content mat-icon {
-      font-size: 40px;
-      width: 40px;
-      height: 40px;
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
       opacity: 0.9;
     }
     .stat-value {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 600;
+      line-height: 28px;
     }
     .stat-label {
-      font-size: 13px;
+      font-size: 12px;
       opacity: 0.85;
       margin-top: 2px;
     }
@@ -273,8 +275,8 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     .top3-cards {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-top: 24px;
+      gap: 12px;
+      margin-top: 12px;
     }
     .top3-card {
       border-radius: 12px;
@@ -289,7 +291,7 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     .top3-row {
       display: flex;
       align-items: center;
-      padding: 10px 0;
+      padding: 7px 0;
       border-bottom: 1px solid rgba(255,255,255,0.2);
     }
     .top3-row:last-child {
@@ -297,47 +299,50 @@ import { Booking, MolliePayment, MolliePaymentStatusEntry } from '../../shared/m
     }
     .top3-rank {
       font-weight: 600;
-      font-size: 16px;
+      font-size: 14px;
       opacity: 0.8;
-      width: 28px;
+      width: 24px;
     }
     .top3-name {
       flex: 1;
-      font-size: 15px;
+      font-size: 13px;
     }
     .top3-value {
       font-weight: 500;
-      font-size: 14px;
+      font-size: 13px;
       opacity: 0.9;
     }
     .top3-empty {
       opacity: 0.8;
       text-align: center;
-      padding: 16px 0;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
+      padding: 10px 0;
     }
     @media (max-width: 1200px) {
       .booking-stats {
         grid-template-columns: repeat(2, 1fr);
-      }
+      gap: 12px;
+      padding: 0;
+    }
       .stat-cards {
         grid-template-columns: repeat(2, 1fr);
-      }
+      gap: 12px;
+    }
     }
     @media (max-width: 700px) {
       .booking-stats {
         grid-template-columns: repeat(2, 1fr);
-      }
+      gap: 12px;
+      padding: 0;
+    }
       .stat-cards {
         grid-template-columns: 1fr;
-      }
+      gap: 12px;
+    }
       .top3-cards {
         grid-template-columns: 1fr;
-      }
+      gap: 12px;
+      margin-top: 12px;
+    }
     }
   `],
 })

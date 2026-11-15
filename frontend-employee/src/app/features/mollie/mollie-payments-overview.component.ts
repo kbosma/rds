@@ -187,17 +187,12 @@ interface BookingMolliePaymentLink {
     }
   `,
   styles: [`
-    .payment-type { font-size: 12px; color: var(--ui-text-secondary, #666); }
-    h1 {
-      margin: 0 0 20px;
-      font-size: 24px;
-      font-weight: 500;
-    }
+    .payment-type { font-size: 12px; color: var(--ui-text-muted); }
     .summary-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
     .summary-card {
       border-radius: 12px;
@@ -205,24 +200,25 @@ interface BookingMolliePaymentLink {
     .summary-content {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 8px 0;
+      gap: 12px;
+      padding: 2px 0;
     }
     .summary-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
     }
     .total-icon { color: var(--theme-primary); }
     .paid-icon { color: #388e3c; }
     .open-icon { color: #f57c00; }
     .summary-label {
       font-size: 13px;
-      color: #888;
+      color: var(--ui-text-muted);
     }
     .summary-value {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 600;
+      line-height: 26px;
     }
     .paid-value { color: #388e3c; }
     .open-value { color: #f57c00; }
@@ -234,22 +230,8 @@ interface BookingMolliePaymentLink {
     }
     .search-field {
       width: 100%;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .full-width {
-      width: 100%;
-    }
-    .alt-row {
-      background-color: #fafafa;
-    }
-    .actions-header { text-align: right; }
-    .actions-cell { width: 1%; }
     .mollie-id {
       color: var(--theme-primary);
       font-family: monospace;
@@ -293,16 +275,6 @@ interface BookingMolliePaymentLink {
     .status-badge[data-status="expired"] {
       background-color: #efebe9;
       color: #4e342e;
-    }
-    .no-data {
-      text-align: center;
-      padding: 24px;
-      color: #888;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
     }
     @media (max-width: 900px) {
       .summary-cards {

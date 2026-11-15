@@ -114,10 +114,9 @@ export interface TemplateDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
     .mode-toggle { margin-bottom: 16px; }
     .switch-warning { font-size: 13px; color: #b26a00; margin: 0 0 8px; }
-    .editor-hint { font-size: 13px; color: #666; margin: 0 0 8px; }
+    .editor-hint { font-size: 13px; color: var(--ui-text-muted); margin: 0 0 8px; }
     .upload-section {
       display: flex;
       align-items: center;
@@ -126,7 +125,7 @@ export interface TemplateDialogData {
     }
     .file-name {
       font-size: 13px;
-      color: #555;
+      color: var(--ui-text-muted);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -154,17 +153,12 @@ export interface TemplateDialogData {
     .dropzone-text {
       margin: 8px 0 4px;
       font-size: 14px;
-      color: #555;
+      color: var(--ui-text-muted);
     }
     .dropzone-hint {
       margin: 0;
       font-size: 12px;
-      color: #999;
-    }
-    .error-text {
-      color: #c62828;
-      font-size: 13px;
-      margin-top: 8px;
+      color: var(--ui-text-muted);
     }
   `],
 })

@@ -145,10 +145,6 @@ import { OrganizationTheme } from '../../shared/models';
       cursor: pointer;
       padding: 2px;
     }
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
     .preview-container {
       border: 1px solid #e0e0e0;
       border-radius: 8px;
@@ -186,7 +182,7 @@ import { OrganizationTheme } from '../../shared/models';
     }
     .preview-card-body {
       font-size: 13px;
-      color: #666;
+      color: var(--ui-text-muted);
     }
     .preview-accent-bar {
       display: flex;

@@ -49,20 +49,20 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'bookings.title' | translate }}</h1>
       <button mat-raised-button color="primary" (click)="navigateToNew()">
         <mat-icon>add</mat-icon> {{ 'bookings.newBooking' | translate }}
       </button>
     </div>
 
-    <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>{{ 'common.search' | translate }}</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput (keyup)="applyFilters()" #searchInput [placeholder]="'bookings.searchPlaceholder' | translate" />
-    </mat-form-field>
-
     <div class="filter-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput (keyup)="applyFilters()" #searchInput [placeholder]="'bookings.searchPlaceholder' | translate" />
+      </mat-form-field>
+
       <mat-form-field appearance="outline" class="date-field">
         <mat-label>{{ 'bookings.periodFrom' | translate }}</mat-label>
         <input matInput [matDatepicker]="filterFromPicker"
@@ -152,46 +152,21 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
     }
   `,
   styles: [`
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
-    .filter-field {
-      width: 100%;
-    }
     .filter-row {
       display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+    }
+    .filter-row .search-field {
+      flex: 2 1 260px;
     }
     .date-field {
-      flex: 1;
+      flex: 1 1 150px;
     }
     .status-field {
-      flex: 1.5;
+      flex: 1.2 1 170px;
     }
-    .clear-btn {
-      margin-top: 2px;
-    }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid var(--ui-line);
-    }
-    .full-width {
-      width: 100%;
-    }
-    .actions-header { text-align: right; }
-    .actions-cell { width: 1%; }
     .status-badge {
       display: inline-block;
       padding: 2px 10px;
@@ -208,16 +183,6 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
     .status-opreis { background: #fff8e1; color: #8d6e00; }
     .status-weerthuis { background: #e8eaf6; color: #283593; }
     .status-afgerond { background: #f3e5f5; color: #6a1b9a; }
-    .no-data {
-      text-align: center;
-      padding: 24px;
-      color: #888;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
-    }
   `],
 })
 export class BookingListComponent implements OnInit {

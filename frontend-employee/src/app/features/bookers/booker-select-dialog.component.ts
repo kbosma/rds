@@ -51,7 +51,7 @@ import { Booker } from '../../shared/models';
       <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
     </mat-dialog-actions>
   `,
-  styles: [`.full-width { width: 100%; } .loading { display: flex; justify-content: center; padding: 16px; }`],
+  styles: [``],
 })
 export class BookerSelectDialogComponent implements OnInit {
   private bookerService = inject(BookerService);

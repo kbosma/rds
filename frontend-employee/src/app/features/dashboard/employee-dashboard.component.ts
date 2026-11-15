@@ -36,15 +36,15 @@ import { NotificationsCardComponent } from '../notifications/notifications-card.
     </mat-card>
   `,
   styles: [`
-    .welcome-card { margin-bottom: 24px; }
-    .welcome-content { display: flex; align-items: center; gap: 16px; padding: 8px 0; }
-    .welcome-icon { font-size: 48px; width: 48px; height: 48px; color: var(--theme-primary); }
-    .welcome-title { margin: 0; font-size: 20px; font-weight: 500; }
-    .welcome-detail { margin: 4px 0 0; color: #666; font-size: 14px; }
+    .welcome-card { margin-bottom: 12px; }
+    .welcome-content { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
+    .welcome-icon { font-size: 36px; width: 36px; height: 36px; color: var(--theme-primary); }
+    .welcome-title { margin: 0; font-size: 17px; font-weight: 600; }
+    .welcome-detail { margin: 2px 0 0; color: var(--ui-text-muted); font-size: 13px; }
     .separator { margin: 0 8px; color: #ccc; }
     .placeholder-card { border-radius: 12px; }
-    .placeholder-content { display: flex; flex-direction: column; align-items: center; padding: 48px 0; color: #888; }
-    .placeholder-icon { font-size: 64px; width: 64px; height: 64px; color: #ccc; margin-bottom: 16px; }
+    .placeholder-content { display: flex; flex-direction: column; align-items: center; padding: 24px 0; color: var(--ui-text-muted); }
+    .placeholder-icon { font-size: 44px; width: 44px; height: 44px; color: #ccc; margin-bottom: 8px; }
   `],
 })
 export class EmployeeDashboardComponent {

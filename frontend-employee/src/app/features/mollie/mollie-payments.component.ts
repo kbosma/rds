@@ -35,7 +35,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       <span>{{ 'payments.title' | translate }}</span>
     </div>
 
-    <div class="header">
+    <div class="page-header">
       <h1>{{ 'payments.title' | translate }}</h1>
       <button mat-raised-button color="primary">
         <mat-icon>add</mat-icon> {{ 'common.newPayment' | translate }}
@@ -190,7 +190,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       gap: 4px;
       margin-bottom: 16px;
       font-size: 14px;
-      color: #888;
+      color: var(--ui-text-muted);
     }
     .breadcrumb-link {
       color: var(--theme-primary);
@@ -204,38 +204,29 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       width: 18px;
       height: 18px;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
     .summary-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
     .summary-card {
       border-radius: 12px;
     }
     .summary-content {
       text-align: center;
-      padding: 8px 0;
+      padding: 2px 0;
+      gap: 12px;
     }
     .summary-label {
       font-size: 13px;
-      color: #888;
+      color: var(--ui-text-muted);
       margin-bottom: 4px;
     }
     .summary-value {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 600;
+      line-height: 26px;
     }
     .summary-green {
       border-left: 4px solid #388e3c;
@@ -248,18 +239,6 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
     }
     .summary-orange .summary-value {
       color: #f57c00;
-    }
-    .table-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .full-width {
-      width: 100%;
-    }
-    .alt-row {
-      background-color: #fafafa;
     }
     .clickable-row {
       cursor: pointer;
@@ -318,7 +297,7 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       margin: 0 0 12px;
       font-size: 14px;
       font-weight: 500;
-      color: #555;
+      color: var(--ui-text-muted);
     }
     .history-table {
       width: 100%;
@@ -329,29 +308,19 @@ import { MolliePayment, MolliePaymentStatusEntry } from '../../shared/models';
       text-align: left;
       padding: 6px 12px;
       border-bottom: 1px solid #ddd;
-      color: #888;
+      color: var(--ui-text-muted);
       font-weight: 500;
     }
     .history-table td {
       padding: 6px 12px;
       border-bottom: 1px solid #eee;
     }
-    .no-data {
-      text-align: center;
-      padding: 24px;
-      color: #888;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
-    }
     .legend {
       display: flex;
       gap: 20px;
       margin-top: 16px;
       font-size: 13px;
-      color: #666;
+      color: var(--ui-text-muted);
       flex-wrap: wrap;
     }
     .legend-item {

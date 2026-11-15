@@ -92,8 +92,8 @@ export interface BookingEditDialogData {
   styles: [`
     .info-grid {
       display: grid;
-      gap: 16px;
-      margin-bottom: 24px;
+      gap: 12px;
+      margin-bottom: 16px;
     }
     .info-item {
       display: flex;
@@ -101,7 +101,7 @@ export interface BookingEditDialogData {
     }
     .info-label {
       font-size: 12px;
-      color: #888;
+      color: var(--ui-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }

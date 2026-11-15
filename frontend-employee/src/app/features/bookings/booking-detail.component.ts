@@ -500,67 +500,29 @@ interface BookingMolliePaymentLink {
     }
   `,
   styles: [`
-    .payment-type { font-size: 12px; color: var(--ui-text-secondary, #666); }
+    .payment-type { font-size: 12px; color: var(--ui-text-muted); }
     .status-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
     .quote-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
-    .quote-hint { font-size: 13px; color: var(--ui-text-secondary, #666); }
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--theme-primary);
-      text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .back-link:hover {
-      text-decoration: underline;
-    }
-    .page-title {
-      font-size: 22px;
-      font-weight: 500;
-      margin: 8px 0 24px;
-    }
+    .quote-hint { font-size: 13px; color: var(--ui-text-muted); }
     .detail-columns {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 24px;
+      gap: 12px;
       align-items: start;
     }
     .column {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 12px;
       min-width: 0;
     }
-    .detail-card {
-      border-radius: 12px;
-    }
-    .detail-card mat-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .card-header-btn {
-      margin-left: auto;
-    }
+    .detail-card { max-width: none; }
     .card-header-actions {
       display: flex;
       gap: 8px;
       margin-left: auto;
     }
-    .full-width { width: 100%; }
-    .row {
-      display: flex;
-      gap: 16px;
-    }
     .row mat-form-field { flex: 1; }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
     .info-grid {
       display: grid;
       gap: 8px;
@@ -575,7 +537,7 @@ interface BookingMolliePaymentLink {
     }
     .info-label {
       font-size: 13px;
-      color: #888;
+      color: var(--ui-text-muted);
       width: var(--label-width, 130px);
       flex-shrink: 0;
     }
@@ -592,10 +554,6 @@ interface BookingMolliePaymentLink {
       font-weight: 600;
       color: #2e7d32;
     }
-    .empty-text {
-      color: #888;
-      font-style: italic;
-    }
     .concept-note {
       color: #e65100;
       font-size: 13px;
@@ -609,11 +567,6 @@ interface BookingMolliePaymentLink {
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
     }
     .loading-inline {
       display: flex;
@@ -635,7 +588,7 @@ interface BookingMolliePaymentLink {
       font-weight: 500;
     }
     .accommodation-supplier {
-      color: #666;
+      color: var(--ui-text-muted);
       font-size: 12px;
     }
     .price-value {
@@ -661,11 +614,9 @@ interface BookingMolliePaymentLink {
       font-weight: 500;
     }
     .activity-type {
-      color: #666;
+      color: var(--ui-text-muted);
       font-size: 12px;
     }
-    .actions-header { text-align: right; }
-    .actions-cell { width: 1%; white-space: nowrap; }
     .new-payment-form {
       padding: 16px 0;
     }

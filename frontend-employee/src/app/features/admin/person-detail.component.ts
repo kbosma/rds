@@ -125,45 +125,8 @@ import { Person, Organization, Account } from '../../shared/models';
     }
   `,
   styles: [`
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--theme-primary);
-      text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .back-link:hover { text-decoration: underline; }
-    .page-title {
-      font-size: 22px;
-      font-weight: 500;
-      margin: 8px 0 24px;
-    }
-    .detail-card {
-      border-radius: 12px;
-      max-width: 700px;
-    }
     .sub-card {
-      margin-top: 24px;
-    }
-    .full-width { width: 100%; }
-    .row {
-      display: flex;
-      gap: 16px;
-    }
-    .flex-1 { flex: 1; }
-    .flex-2 { flex: 2; }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
+      margin-top: 12px;
     }
     .sub-item {
       display: flex;
@@ -185,7 +148,7 @@ import { Person, Organization, Account } from '../../shared/models';
       gap: 12px;
     }
     .sub-item-arrow {
-      color: #999;
+      color: var(--ui-text-muted);
     }
     .status-badge {
       display: inline-block;
@@ -201,10 +164,6 @@ import { Person, Organization, Account } from '../../shared/models';
     .status-locked {
       background-color: #ffebee;
       color: #c62828;
-    }
-    .empty-text {
-      color: #888;
-      font-style: italic;
     }
   `],
 })

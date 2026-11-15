@@ -98,7 +98,7 @@ export interface AccommodationDetailData {
     }
     .section-label {
       font-size: 12px;
-      color: #888;
+      color: var(--ui-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -125,7 +125,7 @@ export interface AccommodationDetailData {
       font-size: 14px;
       font-weight: 500;
       margin: 12px 0 6px;
-      color: #555;
+      color: var(--ui-text-muted);
     }
     .role-badge {
       display: inline-block;
@@ -149,7 +149,7 @@ export interface AccommodationDetailData {
     }
     .info-label {
       font-size: 12px;
-      color: #888;
+      color: var(--ui-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -165,10 +165,6 @@ export interface AccommodationDetailData {
       font-size: 14px;
       color: #444;
       line-height: 1.6;
-    }
-    .empty-text {
-      color: #888;
-      font-style: italic;
     }
     mat-divider {
       margin: 8px 0;

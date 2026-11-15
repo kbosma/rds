@@ -70,8 +70,7 @@ export interface EmailTemplateDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    .editor-label { display: block; font-size: 12px; color: #666; margin: 4px 0 6px; }
+    .editor-label { display: block; font-size: 12px; color: var(--ui-text-muted); margin: 4px 0 6px; }
   `],
 })
 export class EmailTemplateDialogComponent {

@@ -33,11 +33,11 @@ import { Authority } from '../../shared/models';
     TranslatePipe,
   ],
   template: `
-    <div class="header">
+    <div class="page-header">
       <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
       <h1>{{ (isNew() ? 'roles.newRole' : 'roles.editTitle') | translate }}</h1>
     </div>
-    <mat-card>
+    <mat-card class="detail-card">
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="save()">
           <mat-form-field appearance="outline" class="full-width">
@@ -55,7 +55,7 @@ import { Authority } from '../../shared/models';
     </mat-card>
 
     @if (!isNew() && canReadAuthorities) {
-      <mat-card class="authorities-card">
+      <mat-card class="section-card">
         <mat-card-header>
           <mat-card-title>{{ 'roles.authorities' | translate }}</mat-card-title>
         </mat-card-header>
@@ -76,32 +76,30 @@ import { Authority } from '../../shared/models';
               </button>
             </div>
           }
-          @for (a of assigned(); track a.authorityId) {
-            <div class="list-item">
-              <span>{{ a.description }}</span>
-              @if (canRemove) {
-                <button mat-icon-button type="button" class="remove-authority-btn act-delete" (click)="removeAuthority(a)">
-                  <mat-icon>link_off</mat-icon>
-                </button>
-              }
-            </div>
-          } @empty {
-            <p class="empty-text">{{ 'roles.noAuthoritiesAssigned' | translate }}</p>
-          }
+          <div class="item-grid">
+            @for (a of assigned(); track a.authorityId) {
+              <div class="list-item">
+                <span class="item-text">{{ a.description }}</span>
+                @if (canRemove) {
+                  <button mat-icon-button type="button" class="remove-authority-btn act-delete" (click)="removeAuthority(a)">
+                    <mat-icon>link_off</mat-icon>
+                  </button>
+                }
+              </div>
+            } @empty {
+              <p class="empty-text">{{ 'roles.noAuthoritiesAssigned' | translate }}</p>
+            }
+          </div>
         </mat-card-content>
       </mat-card>
     }
   `,
   styles: [`
-    .header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-    h1 { margin: 0; font-size: 24px; font-weight: 500; }
-    .full-width { width: 100%; }
-    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-    .authorities-card { margin-top: 16px; }
-    .link-row { display: flex; gap: 12px; align-items: baseline; margin-top: 8px; }
-    .flex-1 { flex: 1; }
-    .list-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; border-radius: 8px; padding: 4px 12px; margin-bottom: 8px; min-height: 40px; }
-    .empty-text { color: #888; font-style: italic; }
+    .link-row { display: flex; gap: 12px; align-items: baseline; max-width: 760px; }
+    /* Rechten in een raster: veel rechten passen zo op één scherm. */
+    .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; gap: 4px; min-height: 32px; padding: 0 2px 0 10px; border: 1px solid var(--ui-line); border-radius: var(--ui-radius); }
+    .item-text { font-size: 12px; overflow-wrap: anywhere; }
   `],
 })
 export class RoleDetailComponent implements OnInit {

@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
@@ -17,41 +18,45 @@ import { AuthService } from '../../core/auth/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
     MatSnackBarModule,
     TranslatePipe,
   ],
   template: `
     <h1>{{ 'profile.changePasswordTitle' | translate }}</h1>
-    <mat-card>
+    <mat-card class="detail-card">
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="save()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'profile.currentPassword' | translate }}</mat-label>
-            <input matInput type="password" formControlName="currentPassword" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'profile.newPassword' | translate }}</mat-label>
-            <input matInput type="password" formControlName="newPassword" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ 'profile.confirmPassword' | translate }}</mat-label>
-            <input matInput type="password" formControlName="confirmPassword" />
-          </mat-form-field>
+          <div class="row">
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>{{ 'profile.currentPassword' | translate }}</mat-label>
+              <input matInput type="password" formControlName="currentPassword" />
+            </mat-form-field>
+            <span class="flex-1"></span>
+          </div>
+          <div class="row">
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>{{ 'profile.newPassword' | translate }}</mat-label>
+              <input matInput type="password" formControlName="newPassword" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>{{ 'profile.confirmPassword' | translate }}</mat-label>
+              <input matInput type="password" formControlName="confirmPassword" />
+            </mat-form-field>
+          </div>
           @if (mismatch) {
-            <p class="error">{{ 'profile.passwordMismatch' | translate }}</p>
+            <p class="error-text">{{ 'profile.passwordMismatch' | translate }}</p>
           }
-          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || mismatch">
-            {{ 'common.save' | translate }}
-          </button>
+          <div class="actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || mismatch">
+              <mat-icon>save</mat-icon> {{ 'common.save' | translate }}
+            </button>
+          </div>
         </form>
       </mat-card-content>
     </mat-card>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    mat-card { max-width: 500px; }
-    form { display: flex; flex-direction: column; gap: 8px; }
-    .error { color: #f44336; font-size: 13px; margin: 0; }
   `],
 })
 export class ChangePasswordComponent {

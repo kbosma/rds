@@ -107,12 +107,8 @@ export interface BookingActivityDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .full-width { width: 100%; }
-    .row { display: flex; gap: 16px; }
-    .flex-1 { flex: 1; }
-    .loading { display: flex; justify-content: center; padding: 24px; }
     .resolved-field { display: flex; flex-direction: column; margin-bottom: 16px; }
-    .resolved-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .resolved-label { font-size: 12px; color: var(--ui-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
     .resolved-value { font-size: 15px; font-weight: 500; margin-top: 2px; }
   `],
 })

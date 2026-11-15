@@ -140,12 +140,9 @@ import { ChangePasswordDialogComponent } from '../profile/change-password-dialog
       letter-spacing: 2px;
     }
     .app-subtitle {
-      color: #666;
+      color: var(--ui-text-muted);
       margin: 4px 0 0;
       font-size: 14px;
-    }
-    .full-width {
-      width: 100%;
     }
     mat-form-field {
       margin-bottom: 4px;
@@ -174,7 +171,7 @@ import { ChangePasswordDialogComponent } from '../profile/change-password-dialog
       margin-top: 8px;
     }
     .totp-info {
-      color: #555;
+      color: var(--ui-text-muted);
       font-size: 14px;
       margin-bottom: 16px;
       text-align: center;
