@@ -81,7 +81,7 @@ import { Person, Organization, Account } from '../../shared/models';
             }
 
             <div class="actions">
-              <a mat-button routerLink="/admin/persons"><mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
+              <a mat-button routerLink="/admin/persons">{{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
               @if (!readOnly()) {
                 <button mat-raised-button color="primary" type="submit"
                         [disabled]="saving() || form.invalid">

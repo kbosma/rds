@@ -181,8 +181,9 @@ export class TemplateListComponent implements OnInit {
   viewTemplate(template: DocumentTemplate) {
     this.dialog.open(TemplateDialogComponent, {
       data: { template, readOnly: true },
-      width: template.sourceHtml != null ? '980px' : '500px',
-      maxWidth: '95vw',
+      width: template.sourceHtml != null ? '1100px' : '500px',
+      maxWidth: '92vw',
+      panelClass: template.sourceHtml != null ? 'editor-dialog' : '',
     });
   }
 
@@ -190,8 +191,9 @@ export class TemplateListComponent implements OnInit {
     const dialogRef = this.dialog.open(TemplateDialogComponent, {
       data: { template },
       // een template uit de editor heeft meer ruimte nodig dan het uploadformulier
-      width: template?.sourceHtml != null ? '980px' : '500px',
-      maxWidth: '95vw',
+      width: template?.sourceHtml != null ? '1100px' : '500px',
+      maxWidth: '92vw',
+      panelClass: template?.sourceHtml != null ? 'editor-dialog' : '',
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {

@@ -307,7 +307,7 @@ interface BookingMolliePaymentLink {
                       </mat-form-field>
                     </div>
                     <div class="actions">
-                      <button mat-button type="button" (click)="showNewPaymentForm.set(false)"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+                      <button mat-button type="button" (click)="showNewPaymentForm.set(false)">{{ 'common.cancel' | translate }}</button>
                       <button mat-raised-button color="primary" type="submit"
                               [disabled]="creatingPayment() || newPaymentForm.invalid">
                         @if (creatingPayment()) {

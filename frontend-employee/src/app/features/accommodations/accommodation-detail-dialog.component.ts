@@ -83,7 +83,7 @@ export interface AccommodationDetailData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.close' | translate }}</button>
+      <button mat-button mat-dialog-close>{{ 'common.close' | translate }}</button>
     </mat-dialog-actions>
   `,
   styles: [`

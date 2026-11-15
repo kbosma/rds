@@ -174,8 +174,9 @@ export class EmailTemplateListComponent implements OnInit {
   openDialog(template?: EmailTemplate) {
     const dialogRef = this.dialog.open(EmailTemplateDialogComponent, {
       data: { template },
-      width: '860px',
-      maxWidth: '95vw',
+      width: '1100px',
+      maxWidth: '92vw',
+      panelClass: 'editor-dialog',
     });
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) {
@@ -187,8 +188,9 @@ export class EmailTemplateListComponent implements OnInit {
   viewTemplate(template: EmailTemplate) {
     this.dialog.open(EmailTemplateDialogComponent, {
       data: { template, readOnly: true },
-      width: '860px',
-      maxWidth: '95vw',
+      width: '1100px',
+      maxWidth: '92vw',
+      panelClass: 'editor-dialog',
     });
   }
 

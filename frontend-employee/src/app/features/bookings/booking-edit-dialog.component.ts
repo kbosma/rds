@@ -69,7 +69,7 @@ export interface BookingEditDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>
-        <mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}
+        {{ 'common.cancel' | translate }}
       </button>
       <button mat-raised-button color="primary"
               (click)="onSave()"

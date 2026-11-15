@@ -153,7 +153,7 @@ interface DateWarning {
           }
         </button>
       } @else {
-        <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+        <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
         <button mat-raised-button color="primary"
                 (click)="onSubmit()"
                 [disabled]="saving() || form.invalid || loadingData()">

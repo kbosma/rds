@@ -90,7 +90,7 @@ export interface BookingActivityDialogData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+      <button mat-button mat-dialog-close>{{ 'common.cancel' | translate }}</button>
       <button mat-raised-button color="primary"
               (click)="onSubmit()"
               [disabled]="saving() || form.invalid || loadingData()">

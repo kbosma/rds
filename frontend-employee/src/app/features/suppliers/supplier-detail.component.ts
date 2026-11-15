@@ -75,7 +75,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
               <input matInput formControlName="name" />
             </mat-form-field>
             <div class="actions">
-              <a mat-button routerLink="/suppliers"><mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
+              <a mat-button routerLink="/suppliers">{{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}</a>
               @if (!readOnly()) {
                 <button mat-raised-button color="primary" type="submit" [disabled]="saving() || supplierForm.invalid">
                   @if (saving()) {
@@ -144,7 +144,7 @@ import { Accommodation, AccommodationSupplier, Address, Supplier } from '../../s
                 </div>
                 <div class="actions">
                   <button mat-button type="button" (click)="cancelAddressForm()">
-                    <mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}
+                    {{ 'common.cancel' | translate }}
                   </button>
                   <button mat-raised-button color="primary" type="button" class="save-address-btn"
                           [disabled]="savingAddress() || addressForm.invalid" (click)="onSaveAddress()">

@@ -73,7 +73,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
             </mat-form-field>
 
             <div class="actions">
-              <a mat-button routerLink="/accommodations"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</a>
+              <a mat-button routerLink="/accommodations">{{ 'common.cancel' | translate }}</a>
               <button mat-raised-button color="primary" type="submit"
                       [disabled]="savingAccommodation() || accommodationForm.invalid">
                 @if (savingAccommodation()) {
@@ -119,7 +119,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                       <mat-icon>add</mat-icon> {{ 'accommodations.newSupplier' | translate }}
                     </button>
                   }
-                  <button mat-button type="button" (click)="cancelSupplierSelect()"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+                  <button mat-button type="button" (click)="cancelSupplierSelect()">{{ 'common.cancel' | translate }}</button>
                   <button mat-raised-button color="primary" type="button"
                           (click)="onLinkSupplier()"
                           [disabled]="!supplierSelectControl.value">
@@ -217,7 +217,7 @@ import { Accommodation, Address, Supplier, AccommodationSupplier } from '../../s
                   </div>
 
                   <div class="actions">
-                    <button mat-button type="button" (click)="cancelAddressForm()"><mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}</button>
+                    <button mat-button type="button" (click)="cancelAddressForm()">{{ 'common.cancel' | translate }}</button>
                     <button mat-raised-button color="primary" type="button"
                             (click)="onSaveAddress()"
                             [disabled]="savingAddress() || addressForm.invalid">

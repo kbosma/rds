@@ -222,41 +222,44 @@ const IMAGE_STYLE = 'max-width:100%;height:auto;';
     </div>
   `,
   styles: [`
-    .editor-wrapper { border: 1px solid #bdbdbd; border-radius: 6px; overflow: hidden; }
+    .editor-wrapper { border: 1px solid var(--mat-form-field-outlined-outline-color, var(--ui-line)); border-radius: var(--ui-radius); overflow: hidden; }
     .toolbar {
       display: flex; align-items: center; flex-wrap: wrap; gap: 2px;
-      padding: 4px 6px; border-bottom: 1px solid #e0e0e0; background: #fafafa;
+      padding: 4px 6px; border-bottom: 1px solid var(--ui-line); background: var(--ui-primary-faint);
     }
+    /* Keuzelijsten in de werkbalk: zelfde rand, hoek en tekst als de velden van het portaal. */
     .tb-select {
-      height: 32px; border: 1px solid #ccc; border-radius: 4px; background: white;
-      font-size: 13px; padding: 0 4px; max-width: 150px;
+      height: 30px; border: 1px solid var(--mat-form-field-outlined-outline-color, var(--ui-line)); border-radius: 6px;
+      background: #fff; color: var(--ui-text); font: inherit; font-size: 13px; padding: 0 6px; max-width: 150px;
     }
+    .tb-select:hover, .tb-select:focus { border-color: var(--theme-primary); outline: none; }
     .tb-size { max-width: 90px; }
-    .tb-divider { width: 1px; height: 24px; background: #e0e0e0; margin: 0 4px; }
-    .active { background: color-mix(in srgb, var(--theme-primary, #1976d2) 16%, white); border-radius: 4px; }
+    .tb-divider { width: 1px; height: 24px; background: var(--ui-line); margin: 0 4px; }
+    .active { background: color-mix(in srgb, var(--theme-primary) 16%, white); border-radius: 4px; }
     .editor-body { display: flex; align-items: stretch; }
-    .editor-host { flex: 1; min-height: 240px; max-height: 460px; overflow: auto; padding: 12px 16px; }
+    /* Groeit mee met het (grote) templatedialoog; in een klein venster blijft er ruimte voor velden en knoppen. */
+    .editor-host { flex: 1; min-height: 280px; max-height: min(56vh, 640px); overflow: auto; padding: 12px 16px; }
     .var-panel {
-      width: 228px; flex-shrink: 0; border-left: 1px solid #e0e0e0; background: #fafafa;
-      padding: 8px; overflow: auto; max-height: 460px;
+      width: 228px; flex-shrink: 0; border-left: 1px solid var(--ui-line); background: var(--ui-canvas);
+      padding: 8px; overflow: auto; max-height: min(56vh, 640px);
     }
-    .panel-tabs { display: flex; gap: 2px; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+    .panel-tabs { display: flex; gap: 2px; margin-bottom: 8px; border-bottom: 1px solid var(--ui-line); }
     .panel-tab {
-      flex: 1; border: 0; background: none; padding: 6px 4px; font-size: 12px; font-weight: 600;
-      text-transform: uppercase; color: #777; cursor: pointer; border-bottom: 2px solid transparent;
+      flex: 1; border: 0; background: none; padding: 6px 4px; font-size: 12.5px; font-weight: 600;
+      color: var(--ui-text-muted); cursor: pointer; border-bottom: 2px solid transparent;
     }
-    .panel-tab.active { color: var(--theme-primary, #1976d2); border-bottom-color: var(--theme-primary, #1976d2); }
-    .var-hint { font-size: 11px; color: #999; margin-bottom: 8px; }
-    .var-group { font-size: 12px; font-weight: 700; color: #555; margin: 10px 0 4px; }
+    .panel-tab.active { color: var(--theme-primary); border-bottom-color: var(--theme-primary); }
+    .var-hint { font-size: 11.5px; color: var(--ui-text-muted); margin-bottom: 8px; }
+    .var-group { font-size: 12px; font-weight: 600; color: var(--ui-text); margin: 10px 0 4px; }
     .var-group:first-of-type { margin-top: 0; }
     .var-item {
       display: flex; align-items: center; gap: 4px; padding: 5px 6px; margin-bottom: 4px;
-      background: white; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px;
+      background: #fff; border: 1px solid var(--ui-line); border-radius: 6px; font-size: 13px;
       cursor: grab; user-select: none;
     }
-    .var-item:hover { border-color: var(--theme-primary, #1976d2); background: color-mix(in srgb, var(--theme-primary, #1976d2) 8%, white); }
+    .var-item:hover { border-color: var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 8%, white); }
     .var-item:active { cursor: grabbing; }
-    .var-item mat-icon { font-size: 16px; width: 16px; height: 16px; color: #aaa; }
+    .var-item mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--ui-text-muted); }
     /* ProseMirror edit-area + tabellen */
     ::ng-deep .editor-host .ProseMirror { outline: none; min-height: 220px; font-size: 14px; line-height: 1.5; }
     ::ng-deep .editor-host .ProseMirror:focus { outline: none; }
@@ -267,9 +270,9 @@ const IMAGE_STYLE = 'max-width:100%;height:auto;';
     }
     ::ng-deep .editor-host .ProseMirror th { background: #f0f0f0; font-weight: 600; }
     /* Herhaalde tabel: gestippelde rand, en de rij die herhaald wordt (de laatste) gekleurd. */
-    ::ng-deep .editor-host .ProseMirror table[data-repeat] { outline: 2px dashed var(--theme-primary, #1976d2); outline-offset: 2px; }
+    ::ng-deep .editor-host .ProseMirror table[data-repeat] { outline: 2px dashed var(--theme-primary); outline-offset: 2px; }
     ::ng-deep .editor-host .ProseMirror table[data-repeat] tr:last-child td {
-      background: color-mix(in srgb, var(--theme-primary, #1976d2) 8%, white);
+      background: color-mix(in srgb, var(--theme-primary) 8%, white);
     }
     ::ng-deep .editor-host .ProseMirror ul, ::ng-deep .editor-host .ProseMirror ol { padding-left: 22px; margin: 0 0 8px; }
     ::ng-deep .editor-host .ProseMirror img { max-width: 100%; height: auto; }
@@ -277,11 +280,11 @@ const IMAGE_STYLE = 'max-width:100%;height:auto;';
     ::ng-deep .editor-host .ProseMirror [data-resize-container] { line-height: 0; }
     ::ng-deep .editor-host .ProseMirror [data-resize-wrapper] { max-width: 100%; }
     ::ng-deep .editor-host .ProseMirror [data-resize-container].ProseMirror-selectednode [data-resize-wrapper] {
-      outline: 2px solid var(--theme-primary, #1976d2);
+      outline: 2px solid var(--theme-primary);
     }
     ::ng-deep .editor-host .ProseMirror [data-resize-handle] {
       display: none; width: 12px; height: 12px; box-sizing: border-box; z-index: 1;
-      background: var(--theme-primary, #1976d2); border: 2px solid #fff; border-radius: 2px;
+      background: var(--theme-primary); border: 2px solid #fff; border-radius: 2px;
       cursor: nwse-resize; transform: translate(50%, 50%);
     }
     ::ng-deep .editor-host .ProseMirror [data-resize-container].ProseMirror-selectednode [data-resize-handle] { display: block; }

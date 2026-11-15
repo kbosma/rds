@@ -107,7 +107,7 @@ export interface BookerDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>
-        <mat-icon>close</mat-icon> {{ (data.readOnly ? 'common.close' : 'common.cancel') | translate }}
+        {{ (data.readOnly ? 'common.close' : 'common.cancel') | translate }}
       </button>
       @if (!data.readOnly) {
         <button mat-raised-button color="primary"

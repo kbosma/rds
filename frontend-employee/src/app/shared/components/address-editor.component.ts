@@ -70,7 +70,7 @@ import { Address } from '../models';
         </div>
         <div class="actions">
           <button mat-button type="button" class="cancel-address-btn" (click)="close()">
-            <mat-icon>close</mat-icon> {{ 'common.cancel' | translate }}
+            {{ 'common.cancel' | translate }}
           </button>
           <button mat-raised-button color="primary" type="button" class="save-address-btn"
                   [disabled]="form.invalid" (click)="save()">

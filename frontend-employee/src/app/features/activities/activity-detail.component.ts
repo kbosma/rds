@@ -32,10 +32,16 @@ import { Activity } from '../../shared/models';
   ],
   template: `
     <a routerLink="/activities" class="back-link">
-      <mat-icon>arrow_back</mat-icon> {{ 'activity.title' | translate }}
+      <mat-icon>arrow_back</mat-icon> {{ 'activity.backToActivities' | translate }}
     </a>
 
-    <h1 class="page-title">{{ isNew() ? ('activity.newActivity' | translate) : ('activity.name' | translate) }}</h1>
+    <h1 class="page-title">
+      @if (isNew()) {
+        {{ 'activity.newActivity' | translate }}
+      } @else {
+        {{ (readOnly() ? 'activity.viewTitle' : 'activity.editTitle') | translate }} — {{ currentName() }}
+      }
+    </h1>
 
     @if (loading()) {
       <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
@@ -64,7 +70,7 @@ import { Activity } from '../../shared/models';
 
             <div class="actions">
               <button mat-button type="button" routerLink="/activities">
-                <mat-icon>close</mat-icon> {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}
+                {{ (readOnly() ? 'common.close' : 'common.cancel') | translate }}
               </button>
               @if (!readOnly()) {
                 <button mat-raised-button color="primary" type="submit"
@@ -97,6 +103,8 @@ export class ActivityDetailComponent implements OnInit {
   isNew = signal(true);
   /** Alleen inzien: geopend met ?readonly=true (vanuit het inzien-icoon in de lijst). */
   readOnly = signal(false);
+  /** Naam van de geopende activiteit, voor de paginatitel. */
+  currentName = signal('');
   loading = signal(false);
   saving = signal(false);
   private activityId: string | null = null;
@@ -128,6 +136,7 @@ export class ActivityDetailComponent implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (activity) => {
+            this.currentName.set(activity.name);
             this.form.patchValue({
               name: activity.name,
               description: activity.description,

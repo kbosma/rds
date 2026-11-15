@@ -801,7 +801,10 @@
     "saveError": "Error saving activity",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "deleteCascadeWarning": "Booking activities that refer to this activity are deleted too.",
-    "emptyState": "No activities yet. Add one, such as a ticket or transfer."
+    "emptyState": "No activities yet. Add one, such as a ticket or transfer.",
+    "backToActivities": "Back to activities",
+    "editTitle": "Edit activity",
+    "viewTitle": "Activity"
   },
   "bookingActivity": {
     "title": "Activities",

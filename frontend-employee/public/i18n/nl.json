@@ -801,7 +801,10 @@
     "saveError": "Fout bij opslaan activiteit",
     "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
     "deleteCascadeWarning": "Boekingsactiviteiten die naar deze activiteit verwijzen worden ook verwijderd.",
-    "emptyState": "Nog geen activiteiten. Voeg er een toe, zoals een ticket of transfer."
+    "emptyState": "Nog geen activiteiten. Voeg er een toe, zoals een ticket of transfer.",
+    "backToActivities": "Terug naar activiteiten",
+    "editTitle": "Activiteit bewerken",
+    "viewTitle": "Activiteit"
   },
   "bookingActivity": {
     "title": "Activiteiten",
