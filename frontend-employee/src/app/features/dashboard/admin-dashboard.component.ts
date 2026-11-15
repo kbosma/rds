@@ -11,6 +11,7 @@ import { PersonService } from '../admin/person.service';
 import { AccountService } from '../admin/account.service';
 import { AccountRoleService } from '../admin/account-role.service';
 import { RoleService } from '../admin/role.service';
+import { WelcomeHeaderComponent } from './welcome-header.component';
 
 interface OrgOverview {
   name: string;
@@ -22,33 +23,18 @@ interface OrgOverview {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule, TranslatePipe],
+  imports: [WelcomeHeaderComponent, MatCardModule, MatIconModule, MatProgressSpinnerModule, TranslatePipe],
   template: `
-    <div class="welcome-card">
-      <mat-card>
-        <mat-card-content class="welcome-content">
-          <mat-icon class="welcome-icon">admin_panel_settings</mat-icon>
-          <div>
-            <h2 class="welcome-title">{{ 'dashboard.welcome' | translate }}, {{ auth.currentUser()?.personName }}</h2>
-            <p class="welcome-detail">
-              <strong>{{ 'dashboard.role' | translate }}:</strong> {{ auth.currentUser()?.roles?.join(', ') }}
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+    <app-welcome-header />
 
     @if (loading()) {
       <div class="loading">
         <mat-spinner diameter="40"></mat-spinner>
       </div>
     } @else {
-      <mat-card class="overview-card">
+      <mat-card>
         <mat-card-header>
-          <mat-card-title>
-            <mat-icon class="header-icon">business</mat-icon>
-            {{ 'dashboard.organizationsOverview' | translate }}
-          </mat-card-title>
+          <mat-card-title>{{ 'dashboard.organizationsOverview' | translate }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <div class="org-grid">
@@ -57,21 +43,19 @@ interface OrgOverview {
                 <div class="org-name">{{ org.name }}</div>
                 <div class="org-stats">
                   <div class="org-stat">
-                    <mat-icon class="org-stat-icon persons-icon">people</mat-icon>
+                    <mat-icon class="org-stat-icon">people</mat-icon>
                     <span class="org-stat-number">{{ org.personCount }}</span>
                     <span class="org-stat-label">{{ 'dashboard.persons' | translate }}</span>
                   </div>
                   <div class="org-stat">
-                    <mat-icon class="org-stat-icon accounts-icon">manage_accounts</mat-icon>
+                    <mat-icon class="org-stat-icon">manage_accounts</mat-icon>
                     <span class="org-stat-number">{{ org.accountCount }}</span>
                     <span class="org-stat-label">{{ 'dashboard.accounts' | translate }}</span>
                   </div>
                 </div>
                 <div class="role-chips">
                   @for (rc of org.roleCounts; track rc.role) {
-                    <span class="role-chip" [class]="'role-chip role-' + rc.role.toLowerCase()">
-                      {{ rc.role }}: {{ rc.count }}
-                    </span>
+                    <span class="badge badge-neutral">{{ rc.role }}: {{ rc.count }}</span>
                   }
                 </div>
               </div>
@@ -82,46 +66,27 @@ interface OrgOverview {
     }
   `,
   styles: [`
-    .welcome-card { margin-bottom: 12px; }
-    .welcome-content { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
-    .welcome-icon { font-size: 36px; width: 36px; height: 36px; color: #7b1fa2; }
-    .welcome-title { margin: 0; font-size: 17px; font-weight: 600; }
-    .welcome-detail { margin: 2px 0 0; color: var(--ui-text-muted); font-size: 13px; }
-    .overview-card { border-radius: 12px; }
-    .header-icon {
-      vertical-align: middle;
-      margin-right: 8px;
-      color: #7b1fa2;
-    }
     .org-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-      padding: 8px 0;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
     }
     .org-tile {
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 20px;
-      background: linear-gradient(135deg, #f5f5f5, #ffffff);
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .org-tile:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 1px solid var(--ui-line);
+      border-top: 3px solid var(--theme-primary);
+      border-radius: var(--ui-radius);
+      padding: 12px 16px;
     }
     .org-name {
-      font-size: 18px;
+      margin-bottom: 8px;
+      font-size: 15px;
       font-weight: 600;
-      color: #333;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #7b1fa2;
+      color: var(--ui-text);
     }
     .org-stats {
       display: flex;
       gap: 24px;
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
     .org-stat {
       display: flex;
@@ -129,44 +94,21 @@ interface OrgOverview {
       gap: 6px;
     }
     .org-stat-icon {
-      font-size: 20px;
       width: 20px;
       height: 20px;
-    }
-    .persons-icon { color: var(--theme-primary); }
-    .accounts-icon { color: #388e3c; }
-    .org-stat-number {
       font-size: 20px;
+      color: var(--theme-primary);
+    }
+    .org-stat-number {
+      font-size: 18px;
       font-weight: 600;
-      color: #333;
+      color: var(--ui-text);
     }
-    .org-stat-label {
-      font-size: 13px;
-      color: var(--ui-text-muted);
-    }
+    .org-stat-label { color: var(--ui-text-muted); }
     .role-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-    }
-    .role-chip {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 16px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .role-admin {
-      background: #f3e5f5;
-      color: #7b1fa2;
-    }
-    .role-manager {
-      background: #e3f2fd;
-      color: #1565c0;
-    }
-    .role-employee {
-      background: #e8f5e9;
-      color: #2e7d32;
+      gap: 6px;
     }
   `],
 })
