@@ -41,3 +41,6 @@ frontend-booker/dist/
 ### Runtime artifacts ###
 access.log
 src/main/resources/application-rds-local.yaml
+
+### macOS ###
+.DS_Store

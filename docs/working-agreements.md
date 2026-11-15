@@ -34,7 +34,7 @@ Afspraken die in eerdere sessies zijn gemaakt of gecorrigeerd. `CLAUDE.md` (repo
 
 ## Grenzen die de gebruiker stelt
 - Alleen binnen `/Users/keesbosma/Code/rds` werken; de rest van het besturingssysteem is verboden terrein. Bij een documentatietaak: alleen in `docs/` schrijven, ook geen tijdelijke bestanden buiten de repo.
-- Server- of netwerkwijzigingen (NGINX-config toepassen, deploy, `systemctl`) doet de gebruiker zelf; wij leveren de versioneerde config (`deploy/nginx/rds.conf`) en scripts.
+- Server- of netwerkwijzigingen (NGINX-config toepassen, deploy, `systemctl`) doet de gebruiker zelf; wij leveren de versioneerde config (`deploy/nginx/`) en scripts (`deploy/scripts/deploy-nginx.sh`).
 - Niet herhaaldelijk om computer-use-rechten vragen. Schermafbeeldingen van de draaiende app: met de Claude Preview-tools (`preview_screenshot`), geen HTML-mockups of Puppeteer.
 - De Maven-binary van de gebruiker: `/Users/keesbosma/apache-maven-3.9.16/bin/mvn` (naast `./mvnw`).
 

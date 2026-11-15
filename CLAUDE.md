@@ -157,7 +157,7 @@ Gebruik ALLEEN indien nodig:
 - Werkafspraken (taal, git, tests, grenzen, data-/API-regels) → docs/working-agreements.md
 - Bouwen, testen, deployen → docs/build-test-deploy.md
 - Technische handleiding (alle functionaliteit, rollen & authorities, werkprocessen) → docs/handleiding.md
-- Gebruikershandleiding voor medewerkers en managers (HTML, printklaar, met screenshots) → docs/gebruikershandleiding/index.html
+- Gebruikershandleiding voor medewerkers, managers en beheerders (HTML, printklaar, met screenshots; boekingsflow, meldingen, templates, instellingen, beheer) → docs/gebruikershandleiding/index.html
 - Index van alle documentatie (start hier in een nieuwe sessie) → docs/README.md
 
 ---

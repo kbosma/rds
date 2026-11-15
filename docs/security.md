@@ -88,10 +88,12 @@ Word- en e-mailtemplates worden door gebruikers (MANAGER) geschreven en zijn dus
 - De `.docx` uit de editor gaat door **dezelfde** afgeschermde straat; er is een test die een payload in de editor typt en bevestigt dat die geblokkeerd wordt (`HtmlToDocxConverterTest`, `DocgenTemplateInjectionTest`).
 - Afbeeldingen: type uit de **bytes** (PNG/JPEG/GIF/WebP, geen SVG), maximaal 2 MB; in een Word-template alleen uit de eigen bibliotheek, nooit via een URL opgehaald (geen SSRF).
 
-## Netwerklaag (NGINX, `deploy/nginx/rds.conf`)
+## Netwerklaag (NGINX, `deploy/nginx/rds.kbtg.nl.conf`)
 
-- Aparte `server`-blokken: intern/TLS (`software.kbtg`) en het **publieke IP** (alleen wat nodig is: Mollie-webhook en publieke e-mailafbeeldingen).
-- Rate-limits: `login_limit` (employee-login, TOTP, herstelcode, booker-OTP), `mollie_limit` (webhook), `email_image_limit` (afbeeldingen).
+- Eigen `server` voor `rds.kbtg.nl` met een **Let's Encrypt-certificaat** (automatisch vernieuwd) en HSTS; poort 80 stuurt door naar HTTPS (behalve de ACME-challenge).
+- Catch-all `default_server` (`deploy/nginx/catch-all.conf`): door het wildcard-DNS-record komt elk `*.kbtg.nl` bij de server uit; onbekende hostnamen en het kale IP krijgen geen antwoord (`444`) en geen TLS-handshake, dus er lekt ook geen certificaat met de namen van andere sites.
+- Publiek zonder login alleen wat nodig is: de Mollie-webhook (exacte location) en e-mailafbeeldingen (exact `/api/public/email-images/<uuid>`, alleen GET/HEAD).
+- Rate-limits (`deploy/nginx/rds-zones.conf`): `rds_login` (employee-login, TOTP, herstelcode, booker-OTP), `rds_mollie` (webhook), `rds_email_image` (afbeeldingen).
 - Scanner-/exploit-paden (`/.…`, `.php`, `/vendor/`, `.env`, `/mcp`, `/graphql`, …) worden met `444` afgekapt.
 - `/api/` → `http://127.0.0.1:8666/rds/api/`; de backend luistert alleen op `127.0.0.1`.
 

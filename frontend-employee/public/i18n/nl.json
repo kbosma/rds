@@ -850,7 +850,8 @@
     "resend": "Opnieuw versturen",
     "resendDone": "E-mail opnieuw verstuurd",
     "resendError": "Opnieuw versturen is mislukt",
-    "internal": "alleen intern"
+    "internal": "alleen intern",
+    "attachment": "Bijlage"
   },
   "orgSettings": {
     "title": "Organisatie-instellingen",
@@ -873,7 +874,7 @@
     "balanceWeeks": "Restant: weken voor vertrek",
     "weeksOrder": "Het voorschot moet eerder vervallen dan het restant.",
     "paymentEmailTemplate": "Betaalmail (e-mailtemplate)",
-    "paymentEmailHint": "Gaat naar de hoofdboeker zodra de betalingen zijn aangemaakt. Niet gekozen: geen mail."
+    "paymentEmailHint": "Gaat één keer naar de hoofdboeker, direct nadat het systeem bij het bevestigen van de offerte de betalingen heeft aangemaakt. Leeg: de betalingen worden wel aangemaakt, maar er gaat geen mail uit."
   },
   "notifications": {
     "title": "Meldingen",

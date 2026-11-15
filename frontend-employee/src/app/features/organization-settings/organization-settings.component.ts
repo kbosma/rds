@@ -37,19 +37,19 @@ function weeksOrder(group: AbstractControl): ValidationErrors | null {
     MatProgressSpinnerModule, MatSnackBarModule, TranslatePipe,
   ],
   template: `
-    <h1>{{ 'orgSettings.title' | translate }}</h1>
+    <h1 class="page-title">{{ 'orgSettings.title' | translate }}</h1>
 
     @if (loading()) {
       <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
     } @else {
-      <form [formGroup]="form" (ngSubmit)="save()" class="settings-form">
-      <mat-card class="settings-card">
-        <mat-card-header>
-          <mat-card-title>{{ 'orgSettings.quoteTitle' | translate }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="intro">{{ 'orgSettings.quoteIntro' | translate }}</p>
-            <mat-form-field class="full-width">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <mat-card class="detail-card">
+          <mat-card-header>
+            <mat-card-title>{{ 'orgSettings.quoteTitle' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="intro">{{ 'orgSettings.quoteIntro' | translate }}</p>
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ 'orgSettings.quoteDocumentTemplate' | translate }}</mat-label>
               <mat-select formControlName="quoteDocumentTemplateId" class="quote-document-template">
                 <mat-option [value]="null">{{ 'orgSettings.none' | translate }}</mat-option>
@@ -60,7 +60,7 @@ function weeksOrder(group: AbstractControl): ValidationErrors | null {
               <mat-hint>{{ 'orgSettings.quoteDocumentHint' | translate }}</mat-hint>
             </mat-form-field>
 
-            <mat-form-field class="full-width">
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ 'orgSettings.quoteEmailTemplate' | translate }}</mat-label>
               <mat-select formControlName="quoteEmailTemplateId" class="quote-email-template">
                 <mat-option [value]="null">{{ 'orgSettings.none' | translate }}</mat-option>
@@ -70,72 +70,81 @@ function weeksOrder(group: AbstractControl): ValidationErrors | null {
               </mat-select>
               <mat-hint>{{ 'orgSettings.quoteEmailHint' | translate }}</mat-hint>
             </mat-form-field>
-        </mat-card-content>
-      </mat-card>
+          </mat-card-content>
+        </mat-card>
 
-      <mat-card class="settings-card payments-card">
-        <mat-card-header>
-          <mat-card-title>{{ 'orgSettings.paymentsTitle' | translate }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="intro">{{ 'orgSettings.paymentsIntro' | translate }}</p>
-          <div class="number-fields">
-            <mat-form-field>
-              <mat-label>{{ 'orgSettings.depositPercentage' | translate }}</mat-label>
-              <input matInput type="number" min="1" max="100" formControlName="depositPercentage" class="deposit-percentage" />
-              <span matTextSuffix>%</span>
-            </mat-form-field>
-            <mat-form-field>
-              <mat-label>{{ 'orgSettings.depositWeeks' | translate }}</mat-label>
-              <input matInput type="number" min="1" formControlName="depositWeeksBeforeDeparture" class="deposit-weeks" />
-            </mat-form-field>
-            <mat-form-field>
-              <mat-label>{{ 'orgSettings.balanceWeeks' | translate }}</mat-label>
-              <input matInput type="number" min="0" formControlName="balanceWeeksBeforeDeparture" class="balance-weeks" />
-            </mat-form-field>
-          </div>
-          @if (form.hasError('weeksOrder')) {
-            <p class="form-error weeks-order-error">{{ 'orgSettings.weeksOrder' | translate }}</p>
-          }
+        <mat-card class="detail-card section-card payments-card">
+          <mat-card-header>
+            <mat-card-title>{{ 'orgSettings.paymentsTitle' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="intro">{{ 'orgSettings.paymentsIntro' | translate }}</p>
+            <div class="row">
+              <mat-form-field appearance="outline" class="flex-1">
+                <mat-label>{{ 'orgSettings.depositPercentage' | translate }}</mat-label>
+                <input matInput type="number" min="1" max="100" formControlName="depositPercentage" class="deposit-percentage" />
+                <span matTextSuffix>%</span>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="flex-1">
+                <mat-label>{{ 'orgSettings.depositWeeks' | translate }}</mat-label>
+                <input matInput type="number" min="1" formControlName="depositWeeksBeforeDeparture" class="deposit-weeks" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="flex-1">
+                <mat-label>{{ 'orgSettings.balanceWeeks' | translate }}</mat-label>
+                <input matInput type="number" min="0" formControlName="balanceWeeksBeforeDeparture" class="balance-weeks" />
+              </mat-form-field>
+            </div>
+            @if (form.hasError('weeksOrder')) {
+              <p class="form-error weeks-order-error">{{ 'orgSettings.weeksOrder' | translate }}</p>
+            }
 
-          <mat-form-field class="full-width">
-            <mat-label>{{ 'orgSettings.paymentEmailTemplate' | translate }}</mat-label>
-            <mat-select formControlName="paymentEmailTemplateId" class="payment-email-template">
-              <mat-option [value]="null">{{ 'orgSettings.none' | translate }}</mat-option>
-              @for (t of emailTemplates(); track t.emailTemplateId) {
-                <mat-option [value]="t.emailTemplateId">{{ t.name }}</mat-option>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
+              <mat-label>{{ 'orgSettings.paymentEmailTemplate' | translate }}</mat-label>
+              <mat-select formControlName="paymentEmailTemplateId" class="payment-email-template">
+                <mat-option [value]="null">{{ 'orgSettings.none' | translate }}</mat-option>
+                @for (t of emailTemplates(); track t.emailTemplateId) {
+                  <mat-option [value]="t.emailTemplateId">{{ t.name }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>{{ 'orgSettings.paymentEmailHint' | translate }}</mat-hint>
+            </mat-form-field>
+
+            <div class="actions">
+              <span class="hint">
+                @if (!canUpdate()) {
+                  <span class="read-only-note">{{ 'orgSettings.readOnly' | translate }}</span>
+                } @else if (modifiedAt()) {
+                  <span class="modified">{{ 'orgSettings.modifiedAt' | translate }} {{ modifiedAt() | date:'dd-MM-yyyy HH:mm' }}</span>
+                }
+              </span>
+              @if (canUpdate()) {
+                <button mat-raised-button color="primary" class="save-btn" type="submit"
+                        [disabled]="saving() || form.pristine || form.invalid">
+                  @if (saving()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container><mat-icon>save</mat-icon> {{ 'common.save' | translate }}</ng-container>
+                  }
+                </button>
               }
-            </mat-select>
-            <mat-hint>{{ 'orgSettings.paymentEmailHint' | translate }}</mat-hint>
-          </mat-form-field>
-        </mat-card-content>
-      </mat-card>
-
-      <div class="form-footer">
-            @if (modifiedAt()) {
-              <p class="modified">{{ 'orgSettings.modifiedAt' | translate }} {{ modifiedAt() | date:'dd-MM-yyyy HH:mm' }}</p>
-            }
-
-            @if (canUpdate()) {
-              <button mat-flat-button class="act-update save-btn" type="submit" [disabled]="saving() || form.pristine || form.invalid">
-                <mat-icon>save</mat-icon> {{ 'common.save' | translate }}
-              </button>
-            } @else {
-              <p class="read-only-note">{{ 'orgSettings.readOnly' | translate }}</p>
-            }
-      </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
       </form>
     }
   `,
   styles: [`
-    .loading { display: flex; justify-content: center; padding: 48px; }
-    .settings-form { display: flex; flex-direction: column; gap: 16px; max-width: 720px; }
-    .number-fields { display: flex; flex-wrap: wrap; gap: 0 16px; }
-    .number-fields mat-form-field { flex: 1 1 180px; }
-    .form-error { color: var(--act-delete, #c62828); font-size: 13px; margin: 0 0 12px; }
-    .intro { color: var(--ui-text-secondary, #555); margin: 0 0 16px; }
-    .full-width { width: 100%; margin-bottom: 16px; }
-    .modified, .read-only-note { color: var(--ui-text-secondary, #555); font-size: 13px; }
+    .page-title { font-size: 22px; font-weight: 500; margin: 8px 0 24px; }
+    .loading { display: flex; justify-content: center; padding: 40px; }
+    .detail-card { border-radius: 12px; max-width: 700px; }
+    .section-card { margin-top: 24px; }
+    .intro { color: var(--ui-text-muted); margin: 0 0 16px; }
+    .full-width { width: 100%; margin-bottom: 8px; }
+    .row { display: flex; flex-wrap: wrap; gap: 0 16px; }
+    .flex-1 { flex: 1 1 160px; }
+    .form-error { color: var(--act-delete); font-size: 12px; margin: 0 0 12px; }
+    .actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; }
+    .hint { font-size: 12px; color: var(--ui-text-muted); }
   `],
 })
 export class OrganizationSettingsComponent implements OnInit {

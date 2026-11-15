@@ -52,7 +52,7 @@ sequenceDiagram
 Toelichting:
 1. De pay-call bouwt het bedrag als tekst met exact 2 decimalen (`"70.00"`) en stuurt `redirectUrl` en `webhookUrl` mee. De redirect-URL komt bij voorkeur uit de omgevingsconfiguratie (`app.mollie.urls.redirect`).
 2. `tr_xxx` bewaren we als `molliePaymentExternalId`; de checkout-URL uit `_links.checkout.href` als `checkoutUrl`.
-3. **Redirect ≠ webhook.** De redirect is browser-facing en mag een intern adres zijn; de webhook komt van Mollie's servers en moet **publiek bereikbaar** zijn, via NGINX op `/rds/api/mollie/payments/webhook` (zie de IP-server in `deploy/nginx/rds.conf`: een exacte location met rate-limit `mollie_limit`).
+3. **Redirect ≠ webhook.** De redirect is browser-facing en mag een intern adres zijn; de webhook komt van Mollie's servers en moet **publiek bereikbaar** zijn, via NGINX op `https://rds.kbtg.nl/api/mollie/payments/webhook` (zie `deploy/nginx/rds.kbtg.nl.conf`: een exacte location met rate-limit `rds_mollie`; Let's Encrypt-certificaat, dus door Mollie vertrouwd).
 4. De webhook-body bevat alleen het id; de backend haalt de **echte** status zelf bij Mollie op en legt die vast als `MolliePaymentStatusEntry` (auditspoor).
 5. **Webhook-validatie:** `id` moet voldoen aan `tr_[A-Za-z0-9]+` (anders `400`), zodat de endpoint niet voor willekeurige invoer misbruikt kan worden.
 6. Er is ook `POST /api/mollie/payments/create-at-mollie` (medewerker): maakt direct een betaling bij Mollie aan en bewaart het resultaat als `MolliePayment`.

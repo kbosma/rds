@@ -1215,7 +1215,7 @@ Voor beheerders; de volledige technische documentatie staat in [build-test-deplo
 | Backend | Spring Boot 4, Java 21, Jetty; poort **8666**, context-path **`/rds`**; luistert alleen op `127.0.0.1` |
 | Database | PostgreSQL 17 (`rdsdb`); schema via **Flyway** (V1–V16), JPA staat op `validate` |
 | Frontends | Angular 22; medewerkers dev-poort 4200, klanten 4300 |
-| Reverse proxy | NGINX (`deploy/nginx/rds.conf`): `/rds/`, `/booker/`, `/api/`; rate-limits; afkappen van scanner-paden |
+| Reverse proxy | NGINX (`deploy/nginx/rds.kbtg.nl.conf`, `https://rds.kbtg.nl`, Let's Encrypt): `/rds/`, `/booker/`, `/api/`; rate-limits; afkappen van scanner-paden |
 | Tests | embedded PostgreSQL (de tests starten zelf een tijdelijke database) |
 
 ### 12.2 Belangrijke instellingen (`application.yaml`, prefix `app.`)

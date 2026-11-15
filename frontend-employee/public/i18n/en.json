@@ -850,7 +850,8 @@
     "resend": "Send again",
     "resendDone": "Email sent again",
     "resendError": "Sending again failed",
-    "internal": "internal only"
+    "internal": "internal only",
+    "attachment": "Attachment"
   },
   "orgSettings": {
     "title": "Organization settings",
@@ -873,7 +874,7 @@
     "balanceWeeks": "Balance: weeks before departure",
     "weeksOrder": "The deposit must be due before the balance.",
     "paymentEmailTemplate": "Payment email (email template)",
-    "paymentEmailHint": "Sent to the main booker once the payments are created. Not chosen: no email."
+    "paymentEmailHint": "Sent once to the main booker, right after the system creates the payments when the quote is confirmed. Empty: the payments are still created, but no email is sent."
   },
   "notifications": {
     "title": "Notifications",
