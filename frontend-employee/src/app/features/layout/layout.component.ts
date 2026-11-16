@@ -219,7 +219,11 @@ export class LayoutComponent {
   collapsed = signal(LayoutComponent.readCollapsed());
 
   constructor() {
-    this.themeService.loadAndApplyTheme();
+    // Alleen opvragen met de authority die de backend eist; anders geeft elke paginalading een 403 (bv. voor ADMIN
+    // en EMPLOYEE, die ORGANIZATION_THEME_READ niet hebben). Zonder thema gelden de standaardkleuren uit de CSS.
+    if (this.auth.hasAuthority('ORGANIZATION_THEME_READ')) {
+      this.themeService.loadAndApplyTheme();
+    }
   }
 
   toggleCollapsed() {

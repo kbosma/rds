@@ -5,6 +5,7 @@ import org.springframework.http.MediaType;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -79,5 +80,28 @@ class OrganizationControllerTest extends AbstractAuthControllerTest {
                 .andExpect(jsonPath("$.mollieKey").value("test_GpPHhs7SHk73fAyMyaJUFUKJQdxDD5"))
                 // audit blijft behouden in de response (niet null na update)
                 .andExpect(jsonPath("$.createdAt").value("2026-01-01T09:00:00"));
+    }
+
+    // Verwijderen vereist ORGANIZATION_DELETE (alleen ADMIN). Een ontbrekende authority geeft 403 vanuit de
+    // method security, nog vóór de service of de OrganizationDeletionGuard (die geeft 409) wordt geraakt.
+    // ADMIN zelf: zie DeleteVerificationControllerTest (204 zonder bedrijfsgegevens, 409 met).
+    @Test
+    void manager_delete_returns403() throws Exception {
+        mockMvc.perform(delete("/api/organizations/" + ORG_TECHPARTNER_ID)
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void employee_delete_returns403() throws Exception {
+        mockMvc.perform(delete("/api/organizations/" + ORG_TECHPARTNER_ID)
+                        .header("Authorization", "Bearer " + employeeToken()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void unauthenticated_delete_returns401() throws Exception {
+        mockMvc.perform(delete("/api/organizations/" + ORG_TECHPARTNER_ID))
+                .andExpect(status().isUnauthorized());
     }
 }
