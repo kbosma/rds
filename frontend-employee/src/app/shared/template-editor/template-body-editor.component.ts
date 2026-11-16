@@ -238,12 +238,14 @@ const IMAGE_STYLE = 'max-width:100%;height:auto;';
     .active { background: color-mix(in srgb, var(--theme-primary) 16%, white); border-radius: 4px; }
     /* Vaste hoogte, niet afhankelijk van de inhoud: anders bepaalt het zijpaneel de hoogte (lange variabelenlijst
        vs. korte afbeeldingenlijst) en krimpt en verspringt het dialoog bij elke tabwissel. Editor en zijpaneel
-       scrollen elk binnen deze hoogte. In een klein venster blijft er ruimte voor velden en knoppen. */
+       scrollen elk binnen deze hoogte. In een klein venster blijft er ruimte voor velden en knoppen.
+       scrollbar-gutter: stable houdt de ruimte voor een scrollbalk altijd vrij; anders schuift de inhoud opzij
+       zodra een scrollbalk verschijnt of verdwijnt (lange variabelenlijst vs. korte afbeeldingenlijst). */
     .editor-body { display: flex; align-items: stretch; height: min(56vh, 640px); min-height: 280px; }
-    .editor-host { flex: 1; min-width: 0; overflow: auto; padding: 12px 16px; }
+    .editor-host { flex: 1; min-width: 0; overflow: auto; scrollbar-gutter: stable; padding: 12px 16px; }
     .var-panel {
       width: 228px; flex-shrink: 0; border-left: 1px solid var(--ui-line); background: var(--ui-canvas);
-      padding: 8px; overflow: auto;
+      padding: 8px; overflow: auto; scrollbar-gutter: stable;
     }
     /* De tabkoppen blijven staan als de lijst eronder scrolt (top: -8px compenseert de padding van het paneel). */
     .panel-tabs {

@@ -524,5 +524,17 @@ describe('TemplateBodyEditorComponent', () => {
       expect(Math.round(panel.getBoundingClientRect().height)).toBe(editorBodyHeight());
       expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight);
     });
+
+    it('houdt de breedte van de inhoud van het zijpaneel gelijk, met of zonder scrollbalk', () => {
+      fixture.componentRef.setInput('variableGroups', EMAIL_VARIABLE_GROUPS);
+      fixture.detectChanges();
+      const panel = fixture.nativeElement.querySelector('.var-panel') as HTMLElement;
+      const withVariables = panel.clientWidth;
+
+      component.panelTab.set('images');
+      fixture.detectChanges();
+
+      expect(panel.clientWidth).toBe(withVariables);
+    });
   });
 });
