@@ -11,7 +11,7 @@ De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basiss
 
 - **Primary keys**: UUID, auto-gegenereerd (`@GeneratedValue(strategy = GenerationType.UUID)`)
 - **Naamgeving**: snake_case in database, camelCase in Java
-- **Multi-tenancy**: Entiteiten met `tenant_organization` kolom worden gefilterd op organisatie via `TenantContext`
+- **Multi-tenancy**: Entiteiten met `tenant_organization` kolom worden gefilterd op organisatie via `TenantContext`. Sinds V21 is `tenant_organization` overal een foreign key naar `organization` met `ON DELETE RESTRICT` en een index
 - **Audit fields**: `created_at`, `created_by`, `modified_at`, `modified_by` — automatisch gezet via `@PrePersist`/`@PreUpdate`
 - **Enums**: Opgeslagen als `STRING` (`@Enumerated(EnumType.STRING)`), JSON-serialisatie in lowercase via `@JsonValue`/`@JsonCreator` (parsing via `EnumValues.parse`, hoofdletterongevoelig, foutmelding met toegestane waarden). In het template-model (documenten/e-mail) is een enum de hoofdletter-naam
 - **Relaties**: Altijd `FetchType.LAZY`
