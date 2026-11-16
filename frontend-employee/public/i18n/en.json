@@ -523,6 +523,7 @@
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "removed": "Organization removed",
     "removeError": "Error removing organization",
+    "deleteBlocked": "Cannot be deleted: this organization still has data (such as bookings, bookers or accommodations). Remove or move that data first.",
     "editTitle": "Edit organization",
     "newTitle": "New organization",
     "backToOrganizations": "Back to organizations",

@@ -523,6 +523,7 @@
     "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
     "removed": "Organisatie verwijderd",
     "removeError": "Fout bij verwijderen organisatie",
+    "deleteBlocked": "Kan niet verwijderd worden: deze organisatie heeft nog gegevens (zoals boekingen, bookers of accommodaties). Verwijder of verplaats die eerst.",
     "editTitle": "Organisatie bewerken",
     "newTitle": "Nieuwe organisatie",
     "backToOrganizations": "Terug naar organisaties",
