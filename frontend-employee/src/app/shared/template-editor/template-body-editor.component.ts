@@ -236,14 +236,20 @@ const IMAGE_STYLE = 'max-width:100%;height:auto;';
     .tb-size { max-width: 90px; }
     .tb-divider { width: 1px; height: 24px; background: var(--ui-line); margin: 0 4px; }
     .active { background: color-mix(in srgb, var(--theme-primary) 16%, white); border-radius: 4px; }
-    .editor-body { display: flex; align-items: stretch; }
-    /* Groeit mee met het (grote) templatedialoog; in een klein venster blijft er ruimte voor velden en knoppen. */
-    .editor-host { flex: 1; min-height: 280px; max-height: min(56vh, 640px); overflow: auto; padding: 12px 16px; }
+    /* Vaste hoogte, niet afhankelijk van de inhoud: anders bepaalt het zijpaneel de hoogte (lange variabelenlijst
+       vs. korte afbeeldingenlijst) en krimpt en verspringt het dialoog bij elke tabwissel. Editor en zijpaneel
+       scrollen elk binnen deze hoogte. In een klein venster blijft er ruimte voor velden en knoppen. */
+    .editor-body { display: flex; align-items: stretch; height: min(56vh, 640px); min-height: 280px; }
+    .editor-host { flex: 1; min-width: 0; overflow: auto; padding: 12px 16px; }
     .var-panel {
       width: 228px; flex-shrink: 0; border-left: 1px solid var(--ui-line); background: var(--ui-canvas);
-      padding: 8px; overflow: auto; max-height: min(56vh, 640px);
+      padding: 8px; overflow: auto;
     }
-    .panel-tabs { display: flex; gap: 2px; margin-bottom: 8px; border-bottom: 1px solid var(--ui-line); }
+    /* De tabkoppen blijven staan als de lijst eronder scrolt (top: -8px compenseert de padding van het paneel). */
+    .panel-tabs {
+      display: flex; gap: 2px; margin-bottom: 8px; border-bottom: 1px solid var(--ui-line);
+      position: sticky; top: -8px; z-index: 1; background: var(--ui-canvas);
+    }
     .panel-tab {
       flex: 1; border: 0; background: none; padding: 6px 4px; font-size: 12.5px; font-weight: 600;
       color: var(--ui-text-muted); cursor: pointer; border-bottom: 2px solid transparent;
