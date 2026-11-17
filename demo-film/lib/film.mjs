@@ -37,7 +37,9 @@ const OVERLAY_SCRIPT = () => {
     #film-image.on { opacity: 1; }
     #film-image img { width: min(1000px, 78vw); height: 70vh; object-fit: cover; object-position: top;
       background: #fff; border-radius: 6px; box-shadow: 0 16px 50px rgba(0,0,0,.45); }
-    #film-image .i-title { color: #fff; font: 600 18px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }`;
+    #film-image .i-title { color: #fff; font: 600 18px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    /* Meldingen (snackbars) van de app bovenaan, zodat ze de ondertitel onderin niet bedekken. */
+    .cdk-global-overlay-wrapper:has(.mat-mdc-snack-bar-container) { align-items: flex-start !important; padding-top: 64px; }`;
   const install = () => {
     if (document.getElementById('film-style')) return;
     const style = document.createElement('style');

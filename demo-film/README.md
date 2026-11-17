@@ -6,6 +6,7 @@ Video's die in de echte schermen van RDS (medewerkersapp en boekerportaal) zijn 
 |---|---|---|
 | Van aanvraag tot afgeronde reis (prospect → afgerond) | `record.mjs` → `out/boekingsfilmpje.webm` | hoofdstuk 12 |
 | Templates maken (e-mail en Word/PDF) | `record-templates.mjs` → `out/templatesfilmpje.webm` | hoofdstuk 11 |
+| Je organisatie inrichten (huisstijl, personen, accounts, stamgegevens, instellingen) | `record-beheer.mjs` → `out/beheerfilmpje.webm` | hoofdstuk 15 |
 
 De video's staan niet in git (te groot; `docs/gebruikershandleiding/video/` staat in `.gitignore`). Kopieer ze na het
 opnemen naar die map, of verspreid ze apart.
@@ -55,6 +56,8 @@ Eenmalig: `npm install` en `npx playwright install chromium` in deze map.
    Het filmpje komt in `demo-film/out/boekingsfilmpje.webm`. Kopieer het naar `docs/gebruikershandleiding/video/`.
    Het templatefilmpje: `npm run record:templates` (ook op een verse, geseede database; het maakt buiten beeld zelf
    een voorbeeldboeking). Voor de PDF in beeld gebruikt het `sips` (macOS).
+   Het beheerfilmpje: `npm run record:beheer` (op een verse, geseede database; het zet buiten beeld de huisstijl terug
+   naar de standaardkleuren, zodat Sanne hem in beeld instelt).
 
 Opnieuw opnemen kan alleen op een lege database (de seed maakt de organisatie één keer aan en elk script verwacht één
 klant Anna de Vries). Begin dus voor elk filmpje met een nieuwe `rdsdemo` en een herstart van de backend.
@@ -81,3 +84,13 @@ Handig bij het aanpassen: `PACE=0.4 npm run record` (sneller) en `HEADED=1 npm r
 3. Word-template "Reisbevestiging" in de editor: kop met boekingsnummer, aanhef, herhaalde tabellen voor reizigers en
    accommodaties.
 4. Vanuit de boeking: Document, PDF, zichtbaar in het portaal; de eerste pagina van de echte PDF in beeld.
+
+## Draaiboek beheerfilmpje
+
+1. Huisstijl: van de standaardkleuren naar die van Zonnige Reizen; voorbeeld en opslaan.
+2. Nieuwe collega: persoon Daan Mulder, account `daan.mulder` (wachtwoord moet gewijzigd worden), rol EMPLOYEE.
+3. Leverancier Adriatic Homes (ADRIATIC) met adres in Poreč.
+4. Accommodatie Appartement Lavanda (APP-LAVANDA): leverancier koppelen, adres toevoegen.
+5. Activiteit Wijnproeverij in Motovun (tour).
+6. Instellingen: offerte- en betaalmail, voorschot van 30 naar 25 procent.
+7. Daan logt in, kiest een eigen wachtwoord en ziet het menu van een medewerker.
