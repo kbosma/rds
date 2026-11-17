@@ -14,6 +14,18 @@ Het token wordt door beide frontends in `localStorage` bewaard en als `Authoriza
 
 **Rechten direct doorvoeren (V26).** `account.authz_version` gaat omhoog zodra de rechten van een account veranderen: een rol toegewezen of ingetrokken, een recht toegevoegd aan of weggehaald uit een van zijn rollen (ook via `sync_system_roles()`), of het account gelockt, ontgrendeld of met een andere vervaldatum. Databasetriggers doen dat, dus ook bij directe SQL. `JwtAuthenticationFilter` vergelijkt de claim `av` met de database (één opzoeking op primaire sleutel per aanroep) en weigert een verouderd token met `401` en `{"code":"AUTHZ_CHANGED"}`. Alleen `POST /api/auth/token/refresh` werkt dan nog: die geeft een nieuw token met de huidige rechten (`EmployeeTokenService`), zonder wachtwoord of 2FA, maar niet als het account gelockt of verlopen is of een nieuw wachtwoord moet kiezen (`401`). De frontend (`authInterceptor`) ververst bij `AUTHZ_CHANGED` één keer (gedeeld tussen gelijktijdige aanroepen), herhaalt de aanroep en zet het nieuwe token in de `AuthService`, waardoor menu, routes en kaarten direct meebewegen. Een token van vóór V26 heeft geen `av` en wordt dus ook ververst.
 
+```mermaid
+flowchart TD
+    R([verzoek met Authorization: Bearer]) --> V{"token geldig<br/>(handtekening, verloop)?"}
+    V -- nee --> A["geen authenticatie:<br/>401 via Spring Security"]
+    V -- ja --> T{"type?"}
+    T -- TOTP_PENDING --> TP["alleen /login/totp, /login/recovery,<br/>/totp/setup"]
+    T -- BOOKER --> B["BOOKER_PORTAL_READ/UPDATE<br/>BookerContext (booker, boeking)"]
+    T -- EMPLOYEE --> AV{"claim av = account.authz_version?<br/>(of pad = /api/auth/token/refresh)"}
+    AV -- nee --> X["401 AUTHZ_CHANGED<br/>frontend ververst het token"]
+    AV -- ja --> E["authorities uit het token<br/>TenantContext (organisatie, account, authorities)"]
+```
+
 `JwtAuthenticationFilter` (vóór de Spring-filter): valideert het token, zet de `SecurityContext` en de ThreadLocals (`TenantContext` of `BookerContext`) en ruimt ze in een `finally` op. Een `BOOKER`-token krijgt vast `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE`; een `TOTP_PENDING`-token alleen een pseudo-authority `TOTP_PENDING`.
 
 ## Endpoint-toegang (`SecurityConfig`)
@@ -83,6 +95,30 @@ Seed vóór V24 (V2, V6, V10, V12; V16 haalt `DOCUMENT_DELETE` weg) — letters 
 - **Afbeeldingen/templates:** een template mag alleen afbeeldingen van de eigen organisatie bevatten (`TemplateImages`), anders `400` zonder te verraden of de afbeelding elders bestaat.
 
 ## Authenticatie van medewerkers
+
+```mermaid
+sequenceDiagram
+    actor M as Medewerker
+    participant FE as frontend-employee
+    participant API as Backend
+    participant DB as Database
+    M->>FE: gebruikersnaam + wachtwoord
+    FE->>API: POST /api/auth/login
+    API->>DB: account, wachtwoordhash, locked, expires_at
+    alt gelockt, verlopen of fout wachtwoord
+        API-->>FE: 401
+    else TOTP aan
+        API-->>FE: requiresTotp + TOTP_PENDING-token (5 min)
+        M->>FE: 6-cijferige code (of herstelcode)
+        FE->>API: POST /api/auth/login/totp
+        API-->>FE: EMPLOYEE-token
+    else zonder TOTP
+        API-->>FE: EMPLOYEE-token (authorities, av)
+    end
+    opt must_change_password
+        FE->>M: eerst een nieuw wachtwoord kiezen
+    end
+```
 
 1. `POST /api/auth/login` met gebruikersnaam + wachtwoord (BCrypt). Een **vergrendeld** account (`locked`) en een **verlopen** account (`expires_at` in het verleden) worden geweigerd met `401` (`CustomUserDetailsService`). Verversen van het token (`/api/auth/token/refresh`) weigert dezelfde accounts.
 2. Heeft het account `totp_enabled`, dan volgt een `TOTP_PENDING`-token en een tweede stap: `/login/totp` (6-cijferige code) of `/login/recovery` (herstelcode).

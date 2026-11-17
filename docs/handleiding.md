@@ -76,7 +76,24 @@ Lokaal draaien de apps op poort 4200 (medewerkers) en 4300 (klanten); de backend
 
 ### 1.3 Levenscyclus van een boeking
 
-`aanvraag → offerte → boeking → voorschot → betaald → op reis → weer thuis → afgerond`
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> aanvraag: nieuwe boeking
+    aanvraag --> offerte: Offerte versturen
+    offerte --> boeking: Offerte bevestigd<br/>(betalingen aangemaakt)
+    boeking --> voorschot: voorschot betaald
+    voorschot --> betaald: alles betaald
+    boeking --> betaald: alles in één keer
+    betaald --> opreis: vertrekdatum
+    opreis --> weerthuis: na de terugkeerdatum
+    weerthuis --> afgerond: meldingen afgehandeld<br/>(of MANAGER rondt af)
+    betaald --> voorschot: terugboeking
+    voorschot --> boeking: terugboeking
+    afgerond --> [*]
+```
+
+Met de hand kan alleen **terugzetten** (met reden, naar elke eerdere status) en **afronden**; de rest doet het systeem.
 
 De status **kies je niet zelf**: het systeem zet hem. Een nieuwe boeking begint als *aanvraag*, **Offerte versturen** zet *offerte*, het vinkje **Offerte bevestigd** zet *boeking*, betalingen zetten *voorschot* en *betaald*, en de reisdatums *op reis* en *weer thuis*; is de boeking weer thuis en zijn alle meldingen afgehandeld, dan zet het systeem haar op *afgerond*. Met de hand kun je alleen **terugzetten** (met reden) en **afronden** (MANAGER). Het doelontwerp met alle automatische overgangen staat in [domain.md](domain.md#levenscyclus-van-een-boeking). De waarde in de API is lowercase (`aanvraag`, `opreis`, `weerthuis`, …), in templates de hoofdletternaam (`BOEKING`).
 
@@ -93,13 +110,18 @@ In de schermen *Templates* en *E-mailtemplates* maak en beheer je alleen de temp
 
 Dit hoofdstuk beschrijft hoe toegang werkt en hoe deze **op dit moment** is ingericht.
 
-> **Bron en geldigheid.** De inrichting hieronder is afgeleid uit de Flyway-migraties `V2` (basis), `V6` (`EMAIL_SEND`), `V10` (`PAYMENT_CORRECT`), `V12` (`PAYMENT_RELINK`), `V16` (haalt `DOCUMENT_DELETE` weg) en `V18` (`ORGANIZATION_SETTINGS_*`, `QUOTE_SEND`). Dat is de **standaardconfiguratie** van elke nieuwe database. Rol↔authority-koppelingen staan in de database en kunnen via het scherm *Rollen* gewijzigd zijn; de live database is bij het schrijven van deze handleiding niet uitgelezen (geen toegang). Controleer de werkelijke stand in *Rollen → rol openen → Authorities*.
+> **Bron en geldigheid.** De inrichting hieronder is afgeleid uit de Flyway-migraties `V2` (basis), `V6` (`EMAIL_SEND`), `V10` (`PAYMENT_CORRECT`), `V12` (`PAYMENT_RELINK`), `V16` (haalt `DOCUMENT_DELETE` weg), `V18` (`ORGANIZATION_SETTINGS_*`, `QUOTE_SEND`) en `V23`–`V26` (eigen rollen per organisatie; zie [voorstel-eigen-rollen.md](voorstel-eigen-rollen.md)). ADMIN, MANAGER en EMPLOYEE zijn **systeemrollen**: hun inhoud ligt vast (`system_role_template`). Daarnaast kan elke organisatie **eigen rollen** maken; die staan niet in dit hoofdstuk.
 
 ### 2.1 De keten van toegang
 
-```
-ORGANIZATION ──< PERSON ──< ACCOUNT ──< ACCOUNT_ROLE >── ROLE ──< ROLE_AUTHORITY >── AUTHORITY
- (tenant)        (mens)      (login)      (koppeling)     (bundel)   (koppeling)        (recht)
+```mermaid
+flowchart LR
+    O["Organisatie<br/>(klant of RDS Platform)"] --> P["Persoon"] --> A["Account<br/>(inloggen)"]
+    A -- "account_role" --> R["Rol<br/>(van dezelfde organisatie:<br/>systeemrol of eigen rol)"]
+    R -- "role_authority" --> AU["Authorities<br/>(vast, uit RDS)"]
+    AU --> T["Token<br/>(authorities + rechtenversie)"]
+    T --> B["Backend: @PreAuthorize<br/>de echte controle"]
+    T --> F["Frontend: menu, routes,<br/>knoppen (alleen gemak)"]
 ```
 
 1. Een gebruiker logt in met een **account**.
@@ -127,12 +149,12 @@ Er zijn in totaal **70 authorities** (V20 voegt `NOTIFICATION_READ`, `NOTIFICATI
 
 | Rol | Bedoeld voor | Kern |
 |---|---|---|
-| **ADMIN** | systeembeheer van het hele platform | beheert organisaties, personen, accounts, rollen en authorities, **over alle organisaties heen**. Heeft **bewust geen** rechten op boekingen, stamgegevens, documenten, templates, e-mail of thema. Een ADMIN krijgt op die endpoints `403`. |
-| **MANAGER** | beheerder van **één organisatie** | alles wat bij het werk en het beheer van de eigen organisatie hoort: boekingen, stamgegevens, templates, documenten, betalingen (incl. correctie en herkoppelen), huisstijl, en gebruikers (personen/accounts, en de rollen EMPLOYEE en MANAGER toewijzen). Kan rollen en authorities alleen *lezen*. |
+| **ADMIN** | systeembeheer van het hele platform; bestaat alleen in **RDS Platform** | beheert organisaties, personen en accounts **over alle organisaties heen** (`PLATFORM_ADMIN`), en wijst bij klanten de systeemrollen toe (bijv. de eerste manager). Authorities zijn alleen te lezen. Heeft **bewust geen** rechten op boekingen, stamgegevens, documenten, templates, e-mail of thema. Een ADMIN krijgt op die endpoints `403`. |
+| **MANAGER** | beheerder van **één organisatie** | alles wat bij het werk en het beheer van de eigen organisatie hoort: boekingen, stamgegevens, templates, documenten, betalingen (incl. correctie en herkoppelen), huisstijl, gebruikers (personen/accounts) en **eigen rollen** van de organisatie inrichten en toewijzen (binnen de regels van §2.9). |
 | **EMPLOYEE** | dagelijks werk | boekingen en alles daaronder (bookers, prospects, reizigers, regels, activiteiten), documenten (volledig), betalingen aanmaken en bekijken, e-mail versturen. Templates, accommodaties, leveranciers en activiteiten alleen *lezen*. Eigen persoon en account alleen lezen/wijzigen. |
 | *Boeker (klant)* | externe klant | geen rol en geen account: een **BOOKER-token** (na OTP) met vast `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE`, gebonden aan één boeking. |
 
-Aantallen in de standaardconfiguratie: ADMIN **28** authorities, MANAGER **48**, EMPLOYEE **18**. `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE` bestaan wel als authority, maar zijn aan **geen enkele rol** gekoppeld.
+De matrix hieronder is de standaardconfiguratie van vóór V23; sinds V23/V24 hebben ADMIN `PLATFORM_ADMIN` en `USER_SCOPE_ORGANIZATION`, MANAGER `USER_SCOPE_ORGANIZATION`, `ROLE_CREATE/UPDATE/DELETE` en `ROLEAUTHORITY_CREATE/DELETE`, en zijn `AUTHORITY_CREATE/UPDATE/DELETE` vervallen. De actuele inhoud zie je in *Rollen* (matrix) of `system_role_template`. `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE` bestaan wel als authority, maar zijn aan **geen enkele rol** gekoppeld.
 
 ### 2.4 Volledige matrix: authority × rol
 
@@ -306,38 +328,47 @@ Een BOOKER-token werkt **niet** op `/api/bookings` e.d., en omgekeerd werkt een 
 
 ### 2.9 Wie mag welke rol toewijzen?
 
-Rollen zijn globaal en ADMIN omzeilt de organisatiecontroles. Daarom geldt voor `/api/account-roles`:
+Rollen horen bij één organisatie. De kernregel: **je kunt alleen doorgeven wat je zelf hebt**.
 
-| Wie | Mag toewijzen/intrekken |
-|---|---|
-| ADMIN | alle rollen |
-| Niet-ADMIN (bijv. MANAGER) | **alleen `EMPLOYEE` en `MANAGER`** |
+```mermaid
+flowchart TD
+    S([rol r toewijzen aan of intrekken bij account x]) --> O{"r en x van dezelfde organisatie?"}
+    O -- nee --> N404[404]
+    O -- ja --> P{"beheerder (PLATFORM_ADMIN)<br/>en r is een systeemrol?"}
+    P -- ja --> OK["toegestaan<br/>(bijv. de eerste manager bij onboarding)"]
+    P -- nee --> M{"x in je eigen organisatie?"}
+    M -- nee --> N404b[404]
+    M -- ja --> L{"alle rechten van r én van x<br/>heb je zelf (en mag een klant hebben)?"}
+    L -- nee --> F403["403: boven je niveau"]
+    L -- ja --> LM{"de laatste MANAGER intrekken?"}
+    LM -- ja --> C409["409: er moet een manager blijven"]
+    LM -- nee --> OK2[toegestaan]
+```
 
-Zo kan een manager zichzelf of een ander geen ADMIN maken. Een nieuwe of zelfgemaakte rol is dus standaard alleen door een ADMIN te beheren. Het account-scherm vraagt de toewijsbare rollen op via `GET /api/account-roles/assignable-roles` en toont alleen die. Een `403` geeft de melding *"Je mag deze rol niet toewijzen. Alleen een beheerder kan dat."*
+ADMIN bestaat bij een klant niet en is daar dus nooit toe te wijzen. Het account-scherm vraagt de toewijsbare rollen op via `GET /api/account-roles/assignable-roles?accountId=…` en toont alleen die; een weigering toont de uitleg van de server.
 
 ### 2.10 De configuratie wijzigen
 
 | Wat wil je | Hoe | Opmerkingen |
 |---|---|---|
-| Een authority aan een rol hangen of afnemen | *Rollen → rol openen → kaart Authorities → Authority toevoegen* / prullenbak-icoon | ADMIN: lezen/koppelen/ontkoppelen. MANAGER: alleen lezen. Geldt voor alle organisaties. |
+| Een authority aan een rol hangen of afnemen | *Rollen → rol openen → matrix* | alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. Systeemrollen liggen vast. |
 | Een rol aan een account geven | *Accounts → account openen → Rol toevoegen* | zie §2.9 |
-| Een nieuwe rol maken | *Rollen → Nieuwe rol* (alleen ADMIN) | krijgt nog geen authorities; die koppel je daarna |
-| Een nieuwe authority maken | *Rechten → Nieuwe authority* | maakt alleen de naam aan. **Er is pas iets te beschermen als de code er een `@PreAuthorize` voor heeft.** Nieuwe authorities die de applicatie zelf gebruikt komen via een Flyway-migratie (zie `V6` als voorbeeld). |
+| Een nieuwe rol maken | *Rollen → Nieuwe rol* (`ROLE_CREATE`, o.a. MANAGER) | leeg, of als kopie van een rol waarvan je alle rechten zelf hebt |
+| Een nieuwe authority | alleen via een Flyway-migratie | authorities liggen vast: ze doen pas iets als de code ze controleert. Zie [security.md](security.md). |
 
-**Wanneer werkt een wijziging?** Authorities zitten in het token (levensduur **1 uur**). Neem je een authority af terwijl iemand is ingelogd, dan merkt die dat pas bij een **nieuwe login/token** (tot een uur later). Wil je direct effect: laat de gebruiker uit- en weer inloggen of vergrendel het account.
+**Wanneer werkt een wijziging?** Direct (sinds V26). Het token draagt een rechtenversie; verandert er iets aan de rechten van een account, dan weigert de backend het oude token (`401 AUTHZ_CHANGED`) en haalt de app vanzelf een nieuw token op. Wie gelockt of verlopen is, wordt uitgelogd.
 
 ### 2.11 Aanwezige demo-accounts (seed)
 
-`V2__initial_data.sql` maakt twee organisaties met vier accounts. **Er staan hier bewust geen wachtwoorden**; de demo-gegevens zijn fictief en de seed zelf beschrijft het testwachtwoord.
+De seed (`V2`, aangevuld in `V24` en `V25`) maakt RDS Platform en twee klantorganisaties. **Er staan hier bewust geen wachtwoorden**; de demo-gegevens zijn fictief en de seed zelf beschrijft het testwachtwoord.
 
 | Gebruikersnaam | Persoon | Organisatie | Rol |
 |---|---|---|---|
-| `jan.vanbergen` | Jan van Bergen | Puurkroatie | ADMIN |
+| `jan.vanbergen` | Jan van Bergen | RDS Platform | ADMIN |
+| `wendy.vos` | Wendy Vos | Puurkroatie | MANAGER |
 | `maria.jansen` | Maria Jansen | Puurkroatie | EMPLOYEE |
 | `pieter.degroot` | Pieter de Groot | TechPartner BV | MANAGER |
 | `sophie.vandijk` | Sophie van Dijk | TechPartner BV | EMPLOYEE |
-
-Merk op: in de seed heeft **Puurkroatie geen MANAGER**, alleen een ADMIN en een EMPLOYEE. Wil je daar het volledige beheer (templates, huisstijl) testen, maak dan een MANAGER aan via *Accounts* of de onboarding-wizard.
 
 ### 2.12 Checklist: rechten controleren
 

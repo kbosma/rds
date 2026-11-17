@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Templates: gedeelde editor, Word-templates en herhaalde tabellen</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Templates: gedeelde editor, Word-templates en herhaalde tabellen</h1>
+<p>E-mailtemplates en Word-templates (.docx) worden in <strong>dezelfde WYSIWYG-editor</strong> gemaakt, met dezelfde variabelen, dezelfde afbeeldingenbibliotheek en dezelfde herhaalde tabellen. Wat bij e-mail is beschreven (versturen, SMTP, relay) staat in <a href="email.html">email.md</a>; dit document gaat over wat de twee delen.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-overzicht">Overzicht</a></li><li><a href="#h-e-n-model-voor-documenten-n-e-mail">Eén model voor documenten én e-mail</a></li><li><a href="#h-herhaalde-tabellen">Herhaalde tabellen</a></li><li><a href="#h-word-templates-uit-de-editor">Word-templates uit de editor</a></li><li><a href="#h-veiligheid">Veiligheid</a></li><li><a href="#h-frontend">Frontend</a></li><li><a href="#h-codekaart-backend">Codekaart (backend)</a></li><li><a href="#h-tests">Tests</a></li><li><a href="#h-beperkingen-toekomst">Beperkingen / toekomst</a></li></ul></nav>
+<h2 id="h-overzicht">Overzicht</h2>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>E-mailtemplate</th><th>Word-template (.docx)</th></tr></thead><tbody>
+<tr><th scope="row">Wat wordt bewaard</th><td>onderwerp + HTML (<code>email_template.body_html</code>)</td><td>het .docx (<code>document_template.template_data</code>) <strong>en</strong>, bij een template uit de editor, de HTML (<code>source_html</code>)</td></tr>
+<tr><th scope="row">Wanneer ontstaat het eindresultaat</th><td>bij preview/versturen: HTML wordt gemerged</td><td>bij het opslaan wordt de HTML een echt .docx; bij het genereren wordt dat .docx gemerged (xdocreport)</td></tr>
+<tr><th scope="row">Model in de template</th><td><code>${prospect.*}</code> en (bij een boeking) <code>${booking.*}</code></td><td><code>${booking.*}</code></td></tr>
+<tr><th scope="row">Upload van een bestand</th><td>n.v.t.</td><td>blijft bestaan naast de editor</td></tr>
+</tbody></table></div>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    ED[WYSIWYG-editor&lt;br/&gt;TipTap] --&gt;|HTML| EM[email_template.body_html]
+    ED --&gt;|HTML = sourceHtml| CV[HtmlToDocxConverter&lt;br/&gt;jsoup + POI]
+    CV --&gt;|.docx| DT[(document_template&lt;br/&gt;template_data + source_html)]
+    UP[Geüpload .docx] --&gt; DT
+    EM --&gt;|FreeMarker| MAIL[Mail]
+    DT --&gt;|xdocreport + FreeMarker| DOC[Document .docx/.pdf]
+    CTX[BookingContextService&lt;br/&gt;één model] --&gt; EM
+    CTX --&gt; DT
+</pre></figure>
+<h2 id="h-e-n-model-voor-documenten-n-e-mail">Eén model voor documenten én e-mail</h2>
+<p><code>BookingContextService</code> (<code>docgen/service</code>) bouwt de gegevens op; documenten en e-mails gebruiken dezelfde code. Het model is een <strong>platte</strong> structuur (maps, lijsten, tekst, getallen; zie <code>TemplateModels</code>), geen Java-objecten.</p>
+<p><strong><code>booking</code></strong> (<code>BookingContext</code>):</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Veld</th><th>Inhoud</th></tr></thead><tbody>
+<tr><th scope="row"><code>booking.bookingNumber</code>, <code>booking.bookingStatus</code></th><td>nummer en status (enum-naam, bv. <code>BOEKING</code>)</td></tr>
+<tr><th scope="row"><code>booking.fromDate</code>, <code>booking.untilDate</code></th><td>periode (<code>jjjj-mm-dd</code>)</td></tr>
+<tr><th scope="row"><code>booking.totalSum</code></th><td>totaalbedrag (getal)</td></tr>
+<tr><th scope="row"><code>booking.booker.*</code></th><td>de hoofdboeker (zelfde velden als <code>prospect.*</code>)</td></tr>
+<tr><th scope="row"><code>booking.travelers</code></th><td>lijst: <code>firstname</code>, <code>prefix</code>, <code>lastname</code>, <code>gender</code>, <code>birthdate</code>, <code>initials</code></td></tr>
+<tr><th scope="row"><code>booking.bookingLines</code></th><td>lijst: <code>fromDate</code>, <code>untilDate</code>, <code>price</code>, <code>accommodation.{key,name,addresses}</code>, <code>supplier.{key,name,addresses}</code></td></tr>
+<tr><th scope="row"><code>booking.bookingActivities</code></th><td>lijst: <code>activityName</code>, <code>activityType</code>, <code>fromDate</code>, <code>untilDate</code> (afgeleid uit activiteitsdatum + tijden; einde is de volgende dag bij tot-tijd &lt; van-tijd), <code>meetingPoint</code>, <code>totalPrice</code></td></tr>
+<tr><th scope="row"><code>booking.payments</code></th><td>lijst, op vervaldatum: <code>description</code>, <code>amount</code>, <code>paymentType</code> (<code>voorschot</code>, <code>restant</code>, <code>definitief</code>, <code>overig</code>), <code>dueDate</code> (<code>jjjj-mm-dd</code> of leeg; gebruik <code>${p.dueDate!&quot;&quot;}</code>), <code>status</code> (<code>open</code>, <code>paid</code>, …)</td></tr>
+</tbody></table></div>
+<p>Een adres heeft <code>street</code>, <code>housenumber</code>, <code>housenumberAddition</code>, <code>postalcode</code>, <code>city</code>, <code>country</code>, <code>addressrole</code>. De velden van de booker/prospect staan in <a href="email.html">email.md</a>.</p>
+<p>Het model bevat alleen wat de contextklassen in <code>docgen/context</code> aanbieden. De editor biedt in <code>template-variables.ts</code> dezelfde namen aan; een veld dat daar niet bestaat kan in de editor ook niet gekozen worden (een verzonnen veld zou pas bij het samenvoegen fout gaan).</p>
+<h3 id="h-valkuilen-bij-het-schrijven-van-een-expressie">Valkuilen bij het schrijven van een expressie</h3>
+<ul><li><strong>Bedragen:</strong> zonder opmaak toont FreeMarker <code>1250.00</code> als <code>1.250</code> (afgerond, met groepering). De editor voegt bedragen daarom in als <code>${booking.totalSum?string(&quot;#,##0.00&quot;)}</code>.</li><li><strong>Gebruik dubbele aanhalingstekens</strong> (<code>&quot;…&quot;</code>), nooit enkele (<code>&#x27;…&#x27;</code>): xdocreport schrijft een enkele aanhalingsteken in een Word-template om, waardoor de expressie een syntaxfout geeft bij het samenvoegen. Dit geldt ook voor een zelf geüpload .docx.</li><li>Datums zijn tekst in de notatie <code>dd-mm-jjjj</code> (bv. <code>10-07-2027</code>), datum-tijden <code>dd-mm-jjjj uu:mm</code> (activiteiten). Andere opmaak kan met FreeMarker-functies op de tekst. De opmaak zit in <code>TemplateModels</code> en geldt voor e-mail- én Word/PDF-templates.</li><li>Tekst als <code>[#</code> of <code>&lt;#</code> in een Word-template wordt door FreeMarker als instructie gelezen (dat is hoe lussen werken). Gewone tekst heeft daar geen last van.</li></ul>
+<h2 id="h-herhaalde-tabellen">Herhaalde tabellen</h2>
+<p>Een gewone tabel met twee extra attributen: <code>data-repeat</code> (de lijst, bv. <code>booking.travelers</code>) en <code>data-item</code> (de naam waaronder elk element in de rij beschikbaar is, bv. <code>t</code>). <strong>De laatste rij</strong> wordt voor elk element herhaald; rijen erboven (een kopregel) blijven één keer staan. Zonder elementen blijft alleen de kop over.</p>
+<pre class="sketch">&lt;table data-repeat=&quot;booking.travelers&quot; data-item=&quot;t&quot;&gt;&lt;tbody&gt;
+  &lt;tr&gt;&lt;th&gt;Voornaam&lt;/th&gt;&lt;th&gt;Achternaam&lt;/th&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;${t.firstname}&lt;/td&gt;&lt;td&gt;${t.lastname}&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;</pre>
+<p>In de editor: tabelmenu → <em>Herhaalde tabel</em> → reizigers, accommodaties of activiteiten. Dat voegt een tabel in met kopregel en een rij met de passende velden; <em>Herhaling uitzetten</em> maakt er weer een gewone tabel van. Een herhaalde tabel heeft in de editor een gestippelde rand, en de herhalende rij is gekleurd. Voeg je een rij toe onder de laatste, dan wordt díé de herhalende rij.</p>
+<p>Eén concept, twee uitvoeren (<code>RepeatTables</code>):</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Uitvoer</th></tr></thead><tbody>
+<tr><th scope="row">E-mail</th><td><code>&lt;#list lijst as item&gt;</code> om de laatste <code>&lt;tr&gt;</code>; de attributen verdwijnen uit de uiteindelijke mail</td></tr>
+<tr><th scope="row">Word</th><td>echte Word-<strong>samenvoegvelden</strong> <code>@before-row[#list …]</code> (eerste cel) en <code>@after-row[/#list]</code> (laatste cel) in de laatste rij; xdocreport herhaalt de rij</td></tr>
+</tbody></table></div>
+<p>(Een lus over tabelrijen werkt in xdocreport alleen met echte samenvoegvelden; gewone tekst <code>[#list]</code> werkt wel voor alinea's, maar niet voor rijen.)</p>
+<p><strong>Veiligheid:</strong> lijst en itemnaam komen van een gebruiker en komen in een FreeMarker-instructie terecht. Ze worden daarom strikt gevalideerd (een pad van identifiers, bv. <code>booking.travelers</code>; itemnaam is één identifier). Iets anders — bv. een poging om een instructie in te smokkelen — geeft een <code>400</code>.</p>
+<h2 id="h-word-templates-uit-de-editor">Word-templates uit de editor</h2>
+<h3 id="h-opslaan">Opslaan</h3>
+<p><code>POST/PUT /api/document-templates</code> accepteert naast <code>templateData</code> (upload) ook <strong><code>sourceHtml</code></strong> (maximaal 500.000 tekens). De service beslist:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Verzoek</th><th>Gevolg</th></tr></thead><tbody>
+<tr><th scope="row"><code>sourceHtml</code> meegestuurd</th><td>afbeeldingen worden gecontroleerd, <code>HtmlToDocxConverter</code> bouwt het .docx, <code>template_data</code> én <code>source_html</code> worden bewaard. Eventueel meegestuurde <code>templateData</code> wordt genegeerd.</td></tr>
+<tr><th scope="row">alleen <code>templateData</code> (upload)</th><td>de bytes vervangen de template; <code>source_html</code> vervalt (anders zou de editor een oudere versie tonen dan er in gebruik is)</td></tr>
+<tr><th scope="row">geen van beide (alleen naam/omschrijving)</th><td><code>template_data</code> en <code>source_html</code> blijven staan</td></tr>
+</tbody></table></div>
+<p>Een geüploade template heeft geen bron-HTML en blijft dus <em>alleen uploaden/downloaden</em>: een willekeurig Word-bestand kan niet betrouwbaar naar HTML terug. In de dialoog kiest een nieuwe template tussen <em>Word-bestand uploaden</em> en <em>In de editor maken</em>. Een template uit de editor blijft in de editor te bewerken; een geüploade template kan bij het bewerken <strong>omgeschakeld</strong> worden naar de editor (dan begint de editor leeg en vervangt opslaan het geüploade bestand, met een waarschuwing). Inzien vanuit de lijst opent het dialoog alleen-lezen (voor een geüploade template met een download-knop).</p>
+<p>Genereren, downloaden (<code>GET …/{id}/content</code>) en PDF-conversie werken voor beide soorten hetzelfde: het is gewoon een .docx.</p>
+<h3 id="h-wat-de-converter-ondersteunt">Wat de converter ondersteunt</h3>
+<p>Alles wat de editor kan maken: alinea's, koppen (h1–h6), <strong>vet / cursief / onderstreept / doorgehaald</strong>, lettertype, -grootte en kleur, links (alleen <code>http</code>, <code>https</code>, <code>mailto</code>, <code>tel</code>), opsommingen en genummerde lijsten (ook genest; elke genummerde lijst begint weer bij 1), tabellen (kopcel, samengevoegde kolommen/rijen, vastgelegde kolombreedte), afbeeldingen, horizontale lijn, citaat, codeblok, uitlijning. De pagina is <strong>A4</strong> met 2,5 cm marge; standaardlettertype Calibri 11.</p>
+<p>Een tabel krijgt randen, 100% breedte, een grijze kopcel en een kopregel die op elke pagina herhaalt. Na een tabel staat een lege alinea (anders plakt Word tabellen aan elkaar).</p>
+<p><strong>Beperkingen</strong> (de converter weigert dit met een duidelijke melding in plaats van iets verkeerds te maken):</p>
+<ul><li>Geen tabel <strong>in</strong> een tabelcel.</li><li>Maximaal 64 kolommen.</li><li>Afbeeldingen moeten <strong>PNG, JPEG of GIF</strong> zijn. WebP mag wel in de bibliotheek (voor e-mail) maar niet in een Word-template.</li><li>Afbeeldingen moeten uit de bibliotheek komen (zie hieronder); een externe URL of <code>data:</code>-afbeelding wordt geweigerd.</li><li>Onbekende elementen worden genegeerd (hun inhoud blijft); <code>script</code>, <code>style</code>, <code>iframe</code> e.d. vervallen.</li></ul>
+<h3 id="h-afbeeldingsgrootte">Afbeeldingsgrootte</h3>
+<p>Een afbeelding in de editor selecteer je met een klik; dan verschijnt rechtsonder een <strong>greep</strong> waarmee je de afbeelding met de muis groter of kleiner maakt (de beeldverhouding blijft behouden; minimaal 40 px). De grootte wordt als <code>width</code>- en <code>height</code>-attribuut op de <code>&lt;img&gt;</code> bewaard, naast de vaste stijl <code>max-width:100%;height:auto</code> (nooit breder dan de mail/pagina), bv. <code>&lt;img src=&quot;/api/public/email-images/…&quot; width=&quot;169&quot; height=&quot;85&quot; style=&quot;max-width: 100%; height: auto;&quot;&gt;</code>. Dit geldt voor e-mail- én Word-templates (één editor) en komt terug bij het heropenen van de template.</p>
+<ul><li><strong>E-mail</strong>: <code>EmailImageUrlResolver.toAbsolute</code> past bij het versturen alleen het <code>src</code>-pad aan; de attributen blijven ongemoeid.</li><li><strong>Word</strong>: <code>HtmlToDocxConverter.displaySize</code> neemt <code>width</code>/<code>height</code> (attribuut, anders <code>style</code>) over; zonder afmeting geldt de eigen afmeting van het plaatje, en nooit breder dan de pagina (605 px; de hoogte schaalt dan mee).</li></ul>
+<h3 id="h-afbeeldingen-n-bibliotheek">Afbeeldingen: één bibliotheek</h3>
+<p>E-mail en Word gebruiken <strong>dezelfde</strong> bibliotheek (<code>email_image</code>, endpoints <code>/api/email-images</code>; de naam is historisch). Zie <a href="email.html">email.md</a> voor opslag, publiek uitleveren en verwijderen.</p>
+<ul><li>Een template mag alleen afbeeldingen van de <strong>eigen organisatie</strong> bevatten. Die controle staat op één plek, <code>TemplateImages.verifyBelongTo</code>, en wordt bij het opslaan van e-mail- én Word-templates gedaan. De melding maakt geen onderscheid tussen "bestaat niet" en "is van een ander".</li><li>De converter haalt een afbeelding <strong>alleen op via de UUID</strong> uit de bibliotheek van die organisatie (<code>TemplateImages.lookupFor</code>). Er wordt nooit een URL opgehaald, dus ook geen SSRF via een afbeeldingsadres.</li><li>Een afbeelding die in een Word-template uit de editor staat telt in de bibliotheek als <strong>"in gebruik"</strong> (de bibliotheek kijkt naar <code>email_template.body_html</code> én <code>document_template.source_html</code>, beide per organisatie) en kan dus niet verwijderd worden. Het .docx bevat zelf een eigen kopie van de afbeelding, maar opnieuw opslaan vanuit de editor heeft de afbeelding nodig.</li></ul>
+<h2 id="h-veiligheid">Veiligheid</h2>
+<p>Templates zijn door gebruikers geschreven en dus <strong>niet vertrouwd</strong>.</p>
+<ul><li>FreeMarker draait afgeschermd voor e-mail én Word: <code>?new</code> en <code>?api</code> uit (anders kan één regel tekst een commando op de server uitvoeren), geen include/import, en een <strong>plat model</strong> zonder Java-objecten (<code>FreemarkerHardening</code>, <code>TemplateModels</code>). Een template uit de editor gaat door dezelfde afschermde straat als een geüpload bestand; er is een test dat een payload die in de editor wordt getypt nog steeds geblokkeerd wordt.</li><li>De converter behandelt de HTML als data: tekst wordt via Word-API's geschreven (geen string-plakken in XML), links met een ander schema dan http/https/mailto/tel worden platte tekst, een onbekend lettertype of kleur wordt genegeerd.</li><li>Rechten: <code>TEMPLATE_CREATE/UPDATE/DELETE/READ</code> voor beheer; <code>DOCUMENT_CREATE</code> om te genereren; <code>EMAIL_SEND</code> om te versturen. ADMIN heeft deze business-authorities bewust niet.</li></ul>
+<h2 id="h-frontend">Frontend</h2>
+<p>Gedeeld in <code>frontend-employee/src/app/shared/template-editor/</code>:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Bestand</th><th>Rol</th></tr></thead><tbody>
+<tr><th scope="row"><code>template-body-editor.component.ts</code></th><td>de TipTap-editor (<code>ControlValueAccessor</code>), variabelenpaneel, tabel- en herhaalde-tabelmenu, afbeeldingen</td></tr>
+<tr><th scope="row"><code>template-variables.ts</code></th><td>de variabelen en herhaalde tabellen per soort template (<code>EMAIL_VARIABLE_GROUPS</code>, <code>DOCUMENT_VARIABLE_GROUPS</code>, <code>BOOKING_REPEAT_TABLES</code>)</td></tr>
+<tr><th scope="row"><code>template-image-library.component.ts</code>, <code>template-image.service.ts</code></th><td>bibliotheek en upload</td></tr>
+</tbody></table></div>
+<p>De editor krijgt via <code>variableGroups</code> en <code>repeatTables</code> te horen wat hij moet aanbieden: een e-mail heeft de ontvanger (<code>prospect.*</code>) en de boeking (met de uitleg dat die alleen bij een boeking werkt); een Word-template de boeking en de hoofdboeker. Vertalingen staan onder <code>templateEditor.*</code>.</p>
+<p>Gebruikers van de editor: <code>features/email-templates/email-template-dialog</code> en <code>features/templates/template-dialog</code> (upload of editor). E-mail versturen voor een boeking: <em>Toevoegen → E-mail aan hoofdboeker</em> in de tijdlijn <em>Berichten en documenten</em> van het boekingdetail (<code>EMAIL_SEND</code>), of het mail-icoon op een regel in het scherm <em>Prospects</em>. Vanuit de lijst <em>E-mailtemplates</em> kan niet worden verstuurd.</p>
+<h2 id="h-codekaart-backend">Codekaart (backend)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Laag</th><th>Klasse(n)</th></tr></thead><tbody>
+<tr><th scope="row">Gedeeld model</th><td><code>docgen/service/BookingContextService</code> (+ impl), <code>docgen/context/*</code>, <code>docgen/service/TemplateModels</code>, <code>docgen/service/FreemarkerHardening</code></td></tr>
+<tr><th scope="row">Herhaalde tabellen</th><td><code>docgen/service/RepeatTables</code></td></tr>
+<tr><th scope="row">Converter</th><td><code>docgen/service/HtmlToDocxConverter</code> (jsoup + Apache POI)</td></tr>
+<tr><th scope="row">Afbeeldingen</th><td><code>email/service/TemplateImages</code> (controle + opzoeken)</td></tr>
+<tr><th scope="row">Word-templates</th><td><code>booking/service/impl/DocumentTemplateServiceImpl</code>, <code>booking/entity/DocumentTemplate</code> (<code>sourceHtml</code>), <code>booking/dto/DocumentTemplateDto</code></td></tr>
+<tr><th scope="row">Documentnaam</th><td><code>docgen/service/GeneratedDocumentName</code> (sjabloonnaam + boekingsnummer + datum en tijd)</td></tr>
+<tr><th scope="row">Migratie</th><td><code>V8__document_template_source_html.sql</code></td></tr>
+</tbody></table></div>
+<p>Afhankelijkheid: <code>org.jsoup:jsoup</code> (MIT) in <code>pom.xml</code>.</p>
+<h2 id="h-tests">Tests</h2>
+<ul><li><code>HtmlToDocxConverterTest</code>: de hele keten HTML → .docx → afgeschermde xdocreport-merge → tekst (ook herhaalde tabellen, lijsten, tabellen, afbeeldingen, PDF-conversie, injectiepogingen).</li><li><code>RepeatTablesTest</code>, <code>BookingContextServiceImplTest</code>, <code>EmailRenderServiceImplTest</code> (boeking, herhaalde tabel, hardening), <code>EmailSendServiceImplTest</code> (<code>sendForBooking</code>), <code>DocumentTemplateServiceImplTest</code>.</li><li>Integratie: <code>DocumentTemplateEditorControllerTest</code> (aanmaken/bijwerken vanuit de editor, genereren als .docx en PDF, afbeeldingen van een andere organisatie, rechten) en <code>EmailTemplateControllerTest</code> (<code>bookingId</code>).</li><li>Frontend: specs naast de componenten in <code>shared/template-editor</code>, <code>features/templates</code>, <code>features/email-templates</code> en <code>features/bookings</code>.</li></ul>
+<h2 id="h-beperkingen-toekomst">Beperkingen / toekomst</h2>
+<ul><li>Een geüploade .docx is niet in de editor te openen (geen terugweg van Word naar HTML).</li><li>De "in gebruik"-controle zoekt het pad in de HTML (<code>LIKE</code>); een echte koppeling afbeelding ↔ template zou dit sneller en strikter maken.</li><li>Geen kop-/voettekst, paginanummers of inhoudsopgave in een Word-template uit de editor.</li><li>Geen geneste tabellen; geen tekstvak/vormen.</li><li>De herhalende rij is altijd de <strong>laatste</strong> rij; meerdere herhalende rijen in één tabel kan niet (gebruik twee tabellen).</li></ul>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

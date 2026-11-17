@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RDS — Handleiding</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>RDS — Handleiding</h1>
+<p><strong>Reis Dossier Systeem (RDS)</strong> — de volledige gebruikers- en beheerhandleiding.</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th></th></tr></thead><tbody>
+<tr><th scope="row">Doelgroep</th><td>medewerkers (EMPLOYEE), managers (MANAGER), systeembeheerders (ADMIN), klanten (boekers) en beheerders/integrators die de API gebruiken</td></tr>
+<tr><th scope="row">Peildatum</th><td>20-10-2026 (branch <code>main</code>, Flyway-migraties V1–V16)</td></tr>
+<tr><th scope="row">Bron</th><td>de code en de migraties zelf. De rechtenmatrix (§2.4) en de endpointlijst (§9) zijn gegenereerd uit de SQL-migraties en de <code>@PreAuthorize</code>-annotaties; waar een eerder document afwijkt, wint de code.</td></tr>
+<tr><th scope="row">Taal</th><td>Nederlands; schermnamen staan zoals ze in de Nederlandse interface heten, technische namen (authorities, endpoints, velden) staan ongewijzigd</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>Hoe lees je dit?</strong><br>- Wil je weten <em>wat een rol mag</em>: ga naar <a href="#2-rollen-en-authorities">§2 Rollen en authorities</a>.<br>- Wil je een <em>taak uitvoeren</em> (boeking maken, document genereren, betaling vastleggen): <a href="#6-werkprocessen-stap-voor-stap">§6 Werkprocessen</a>.<br>- Zoek je een <em>scherm</em>: <a href="#4-de-medewerkersapp-frontend-employee">§4 Medewerkersapp</a>.<br>- Ben je <em>klant</em>: <a href="#5-het-boekerportaal-voor-klanten">§5 Boekerportaal</a>.<br>- Bouw je een <em>koppeling</em>: <a href="#9-api-referentie">§9 API-referentie</a>.<br>- Loopt iets vast: <a href="#11-problemen-oplossen">§11 Problemen oplossen</a> en <a href="#10-bekende-beperkingen">§10 Bekende beperkingen</a>.</div>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-inhoud">Inhoud</a></li><li><a href="#h-1-wat-is-rds">1. Wat is RDS?</a></li><li><a href="#h-2-rollen-en-authorities">2. Rollen en authorities</a></li><li><a href="#h-3-inloggen-en-je-eigen-account">3. Inloggen en je eigen account</a></li><li><a href="#h-4-de-medewerkersapp-frontend-employee">4. De medewerkersapp (frontend-employee)</a></li><li><a href="#h-5-het-boekerportaal-voor-klanten">5. Het boekerportaal (voor klanten)</a></li><li><a href="#h-6-werkprocessen-stap-voor-stap">6. Werkprocessen stap voor stap</a></li><li><a href="#h-7-templates-variabelen-tabellen-en-afbeeldingen">7. Templates: variabelen, tabellen en afbeeldingen</a></li><li><a href="#h-8-regels-beveiliging-en-foutmeldingen">8. Regels, beveiliging en foutmeldingen</a></li><li><a href="#h-9-api-referentie">9. API-referentie</a></li><li><a href="#h-10-bekende-beperkingen">10. Bekende beperkingen</a></li><li><a href="#h-11-problemen-oplossen">11. Problemen oplossen</a></li><li><a href="#h-12-beheer-en-configuratie">12. Beheer en configuratie</a></li><li><a href="#h-13-bijlagen">13. Bijlagen</a></li></ul></nav>
+<h2 id="h-inhoud">Inhoud</h2>
+<ol><li><a href="#1-wat-is-rds">Wat is RDS?</a></li><li><a href="#2-rollen-en-authorities">Rollen en authorities</a></li><li><a href="#3-inloggen-en-je-eigen-account">Inloggen en je eigen account</a></li><li><a href="#4-de-medewerkersapp-frontend-employee">De medewerkersapp (<code>frontend-employee</code>)</a></li><li><a href="#5-het-boekerportaal-voor-klanten">Het boekerportaal (voor klanten)</a></li><li><a href="#6-werkprocessen-stap-voor-stap">Werkprocessen stap voor stap</a></li><li><a href="#7-templates-variabelen-tabellen-en-afbeeldingen">Templates: variabelen, tabellen en afbeeldingen</a></li><li><a href="#8-regels-beveiliging-en-foutmeldingen">Regels, beveiliging en foutmeldingen</a></li><li><a href="#9-api-referentie">API-referentie</a></li><li><a href="#10-bekende-beperkingen">Bekende beperkingen</a></li><li><a href="#11-problemen-oplossen">Problemen oplossen</a></li><li><a href="#12-beheer-en-configuratie">Beheer en configuratie</a></li><li><a href="#13-bijlagen">Bijlagen</a></li></ol>
+<h2 id="h-1-wat-is-rds">1. Wat is RDS?</h2>
+<p>RDS is een <strong>multi-tenant SaaS</strong> voor reisorganisaties. Een medewerker beheert per reis een <strong>boeking</strong> (een dossier): hoofdboeker, reizigers, verblijven, activiteiten, documenten, e-mails en betalingen. Het systeem</p>
+<ul><li>genereert <strong>Word/PDF-documenten</strong> uit sjablonen (templates),</li><li>verstuurt <strong>e-mails</strong> uit sjablonen,</li><li>laat klanten via een <strong>portaal</strong> hun eigen reis bekijken en betalen,</li><li>verwerkt betalingen via <strong>Mollie</strong>.</li></ul>
+<p>Elke <strong>organisatie</strong> (tenant) ziet uitsluitend de eigen gegevens.</p>
+<h3 id="h-1-1-twee-apps-n-backend">1.1 Twee apps, één backend</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>App</th><th>Voor wie</th><th>Inloggen met</th><th>Adres in productie</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Medewerkersapp</strong> (<code>frontend-employee</code>)</th><td>ADMIN, MANAGER, EMPLOYEE</td><td>gebruikersnaam + wachtwoord (+ 2FA indien aan)</td><td><code>/rds/</code></td></tr>
+<tr><th scope="row"><strong>Boekerportaal</strong> (<code>frontend-booker</code>)</th><td>klanten</td><td>e-mailadres + boekingsnummer + eenmalige code (OTP)</td><td><code>/booker/</code></td></tr>
+</tbody></table></div>
+<p>Lokaal draaien de apps op poort 4200 (medewerkers) en 4300 (klanten); de backend op poort 8666 met context-path <code>/rds</code>.</p>
+<h3 id="h-1-2-kernbegrippen">1.2 Kernbegrippen</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Begrip</th><th>Betekenis</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Organisatie / tenant</strong></th><td>een klant van het SaaS-systeem; alle gegevens zijn per organisatie gescheiden</td></tr>
+<tr><th scope="row"><strong>Persoon → Account</strong></th><td>een persoon hoort bij één organisatie; een account (login) hoort bij één persoon</td></tr>
+<tr><th scope="row"><strong>Rol</strong></th><td>benoemde bundel rechten: <code>ADMIN</code>, <code>MANAGER</code>, <code>EMPLOYEE</code></td></tr>
+<tr><th scope="row"><strong>Authority</strong></th><td>één granulair recht, bijvoorbeeld <code>BOOKING_READ</code>. In de menu's heet dit scherm <strong>Rechten</strong></td></tr>
+<tr><th scope="row"><strong>Boeking</strong></th><td>het reisdossier, met boekingsnummer <code>BK-&lt;jaar&gt;-&lt;5 cijfers&gt;</code> en een status</td></tr>
+<tr><th scope="row"><strong>Boeker / Booker</strong></th><td>de opdrachtgever; heeft geen login in de medewerkersapp. Een boeking verwijst naar maximaal één <em>hoofdboeker</em></td></tr>
+<tr><th scope="row"><strong>Prospect</strong></th><td>een potentiële klant: technisch een boeker met status <code>prospect</code></td></tr>
+<tr><th scope="row"><strong>Reiziger</strong></th><td>iemand die meereist op één boeking</td></tr>
+<tr><th scope="row"><strong>Boekingsregel</strong></th><td>een verblijf in een boeking (accommodatie + leverancier + periode + prijs). In de interface heet dit blok <em>Accommodaties</em></td></tr>
+<tr><th scope="row"><strong>Boekingsactiviteit</strong></th><td>een activiteit in een boeking (datum, tijden, trefpunt, prijs)</td></tr>
+<tr><th scope="row"><strong>Document</strong></th><td>een bestand bij een boeking: geüpload (PDF) of gegenereerd (PDF of DOCX)</td></tr>
+<tr><th scope="row"><strong>Template</strong></th><td>sjabloon met velden: <em>Word-template</em> (wordt document) of <em>e-mailtemplate</em> (wordt mail)</td></tr>
+<tr><th scope="row"><strong>Concept-boeking</strong></th><td>een voorgevuld, nog niet opgeslagen boekingsscherm</td></tr>
+<tr><th scope="row"><strong>Thema / Huisstijl</strong></th><td>kleuren en logo van de organisatie, zichtbaar in de hele interface</td></tr>
+</tbody></table></div>
+<h3 id="h-1-3-levenscyclus-van-een-boeking">1.3 Levenscyclus van een boeking</h3>
+<figure class="diagram"><pre class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --&gt; aanvraag: nieuwe boeking
+    aanvraag --&gt; offerte: Offerte versturen
+    offerte --&gt; boeking: Offerte bevestigd&lt;br/&gt;(betalingen aangemaakt)
+    boeking --&gt; voorschot: voorschot betaald
+    voorschot --&gt; betaald: alles betaald
+    boeking --&gt; betaald: alles in één keer
+    betaald --&gt; opreis: vertrekdatum
+    opreis --&gt; weerthuis: na de terugkeerdatum
+    weerthuis --&gt; afgerond: meldingen afgehandeld&lt;br/&gt;(of MANAGER rondt af)
+    betaald --&gt; voorschot: terugboeking
+    voorschot --&gt; boeking: terugboeking
+    afgerond --&gt; [*]
+</pre></figure>
+<p>Met de hand kan alleen <strong>terugzetten</strong> (met reden, naar elke eerdere status) en <strong>afronden</strong>; de rest doet het systeem.</p>
+<p>De status <strong>kies je niet zelf</strong>: het systeem zet hem. Een nieuwe boeking begint als <em>aanvraag</em>, <strong>Offerte versturen</strong> zet <em>offerte</em>, het vinkje <strong>Offerte bevestigd</strong> zet <em>boeking</em>, betalingen zetten <em>voorschot</em> en <em>betaald</em>, en de reisdatums <em>op reis</em> en <em>weer thuis</em>; is de boeking weer thuis en zijn alle meldingen afgehandeld, dan zet het systeem haar op <em>afgerond</em>. Met de hand kun je alleen <strong>terugzetten</strong> (met reden) en <strong>afronden</strong> (MANAGER). Het doelontwerp met alle automatische overgangen staat in <a href="domain.html#levenscyclus-van-een-boeking">domain.md</a>. De waarde in de API is lowercase (<code>aanvraag</code>, <code>opreis</code>, <code>weerthuis</code>, …), in templates de hoofdletternaam (<code>BOEKING</code>).</p>
+<h3 id="h-1-4-twee-vaste-werkregels">1.4 Twee vaste werkregels</h3>
+<ul><li><strong>E-mail versturen</strong> kan alleen vanuit een <strong>boeking</strong> (naar de hoofdboeker) of vanuit een <strong>prospect</strong> (mail-icoon in <em>Prospects</em>).</li><li><strong>Documenten maken</strong> (genereren of uploaden) kan alleen vanuit een <strong>boeking</strong>.</li></ul>
+<p>In de schermen <em>Templates</em> en <em>E-mailtemplates</em> maak en beheer je alleen de templates zelf; je verstuurt of genereert daar niets.</p>
+<h2 id="h-2-rollen-en-authorities">2. Rollen en authorities</h2>
+<p>Dit hoofdstuk beschrijft hoe toegang werkt en hoe deze <strong>op dit moment</strong> is ingericht.</p>
+<div class="callout"><strong>Bron en geldigheid.</strong> De inrichting hieronder is afgeleid uit de Flyway-migraties <code>V2</code> (basis), <code>V6</code> (<code>EMAIL_SEND</code>), <code>V10</code> (<code>PAYMENT_CORRECT</code>), <code>V12</code> (<code>PAYMENT_RELINK</code>), <code>V16</code> (haalt <code>DOCUMENT_DELETE</code> weg), <code>V18</code> (<code>ORGANIZATION_SETTINGS_*</code>, <code>QUOTE_SEND</code>) en <code>V23</code>–<code>V26</code> (eigen rollen per organisatie; zie <a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.md</a>). ADMIN, MANAGER en EMPLOYEE zijn <strong>systeemrollen</strong>: hun inhoud ligt vast (<code>system_role_template</code>). Daarnaast kan elke organisatie <strong>eigen rollen</strong> maken; die staan niet in dit hoofdstuk.</div>
+<h3 id="h-2-1-de-keten-van-toegang">2.1 De keten van toegang</h3>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    O[&quot;Organisatie&lt;br/&gt;(klant of RDS Platform)&quot;] --&gt; P[&quot;Persoon&quot;] --&gt; A[&quot;Account&lt;br/&gt;(inloggen)&quot;]
+    A -- &quot;account_role&quot; --&gt; R[&quot;Rol&lt;br/&gt;(van dezelfde organisatie:&lt;br/&gt;systeemrol of eigen rol)&quot;]
+    R -- &quot;role_authority&quot; --&gt; AU[&quot;Authorities&lt;br/&gt;(vast, uit RDS)&quot;]
+    AU --&gt; T[&quot;Token&lt;br/&gt;(authorities + rechtenversie)&quot;]
+    T --&gt; B[&quot;Backend: @PreAuthorize&lt;br/&gt;de echte controle&quot;]
+    T --&gt; F[&quot;Frontend: menu, routes,&lt;br/&gt;knoppen (alleen gemak)&quot;]
+</pre></figure>
+<ol><li>Een gebruiker logt in met een <strong>account</strong>.</li><li>Het account heeft één of meer <strong>rollen</strong> (in de praktijk één).</li><li>Elke rol heeft een verzameling <strong>authorities</strong>.</li><li>Bij het inloggen worden de authorities in het <strong>JWT-token</strong> gezet (claim <code>authorities</code>, naast <code>roles</code>, <code>org</code>, <code>personId</code>, …).</li><li>De <strong>backend</strong> controleert bij <em>elk</em> endpoint met <code>@PreAuthorize(&quot;hasAuthority(&#x27;…&#x27;)&quot;)</code>.</li><li>De <strong>frontend</strong> toont menu-items en knoppen op basis van dezelfde authorities. De UI verbergt alleen; de server is de enige echte controle.</li></ol>
+<div class="callout"><strong>Belangrijkste regel van het project:</strong> de interface kijkt naar <strong>authorities, nooit naar rollen</strong>. Een rolnaam beïnvloedt dus niets rechtstreeks; alleen de authorities die aan de rol hangen tellen. (Het dashboard kiest bijvoorbeeld op <code>ORGANIZATION_READ</code> en <code>ACCOUNT_CREATE</code>, niet op de rolnaam.)</div>
+<h3 id="h-2-2-naamgeving-van-authorities">2.2 Naamgeving van authorities</h3>
+<p><code>&lt;DOMEIN&gt;_&lt;ACTIE&gt;</code> met actie <code>READ</code>, <code>CREATE</code>, <code>UPDATE</code> of <code>DELETE</code>. Daarnaast bestaan er drie bijzondere:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Authority</th><th>Betekenis</th></tr></thead><tbody>
+<tr><th scope="row"><code>EMAIL_SEND</code></th><td>e-mail versturen (los van het beheren van templates)</td></tr>
+<tr><th scope="row"><code>PAYMENT_CORRECT</code></th><td>de status van een betaling handmatig corrigeren</td></tr>
+<tr><th scope="row"><code>PAYMENT_RELINK</code></th><td>een betaling met reden aan een andere boeking hangen</td></tr>
+</tbody></table></div>
+<p>Er zijn in totaal <strong>70 authorities</strong> (V20 voegt <code>NOTIFICATION_READ</code>, <code>NOTIFICATION_UPDATE</code>, <code>BOOKING_STATUS_REVERT</code>, <code>BOOKING_STATUS_REVERT_PAID</code> en <code>BOOKING_COMPLETE</code> toe): 60 uit de basismigratie (<code>V2</code>) plus <code>EMAIL_SEND</code> (<code>V6</code>), <code>PAYMENT_CORRECT</code> (<code>V10</code>), <code>PAYMENT_RELINK</code> (<code>V12</code>) en <code>ORGANIZATION_SETTINGS_READ</code>, <code>ORGANIZATION_SETTINGS_UPDATE</code> en <code>QUOTE_SEND</code> (<code>V18</code>), min <code>DOCUMENT_DELETE</code> dat in <code>V16</code> is vervallen (een document wordt nooit verwijderd).</p>
+<h3 id="h-2-3-de-drie-rollen">2.3 De drie rollen</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Rol</th><th>Bedoeld voor</th><th>Kern</th></tr></thead><tbody>
+<tr><th scope="row"><strong>ADMIN</strong></th><td>systeembeheer van het hele platform; bestaat alleen in <strong>RDS Platform</strong></td><td>beheert organisaties, personen en accounts <strong>over alle organisaties heen</strong> (<code>PLATFORM_ADMIN</code>), en wijst bij klanten de systeemrollen toe (bijv. de eerste manager). Authorities zijn alleen te lezen. Heeft <strong>bewust geen</strong> rechten op boekingen, stamgegevens, documenten, templates, e-mail of thema. Een ADMIN krijgt op die endpoints <code>403</code>.</td></tr>
+<tr><th scope="row"><strong>MANAGER</strong></th><td>beheerder van <strong>één organisatie</strong></td><td>alles wat bij het werk en het beheer van de eigen organisatie hoort: boekingen, stamgegevens, templates, documenten, betalingen (incl. correctie en herkoppelen), huisstijl, gebruikers (personen/accounts) en <strong>eigen rollen</strong> van de organisatie inrichten en toewijzen (binnen de regels van §2.9).</td></tr>
+<tr><th scope="row"><strong>EMPLOYEE</strong></th><td>dagelijks werk</td><td>boekingen en alles daaronder (bookers, prospects, reizigers, regels, activiteiten), documenten (volledig), betalingen aanmaken en bekijken, e-mail versturen. Templates, accommodaties, leveranciers en activiteiten alleen <em>lezen</em>. Eigen persoon en account alleen lezen/wijzigen.</td></tr>
+<tr><th scope="row"><em>Boeker (klant)</em></th><td>externe klant</td><td>geen rol en geen account: een <strong>BOOKER-token</strong> (na OTP) met vast <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code>, gebonden aan één boeking.</td></tr>
+</tbody></table></div>
+<p>De matrix hieronder is de standaardconfiguratie van vóór V23; sinds V23/V24 hebben ADMIN <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>, MANAGER <code>USER_SCOPE_ORGANIZATION</code>, <code>ROLE_CREATE/UPDATE/DELETE</code> en <code>ROLEAUTHORITY_CREATE/DELETE</code>, en zijn <code>AUTHORITY_CREATE/UPDATE/DELETE</code> vervallen. De actuele inhoud zie je in <em>Rollen</em> (matrix) of <code>system_role_template</code>. <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code> bestaan wel als authority, maar zijn aan <strong>geen enkele rol</strong> gekoppeld.</p>
+<h3 id="h-2-4-volledige-matrix-authority-rol">2.4 Volledige matrix: authority × rol</h3>
+<p>Gegenereerd uit de migraties <code>V2</code>, <code>V6</code>, <code>V10</code>, <code>V12</code>, <code>V16</code>, <code>V18</code> en <code>V20</code>. De kolom <em>Endpoints</em> noemt de API-resources die de authority gebruiken (uit de <code>@PreAuthorize</code>-annotaties).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Authority</th><th>Wat het toestaat</th><th>ADMIN</th><th>MANAGER</th><th>EMPLOYEE</th><th>Endpoints (resources)</th></tr></thead><tbody>
+<tr><th scope="row">1</th><td><code>ACCOMMODATION_CREATE</code></td><td>accommodaties: aanmaken</td><td>–</td><td>✓</td><td>–</td><td><code>/api/accommodation-addresses</code>, <code>/api/accommodations</code>, <code>/api/accommodation-suppliers</code></td></tr>
+<tr><th scope="row">2</th><td><code>ACCOMMODATION_DELETE</code></td><td>accommodaties: verwijderen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/accommodation-addresses</code>, <code>/api/accommodations</code>, <code>/api/accommodation-suppliers</code></td></tr>
+<tr><th scope="row">3</th><td><code>ACCOMMODATION_READ</code></td><td>accommodaties: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/accommodation-addresses</code>, <code>/api/accommodations</code>, <code>/api/accommodation-suppliers</code></td></tr>
+<tr><th scope="row">4</th><td><code>ACCOMMODATION_UPDATE</code></td><td>accommodaties: wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/accommodations</code></td></tr>
+<tr><th scope="row">5</th><td><code>ACCOUNTROLE_CREATE</code></td><td>rollen aan accounts: aanmaken</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/account-roles</code></td></tr>
+<tr><th scope="row">6</th><td><code>ACCOUNTROLE_DELETE</code></td><td>rollen aan accounts: verwijderen</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/account-roles</code></td></tr>
+<tr><th scope="row">7</th><td><code>ACCOUNTROLE_READ</code></td><td>rollen aan accounts: bekijken (lijst en detail)</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/account-roles</code></td></tr>
+<tr><th scope="row">8</th><td><code>ACCOUNT_CREATE</code></td><td>accounts: aanmaken</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/accounts</code></td></tr>
+<tr><th scope="row">9</th><td><code>ACCOUNT_DELETE</code></td><td>accounts: verwijderen</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/accounts</code></td></tr>
+<tr><th scope="row">10</th><td><code>ACCOUNT_READ</code></td><td>accounts: bekijken (lijst en detail)</td><td>✓</td><td>✓</td><td>✓</td><td><code>/api/accounts</code></td></tr>
+<tr><th scope="row">11</th><td><code>ACCOUNT_UPDATE</code></td><td>accounts: wijzigen</td><td>✓</td><td>✓</td><td>✓</td><td><code>/api/accounts</code></td></tr>
+<tr><th scope="row">12</th><td><code>ACTIVITY_CREATE</code></td><td>activiteiten (stamgegevens): aanmaken</td><td>–</td><td>✓</td><td>–</td><td><code>/api/activities</code></td></tr>
+<tr><th scope="row">13</th><td><code>ACTIVITY_DELETE</code></td><td>activiteiten (stamgegevens): verwijderen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/activities</code></td></tr>
+<tr><th scope="row">14</th><td><code>ACTIVITY_READ</code></td><td>activiteiten (stamgegevens): bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/activities</code></td></tr>
+<tr><th scope="row">15</th><td><code>ACTIVITY_UPDATE</code></td><td>activiteiten (stamgegevens): wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/activities</code></td></tr>
+<tr><th scope="row">16</th><td><code>AUTHORITY_CREATE</code></td><td>authorities: aanmaken</td><td>✓</td><td>–</td><td>–</td><td><code>/api/authorities</code></td></tr>
+<tr><th scope="row">17</th><td><code>AUTHORITY_DELETE</code></td><td>authorities: verwijderen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/authorities</code></td></tr>
+<tr><th scope="row">18</th><td><code>AUTHORITY_READ</code></td><td>authorities: bekijken (lijst en detail)</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/authorities</code></td></tr>
+<tr><th scope="row">19</th><td><code>AUTHORITY_UPDATE</code></td><td>authorities: wijzigen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/authorities</code></td></tr>
+<tr><th scope="row">20</th><td><code>BOOKER_PORTAL_READ</code></td><td>het eigen reisschema, documenten, betalingen enz. bekijken (alleen via BOOKER-token)</td><td>–</td><td>–</td><td>–</td><td><code>/api/booker-portal</code></td></tr>
+<tr><th scope="row">21</th><td><code>BOOKER_PORTAL_UPDATE</code></td><td>een betaling starten (alleen via BOOKER-token)</td><td>–</td><td>–</td><td>–</td><td><code>/api/booker-portal</code></td></tr>
+<tr><th scope="row">22</th><td><code>BOOKING_CREATE</code></td><td>boekingen, boekers/prospects, reizigers, adressen, regels en activiteiten: aanmaken</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/addresses</code>, <code>/api/booker-addresses</code>, <code>/api/bookers</code>, <code>/api/booking-activities</code>, <code>/api/bookings</code>, <code>/api/booking-lines</code>, <code>/api/travelers</code></td></tr>
+<tr><th scope="row">23</th><td><code>BOOKING_DELETE</code></td><td>boekingen, boekers/prospects, reizigers, adressen, regels en activiteiten: verwijderen</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/addresses</code>, <code>/api/booker-addresses</code>, <code>/api/bookers</code>, <code>/api/booking-activities</code>, <code>/api/bookings</code>, <code>/api/booking-lines</code>, <code>/api/travelers</code></td></tr>
+<tr><th scope="row">24</th><td><code>BOOKING_READ</code></td><td>boekingen, boekers/prospects, reizigers, adressen, regels en activiteiten: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/addresses</code>, <code>/api/booker-addresses</code>, <code>/api/bookers</code>, <code>/api/booking-activities</code>, <code>/api/bookings</code>, <code>/api/booking-lines</code>, <code>/api/travelers</code>, <code>/api/sent-emails</code></td></tr>
+<tr><th scope="row">25</th><td><code>BOOKING_UPDATE</code></td><td>boekingen, boekers/prospects, reizigers, adressen, regels en activiteiten: wijzigen</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/addresses</code>, <code>/api/bookers</code>, <code>/api/booking-activities</code>, <code>/api/bookings</code>, <code>/api/booking-lines</code>, <code>/api/travelers</code></td></tr>
+<tr><th scope="row">26</th><td><code>DOCUMENT_CREATE</code></td><td>documenten: aanmaken</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/documents</code></td></tr>
+<tr><th scope="row">27</th><td><code>DOCUMENT_READ</code></td><td>documenten: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/documents</code></td></tr>
+<tr><th scope="row">28</th><td><code>DOCUMENT_UPDATE</code></td><td>documenten: wijzigen</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/documents</code></td></tr>
+<tr><th scope="row">29</th><td><code>EMAIL_SEND</code></td><td>e-mail versturen en opnieuw versturen</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/email-templates</code>, <code>/api/sent-emails</code></td></tr>
+<tr><th scope="row">30</th><td><code>ORGANIZATION_CREATE</code></td><td>organisaties: aanmaken</td><td>✓</td><td>–</td><td>–</td><td><code>/api/organizations</code></td></tr>
+<tr><th scope="row">31</th><td><code>ORGANIZATION_DELETE</code></td><td>organisaties: verwijderen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/organizations</code></td></tr>
+<tr><th scope="row">32</th><td><code>ORGANIZATION_READ</code></td><td>organisaties: bekijken (lijst en detail)</td><td>✓</td><td>–</td><td>–</td><td><code>/api/organizations</code></td></tr>
+<tr><th scope="row">33</th><td><code>ORGANIZATION_THEME_CREATE</code></td><td>huisstijl van de organisatie: aanmaken</td><td>–</td><td>✓</td><td>–</td><td><code>/api/organization-themes</code></td></tr>
+<tr><th scope="row">34</th><td><code>ORGANIZATION_THEME_DELETE</code></td><td>huisstijl van de organisatie: verwijderen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/organization-themes</code></td></tr>
+<tr><th scope="row">35</th><td><code>ORGANIZATION_THEME_READ</code></td><td>huisstijl van de organisatie: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>–</td><td><code>/api/organization-themes</code></td></tr>
+<tr><th scope="row">36</th><td><code>ORGANIZATION_THEME_UPDATE</code></td><td>huisstijl van de organisatie: wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/organization-themes</code></td></tr>
+<tr><th scope="row">37</th><td><code>ORGANIZATION_UPDATE</code></td><td>organisaties: wijzigen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/organizations</code></td></tr>
+<tr><th scope="row">38</th><td><code>PAYMENT_CORRECT</code></td><td>de status van een betaling corrigeren (nieuwe regel met reden)</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/mollie</code></td></tr>
+<tr><th scope="row">39</th><td><code>PAYMENT_CREATE</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: aanmaken</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/booking-mollie-payments</code>, <code>/api/mollie</code></td></tr>
+<tr><th scope="row">40</th><td><code>PAYMENT_DELETE</code></td><td>geen enkel endpoint gebruikt dit: betalingen worden nooit verwijderd</td><td>–</td><td>✓</td><td>–</td><td><em>(geen)</em></td></tr>
+<tr><th scope="row">41</th><td><code>PAYMENT_READ</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/booking-mollie-payments</code>, <code>/api/mollie</code></td></tr>
+<tr><th scope="row">42</th><td><code>PAYMENT_RELINK</code></td><td>een betaling met reden aan een andere boeking hangen</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/booking-mollie-payments</code></td></tr>
+<tr><th scope="row">43</th><td><code>PAYMENT_UPDATE</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/mollie</code></td></tr>
+<tr><th scope="row">44</th><td><code>PERSON_CREATE</code></td><td>personen: aanmaken</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/persons</code></td></tr>
+<tr><th scope="row">45</th><td><code>PERSON_DELETE</code></td><td>personen: verwijderen</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/persons</code></td></tr>
+<tr><th scope="row">46</th><td><code>PERSON_READ</code></td><td>personen: bekijken (lijst en detail)</td><td>✓</td><td>✓</td><td>✓</td><td><code>/api/persons</code></td></tr>
+<tr><th scope="row">47</th><td><code>PERSON_UPDATE</code></td><td>personen: wijzigen</td><td>✓</td><td>✓</td><td>✓</td><td><code>/api/persons</code></td></tr>
+<tr><th scope="row">48</th><td><code>ROLEAUTHORITY_CREATE</code></td><td>authorities aan rollen: aanmaken</td><td>✓</td><td>–</td><td>–</td><td><code>/api/role-authorities</code></td></tr>
+<tr><th scope="row">49</th><td><code>ROLEAUTHORITY_DELETE</code></td><td>authorities aan rollen: verwijderen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/role-authorities</code></td></tr>
+<tr><th scope="row">50</th><td><code>ROLEAUTHORITY_READ</code></td><td>authorities aan rollen: bekijken (lijst en detail)</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/role-authorities</code></td></tr>
+<tr><th scope="row">51</th><td><code>ROLE_CREATE</code></td><td>rollen: aanmaken</td><td>✓</td><td>–</td><td>–</td><td><code>/api/roles</code></td></tr>
+<tr><th scope="row">52</th><td><code>ROLE_DELETE</code></td><td>rollen: verwijderen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/roles</code></td></tr>
+<tr><th scope="row">53</th><td><code>ROLE_READ</code></td><td>rollen: bekijken (lijst en detail)</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/roles</code></td></tr>
+<tr><th scope="row">54</th><td><code>ROLE_UPDATE</code></td><td>rollen: wijzigen</td><td>✓</td><td>–</td><td>–</td><td><code>/api/roles</code></td></tr>
+<tr><th scope="row">55</th><td><code>SUPPLIER_CREATE</code></td><td>leveranciers: aanmaken</td><td>–</td><td>✓</td><td>–</td><td><code>/api/supplier-addresses</code>, <code>/api/suppliers</code></td></tr>
+<tr><th scope="row">56</th><td><code>SUPPLIER_DELETE</code></td><td>leveranciers: verwijderen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/supplier-addresses</code>, <code>/api/suppliers</code></td></tr>
+<tr><th scope="row">57</th><td><code>SUPPLIER_READ</code></td><td>leveranciers: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/supplier-addresses</code>, <code>/api/suppliers</code></td></tr>
+<tr><th scope="row">58</th><td><code>SUPPLIER_UPDATE</code></td><td>leveranciers: wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/suppliers</code></td></tr>
+<tr><th scope="row">59</th><td><code>TEMPLATE_CREATE</code></td><td>Word-templates, e-mailtemplates en afbeeldingen: aanmaken</td><td>–</td><td>✓</td><td>–</td><td><code>/api/document-templates</code>, <code>/api/email-images</code>, <code>/api/email-templates</code></td></tr>
+<tr><th scope="row">60</th><td><code>TEMPLATE_DELETE</code></td><td>Word-templates, e-mailtemplates en afbeeldingen: verwijderen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/document-templates</code>, <code>/api/email-images</code>, <code>/api/email-templates</code></td></tr>
+<tr><th scope="row">61</th><td><code>TEMPLATE_READ</code></td><td>Word-templates, e-mailtemplates en afbeeldingen: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/document-templates</code>, <code>/api/email-templates</code></td></tr>
+<tr><th scope="row">62</th><td><code>TEMPLATE_UPDATE</code></td><td>Word-templates, e-mailtemplates en afbeeldingen: wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/document-templates</code>, <code>/api/email-images</code>, <code>/api/email-templates</code></td></tr>
+<tr><th scope="row">63</th><td><code>ORGANIZATION_SETTINGS_READ</code></td><td>organisatie-instellingen van de eigen organisatie: bekijken (V18)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/organization-settings</code></td></tr>
+<tr><th scope="row">64</th><td><code>ORGANIZATION_SETTINGS_UPDATE</code></td><td>organisatie-instellingen van de eigen organisatie: wijzigen (V18)</td><td>–</td><td>✓</td><td>–</td><td><code>/api/organization-settings</code></td></tr>
+<tr><th scope="row">65</th><td><code>QUOTE_SEND</code></td><td>offerte versturen: PDF maken en mailen naar de hoofdboeker (V18)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/bookings/{id}/send-quote</code></td></tr>
+<tr><th scope="row">66</th><td><code>NOTIFICATION_READ</code></td><td>notificaties bekijken (V20)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/notifications</code></td></tr>
+<tr><th scope="row">67</th><td><code>NOTIFICATION_UPDATE</code></td><td>notificaties afhandelen (V20)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/notifications</code></td></tr>
+<tr><th scope="row">68</th><td><code>BOOKING_STATUS_REVERT</code></td><td>status terugzetten met reden, zolang er niets betaald is (V20)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/bookings/{id}/status-revert</code></td></tr>
+<tr><th scope="row">69</th><td><code>BOOKING_STATUS_REVERT_PAID</code></td><td>status terugzetten, ook als er al betaald is (V20)</td><td>–</td><td>✓</td><td>–</td><td><code>/api/bookings/{id}/status-revert</code></td></tr>
+<tr><th scope="row">70</th><td><code>BOOKING_COMPLETE</code></td><td>boeking afronden (V20)</td><td>–</td><td>✓</td><td>–</td><td><code>/api/bookings/{id}/complete</code></td></tr>
+<tr><th scope="row"></th><td><strong>Totaal: 70</strong></td><td></td><td><strong>28</strong></td><td><strong>56</strong></td><td><strong>23</strong></td><td></td></tr>
+</tbody></table></div>
+<h3 id="h-2-5-dezelfde-matrix-per-domein-leesversie">2.5 Dezelfde matrix per domein (leesversie)</h3>
+<p>Letters: <strong>C</strong>reate, <strong>R</strong>ead, <strong>U</strong>pdate, <strong>D</strong>elete, <strong>S</strong> = versturen. Een streepje betekent: geen recht.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Domein</th><th>ADMIN</th><th>MANAGER</th><th>EMPLOYEE</th><th>Wat het domein dekt</th></tr></thead><tbody>
+<tr><th scope="row"><code>ORGANIZATION</code></th><td>C R U D</td><td>–</td><td>–</td><td>organisaties (incl. afzenderadres en Mollie-sleutel)</td></tr>
+<tr><th scope="row"><code>PERSON</code></th><td>C R U D</td><td>C R U D</td><td>R U</td><td>personen</td></tr>
+<tr><th scope="row"><code>ACCOUNT</code></th><td>C R U D</td><td>C R U D</td><td>R U</td><td>accounts (inclusief vergrendelen en TOTP resetten)</td></tr>
+<tr><th scope="row"><code>ACCOUNTROLE</code></th><td>C R D</td><td>C R D</td><td>–</td><td>rollen aan een account hangen of afnemen</td></tr>
+<tr><th scope="row"><code>ROLE</code></th><td>C R U D</td><td>R</td><td>–</td><td>rollen</td></tr>
+<tr><th scope="row"><code>AUTHORITY</code></th><td>C R U D</td><td>R</td><td>–</td><td>authorities zelf</td></tr>
+<tr><th scope="row"><code>ROLEAUTHORITY</code></th><td>C R D</td><td>R</td><td>–</td><td>authorities aan een rol hangen</td></tr>
+<tr><th scope="row"><code>BOOKING</code></th><td>–</td><td>C R U D</td><td>C R U D</td><td>boekingen, boekers/prospects, reizigers, adressen, boekingsregels, boekingsactiviteiten, verzonden e-mails (lezen)</td></tr>
+<tr><th scope="row"><code>ACCOMMODATION</code></th><td>–</td><td>C R U D</td><td>R</td><td>accommodaties en hun adressen/leveranciers</td></tr>
+<tr><th scope="row"><code>SUPPLIER</code></th><td>–</td><td>C R U D</td><td>R</td><td>leveranciers en hun adressen</td></tr>
+<tr><th scope="row"><code>ACTIVITY</code></th><td>–</td><td>C R U D</td><td>R</td><td>activiteiten (stamgegevens)</td></tr>
+<tr><th scope="row"><code>DOCUMENT</code></th><td>–</td><td>C R U</td><td>C R U</td><td>documenten bij boekingen; genereren (geen verwijderen: een document wordt nooit verwijderd)</td></tr>
+<tr><th scope="row"><code>PAYMENT</code></th><td>–</td><td>C R U D\*</td><td>C R</td><td>Mollie-betalingen en koppeling aan boekingen</td></tr>
+<tr><th scope="row"><code>PAYMENT_CORRECT</code></th><td>✓</td><td>✓</td><td>–</td><td>statuscorrectie van een betaling</td></tr>
+<tr><th scope="row"><code>PAYMENT_RELINK</code></th><td>✓</td><td>✓</td><td>–</td><td>betaling herkoppelen met reden</td></tr>
+<tr><th scope="row"><code>TEMPLATE</code></th><td>–</td><td>C R U D</td><td>R</td><td>Word-templates, e-mailtemplates, afbeeldingenbibliotheek</td></tr>
+<tr><th scope="row"><code>EMAIL_SEND</code></th><td>–</td><td>S</td><td>S</td><td>e-mail versturen en opnieuw versturen</td></tr>
+<tr><th scope="row"><code>ORGANIZATION_THEME</code></th><td>–</td><td>C R U D</td><td>–</td><td>huisstijl van de eigen organisatie</td></tr>
+<tr><th scope="row"><code>ORGANIZATION_SETTINGS</code></th><td>–</td><td>R U</td><td>R</td><td>organisatie-instellingen (offertetemplate en offertemail)</td></tr>
+<tr><th scope="row"><code>QUOTE_SEND</code></th><td>–</td><td>S</td><td>S</td><td>offerte versturen</td></tr>
+<tr><th scope="row"><code>NOTIFICATION</code></th><td>–</td><td>R U</td><td>R U</td><td>notificaties bekijken en afhandelen</td></tr>
+<tr><th scope="row"><code>BOOKING_STATUS_REVERT</code></th><td>–</td><td>✓</td><td>✓</td><td>status terugzetten zolang er niets betaald is; <code>_PAID</code> (ook daarna) alleen MANAGER</td></tr>
+<tr><th scope="row"><code>BOOKING_COMPLETE</code></th><td>–</td><td>✓</td><td>–</td><td>boeking afronden</td></tr>
+<tr><th scope="row"><code>BOOKER_PORTAL</code></th><td>–</td><td>–</td><td>–</td><td>alleen via BOOKER-token (zie §2.7)</td></tr>
+</tbody></table></div>
+<p>\* <code>PAYMENT_UPDATE</code> is alleen bruikbaar zolang een betaling nog niet bij Mollie bestaat. <code>PAYMENT_DELETE</code> bestaat als authority, maar er is <strong>geen enkel endpoint</strong> dat een betaling verwijdert (zie §8.3); de authority heeft dus geen effect.</p>
+<div class="callout"><strong>Opvallende uitzonderingen</strong><br>- <strong>ADMIN heeft <code>PAYMENT_CORRECT</code> en <code>PAYMENT_RELINK</code>, maar niet <code>PAYMENT_READ</code>.</strong> ADMIN kan de betaling dus niet zien waarop dat recht werkt; in de praktijk zijn deze twee rechten voor MANAGER bedoeld.<br>- <strong>MANAGER heeft géén <code>ORGANIZATION_*</code>.</strong> Het afzenderadres (<code>email_from</code>) en de Mollie-sleutel van een organisatie kan alleen ADMIN bewerken.<br>- <strong>EMPLOYEE heeft <code>EMAIL_SEND</code> maar geen <code>TEMPLATE_CREATE</code></strong>: mail versturen mag, templates beheren niet.<br>- <strong>EMPLOYEE heeft <code>BOOKING_DELETE</code></strong> (en MANAGER ook): verwijderen van boekingen is dus niet voorbehouden aan MANAGER. De verwijderbeveiliging (§8.3) geldt voor beiden.</div>
+<h3 id="h-2-6-welke-rol-ziet-welk-menu-item">2.6 Welke rol ziet welk menu-item?</h3>
+<p>Het zijmenu toont een item als de gebruiker <strong>minstens één</strong> van de genoemde authorities heeft. Berekend uit <code>layout.component.ts</code> en de matrix:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Menu-item (route)</th><th>Vereist (een van)</th><th>ADMIN</th><th>MANAGER</th><th>EMPLOYEE</th></tr></thead><tbody>
+<tr><th scope="row">Dashboard (<code>/dashboard</code>)</th><td>–</td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Boekingen (<code>/bookings</code>)</th><td><code>BOOKING_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Boekers (<code>/bookers</code>)</th><td><code>BOOKING_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Prospects (<code>/prospects</code>)</th><td><code>BOOKING_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Betalingen (<code>/payments</code>)</th><td><code>PAYMENT_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row"><em>Sectie BEHEER</em> — Organisaties (<code>/admin/organizations</code>)</th><td><code>ORGANIZATION_READ</code></td><td>✓</td><td>–</td><td>–</td></tr>
+<tr><th scope="row"><em>Sectie ORGANISATIE BEHEER</em> — Accommodaties</th><td><code>ACCOMMODATION_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>–</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">Leveranciers</th><td><code>SUPPLIER_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>–</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">Activiteiten</th><td><code>ACTIVITY_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>–</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">Templates (Word)</th><td><code>TEMPLATE_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>–</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">E-mailtemplates</th><td><code>TEMPLATE_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Personen (<code>/admin/persons</code>)</th><td><code>PERSON_CREATE</code>/<code>PERSON_DELETE</code></td><td>✓</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">Accounts (<code>/admin/accounts</code>)</th><td><code>ACCOUNT_CREATE</code>/<code>ACCOUNT_DELETE</code></td><td>✓</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">Rollen (<code>/admin/roles</code>)</th><td><code>ROLE_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>✓</td><td>–</td><td>–</td></tr>
+<tr><th scope="row">Rechten (<code>/admin/authorities</code>)</th><td><code>AUTHORITY_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>✓</td><td>–</td><td>–</td></tr>
+<tr><th scope="row">Huisstijl (<code>/admin/theme</code>)</th><td><code>ORGANIZATION_THEME_UPDATE</code></td><td>–</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">Instellingen (<code>/organization-settings</code>)</th><td><code>ORGANIZATION_SETTINGS_READ</code></td><td>–</td><td>✓</td><td>✓ (alleen lezen)</td></tr>
+<tr><th scope="row"><em>Sectie MIJN BEHEER</em> — Mijn gegevens (<code>/profile</code>)</th><td><code>PERSON_UPDATE</code></td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Wachtwoord (<code>/change-password</code>)</th><td><code>ACCOUNT_UPDATE</code></td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">2FA Instellingen (<code>/totp-settings</code>)</th><td>–</td><td>✓</td><td>✓</td><td>✓</td></tr>
+</tbody></table></div>
+<p>Gevolgen om te weten:</p>
+<ul><li><strong>Een EMPLOYEE heeft <code>ACCOMMODATION_READ</code>, <code>SUPPLIER_READ</code> en <code>ACTIVITY_READ</code></strong> en kan die dus <em>kiezen</em> in een boekingsregel of -activiteit, maar ziet de beheerlijsten niet in het menu (die vragen een schrijfrecht).</li><li><strong>Een MANAGER ziet Rollen en Rechten niet in het menu</strong>, hoewel de leesrechten <code>ROLE_READ</code>/<code>AUTHORITY_READ</code> er zijn. Die zijn nodig voor het account-scherm (rol kiezen) en worden daar gebruikt.</li><li>De route <code>/travelers</code> (Reizigers) bestaat, maar heeft <strong>geen menu-item</strong>: reizigers beheer je in het boekingsdetail.</li><li>De routes zelf zijn alleen afgeschermd met een <em>inlog-controle</em> (<code>authGuard</code>), niet per authority. Typ je als EMPLOYEE <code>/admin/roles</code> in de adresbalk, dan opent het scherm wel, maar de server weigert de gegevens (<code>403</code>) en je ziet geen data of een foutmelding. Beveiliging zit in de backend.</li></ul>
+<h3 id="h-2-7-het-boekerportaal-heeft-een-eigen-model">2.7 Het boekerportaal heeft een eigen model</h3>
+<p>Een klant heeft <strong>geen account en geen rol</strong>. Na een geslaagde OTP-login krijgt de klant een token met <code>type=BOOKER</code> en het <code>bookingId</code>. De backend geeft daaraan <strong>automatisch</strong> twee authorities:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Authority</th><th>Wat het toestaat</th></tr></thead><tbody>
+<tr><th scope="row"><code>BOOKER_PORTAL_READ</code></th><td>de <code>GET</code>-endpoints onder <code>/api/booker-portal/**</code> van de <strong>eigen boeking</strong>: overzicht (kerngegevens en huisstijl), reisschema, boekingsregels, boekingsactiviteiten, accommodaties, activiteiten, documenten (alleen zichtbare, en het bestand zelf), verzonden e-mails (lijst en inhoud), betalingen en betaalstatussen</td></tr>
+<tr><th scope="row"><code>BOOKER_PORTAL_UPDATE</code></th><td><code>POST /api/booker-portal/payments/pay/{molliePaymentId}</code>: een betaling starten</td></tr>
+</tbody></table></div>
+<p>Een BOOKER-token werkt <strong>niet</strong> op <code>/api/bookings</code> e.d., en omgekeerd werkt een medewerkerstoken niet op de portal-endpoints. Elke portal-query is gebonden aan het <code>bookingId</code> uit het token; een betaling van een andere boeking wordt geweigerd.</p>
+<h3 id="h-2-8-tenant-isolatie-organisatiegrenzen">2.8 Tenant-isolatie (organisatiegrenzen)</h3>
+<ul><li>Elke tenant-entiteit heeft een onveranderlijke <code>tenant_organization</code>; die wordt bij het aanmaken gevuld uit de ingelogde organisatie.</li><li><strong>Services</strong> filteren op authorities: met <code>PLATFORM_ADMIN</code> (ADMIN) zie je alles, anderen alleen de eigen organisatie; personen en accounts van de hele organisatie alleen met <code>USER_SCOPE_ORGANIZATION</code> (MANAGER), anders alleen het eigen. Een resource van een andere organisatie geeft <code>403</code> (of <code>404</code>).</li><li>Verwijzingen worden óók gecontroleerd: je kunt geen boeker, accommodatie of boeking van een andere organisatie aan je eigen gegevens hangen.</li><li><strong>Rollen en authorities zijn globaal</strong>, niet per organisatie. Wijzig je in <em>Rollen</em> welke authorities <code>EMPLOYEE</code> heeft, dan geldt dat voor <em>alle</em> organisaties tegelijk.</li><li>Bewuste uitzondering: e-mailafbeeldingen worden publiek uitgeleverd via een onraadbare UUID (een ontvanger heeft geen login).</li></ul>
+<h3 id="h-2-9-wie-mag-welke-rol-toewijzen">2.9 Wie mag welke rol toewijzen?</h3>
+<p>Rollen horen bij één organisatie. De kernregel: <strong>je kunt alleen doorgeven wat je zelf hebt</strong>.</p>
+<figure class="diagram"><pre class="mermaid">
+flowchart TD
+    S([rol r toewijzen aan of intrekken bij account x]) --&gt; O{&quot;r en x van dezelfde organisatie?&quot;}
+    O -- nee --&gt; N404[404]
+    O -- ja --&gt; P{&quot;beheerder (PLATFORM_ADMIN)&lt;br/&gt;en r is een systeemrol?&quot;}
+    P -- ja --&gt; OK[&quot;toegestaan&lt;br/&gt;(bijv. de eerste manager bij onboarding)&quot;]
+    P -- nee --&gt; M{&quot;x in je eigen organisatie?&quot;}
+    M -- nee --&gt; N404b[404]
+    M -- ja --&gt; L{&quot;alle rechten van r én van x&lt;br/&gt;heb je zelf (en mag een klant hebben)?&quot;}
+    L -- nee --&gt; F403[&quot;403: boven je niveau&quot;]
+    L -- ja --&gt; LM{&quot;de laatste MANAGER intrekken?&quot;}
+    LM -- ja --&gt; C409[&quot;409: er moet een manager blijven&quot;]
+    LM -- nee --&gt; OK2[toegestaan]
+</pre></figure>
+<p>ADMIN bestaat bij een klant niet en is daar dus nooit toe te wijzen. Het account-scherm vraagt de toewijsbare rollen op via <code>GET /api/account-roles/assignable-roles?accountId=…</code> en toont alleen die; een weigering toont de uitleg van de server.</p>
+<h3 id="h-2-10-de-configuratie-wijzigen">2.10 De configuratie wijzigen</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Wat wil je</th><th>Hoe</th><th>Opmerkingen</th></tr></thead><tbody>
+<tr><th scope="row">Een authority aan een rol hangen of afnemen</th><td><em>Rollen → rol openen → matrix</em></td><td>alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. Systeemrollen liggen vast.</td></tr>
+<tr><th scope="row">Een rol aan een account geven</th><td><em>Accounts → account openen → Rol toevoegen</em></td><td>zie §2.9</td></tr>
+<tr><th scope="row">Een nieuwe rol maken</th><td><em>Rollen → Nieuwe rol</em> (<code>ROLE_CREATE</code>, o.a. MANAGER)</td><td>leeg, of als kopie van een rol waarvan je alle rechten zelf hebt</td></tr>
+<tr><th scope="row">Een nieuwe authority</th><td>alleen via een Flyway-migratie</td><td>authorities liggen vast: ze doen pas iets als de code ze controleert. Zie <a href="security.html">security.md</a>.</td></tr>
+</tbody></table></div>
+<p><strong>Wanneer werkt een wijziging?</strong> Direct (sinds V26). Het token draagt een rechtenversie; verandert er iets aan de rechten van een account, dan weigert de backend het oude token (<code>401 AUTHZ_CHANGED</code>) en haalt de app vanzelf een nieuw token op. Wie gelockt of verlopen is, wordt uitgelogd.</p>
+<h3 id="h-2-11-aanwezige-demo-accounts-seed">2.11 Aanwezige demo-accounts (seed)</h3>
+<p>De seed (<code>V2</code>, aangevuld in <code>V24</code> en <code>V25</code>) maakt RDS Platform en twee klantorganisaties. <strong>Er staan hier bewust geen wachtwoorden</strong>; de demo-gegevens zijn fictief en de seed zelf beschrijft het testwachtwoord.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Gebruikersnaam</th><th>Persoon</th><th>Organisatie</th><th>Rol</th></tr></thead><tbody>
+<tr><th scope="row"><code>jan.vanbergen</code></th><td>Jan van Bergen</td><td>RDS Platform</td><td>ADMIN</td></tr>
+<tr><th scope="row"><code>wendy.vos</code></th><td>Wendy Vos</td><td>Puurkroatie</td><td>MANAGER</td></tr>
+<tr><th scope="row"><code>maria.jansen</code></th><td>Maria Jansen</td><td>Puurkroatie</td><td>EMPLOYEE</td></tr>
+<tr><th scope="row"><code>pieter.degroot</code></th><td>Pieter de Groot</td><td>TechPartner BV</td><td>MANAGER</td></tr>
+<tr><th scope="row"><code>sophie.vandijk</code></th><td>Sophie van Dijk</td><td>TechPartner BV</td><td>EMPLOYEE</td></tr>
+</tbody></table></div>
+<h3 id="h-2-12-checklist-rechten-controleren">2.12 Checklist: rechten controleren</h3>
+<ol><li>Welke authorities heeft de rol? → <em>Rollen → rol openen</em>.</li><li>Heeft het account de rol? → <em>Accounts → account openen</em>.</li><li>Staat het account op <em>vergrendeld</em>? Dan kan niet worden ingelogd.</li><li>Is het token verlopen of van vóór de wijziging? → opnieuw inloggen.</li><li>Hoort het gevraagde object bij dezelfde organisatie? Zo niet → <code>403</code>/<code>404</code>, ook met het juiste recht.</li><li>Is de actie een alleen-toevoegen-regel (betaling, status, e-mail)? Dan bestaat bewerken/verwijderen niet, wat je rechten ook zijn.</li></ol>
+<h2 id="h-3-inloggen-en-je-eigen-account">3. Inloggen en je eigen account</h2>
+<h3 id="h-3-1-inloggen-medewerkers">3.1 Inloggen (medewerkers)</h3>
+<ol><li>Open de medewerkersapp (<code>/rds/</code>). Zonder geldige sessie ga je naar <code>/login</code>.</li><li>Vul <strong>Gebruikersnaam</strong> en <strong>Wachtwoord</strong> in → <strong>Inloggen</strong>.</li><li>Heeft je account 2FA aan, dan volgt een tweede stap (§3.2).</li><li>Is bij je account <em>Wachtwoord moet gewijzigd worden</em> aangezet, dan word je naar het scherm <em>Wachtwoord</em> geleid met de melding <em>"Je moet je wachtwoord wijzigen voordat je verder kunt gaan."</em></li><li>Je komt op het <strong>Dashboard</strong>.</li></ol>
+<p>Meldingen: <em>"Controleer gebruikersnaam en wachtwoord"</em> bij een fout. Een <strong>vergrendeld</strong> account wordt geweigerd. De inlogendpoints zijn in productie rate-limited via NGINX.</p>
+<h3 id="h-3-2-twee-factor-authenticatie-2fa-totp">3.2 Twee-factor-authenticatie (2FA/TOTP)</h3>
+<p>Als TOTP aan staat, geeft het eerste inlogpunt een tijdelijk token (<code>TOTP_PENDING</code>) dat alleen de tweede stap toestaat.</p>
+<ul><li><strong>Authenticatorcode:</strong> de 6-cijferige code van je app (Google Authenticator, Authy, …) → <strong>Verifiëren</strong>.</li><li><strong>Herstelcode:</strong> kies <em>Herstelcode gebruiken</em> en voer één van je herstelcodes in. Een herstelcode kan één keer worden gebruikt.</li></ul>
+<h3 id="h-3-3-je-eigen-account-beheren-sectie-mijn-beheer">3.3 Je eigen account beheren (sectie MIJN BEHEER)</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Scherm</th><th>Wat je er doet</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Mijn gegevens</strong></th><td>voornaam, tussenvoegsel en achternaam van je eigen persoon wijzigen</td></tr>
+<tr><th scope="row"><strong>Wachtwoord</strong></th><td>huidig wachtwoord + nieuw wachtwoord + bevestiging. De interface vraagt <strong>minimaal 8 tekens</strong> (de server accepteert minimaal 6; zie §10). Je moet het huidige wachtwoord kennen.</td></tr>
+<tr><th scope="row"><strong>2FA Instellingen</strong></th><td>status zien (<em>Actief</em>/<em>Niet actief</em>), 2FA <strong>activeren</strong> (QR-code scannen of de sleutel handmatig invoeren, bevestigen met een code, herstelcodes bewaren) en <strong>deactiveren</strong> (met een huidige code)</td></tr>
+</tbody></table></div>
+<p>Bewaar de herstelcodes veilig: ze worden alleen getoond bij het instellen.</p>
+<h3 id="h-3-4-taal-en-uitloggen">3.4 Taal en uitloggen</h3>
+<p>Rechtsboven in de balk staan je naam met organisatie, de <strong>taalwisselaar</strong> (Nederlands/Engels; de keuze wordt in de browser onthouden) en <strong>Uitloggen</strong>. Het token (<code>rds_token</code>) staat in de lokale opslag van de browser en is <strong>1 uur</strong> geldig; daarna word je naar het inlogscherm gestuurd. Bij een <code>401</code> (behalve op de inlogschermen) word je automatisch uitgelogd.</p>
+<h3 id="h-3-5-beheer-van-andermans-account">3.5 Beheer van andermans account</h3>
+<p>Zie §4.15 (Accounts). Een beheerder kan een account vergrendelen, een wachtwoordwijziging afdwingen, een vervaldatum zetten en 2FA van iemand anders resetten (<code>ACCOUNT_UPDATE</code>).</p>
+<h2 id="h-4-de-medewerkersapp-frontend-employee">4. De medewerkersapp (<code>frontend-employee</code>)</h2>
+<h3 id="h-4-1-opbouw-van-het-scherm">4.1 Opbouw van het scherm</h3>
+<ul><li><strong>Linkermenu</strong> (donker, kleur volgt de huisstijl): alleen de items waarvoor je authorities hebt (§2.6).</li><li><strong>Bovenbalk:</strong> titel, je naam (organisatie), taalwisselaar, uitloggen.</li><li><strong>Werkgebied:</strong> het geopende scherm.</li><li><strong>Lijsten</strong> (Boekingen, Boekers, Prospects, Betalingen, Accommodaties, Leveranciers, Activiteiten, Templates, E-mailtemplates, Personen, Accounts, Organisaties, Rollen, Rechten) gebruiken allemaal hetzelfde grid met één kolom <strong>Acties</strong> met iconen. <strong>Klikken op de hele regel doet niets</strong>; alleen de iconen werken:</li></ul>
+<div class="tablewrap"><table>
+<thead><tr><th>Icoon</th><th>Kleur</th><th>Betekenis</th><th>Vereist</th></tr></thead><tbody>
+<tr><th scope="row">oog</th><td>blauw</td><td><strong>Inzien</strong> (alleen lezen): geen risico</td><td>het <code>*_READ</code>-recht van de lijst</td></tr>
+<tr><th scope="row">potlood</th><td>violet</td><td><strong>Bewerken</strong>: middel risico, je wijzigt bestaande gegevens</td><td>het <code>*_UPDATE</code>-recht</td></tr>
+<tr><th scope="row">prullenbak</th><td>rood</td><td><strong>Verwijderen</strong> (altijd met bevestigingsvenster): hoog risico</td><td>het <code>*_DELETE</code>-recht</td></tr>
+</tbody></table></div>
+<p>De kleur van een icoon laat zien hoe riskant de actie is, zodat je het onderscheid ook ziet voordat je klikt. De kleuren zijn bewust rustig (met een grijze waas), zodat ze niet knallen. Dezelfde kleuren gelden voor de iconen én voor de knoppen met een rand in de kaarten (zoals <em>Bewerken</em>, <em>Toevoegen</em> en <em>Verwijderen</em> bij een boeking):</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kleur</th><th>Soort actie</th><th>Risico</th><th>Voorbeelden</th></tr></thead><tbody>
+<tr><th scope="row">blauw</th><td>lezen, openen, downloaden</td><td>geen</td><td>oog-icoon, template downloaden, een e-mail of document in het boekerportaal bekijken</td></tr>
+<tr><th scope="row">groen</th><td>toevoegen</td><td>laag</td><td><em>Toevoegen</em> in een kaart, <em>nieuwe boeking</em> op een boekerregel</td></tr>
+<tr><th scope="row">violet</th><td>wijzigen</td><td>middel</td><td>potlood-icoon, <em>Bewerken</em>, een adres bewerken, <em>Naar andere boeking koppelen</em>, <em>Correctie registreren</em></td></tr>
+<tr><th scope="row">oranje-rood</th><td>versturen naar buiten</td><td>hoog: niet terug te halen</td><td>mail-icoon in <em>Prospects</em>, <em>Opnieuw versturen</em></td></tr>
+<tr><th scope="row">rood</th><td>verwijderen of ontkoppelen</td><td>hoog</td><td>prullenbak, <em>Verwijderen</em>, een adres of koppeling verwijderen</td></tr>
+</tbody></table></div>
+<p>Knoppen zonder zo'n actie (<em>Opslaan</em>, <em>Annuleren</em>, <em>Sluiten</em>) houden de kleur van de organisatie.</p>
+<p>Een icoon verschijnt alleen als je het recht hebt. Detailpagina's gaan in <em>alleen-inzien</em>-modus met <code>?readonly=true</code>: formulier uitgeschakeld, geen opslaan/verwijderen.</p>
+<ul><li><strong>Meldingen</strong> verschijnen onderaan als snackbar (opgeslagen, fout, enz.).</li><li><strong>Dubbelklik-bescherming:</strong> een opslaan-knop verwerkt een tweede klik niet.</li><li><strong>Bevestigen:</strong> verwijderen vraagt altijd om bevestiging via een eigen dialoog.</li></ul>
+<h3 id="h-4-2-dashboard">4.2 Dashboard</h3>
+<p>Het dashboard kiest op <strong>authorities</strong>:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Jij hebt…</th><th>Je ziet…</th></tr></thead><tbody>
+<tr><th scope="row"><code>ORGANIZATION_READ</code> (ADMIN)</th><td><strong>Beheerdashboard:</strong> welkomstkaart (organisatie, rol) en een <em>Organisaties overzicht</em> met aantallen personen en accounts</td></tr>
+<tr><th scope="row">geen <code>ORGANIZATION_READ</code>, wel <code>ACCOUNT_CREATE</code> (MANAGER)</th><td><strong>Managerdashboard</strong> (zie hieronder)</td></tr>
+<tr><th scope="row">anders (EMPLOYEE)</th><td>welkomstkaart en een plaatshouder <em>"Deze pagina wordt binnenkort beschikbaar."</em></td></tr>
+</tbody></table></div>
+<p>Met <code>NOTIFICATION_READ</code> (MANAGER en EMPLOYEE) staat onder de welkomstkaart de kaart <strong>Meldingen</strong>: de openstaande notificaties van de organisatie (alles betaald, op reis, weer thuis, terugboeking), elk met een link naar de boeking en, met <code>NOTIFICATION_UPDATE</code>, de knop <strong>Afhandelen</strong>.</p>
+<p><strong>Managerdashboard</strong> (lopend jaar):</p>
+<ul><li><em>Boekingen {jaar}</em>: tegels <strong>Totaal</strong>, <strong>Afgerond</strong>, <strong>Actief</strong>, <strong>Toekomstig</strong>; klik opent de boekingenlijst.</li><li><em>Totale omzet {jaar}</em>, <em>Betaald {jaar}</em>, <em>Openstaand</em> (klik opent <em>Betalingen</em>).</li><li><em>Top 5 meest geboekte accommodaties {jaar}</em> en <em>Top 5 meeste omzet accommodaties {jaar}</em>.</li></ul>
+<h3 id="h-4-3-boekingen-lijst">4.3 Boekingen (lijst)</h3>
+<p>Menu <strong>Boekingen</strong> (<code>BOOKING_READ</code>).</p>
+<ul><li><strong>Kolommen:</strong> Boekingnummer, Van, Tot, Status, Totaal, Acties.</li><li><strong>Zoeken:</strong> op boekingnummer of boeker; <strong>Periode van/tot</strong> als filter.</li><li><strong>Nieuwe boeking:</strong> kies eerst een hoofdboeker in het venster <em>Hoofdboeker selecteren</em> (een boeking ontstaat alleen vanuit een <strong>bestaande</strong> boeker: registreer een nieuwe klant eerst in <em>Prospects</em>). Daarna opent een <strong>concept-boeking</strong> (§4.4).</li><li><strong>Iconen:</strong> inzien (<code>?readonly=true</code>), bewerken, verwijderen (zie §8.3 voor de beveiliging).</li></ul>
+<p>Van, Tot en Totaal zijn <strong>berekend</strong>: de periode uit de boekingsregels en activiteiten, het totaal als som van de regelprijzen en activiteitsprijzen. Ze worden niet apart ingevoerd.</p>
+<h3 id="h-4-4-boeking-detailscherm-het-hoofdscherm">4.4 Boeking: detailscherm (het hoofdscherm)</h3>
+<p>Titel: <em>Boeking bewerken — BK-…</em> (of <em>Boeking inzien</em> in alleen-lezen-modus). Het scherm bestaat uit kaarten. Wijzigende knoppen vragen het bijbehorende recht <strong>én</strong> dat je niet in alleen-lezen-modus zit.</p>
+<p><strong>Concept-boeking.</strong> Start je een boeking vanuit een boeker (<code>/bookings/new?bookerId=…</code>), dan is het scherm voorgevuld met de boeker en de melding <em>"Concept — nog niet opgeslagen. De boeking wordt pas aangemaakt zodra je iets toevoegt."</em> Er wordt <strong>niets opgeslagen</strong> tot je het eerste onderdeel toevoegt (reiziger, accommodatie, activiteit, betaling). Pas dan ontstaat de boeking en krijgt die een boekingsnummer (eerst bevestigen: <em>"Hiermee wordt een definitieve boeking aangemaakt…"</em>). Heeft de boeker al een lopende (niet-afgeronde) boeking, dan volgt een waarschuwing: <em>"Mogelijk is de verkeerde boeker gekozen. Toch doorgaan?"</em> Een prospect met een nieuwe boeking wordt automatisch een actieve boeker.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kaart</th><th>Inhoud</th><th>Acties (vereist recht)</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Boekinggegevens</strong></th><td>boekingsnummer, status, berekende periode en totaalbedrag, en <em>Offerte bevestigd op</em> zodra de offerte is bevestigd</td><td><strong>Status terugzetten</strong> (<code>BOOKING_STATUS_REVERT</code>; na een betaling alleen <code>BOOKING_STATUS_REVERT_PAID</code>): eerdere status kiezen en een reden geven. <strong>Afronden</strong> (<code>BOOKING_COMPLETE</code>). <strong>Statusgeschiedenis</strong>: alle statuswijzigingen met wie (of het systeem), wanneer en waarom. <strong>Bewerken</strong>: alleen nog <strong>Offerte bevestigd</strong> aanvinken (<code>BOOKING_UPDATE</code>); de status zelf is niet te kiezen. Bevestigen kan alleen in status <em>Offerte</em> met een hoofdboeker en een verblijf met een prijs; de status wordt dan <em>Boeking</em>, het moment wordt vastgelegd en het systeem maakt de <strong>betalingen</strong> aan (voorschot en restant, of één volledige betaling als de restanttermijn al voorbij is) en mailt ze naar de hoofdboeker als er een betaalmail is gekozen. Uitvinken kan niet. <strong>Offerte versturen</strong> (<code>QUOTE_SEND</code>, onderin de kaart, alleen in status <em>Aanvraag</em> of <em>Offerte</em> en zolang de offerte niet bevestigd is): na bevestigen maakt het systeem met de offertetemplate een PDF (zichtbaar in het portaal), mailt die als bijlage met de offertemail naar de hoofdboeker en zet de status op <em>Offerte</em>. Opnieuw versturen maakt een nieuwe PDF; de vorige blijft bewaard. Zonder hoofdboeker met e-mailadres is de knop uitgeschakeld; zonder gekozen templates (zie <em>Instellingen</em>, §4.15) meldt het systeem dat.</td></tr>
+<tr><th scope="row"><strong>Meldingen</strong> (bovenaan rechts, met <code>NOTIFICATION_READ</code>, alleen als er meldingen zijn)</th><td>de notificaties van deze boeking, open bovenaan</td><td><strong>Afhandelen</strong> (<code>NOTIFICATION_UPDATE</code>)</td></tr>
+<tr><th scope="row"><strong>Hoofdboeker</strong></th><td>naam, roepnaam, telefoon, e-mail, geboortedatum</td><td><em>Toevoegen</em> (koppelen, <code>BOOKING_CREATE</code>); <em>Bewerken</em> van de boekergegevens (<code>BOOKING_UPDATE</code>); <em>Verwijderen</em> = ontkoppelen van de boeking (<code>BOOKING_DELETE</code>, de boeker zelf blijft bestaan)</td></tr>
+<tr><th scope="row"><strong>Accommodaties</strong> (boekingsregels)</th><td>accommodatie, leverancier, van, tot, prijs</td><td>toevoegen/bewerken/verwijderen (<code>BOOKING_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code>)</td></tr>
+<tr><th scope="row"><strong>Activiteiten</strong></th><td>activiteit, datum en tijden, trefpunt, totaalprijs</td><td>toevoegen/bewerken/verwijderen</td></tr>
+<tr><th scope="row"><strong>Reizigers</strong></th><td>naam, geslacht, geboortedatum, initialen</td><td>toevoegen/bewerken/verwijderen</td></tr>
+<tr><th scope="row"><strong>Betalingen</strong> (alleen met <code>PAYMENT_READ</code>)</th><td>omschrijving (met de soort: <em>Voorschot</em>, <em>Restant</em> of <em>Volledige betaling</em>), bedrag, status, uiterlijke betaaldatum</td><td><strong>Nieuwe betaling</strong> (<code>PAYMENT_CREATE</code>); oog-icoon opent het betalingsvenster met de statushistorie. In dat venster staan <em>Naar andere boeking koppelen</em> (<code>PAYMENT_RELINK</code>) en <em>Correctie registreren</em> (<code>PAYMENT_CORRECT</code>). Een betaling bewerken (potlood, <code>PAYMENT_UPDATE</code>) kan alleen in het scherm <em>Betalingen</em>, en alleen zolang de betaling nog niet bij Mollie bestaat.</td></tr>
+<tr><th scope="row"><strong>Berichten en documenten</strong> (tijdlijn; documenten met <code>DOCUMENT_READ</code>)</th><td>e-mails aan de hoofdboeker, documenten en betalingen, nieuwste bovenaan, met filter <em>Alles/E-mail/Documenten/Betalingen</em></td><td><strong>Toevoegen → E-mail aan hoofdboeker</strong> (<code>EMAIL_SEND</code>), <strong>Toevoegen → Document</strong> (<code>DOCUMENT_CREATE</code>)</td></tr>
+</tbody></table></div>
+<p><strong>Boekingsregel (accommodatie) toevoegen.</strong> Kies een accommodatie, de leverancier, <em>Van datum</em>, <em>Tot datum</em> en de prijs. Het systeem controleert de periodes:</p>
+<ul><li><em>"{x} overlapt met {y}"</em> — overlap met een andere regel;</li><li><em>"Geen accommodatie van {van} tot {tot}"</em> — een gat in het verblijf.</li></ul>
+<p>In beide gevallen kies je <strong>Toch opslaan</strong> of <strong>Aanpassen</strong>. Heeft de gekozen accommodatie nog geen leverancier, dan kies of maak je er een (de koppeling wordt bij opslaan vastgelegd). Met <code>ACCOMMODATION_CREATE</code>/<code>SUPPLIER_CREATE</code> kun je direct een accommodatie of leverancier aanmaken via <em>Nieuwe accommodatie</em>/<em>Nieuwe leverancier</em> (alleen code en naam; de rest vul je later aan).</p>
+<p><strong>Activiteit toevoegen.</strong> Kies een activiteit, <em>Datum</em>, <em>Van-tijd</em>, <em>Tot-tijd</em> (24-uurs), <em>Trefpunt</em> en <em>Totaalprijs</em>. Is de tot-tijd vóór de van-tijd, dan <strong>eindigt de activiteit de volgende dag</strong> (hint in het venster, <em>"(volgende dag)"</em> in de tabel). Datum, van-tijd en tot-tijd zijn verplicht.</p>
+<p><strong>Reiziger toevoegen.</strong> Voornaam en achternaam zijn verplicht; verder tussenvoegsel, initialen, geslacht (<em>man/vrouw</em>; de API kent ook <em>anders</em>) en geboortedatum.</p>
+<p><strong>Boeking verwijderen.</strong> Zie §8.3: een boeking met documenten, betalingen, herkoppelingen of verzonden e-mails kan <strong>niet</strong> worden verwijderd (<code>409</code>). Verwijderen neemt anders reizigers, boekingsregels, activiteiten en betalingskoppelingen mee.</p>
+<h3 id="h-4-5-berichten-en-documenten-tijdlijn">4.5 Berichten en documenten (tijdlijn)</h3>
+<p>De tijdlijn in de boeking vervangt de oude losse documentenkaart.</p>
+<ul><li><strong>Pictogram links</strong> toont de soort (mail, document, betaling); <strong>gekleurde vlakjes</strong> rechts de eigenschappen:<ul><li>e-mail: <em>verstuurd</em> of <em>opnieuw verstuurd</em>;</li><li>document: <em>portaal</em> (groen, zichtbaar voor de klant) of <em>alleen intern</em>, plus het formaat;</li><li>betaling: de statusbadge en de methode.</li></ul></li><li><strong>Inzien</strong> opent per soort het bestaande venster. Een e-mail opent het verzonden bericht (inhoud in een afgeschermd iframe) met <strong>Opnieuw versturen</strong> (<code>EMAIL_SEND</code>).</li><li><strong>Document → potloodicoon</strong> (<code>DOCUMENT_UPDATE</code>): alleen de zichtbaarheid in het boekerportaal wijzigen.</li><li><strong>Geen verwijderknop:</strong> documenten, betalingen en verzonden e-mails zijn geschiedenis en kunnen niet worden verwijderd (ontwerpbesluit, §8.2). Er is ook geen API-endpoint voor: <code>DELETE /api/documents/{id}</code> geeft <code>405</code>. Een per ongeluk geüploade of gegenereerde stand blijft dus staan; zet <em>Zichtbaar in het boekerportaal</em> uit zodat de klant het niet ziet.</li></ul>
+<h3 id="h-4-6-documenten-toevoegen">4.6 Documenten toevoegen</h3>
+<p>Documenten maak je <strong>alleen vanuit een boeking</strong>. <strong>Toevoegen → Document</strong> opent <em>Document toevoegen</em> (<code>DOCUMENT_CREATE</code>) met twee onderdelen:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderdeel</th><th>Hoe</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Genereren</strong></th><td>kies een <strong>Template</strong> (Word-template), kies <strong>PDF</strong> of <strong>DOCX</strong> en klik <strong>Genereer</strong>. De naam wordt <code>&lt;sjabloonnaam&gt; - &lt;boekingsnummer&gt; - &lt;datum tijd&gt;.&lt;ext&gt;</code>, zodat hetzelfde sjabloon vaker kan worden gebruikt.</td></tr>
+<tr><th scope="row"><strong>Uploaden</strong></th><td><strong>sleep</strong> een bestand in het vak, of kies <strong>Kies bestand</strong>, of haal het op via een <strong>URL</strong> (<em>Ophalen</em>). In de interface zijn <strong>alleen PDF-bestanden</strong> toegestaan (<em>"Ongeldig bestandstype. Alleen PDF-bestanden zijn toegestaan."</em>). Geef een <strong>Documentnaam</strong>.</td></tr>
+</tbody></table></div>
+<p>Beide manieren hebben het vinkje <strong>Zichtbaar in het boekerportaal</strong> (standaard <strong>uit</strong>): de klant ziet het document alleen als dit aan staat. Achteraf wijzig je dat via het potloodicoon in de tijdlijn.</p>
+<p>Opmerking: een document gaat als JSON (bytes) naar de server, niet als multipart. De uploadlimiet van 2 MB (§12) geldt daarom voor <strong>afbeeldingen</strong>; een aparte grootte-limiet voor documenten is in de code niet ingesteld (de standaardgrenzen van de webserver blijven gelden).</p>
+<h3 id="h-4-7-e-mail-versturen">4.7 E-mail versturen</h3>
+<p>E-mail versturen kan op <strong>twee plekken</strong>, en nergens anders. In het scherm <em>E-mailtemplates</em> maak en beheer je alleen templates.</p>
+<ol><li><strong>Vanuit de boeking:</strong> <em>Berichten en documenten → Toevoegen → E-mail aan hoofdboeker</em> (<code>EMAIL_SEND</code>). De dialoog toont de boeking als vast doel; kies een template, bekijk eventueel met <strong>Genereer voorbeeld</strong> het resultaat en klik <strong>Verstuur</strong>. Bevestig <em>"E-mail versturen naar de hoofdboeker van boeking {nummer}?"</em>. De mail gaat naar het e-mailadres van de <strong>hoofdboeker</strong>. Heeft de boeking geen hoofdboeker of heeft die geen e-mailadres, dan wordt er niets verstuurd.</li><li><strong>Vanuit de prospect:</strong> in <em>Prospects</em> het <strong>mail-icoon</strong> op de regel (<code>EMAIL_SEND</code>). Dezelfde dialoog, nu met de prospect als vast doel; bevestig <em>"Weet je zeker dat je deze e-mail naar {naam} wilt versturen?"</em>.</li></ol>
+<p>De afzender is het adres dat bij de organisatie is ingesteld (<code>email_from</code>, alleen ADMIN kan dat instellen). Is dat leeg, of ontbreekt het ontvangeradres, dan volgt een duidelijke foutmelding (<code>400</code>). Een mail <strong>voor een boeking</strong> wordt na succesvol versturen bewaard in de tijdlijn; een mail aan een losse prospect wordt niet bewaard. Is er lokaal geen SMTP-server ingesteld, dan wordt er niets echt verstuurd maar alleen gelogd (§12).</p>
+<h3 id="h-4-8-boekers">4.8 Boekers</h3>
+<p>Menu <strong>Boekers</strong> (<code>BOOKING_READ</code>). Kolommen: Naam, E-mailadres, Telefoon, Geboortedatum, Acties. Zoek op naam, e-mail of telefoon.</p>
+<ul><li><strong>Nieuwe boeker</strong> en bewerken: voornaam en achternaam en een geldig e-mailadres zijn verplicht; verder tussenvoegsel, roepnaam, telefoon, geslacht, geboortedatum en initialen. De <strong>status</strong> kies je niet: die volgt uit de boekingen (zie §4.9).</li><li>Een <strong>rij-icoon</strong> start een <strong>concept-boeking</strong> voor die boeker (heeft hij meerdere boekingen, dan kies je eerst: <em>"Er zijn meerdere boekingen voor {naam}"</em>).</li><li><strong>Adressen</strong> van een boeker beheer je in het boekerdialoog (alleen bij een bestaande boeker, met <code>BOOKING_UPDATE</code>). Een adres heeft straat, huisnummer, toevoeging, postcode, plaats, land en een <strong>rol</strong> (<em>woon-, facturatie-, accommodatie- of leveranciersadres</em>).</li><li>Verwijderen: zie §8.3.</li></ul>
+<h3 id="h-4-9-prospects">4.9 Prospects</h3>
+<p>Menu <strong>Prospects</strong>. Het aanmeldproces voor potentiële klanten.</p>
+<ol><li><strong>Registreer prospect</strong> (status <code>prospect</code>, nog geen boeking).</li><li>Mail ze via het <strong>mail-icoon</strong> op hun regel in <em>Prospects</em> (§4.7).</li><li>Maak er een boeking voor aan (<em>Boekingen → Nieuwe boeking</em> of het rij-icoon in <em>Boekers</em>).</li></ol>
+<p>De status van een boeker volgt automatisch uit zijn boekingen: <strong><code>prospect</code></strong> zolang er geen boeking is (zo begint elke nieuwe boeker), <strong><code>active</code></strong> zodra er een boeking is die nog niet is afgerond, <strong><code>nietactief</code></strong> als al zijn boekingen zijn afgerond. Een nieuwe boeking maakt hem weer <code>active</code>. Je kunt de status niet zelf kiezen; de knop <em>Maak boeker</em> bestaat niet meer.</p>
+<p>Statussen van een boeker: <code>prospect</code>, <code>active</code>, <code>nietactief</code>.</p>
+<h3 id="h-4-10-reizigers">4.10 Reizigers</h3>
+<p>Reizigers beheer je in het boekingsdetail. De losse route <code>/travelers</code> bestaat wel maar staat niet in het menu.</p>
+<h3 id="h-4-11-betalingen-overzicht">4.11 Betalingen (overzicht)</h3>
+<p>Menu <strong>Betalingen</strong> (<code>PAYMENT_READ</code>). Kolommen: Mollie ID (<code>tr_…</code>), Boeking, Datum, Omschrijving, Methode, Bedrag, Status, Acties; bovenaan samenvattende tegels. Zie §6.6 voor de hele betaalketen.</p>
+<ul><li><strong>Oog-icoon:</strong> het betalingsvenster met de gegevens en de volledige <strong>statushistorie</strong> (alleen lezen).</li><li><strong>Potlood:</strong> alleen voor een betaling die nog niet bij Mollie is aangemaakt (omschrijving en bedrag aanpassen). Is de betaling al bij Mollie, dan geeft de server <code>409</code> (<em>"Deze betaling bestaat al bij Mollie en kan niet meer worden gewijzigd."</em>).</li><li><strong>Geen prullenbak:</strong> betalingen worden nooit verwijderd.</li><li><strong>Correctie registreren</strong> (<code>PAYMENT_CORRECT</code>): nieuwe status uit <em>open/betaald/mislukt/geannuleerd</em> + een <strong>reden</strong> van minstens 5 tekens. Het wordt een nieuwe regel met de markering <em>Correctie</em>, wie en wanneer. Een correctie naar de huidige status wordt geweigerd. Statussen <em>pending</em>, <em>authorized</em> en <em>expired</em> bepaalt alleen Mollie.</li><li><strong>Naar andere boeking koppelen</strong> (<code>PAYMENT_RELINK</code>): kies een andere boeking van dezelfde organisatie en geef een reden (5–500 tekens). De geschiedenis (van, naar, datum, door, reden) staat als tabel in hetzelfde venster.</li></ul>
+<p>Statussen: Open, In afwachting, Geautoriseerd, Betaald, Mislukt, Geannuleerd, Verlopen.</p>
+<h3 id="h-4-12-accommodaties-leveranciers-en-activiteiten-stamgegevens">4.12 Accommodaties, Leveranciers en Activiteiten (stamgegevens)</h3>
+<p>Sectie <strong>ORGANISATIE BEHEER</strong> (alleen zichtbaar met een schrijfrecht; zie §2.6).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Scherm</th><th>Velden</th><th>Bijzonderheden</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Accommodaties</strong></th><td><em>Code</em> (key) en <em>Naam</em> verplicht</td><td>adressen (met rol), <strong>leveranciers koppelen/ontkoppelen</strong>; lijst toont naam, code, leverancier, adres; zoeken op naam, code of leverancier</td></tr>
+<tr><th scope="row"><strong>Leveranciers</strong></th><td><em>Code</em> en <em>Naam</em> verplicht</td><td>adressen, gekoppelde accommodaties; zoeken op naam of code</td></tr>
+<tr><th scope="row"><strong>Activiteiten</strong></th><td><em>Naam</em> en <em>Type</em> verplicht, <em>Omschrijving</em></td><td>type: <strong>tour, excursie, ticket, transfer</strong></td></tr>
+</tbody></table></div>
+<p>Verwijderen van een accommodatie of leverancier neemt de bijbehorende boekingsregels mee (waarschuwing), tenzij een boeking met documenten of betalingen eraan hangt (<code>409</code>). Bij een activiteit worden de boekingsactiviteiten meegenomen. Adressen die nergens anders meer aan hangen worden opgeruimd.</p>
+<h3 id="h-4-13-templates-word">4.13 Templates (Word)</h3>
+<p>Menu <strong>Templates</strong> (<code>TEMPLATE_CREATE/UPDATE/DELETE</code>; lezen kan met <code>TEMPLATE_READ</code>). Hier maak en beheer je alleen de templates; een document genereer je vanuit een boeking (§4.6). Kolommen o.a. Naam, Omschrijving, Soort (<em>Editor</em> of <em>Geüpload bestand</em>), Aangemaakt.</p>
+<p>Bij <strong>Nieuwe template</strong> kies je <strong>Soort template</strong>:</p>
+<ul><li><strong>Word-bestand uploaden</strong> — sleep een <code>.docx</code> met velden zoals <code>${booking.bookingNumber}</code> (alleen <code>.docx</code>). Een geüpload bestand is niet in de editor te openen.</li><li><strong>In de editor maken</strong> — de WYSIWYG-editor (§7). Bij het opslaan wordt de HTML een echt Word-document (A4, marge 2,5 cm, Calibri 11).</li></ul>
+<p>Het oog-icoon opent de template alleen-lezen (voor een geüploade template met een <strong>Downloaden</strong>-knop). Bij het bewerken van een geüploade template kun je <strong>omschakelen</strong> naar de editor; opslaan vervangt dan het geüploade bestand (<em>"Let op…"</em>-waarschuwing).</p>
+<h3 id="h-4-14-e-mailtemplates">4.14 E-mailtemplates</h3>
+<p>Menu <strong>E-mailtemplates</strong> (<code>TEMPLATE_READ</code>). Velden: <strong>Naam</strong>, <strong>Onderwerp</strong> (platte tekst, mag variabelen bevatten) en de <strong>HTML-body</strong> in dezelfde editor. Het oog-icoon toont de template alleen-lezen; er is hier <strong>geen voorbeeld en geen verzendknop</strong>: dat kan alleen vanuit een boeking of een prospect (§4.7). Aanmaken, wijzigen en verwijderen is aan MANAGER; een EMPLOYEE kan de templates alleen bekijken.</p>
+<h3 id="h-4-15-beheer-admin-en-manager">4.15 Beheer (ADMIN en MANAGER)</h3>
+<p><strong>Organisaties</strong> (ADMIN; <code>ORGANIZATION_*</code>). Velden: <em>Naam</em>, <em>Afzender-e-mailadres</em> (<code>email_from</code>, voor mail aan prospects en boekers), <em>Mollie-sleutel</em>. In het detail zie je de gekoppelde personen. <strong>Verwijderen</strong> wordt geweigerd (<code>409</code>) zolang er nog gegevens met die organisatie aan hangen; de melding noemt de aantallen per tabel.</p>
+<p><strong>Onboarding-wizard</strong> (<em>Organisaties → Onboarding wizard</em>, ADMIN). Een nieuwe organisatie in vier stappen met een samenvatting:</p>
+<ol><li><strong>Organisatie</strong> — organisatienaam;</li><li><strong>Persoon</strong> — voornaam, tussenvoegsel, achternaam;</li><li><strong>Account</strong> — gebruikersnaam, wachtwoord, optie <em>Wachtwoord moet gewijzigd worden</em>;</li><li><strong>Rol toewijzen</strong> — kies de rol (meestal <code>MANAGER</code>).</li></ol>
+<p>Afronden maakt alles aan: <em>"Onboarding succesvol afgerond!"</em></p>
+<p><strong>Personen</strong> (<code>PERSON_*</code>; ADMIN en MANAGER). Voornaam, achternaam (verplicht), tussenvoegsel en organisatie. De organisatie kies je alleen met <code>ORGANIZATION_READ</code> (ADMIN); een MANAGER maakt personen automatisch in de eigen organisatie aan. In het detail zie je de gekoppelde accounts.</p>
+<p><strong>Accounts</strong> (<code>ACCOUNT_*</code>; ADMIN en MANAGER). Lijst met een zoekveld (gebruikersnaam) en filterknoppen op rol (Alle/Admin/Manager/Medewerker) en organisatie; een legenda toont <em>Actief</em> en <em>Vergrendeld</em>. Een account heeft: gebruikersnaam, wachtwoord, persoon, <strong>vergrendeld</strong>, <strong>wachtwoordwijziging afdwingen</strong>, <strong>vervaldatum</strong>, en 2FA-status. Beheerfuncties:</p>
+<ul><li><strong>Rol toevoegen/verwijderen</strong> (§2.9);</li><li><strong>2FA resetten</strong> van een ander account (<code>ACCOUNT_UPDATE</code>);</li><li>vergrendelen om inloggen te blokkeren.</li></ul>
+<p><strong>Rollen</strong> en <strong>Rechten</strong> (alleen ADMIN in het menu). <em>Rollen</em> toont per rol de kaart <em>Authorities</em> met koppelen en ontkoppelen (met bevestiging). <em>Rechten</em> beheert de authority-namen zelf. Zie §2.10.</p>
+<p><strong>Instellingen</strong> (menu <em>Instellingen</em>, scherm <em>Organisatie-instellingen</em>; lezen met <code>ORGANIZATION_SETTINGS_READ</code>, wijzigen met <code>ORGANIZATION_SETTINGS_UPDATE</code>, alleen MANAGER). Onder <em>Offerte</em> kies je het <strong>Offertedocument</strong> (een Word-template) en de <strong>Offertemail</strong> (een e-mailtemplate). Beide zijn nodig voor <em>Offerte versturen</em>. Je kunt alleen templates van de eigen organisatie kiezen; wordt een gekozen template verwijderd, dan vervalt alleen die keuze. Onder <em>Betalingen</em> stel je het betalingsschema in: <strong>Voorschot (% van het totaal)</strong> (1–100), <strong>Voorschot: weken voor vertrek</strong> en <strong>Restant: weken voor vertrek</strong> (het voorschot moet eerder vervallen dan het restant), en de <strong>Betaalmail</strong> (een e-mailtemplate; niet gekozen = geen mail). Standaard: 30%, 12 en 6 weken. Een EMPLOYEE ziet de keuzes maar kan ze niet wijzigen.</p>
+<p><strong>Huisstijl</strong> (MANAGER, <code>ORGANIZATION_THEME_UPDATE</code>). <em>Thema-instellingen</em>: <strong>Primaire kleur</strong>, <strong>Accentkleur</strong>, <strong>Kaart-titel kleur</strong> (hexcode <code>#rrggbb</code>) en <strong>Logo URL</strong> (maximaal 500 tekens), met een voorbeeld. De kleuren sturen de hele interface: balk, actief menu-item, tabelkoppen, knoppen. Zonder thema is de standaardkleur teal <code>#0e8f8a</code>.</p>
+<h3 id="h-4-16-afbeeldingenbibliotheek-in-de-editor">4.16 Afbeeldingenbibliotheek (in de editor)</h3>
+<p>In de editor staat naast <em>Variabelen</em> het tabblad <strong>Afbeeldingen</strong>, de bibliotheek van <strong>de eigen organisatie</strong>. Uploaden (PNG, JPEG, GIF of WebP; <strong>maximaal 2 MB</strong>; type wordt uit de bytes bepaald, SVG is niet toegestaan), een afbeelding in de tekst slepen of aanklikken, en verwijderen. Verwijderen kan alleen als de afbeelding <strong>ongebruikt</strong> is (geen e-mailtemplate en geen Word-template uit de editor van dezelfde organisatie, <code>409</code> anders) en vraagt <code>TEMPLATE_DELETE</code>. Een al verstuurde mail toont een verwijderd plaatje niet meer; de bevestiging waarschuwt hiervoor.</p>
+<h2 id="h-5-het-boekerportaal-voor-klanten">5. Het boekerportaal (voor klanten)</h2>
+<p>Het portaal (<code>/booker/</code>) is <strong>alleen-lezen</strong>, behalve het <strong>betalen</strong> en het <strong>downloaden van documenten</strong>. Elke ingelogde klant ziet uitsluitend de gegevens van de <strong>eigen boeking</strong>.</p>
+<h3 id="h-5-1-inloggen-met-een-eenmalige-code">5.1 Inloggen met een eenmalige code</h3>
+<ol><li>Open het portaal. Voer uw <strong>E-mailadres</strong> en <strong>Boekingnummer</strong> in → <strong>Verificatiecode aanvragen</strong>.</li><li>Er wordt een 6-cijferige code verstuurd (geldig <strong>10 minuten</strong>; maximaal 3 actieve codes per e-mailadres). Het systeem antwoordt altijd hetzelfde, zodat niemand kan raden welke combinaties bestaan.</li><li>Voer de <strong>Verificatiecode</strong> in → <strong>Verifiëren</strong>. Bij een fout: <em>"Ongeldige of verlopen verificatiecode"</em>.</li><li>U bent 1 uur ingelogd.</li></ol>
+<div class="callout"><strong>Let op (huidige stand):</strong> de OTP-mail wordt nog <strong>niet echt verstuurd</strong>; <code>OtpEmailService</code> schrijft de code alleen in het serverlog. Zie §10. In een test lees je de code uit het backend-log.</div>
+<h3 id="h-5-2-het-dashboard">5.2 Het dashboard</h3>
+<p>Na het inloggen ziet u <strong>één pagina met alles van uw boeking</strong>; u hoeft nergens op te klikken om iets te zien. Er zijn geen tabbladen meer. De pagina neemt de <strong>kleuren en het logo van de organisatie</strong> over en past zich aan uw scherm aan (§5.5).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kaart</th><th>Wat u ziet</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Kop</strong></th><td><em>Hallo {voornaam}</em>, de periode en het aantal nachten, uw boekingsnummer, het aantal reizigers met hun voornamen, een <strong>statusbalk</strong> met de voortgang van uw boeking (aanvraag tot afgerond), en rechts de <strong>aftelling</strong> (<em>234 dagen tot vertrek</em>) of, tijdens de reis, <em>Dag 9 van 15, nog 6 nachten</em></td></tr>
+<tr><th scope="row"><strong>Betaalbalk</strong> (alleen telefoon)</th><td>wat er openstaat met een knop <strong>Betaal nu</strong>; staat er niets open, dan verdwijnt de balk</td></tr>
+<tr><th scope="row"><strong>Wat komt eraan</strong></th><td>voor de reis: de eerstvolgende stap (bijv. <em>Check-in Villa Marina, zaterdag 12 juni, over 234 dagen</em>) en wat daarna komt. Tijdens de reis heet de kaart <em>Nu en straks</em>: wat nu bezig is, wat hierna komt en wat daarna. Na de reis staat er een bedankje</td></tr>
+<tr><th scope="row"><strong>Uw reis in één oogopslag</strong></th><td>de tijdlijn: een <strong>balk per verblijf</strong> over de dagen, een <strong>genummerd punt per activiteit</strong>, en vandaag gemarkeerd. Op een smal scherm staat dezelfde informatie als <strong>agenda per dag</strong> (check-in, activiteiten met tijd en trefpunt, check-out), met een gekleurde rand per verblijf</td></tr>
+<tr><th scope="row"><strong>Betalingen</strong></th><td>een cirkel met het percentage betaald, <strong>Totaal</strong>, <strong>Betaald</strong> en <strong>Openstaand</strong>, een regel per betaling met status (tekst, pictogram en kleur) en, bij een betaalde betaling, wanneer die is betaald; een knop <strong>Betaal …</strong> bij een betaling die nog openstaat</td></tr>
+<tr><th scope="row"><strong>Verblijven</strong></th><td>een kaart per verblijf: naam, leverancier, periode en aantal nachten (op de telefoon om langs te zwiepen)</td></tr>
+<tr><th scope="row"><strong>Activiteiten</strong></th><td>genummerd zoals de punten in de tijdlijn: naam, dag, tijd, trefpunt en soort (tour, excursie, ticket, transfer)</td></tr>
+<tr><th scope="row"><strong>Berichten en documenten</strong></th><td>in één lijst, nieuwste bovenaan: de <strong>e-mails</strong> die de organisatie u heeft gestuurd (onderwerp, datum, afzender; <em>opnieuw verstuurd</em> als een medewerker ze nog eens heeft gestuurd) en de <strong>documenten</strong> die de organisatie zichtbaar heeft gemaakt (datum, grootte). Bij een e-mail opent het oog-icoon het bericht zoals u het ontving, bij een document bewaart de pijl het bestand. Een filter <em>Alles / E-mail / Documenten</em> verschijnt zodra er van beide soorten zijn; standaard staan de nieuwste zes regels er, de rest staat achter <em>Toon nog n</em>. Betalingen staan hier niet in</td></tr>
+</tbody></table></div>
+<p>Elke kaart laadt los van de andere. Is er nog niets (bijvoorbeeld nog geen activiteiten), dan staat er een korte uitleg; mislukt het laden, dan staat er <em>"Dit onderdeel kon niet worden geladen"</em> met <strong>Opnieuw proberen</strong>, en de rest van de pagina blijft werken.</p>
+<h3 id="h-5-3-betalen-en-downloaden">5.3 Betalen en downloaden</h3>
+<p><strong>Betalen</strong></p>
+<ol><li>Bij een betaling met status <strong>Open</strong>, <strong>Mislukt</strong> of <strong>Verlopen</strong> staat de knop <strong>Betaal …</strong> (op de telefoon ook de betaalbalk bovenaan; staan er meerdere betalingen open, dan brengt die u naar de kaart <em>Betalingen</em>).</li><li>De portal vraagt de backend de betaling bij Mollie te starten; u gaat naar de <strong>betaalpagina van Mollie</strong>. Mislukt het starten, dan staat er <em>"De betaling kon niet worden gestart. Probeer het opnieuw."</em></li><li>Na het betalen keert u terug naar het portaal. De pagina <strong>ververst de betalingen zelf</strong> (elke 2,5 seconden, maximaal ongeveer 30 seconden) tot de uitkomst bekend is; de status wordt via de Mollie-webhook bijgewerkt en u ziet <em>Betaald</em> zodra die binnen is.</li></ol>
+<p>Statussen voor de klant: Open, In behandeling, Geautoriseerd, Betaald, Mislukt, Geannuleerd, Verlopen.</p>
+<p><strong>Downloaden:</strong> de pijl achter een document bewaart het bestand onder de naam van het document. Mislukt dat, dan staat er <em>"Het document kon niet worden gedownload. Probeer het opnieuw."</em></p>
+<p><strong>Een e-mail lezen:</strong> het oog-icoon opent een venster met onderwerp, afzender, verzenddatum en de mail zoals verstuurd. Dat venster toont de inhoud veilig afgeschermd (er kunnen geen scripts in draaien). Lukt het laden niet, dan kunt u het opnieuw proberen.</p>
+<h3 id="h-5-4-taal-en-uitloggen">5.4 Taal en uitloggen</h3>
+<p>Rechtsboven staan de taalwisselaar (Nederlands/Engels; ook datums en bedragen volgen de taal) en <strong>Uitloggen</strong>. Het token (<code>rds_booker_token</code>) wordt na 1 uur ongeldig.</p>
+<h3 id="h-5-5-op-telefoon-tablet-en-computer">5.5 Op telefoon, tablet en computer</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Scherm</th><th>Indeling</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Telefoon</strong> (smaller dan 600 px)</th><td>één kolom in volgorde van urgentie: kop, betaalbalk, wat komt eraan, tijdlijn (als agenda), betalingen, verblijven, activiteiten, documenten</td></tr>
+<tr><th scope="row"><strong>Tablet</strong> (600 tot 999 px)</th><td>twee kolommen: wat komt eraan naast betalingen, daaronder de tijdlijn over de volle breedte, verblijven naast activiteiten, dan documenten</td></tr>
+<tr><th scope="row"><strong>Computer</strong> (1000 px en breder)</th><td>een brede kolom met tijdlijn, verblijven en activiteiten, en een smalle kolom met wat komt eraan, betalingen en documenten</td></tr>
+</tbody></table></div>
+<p>De oude adressen (<code>/payments</code>, <code>/itinerary</code>, <code>/documents</code>, <code>/accommodations</code>, <code>/activities</code>) leiden naar het dashboard, zodat bladwijzers en de terugkeer van Mollie blijven werken.</p>
+<h2 id="h-6-werkprocessen-stap-voor-stap">6. Werkprocessen stap voor stap</h2>
+<h3 id="h-6-1-van-prospect-tot-afgeronde-boeking">6.1 Van prospect tot afgeronde boeking</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Stap</th><th>Wie</th><th>Wat</th></tr></thead><tbody>
+<tr><th scope="row">1</th><td>EMPLOYEE/MANAGER</td><td><strong>Prospects → Registreer prospect</strong> (naam, e-mail, status <code>prospect</code>)</td></tr>
+<tr><th scope="row">2</th><td>EMPLOYEE/MANAGER</td><td><strong>Prospects → mail-icoon</strong> → template kiezen → voorbeeld → <strong>Verstuur</strong></td></tr>
+<tr><th scope="row">3</th><td>EMPLOYEE/MANAGER</td><td>de prospect wordt vanzelf een actieve boeker zodra er een boeking voor ontstaat</td></tr>
+<tr><th scope="row">4</th><td>EMPLOYEE/MANAGER</td><td><strong>Boekers → rij-icoon</strong> (concept-boeking) of <strong>Boekingen → Nieuwe boeking</strong></td></tr>
+<tr><th scope="row">5</th><td>EMPLOYEE/MANAGER</td><td>in de boeking: <strong>Accommodaties</strong> (verblijven), <strong>Activiteiten</strong>, <strong>Reizigers</strong> toevoegen</td></tr>
+<tr><th scope="row">6</th><td>EMPLOYEE/MANAGER</td><td><strong>Offerte versturen</strong>: het systeem maakt de offerte-PDF (zichtbaar in het portaal), mailt hem naar de hoofdboeker en zet de status op <code>offerte</code> (eenmalig vooraf: de MANAGER kiest de templates bij <em>Instellingen</em>)</td></tr>
+<tr><th scope="row">7</th><td>EMPLOYEE/MANAGER</td><td>de klant gaat akkoord: <strong>Bewerken → Offerte bevestigd</strong>; de status wordt <code>boeking</code>, het systeem maakt voorschot en restant aan (met uiterlijke betaaldatum) en mailt ze naar de hoofdboeker</td></tr>
+<tr><th scope="row">8</th><td>EMPLOYEE/MANAGER</td><td>wijzigt het totaal nog (verblijf of activiteit), dan rekent het restant automatisch mee zolang de klant het nog niet is gaan betalen</td></tr>
+<tr><th scope="row">9</th><td>klant</td><td>logt in op het portaal en <strong>betaalt</strong></td></tr>
+<tr><th scope="row">10</th><td>systeem</td><td>na betaling <code>voorschot</code> en <code>betaald</code> (met de melding <em>Alles betaald</em>), daarna op de reisdatums <code>opreis</code> en <code>weerthuis</code> (elk met een melding)</td></tr>
+<tr><th scope="row">11</th><td>EMPLOYEE/MANAGER</td><td>meldingen <strong>afhandelen</strong> (dashboard of boeking)</td></tr>
+<tr><th scope="row">12</th><td>systeem</td><td>is de boeking <em>weer thuis</em> en zijn alle meldingen afgehandeld, dan rondt het systeem haar af (<code>afgerond</code>); een MANAGER kan ook eerder zelf <strong>Afronden</strong></td></tr>
+</tbody></table></div>
+<p>Gaat er iets mis (de klant wil een andere periode, een betaling wordt teruggeboekt), dan zet je de status terug met <strong>Status terugzetten</strong> en een reden; een terugboeking zet het systeem zelf terug.</p>
+<h3 id="h-6-2-een-nieuwe-organisatie-in-gebruik-nemen-admin">6.2 Een nieuwe organisatie in gebruik nemen (ADMIN)</h3>
+<ol><li><strong>Organisaties → Onboarding wizard</strong>: organisatie, eerste persoon, account, rol <code>MANAGER</code>. Laat <em>Wachtwoord moet gewijzigd worden</em> aan.</li><li>Open daarna de organisatie en vul het <strong>Afzender-e-mailadres</strong> in (nodig om e-mail te kunnen versturen) en eventueel de Mollie-sleutel.</li><li>Laat de manager inloggen, het wachtwoord wijzigen en bij voorkeur <strong>2FA</strong> instellen.</li><li>De manager stelt de <strong>Huisstijl</strong> in, maakt <strong>Accommodaties/Leveranciers/Activiteiten</strong>, <strong>Templates</strong> en <strong>E-mailtemplates</strong> aan en maakt de overige accounts (EMPLOYEE) aan.</li></ol>
+<h3 id="h-6-3-een-word-template-maken-en-een-document-genereren">6.3 Een Word-template maken en een document genereren</h3>
+<ol><li><strong>Templates → Nieuwe template</strong> → <em>In de editor maken</em>.</li><li>Typ de tekst; voeg <strong>variabelen</strong> in (paneel <em>Variabelen</em>: klik of sleep), bv. boekingsnummer, hoofdboeker, totaalbedrag.</li><li>Reizigers of verblijven in een tabel? Gebruik <strong>Tabel → Herhaalde tabel</strong> (§7.3).</li><li><strong>Opslaan.</strong></li><li>In een boeking: <strong>Toevoegen → Document → Genereren</strong>, kies de template en <strong>PDF</strong> of <strong>DOCX</strong>, eventueel <em>Zichtbaar in het boekerportaal</em>, <strong>Genereer</strong>.</li><li>Controleer het resultaat in de tijdlijn.</li></ol>
+<h3 id="h-6-4-een-e-mailtemplate-maken-en-versturen">6.4 Een e-mailtemplate maken en versturen</h3>
+<ol><li><strong>E-mailtemplates → Nieuw template</strong>: naam, onderwerp (bv. <code>Uw boeking ${booking.bookingNumber}</code>), body.</li><li>Gebruik <code>${prospect.*}</code> voor de ontvanger en <code>${booking.*}</code> voor boekinggegevens (de laatste werken alleen als de mail <em>voor een boeking</em> wordt verstuurd).</li><li><strong>Opslaan.</strong> Het scherm <em>E-mailtemplates</em> is alleen voor het beheren van templates: daar kun je niet voorbeeld bekijken of versturen.</li><li>Versturen: in een boeking <em>Toevoegen → E-mail aan hoofdboeker</em>, of in <em>Prospects</em> het mail-icoon. Kies de template, klik <strong>Genereer voorbeeld</strong> en daarna <strong>Verstuur</strong> (<code>EMAIL_SEND</code>).</li></ol>
+<h3 id="h-6-5-een-klant-toegang-geven-tot-het-portaal">6.5 Een klant toegang geven tot het portaal</h3>
+<p>Een klant heeft alleen zijn <strong>e-mailadres</strong> (zoals vastgelegd bij de hoofdboeker) en het <strong>boekingsnummer</strong> nodig. Controleer daarom bij de hoofdboeker dat het e-mailadres klopt, deel het boekingsnummer mee en maak de relevante documenten zichtbaar in het portaal.</p>
+<h3 id="h-6-6-betalingen-vastleggen-en-afhandelen">6.6 Betalingen vastleggen en afhandelen</h3>
+<pre class="sketch">medewerker                         klant (portaal)                 Mollie
+    │ 1. Nieuwe betaling                │                              │
+    │    (bedrag, omschrijving)         │                              │
+    │    status OPEN, geen Mollie-id    │                              │
+    │                                   │ 2. Betalen ─────────────────►│ betaling aangemaakt
+    │                                   │ ◄── checkout-URL ────────────│ (tr_…)
+    │                                   │ 3. betaalt op Mollie ───────►│
+    │ ◄─────────── 4. webhook (id) ─────────────────────────────────── │
+    │    backend haalt de échte status bij Mollie op en legt die vast   │
+    │                                   │ 5. portaal toont &quot;Betaald&quot; ◄ │</pre>
+<ul><li>De <strong>webhook is de enige bron van de status</strong>, niet de terugkeer-redirect.</li><li>Een betaling is eerst een <strong>aankondiging</strong> (nog te wijzigen), na de start bij Mollie <strong>geschiedenis</strong> (alleen toevoegen).</li><li>Betaalde buiten Mollie om (bank)? Registreer een <strong>Correctie</strong> met reden.</li><li>Aan de verkeerde boeking gehangen? <strong>Naar andere boeking koppelen</strong> met reden.</li><li>Een betaling en haar statushistorie worden <strong>nooit verwijderd</strong>, ook niet door een databaseactie (databasetriggers weigeren dat).</li></ul>
+<h3 id="h-6-7-een-medewerker-aanmaken-of-blokkeren-manager">6.7 Een medewerker aanmaken of blokkeren (MANAGER)</h3>
+<ol><li><strong>Personen → Nieuwe persoon</strong>; daarna <strong>Accounts → Nieuw account</strong> (gebruikersnaam, startwachtwoord, persoon; zet <em>Wachtwoord moet gewijzigd worden</em> aan).</li><li><strong>Rol toevoegen</strong> (<code>EMPLOYEE</code> of <code>MANAGER</code>).</li><li>Vertrekt iemand: zet het account op <strong>vergrendeld</strong> (inloggen onmogelijk) of verwijder het.</li><li>Is iemand zijn 2FA-apparaat kwijt: <strong>2FA resetten</strong> bij dat account.</li></ol>
+<h3 id="h-6-8-een-afwijking-in-een-betaling-rechtzetten">6.8 Een afwijking in een betaling rechtzetten</h3>
+<ol><li>Open de boeking → kaart <em>Betalingen</em> → oog-icoon.</li><li>Onjuiste status? <strong>Correctie registreren</strong> (nieuwe status + reden).</li><li>Verkeerde boeking? <strong>Naar andere boeking koppelen</strong> (doelboeking + reden).</li><li>Beide acties staan met wie, wanneer en waarom in de historie; niets wordt overschreven.</li></ol>
+<h2 id="h-7-templates-variabelen-tabellen-en-afbeeldingen">7. Templates: variabelen, tabellen en afbeeldingen</h2>
+<p>E-mailtemplates en Word-templates delen <strong>één editor</strong>, <strong>één bibliotheek</strong> en <strong>één gegevensmodel</strong>.</p>
+<h3 id="h-7-1-de-editor">7.1 De editor</h3>
+<p>Knoppen: lettertype en -grootte, <strong>vet / cursief / onderstrepen</strong>, opsomming, genummerde lijst, <strong>tabel</strong> (invoegen, kolom/rij toevoegen en verwijderen, tabel verwijderen), <strong>afbeelding</strong>, plus de zijpanelen <strong>Variabelen</strong> en <strong>Afbeeldingen</strong>. Variabelen voeg je in door te klikken of te slepen.</p>
+<p>Koppen, links (<code>http</code>, <code>https</code>, <code>mailto</code>, <code>tel</code>), uitlijning, kleur, doorhalen, horizontale lijn, citaat en codeblok worden ondersteund. Een afbeelding selecteer je met een klik; met de greep rechtsonder maak je hem groter of kleiner (de beeldverhouding blijft behouden, minimaal 40 px).</p>
+<h3 id="h-7-2-variabelen">7.2 Variabelen</h3>
+<p><strong>Ontvanger — <code>${prospect.*}</code></strong> (voor e-mail; bij een boeking is dit de hoofdboeker):</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Variabele</th><th>Inhoud</th></tr></thead><tbody>
+<tr><th scope="row"><code>${prospect.firstname}</code></th><td>voornaam</td></tr>
+<tr><th scope="row"><code>${prospect.prefix}</code></th><td>tussenvoegsel</td></tr>
+<tr><th scope="row"><code>${prospect.lastname}</code></th><td>achternaam</td></tr>
+<tr><th scope="row"><code>${prospect.fullName}</code></th><td>voornaam tussenvoegsel achternaam</td></tr>
+<tr><th scope="row"><code>${prospect.callsign}</code></th><td>roepnaam</td></tr>
+<tr><th scope="row"><code>${prospect.telephone}</code></th><td>telefoon</td></tr>
+<tr><th scope="row"><code>${prospect.emailaddress}</code></th><td>e-mailadres</td></tr>
+<tr><th scope="row"><code>${prospect.gender}</code></th><td>geslacht (hoofdletternaam, bijv. <code>MAN</code>)</td></tr>
+<tr><th scope="row"><code>${prospect.birthdate}</code></th><td>geboortedatum (<code>jjjj-mm-dd</code>)</td></tr>
+<tr><th scope="row"><code>${prospect.initials}</code></th><td>initialen</td></tr>
+</tbody></table></div>
+<p><strong>Boeking — <code>${booking.*}</code></strong>:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Variabele</th><th>Inhoud</th></tr></thead><tbody>
+<tr><th scope="row"><code>${booking.bookingNumber}</code></th><td>boekingsnummer</td></tr>
+<tr><th scope="row"><code>${booking.bookingStatus}</code></th><td>status (hoofdletternaam, bijv. <code>BOEKING</code>)</td></tr>
+<tr><th scope="row"><code>${booking.fromDate}</code> / <code>${booking.untilDate}</code></th><td>periode (<code>jjjj-mm-dd</code>)</td></tr>
+<tr><th scope="row"><code>${booking.totalSum}</code></th><td>totaalbedrag (getal)</td></tr>
+<tr><th scope="row"><code>${booking.booker.*}</code></th><td>de hoofdboeker (dezelfde velden als <code>prospect.*</code>)</td></tr>
+<tr><th scope="row"><code>booking.travelers</code></th><td>lijst: <code>firstname</code>, <code>prefix</code>, <code>lastname</code>, <code>gender</code>, <code>birthdate</code>, <code>initials</code></td></tr>
+<tr><th scope="row"><code>booking.bookingLines</code></th><td>lijst: <code>fromDate</code>, <code>untilDate</code>, <code>price</code>, <code>accommodation.{key,name,addresses}</code>, <code>supplier.{key,name,addresses}</code></td></tr>
+<tr><th scope="row"><code>booking.bookingActivities</code></th><td>lijst: <code>activityName</code>, <code>activityType</code>, <code>fromDate</code>, <code>untilDate</code>, <code>meetingPoint</code>, <code>totalPrice</code></td></tr>
+</tbody></table></div>
+<p>Een adres heeft <code>street</code>, <code>housenumber</code>, <code>housenumberAddition</code>, <code>postalcode</code>, <code>city</code>, <code>country</code>, <code>addressrole</code>. De editor biedt alleen velden aan die bestaan; een verzonnen veld geeft pas bij het samenvoegen een fout.</p>
+<h3 id="h-7-3-herhaalde-tabellen">7.3 Herhaalde tabellen</h3>
+<p>Een tabel waarvan de <strong>laatste rij</strong> voor elk element van een lijst wordt herhaald; de rijen erboven (de kop) blijven één keer staan. In de editor: <strong>Tabel → Herhaalde tabel</strong> → <em>Reizigers</em>, <em>Accommodaties</em> of <em>Activiteiten</em>. Dat voegt een tabel in met kopregel en een rij met de passende velden. <em>Herhaling uitzetten</em> maakt er weer een gewone tabel van. Zonder elementen blijft alleen de kop over.</p>
+<p>Technisch (voor een zelf geschreven template): <code>&lt;table data-repeat=&quot;booking.travelers&quot; data-item=&quot;t&quot;&gt;</code> met in de laatste rij <code>${t.firstname}</code>. Lijst- en itemnaam worden strikt gevalideerd; iets anders geeft <code>400</code>.</p>
+<h3 id="h-7-4-valkuilen">7.4 Valkuilen</h3>
+<ul><li><strong>Bedragen:</strong> zonder opmaak toont FreeMarker <code>1250.00</code> als <code>1.250</code>. De editor voegt <code>${booking.totalSum?string(&quot;#,##0.00&quot;)}</code> in; gebruik dat voor bedragen.</li><li>Gebruik <strong>dubbele</strong> aanhalingstekens (<code>&quot;…&quot;</code>) in expressies, nooit enkele (ook niet in een geüpload <code>.docx</code>).</li><li>Datums zijn tekst in de notatie <code>dd-mm-jjjj</code> (activiteiten: <code>dd-mm-jjjj uu:mm</code>); andere opmaak vergt FreeMarker-functies.</li><li>Tekst als <code>[#</code> of <code>&lt;#</code> in een Word-template wordt als instructie gelezen.</li></ul>
+<h3 id="h-7-5-beperkingen-van-word-templates-uit-de-editor">7.5 Beperkingen van Word-templates uit de editor</h3>
+<p>Geen geneste tabellen, maximaal 64 kolommen, afbeeldingen alleen PNG/JPEG/GIF (WebP wel in e-mail), geen kop- of voettekst, geen paginanummers, geen tekstvakken; per tabel één herhalende rij (de laatste). Afbeeldingen komen altijd uit de bibliotheek van de eigen organisatie, nooit via een externe URL.</p>
+<h2 id="h-8-regels-beveiliging-en-foutmeldingen">8. Regels, beveiliging en foutmeldingen</h2>
+<h3 id="h-8-1-beveiligingsmaatregelen-in-het-kort">8.1 Beveiligingsmaatregelen in het kort</h3>
+<ul><li><strong>JWT</strong>, stateless; drie soorten token (<code>EMPLOYEE</code>, <code>TOTP_PENDING</code>, <code>BOOKER</code>), elk met een eigen levensduur (nu 1 uur).</li><li><strong>Wachtwoorden</strong> met BCrypt; optionele <strong>TOTP-2FA</strong> met herstelcodes voor medewerkers.</li><li><strong>Rate-limits</strong> (NGINX) op alle inlogendpoints, de OTP-aanvraag, de Mollie-webhook en de publieke afbeeldingen.</li><li><strong>Templates</strong> worden als niet-vertrouwd behandeld: FreeMarker draait afgeschermd (geen <code>?new</code>, geen <code>?api</code>, geen include/import, plat model zonder Java-objecten).</li><li><strong>Geen entities in API-antwoorden</strong>: alleen DTO's; een test laat de build falen als dat toch gebeurt.</li></ul>
+<h3 id="h-8-2-alleen-toevoegen-regels">8.2 Alleen-toevoegen-regels</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Wat</th><th>Gedrag</th></tr></thead><tbody>
+<tr><th scope="row">Betalingen (<code>mollie_payment</code>)</th><td>nooit verwijderen; databasetriggers weigeren <code>DELETE</code> en <code>TRUNCATE</code></td></tr>
+<tr><th scope="row">Statusregels van betalingen</th><td>nooit wijzigen of verwijderen; een correctie is een <em>nieuwe regel</em></td></tr>
+<tr><th scope="row">Koppeling betaling ↔ boeking</th><td>nooit losmaken; alleen herkoppelen met reden (nieuwe regel)</td></tr>
+<tr><th scope="row">Herkoppelregels</th><td>alleen toevoegen</td></tr>
+<tr><th scope="row">Verzonden e-mails (<code>sent_email</code>)</th><td>alleen toevoegen; opnieuw versturen maakt een nieuwe regel</td></tr>
+<tr><th scope="row">Documenten</th><td>nooit verwijderen: geen knop en geen endpoint (<code>DELETE</code> geeft <code>405</code>); anders dan bij betalingen en e-mails zit er geen databasetrigger op</td></tr>
+</tbody></table></div>
+<h3 id="h-8-3-verwijderbescherming-http-409">8.3 Verwijderbescherming (HTTP <code>409</code>)</h3>
+<p>Documenten en betalingen zijn de "waarheid" en mogen niet stilletjes verdwijnen. De server weigert daarom het verwijderen van:</p>
+<ul><li>een <strong>boeking</strong> met documenten, betalingen, een herkoppeling of verzonden e-mails;</li><li>een <strong>boeker, accommodatie, leverancier of activiteit</strong> die voorkomt in een boeking met documenten of betalingen;</li><li>een <strong>organisatie</strong> zolang er nog gegevens van die organisatie bestaan.</li></ul>
+<p>Melding in de UI: <em>"Kan niet verwijderd worden: er hangen documenten of betalingen aan. Die blijven bewaard als geschiedenis."</em> Betalingen en documenten kunnen nooit worden verwijderd (er is geen knop en geen endpoint). Een boeking die een document of betaling heeft, blijft dus altijd beschermd. De controle zit in de services en is dus niet te omzeilen via de API. Wat <strong>niet</strong> geblokkeerd wordt: een boeking of stamgegeven zonder documenten of betalingen; die verdwijnt met de gekoppelde regels en activiteiten (database-cascade).</p>
+<h3 id="h-8-4-http-statuscodes">8.4 HTTP-statuscodes</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Code</th><th>Betekenis</th></tr></thead><tbody>
+<tr><th scope="row"><code>200</code></th><td>gelukt</td></tr>
+<tr><th scope="row"><code>201</code></th><td>aangemaakt</td></tr>
+<tr><th scope="row"><code>204</code></th><td>verwijderd, geen inhoud</td></tr>
+<tr><th scope="row"><code>400</code></th><td>ongeldige invoer (validatie, onbekende enumwaarde, ontbrekend afzender-/ontvangeradres, ongeldige afbeelding in een template)</td></tr>
+<tr><th scope="row"><code>401</code></th><td>niet ingelogd of token verlopen</td></tr>
+<tr><th scope="row"><code>403</code></th><td>ingelogd, maar geen recht of ander organisatie</td></tr>
+<tr><th scope="row"><code>404</code></th><td>niet gevonden (ook voor andermans resources, zonder te lekken)</td></tr>
+<tr><th scope="row"><code>409</code></th><td>botsing: verwijderbescherming, vergrendelde betaling, afbeelding in gebruik</td></tr>
+<tr><th scope="row"><code>413</code></th><td>bestand te groot</td></tr>
+</tbody></table></div>
+<p>Fouten komen terug als <code>{ &quot;message&quot;: &quot;…&quot;, &quot;status&quot;: 400, &quot;timestamp&quot;: &quot;…&quot; }</code>; de UI toont de <code>message</code> waar nuttig.</p>
+<h2 id="h-9-api-referentie">9. API-referentie</h2>
+<h3 id="h-9-1-conventies">9.1 Conventies</h3>
+<ul><li>Basis: <code>http(s)://&lt;host&gt;/rds/api/...</code> (rechtstreeks op de backend), of <code>/api/...</code> via NGINX of de dev-proxy.</li><li>Alles is <strong>JSON</strong>, behalve de upload van afbeeldingen (multipart) en downloads (octet-stream); een document wordt als JSON met bytes aangeleverd. Binaire velden gaan als bytearray of base64; downloads via de aparte <code>…/content</code>-endpoints.</li><li>Authenticatie: <code>Authorization: Bearer &lt;jwt&gt;</code>.</li><li>REST per resource: <code>GET /resources</code>, <code>GET /resources/{id}</code>, <code>POST</code>, <code>PUT /{id}</code>, <code>DELETE /{id}</code>.</li><li><strong>Enums zijn lowercase</strong> in JSON; onbekende waarde → <code>400</code> met de toegestane waarden.</li><li>Datums <code>jjjj-mm-dd</code>, tijdstippen ISO, bedragen als getal (<code>70.00</code>).</li><li>Lijsten zijn tenant-gefilterd (ADMIN ziet alles).</li><li>Het totaal aantal endpoints: <strong>168</strong>, verdeeld over 41 controllers.</li></ul>
+<p><strong>Voorbeeld — inloggen en lezen</strong></p>
+<pre class="sketch">BASE=http://localhost:8666/rds
+
+# inloggen (medewerker)
+curl -X POST $BASE/api/auth/login -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;userName&quot;:&quot;&lt;gebruiker&gt;&quot;,&quot;password&quot;:&quot;&lt;wachtwoord&gt;&quot;}&#x27;
+# antwoord: { token, ... }  of  { requiresTotp: true, tempToken }
+TOKEN=&lt;token uit het antwoord&gt;
+
+curl $BASE/api/bookings -H &quot;Authorization: Bearer $TOKEN&quot;
+curl &quot;$BASE/api/bookers?status=prospect&quot; -H &quot;Authorization: Bearer $TOKEN&quot;</pre>
+<p><strong>Voorbeeld — document genereren en e-mail renderen</strong></p>
+<pre class="sketch">curl -X POST $BASE/api/documents/generate -H &quot;Authorization: Bearer $TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;templateId&quot;:&quot;&lt;id&gt;&quot;,&quot;bookingId&quot;:&quot;&lt;id&gt;&quot;,&quot;outputFormat&quot;:&quot;pdf&quot;}&#x27;
+
+# voor precies één van bookerId / bookingId
+curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/render?bookingId=&lt;id&gt;&quot; -H &quot;Authorization: Bearer $TOKEN&quot;
+curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/send?bookerId=&lt;id&gt;&quot;    -H &quot;Authorization: Bearer $TOKEN&quot;</pre>
+<h3 id="h-9-2-veldregels-validatie">9.2 Veldregels (validatie)</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Resource</th><th>Verplicht</th><th>Overig</th></tr></thead><tbody>
+<tr><th scope="row">Boeking</th><td><code>bookingStatus</code></td><td><code>bookingNumber</code> ≤ 14 tekens (wordt gegenereerd), <code>bookerId</code> optioneel</td></tr>
+<tr><th scope="row">Boeker</th><td><code>firstname</code>, <code>lastname</code> (≤ 255), <code>emailaddress</code> (geldig e-mail)</td><td><code>status</code> wordt door de server bepaald (een meegestuurde waarde wordt genegeerd)</td></tr>
+<tr><th scope="row">Boeking (aanmaken)</th><td><code>bookerId</code> van een bestaande boeker, <code>bookingStatus</code> = <code>aanvraag</code></td><td>anders <code>400</code></td></tr>
+<tr><th scope="row">Boeking (bijwerken)</th><td><code>bookingStatus</code></td><td><code>quoteConfirmed: true</code> alleen vanuit status <code>offerte</code> met een hoofdboeker (wordt <code>boeking</code>, <code>quoteConfirmedAt</code> = nu); terug naar <code>false</code> geeft <code>400</code></td></tr>
+<tr><th scope="row">Reiziger</th><td><code>bookingId</code>, <code>firstname</code>, <code>lastname</code></td><td>geslacht: <code>man</code>, <code>vrouw</code>, <code>anders</code></td></tr>
+<tr><th scope="row">Boekingsregel</th><td><code>bookingId</code>, <code>accommodationId</code>, <code>supplierId</code></td><td><code>fromDate</code>, <code>untilDate</code>, <code>price</code></td></tr>
+<tr><th scope="row">Boekingsactiviteit</th><td><code>bookingId</code>, <code>activityId</code>, <code>activityDate</code>, <code>fromTime</code>, <code>untilTime</code></td><td><code>meetingPoint</code>, <code>totalPrice</code>; <code>untilTime</code> &lt; <code>fromTime</code> = volgende dag</td></tr>
+<tr><th scope="row">Accommodatie / Leverancier</th><td><code>key</code>, <code>name</code> (≤ 255)</td><td></td></tr>
+<tr><th scope="row">Activiteit</th><td><code>name</code>, <code>activityType</code></td><td><code>activityType</code>: <code>tour</code>, <code>excursie</code>, <code>ticket</code>, <code>transfer</code></td></tr>
+<tr><th scope="row">Adres</th><td><code>street</code>, <code>city</code>, <code>country</code> (≤ 255)</td><td><code>addressrole</code>: <code>woon</code>, <code>factuur</code>, <code>accommodatie</code>, <code>leverancier</code></td></tr>
+<tr><th scope="row">Organisatie</th><td><code>name</code></td><td><code>emailFrom</code>, <code>mollieKey</code></td></tr>
+<tr><th scope="row">Thema</th><td>kleuren <code>#rrggbb</code></td><td><code>logoUrl</code> ≤ 500 tekens</td></tr>
+<tr><th scope="row">Wachtwoord wijzigen</th><td>huidig en nieuw wachtwoord</td><td>nieuw: minimaal 6 tekens (UI: 8)</td></tr>
+</tbody></table></div>
+<h3 id="h-9-3-alle-endpoints-met-benodigde-authority">9.3 Alle endpoints met benodigde authority</h3>
+<p><em>Gegenereerd uit de <code>@PreAuthorize</code>-annotaties van de controllers. <code>–</code> = publiek of alleen eigen account.</em></p>
+<h4 id="h-inloggen-en-eigen-account">Inloggen en eigen account</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">POST</th><td><code>/api/auth/login</code></td><td>–</td><td>Inloggen (wachtwoord)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/auth/login/totp</code></td><td>–</td><td>Tweede stap: authenticatorcode</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/auth/login/recovery</code></td><td>–</td><td>Tweede stap: herstelcode</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/auth/totp/setup</code></td><td>–</td><td>2FA instellen (QR en herstelcodes)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/auth/totp/verify</code></td><td>–</td><td>2FA bevestigen met een code</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/auth/totp/disable</code></td><td>–</td><td>2FA uitzetten</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/auth/change-password</code></td><td>–</td><td>Eigen wachtwoord wijzigen</td></tr>
+</tbody></table></div>
+<h4 id="h-beheer-organisaties-personen-accounts-rollen-rechten-thema">Beheer: organisaties, personen, accounts, rollen, rechten, thema</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">GET</th><td><code>/api/organizations</code></td><td><code>ORGANIZATION_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/organizations/{id}</code></td><td><code>ORGANIZATION_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/organizations</code></td><td><code>ORGANIZATION_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/organizations/{id}</code></td><td><code>ORGANIZATION_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/organizations/{id}</code></td><td><code>ORGANIZATION_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/organization-themes</code></td><td><code>ORGANIZATION_THEME_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/organization-themes/{id}</code></td><td><code>ORGANIZATION_THEME_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/organization-themes/my-theme</code></td><td><code>ORGANIZATION_THEME_READ</code></td><td>Thema van de eigen organisatie</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/organization-settings/mine</code></td><td><code>ORGANIZATION_SETTINGS_READ</code></td><td>Instellingen van de eigen organisatie (lege keuzes als er niets is opgeslagen)</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/organization-settings/mine</code></td><td><code>ORGANIZATION_SETTINGS_UPDATE</code></td><td>Instellingen van de eigen organisatie opslaan (alleen eigen templates; <code>400</code> anders)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/organization-themes</code></td><td><code>ORGANIZATION_THEME_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/organization-themes/{id}</code></td><td><code>ORGANIZATION_THEME_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/organization-themes/{id}</code></td><td><code>ORGANIZATION_THEME_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/persons</code></td><td><code>PERSON_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/persons/{id}</code></td><td><code>PERSON_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/persons</code></td><td><code>PERSON_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/persons/{id}</code></td><td><code>PERSON_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/persons/{id}</code></td><td><code>PERSON_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accounts</code></td><td><code>ACCOUNT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accounts/{id}</code></td><td><code>ACCOUNT_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/accounts</code></td><td><code>ACCOUNT_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/accounts/{id}</code></td><td><code>ACCOUNT_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/accounts/{id}</code></td><td><code>ACCOUNT_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/accounts/{id}/totp</code></td><td><code>ACCOUNT_UPDATE</code></td><td>2FA van het account resetten</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/account-roles</code></td><td><code>ACCOUNTROLE_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/account-roles/assignable-roles</code></td><td><code>ACCOUNTROLE_READ</code></td><td>Rollen die de ingelogde gebruiker mag toewijzen/intrekken</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/account-roles/{accountId}/{roleId}</code></td><td><code>ACCOUNTROLE_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/account-roles</code></td><td><code>ACCOUNTROLE_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/account-roles/{accountId}/{roleId}</code></td><td><code>ACCOUNTROLE_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/roles</code></td><td><code>ROLE_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/roles/{id}</code></td><td><code>ROLE_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/roles</code></td><td><code>ROLE_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/roles/{id}</code></td><td><code>ROLE_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/roles/{id}</code></td><td><code>ROLE_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/authorities</code></td><td><code>AUTHORITY_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/authorities/{id}</code></td><td><code>AUTHORITY_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/authorities</code></td><td><code>AUTHORITY_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/authorities/{id}</code></td><td><code>AUTHORITY_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/authorities/{id}</code></td><td><code>AUTHORITY_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/role-authorities</code></td><td><code>ROLEAUTHORITY_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/role-authorities/{roleId}/{authorityId}</code></td><td><code>ROLEAUTHORITY_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/role-authorities</code></td><td><code>ROLEAUTHORITY_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/role-authorities/{roleId}/{authorityId}</code></td><td><code>ROLEAUTHORITY_DELETE</code></td><td>Verwijderen</td></tr>
+</tbody></table></div>
+<h4 id="h-boekingen-en-klanten">Boekingen en klanten</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">GET</th><td><code>/api/bookings</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/bookings/{id}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/bookings</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/bookings/{id}</code></td><td><code>BOOKING_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/bookings/{id}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/bookings/{id}/status-revert</code></td><td><code>BOOKING_STATUS_REVERT</code> of <code>_PAID</code></td><td>Terugzetten naar een eerdere status <code>{targetStatus, reason}</code>; na een betaling alleen met <code>_PAID</code> (<code>403</code>)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/bookings/{id}/complete</code></td><td><code>BOOKING_COMPLETE</code></td><td>Afronden <code>{reason?}</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/bookings/{id}/status-changes</code></td><td><code>BOOKING_READ</code></td><td>Statusgeschiedenis, nieuwste eerst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/notifications/open</code></td><td><code>NOTIFICATION_READ</code></td><td>Openstaande notificaties van de eigen organisatie</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/notifications/booking/{bookingId}</code></td><td><code>NOTIFICATION_READ</code></td><td>Notificaties van een boeking</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/notifications/{id}/handle</code></td><td><code>NOTIFICATION_UPDATE</code></td><td>Afhandelen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/bookings/{id}/send-quote</code></td><td><code>QUOTE_SEND</code></td><td>Offerte versturen: status <code>offerte</code>, PDF bij de boeking, mail met bijlage naar de hoofdboeker (<code>400</code> buiten aanvraag/offerte, na bevestigen, zonder hoofdboeker of zonder ingestelde templates)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/bookers</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/bookers/{id}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/bookers</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/bookers/{id}</code></td><td><code>BOOKING_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/bookers/{id}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-addresses</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-addresses/{bookerId}/{addressId}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-addresses</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/booker-addresses/{bookerId}/{addressId}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/travelers</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/travelers/{id}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/travelers</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/travelers/{id}</code></td><td><code>BOOKING_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/travelers/{id}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/addresses</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/addresses/{id}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/addresses</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/addresses/{id}</code></td><td><code>BOOKING_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/addresses/{id}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-lines</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-lines/booking/{bookingId}</code></td><td><code>BOOKING_READ</code></td><td>Regels van een boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-lines/{bookingLineId}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booking-lines</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/booking-lines/{bookingLineId}</code></td><td><code>BOOKING_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/booking-lines/{bookingLineId}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-activities</code></td><td><code>BOOKING_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-activities/booking/{bookingId}</code></td><td><code>BOOKING_READ</code></td><td>Activiteiten van een boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-activities/{bookingActivityId}</code></td><td><code>BOOKING_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booking-activities</code></td><td><code>BOOKING_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/booking-activities/{bookingActivityId}</code></td><td><code>BOOKING_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/booking-activities/{bookingActivityId}</code></td><td><code>BOOKING_DELETE</code></td><td>Verwijderen</td></tr>
+</tbody></table></div>
+<h4 id="h-stamgegevens">Stamgegevens</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">GET</th><td><code>/api/accommodations</code></td><td><code>ACCOMMODATION_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accommodations/{id}</code></td><td><code>ACCOMMODATION_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/accommodations</code></td><td><code>ACCOMMODATION_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/accommodations/{id}</code></td><td><code>ACCOMMODATION_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/accommodations/{id}</code></td><td><code>ACCOMMODATION_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accommodation-addresses</code></td><td><code>ACCOMMODATION_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accommodation-addresses/{accommodationId}/{addressId}</code></td><td><code>ACCOMMODATION_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/accommodation-addresses</code></td><td><code>ACCOMMODATION_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/accommodation-addresses/{accommodationId}/{addressId}</code></td><td><code>ACCOMMODATION_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accommodation-suppliers</code></td><td><code>ACCOMMODATION_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/accommodation-suppliers/{accommodationId}/{supplierId}</code></td><td><code>ACCOMMODATION_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/accommodation-suppliers</code></td><td><code>ACCOMMODATION_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/accommodation-suppliers/{accommodationId}/{supplierId}</code></td><td><code>ACCOMMODATION_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/suppliers</code></td><td><code>SUPPLIER_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/suppliers/{id}</code></td><td><code>SUPPLIER_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/suppliers</code></td><td><code>SUPPLIER_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/suppliers/{id}</code></td><td><code>SUPPLIER_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/suppliers/{id}</code></td><td><code>SUPPLIER_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/supplier-addresses</code></td><td><code>SUPPLIER_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/supplier-addresses/{supplierId}/{addressId}</code></td><td><code>SUPPLIER_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/supplier-addresses</code></td><td><code>SUPPLIER_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/supplier-addresses/{supplierId}/{addressId}</code></td><td><code>SUPPLIER_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/activities</code></td><td><code>ACTIVITY_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/activities/{id}</code></td><td><code>ACTIVITY_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/activities</code></td><td><code>ACTIVITY_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/activities/{id}</code></td><td><code>ACTIVITY_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/activities/{id}</code></td><td><code>ACTIVITY_DELETE</code></td><td>Verwijderen</td></tr>
+</tbody></table></div>
+<h4 id="h-documenten-en-templates">Documenten en templates</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">GET</th><td><code>/api/documents</code></td><td><code>DOCUMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/documents/booking/{bookingId}</code></td><td><code>DOCUMENT_READ</code></td><td>Documenten van een boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/documents/{id}/content</code></td><td><code>DOCUMENT_READ</code></td><td>Inhoud downloaden</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/documents/{id}</code></td><td><code>DOCUMENT_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/documents</code></td><td><code>DOCUMENT_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/documents/{id}</code></td><td><code>DOCUMENT_UPDATE</code></td><td>Alleen <code>visibleInPortal</code> wijzigen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/documents/generate</code></td><td><code>DOCUMENT_CREATE</code></td><td>Genereren uit een Word-template (pdf of docx)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/document-templates</code></td><td><code>TEMPLATE_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/document-templates/{id}</code></td><td><code>TEMPLATE_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/document-templates/{id}/content</code></td><td><code>TEMPLATE_READ</code></td><td>Het .docx downloaden</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/document-templates</code></td><td><code>TEMPLATE_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/document-templates/{id}</code></td><td><code>TEMPLATE_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/document-templates/{id}</code></td><td><code>TEMPLATE_DELETE</code></td><td>Verwijderen</td></tr>
+</tbody></table></div>
+<h4 id="h-e-mail-en-afbeeldingen">E-mail en afbeeldingen</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">GET</th><td><code>/api/email-templates</code></td><td><code>TEMPLATE_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/email-templates/{id}</code></td><td><code>TEMPLATE_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/email-templates</code></td><td><code>TEMPLATE_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/email-templates/{id}</code></td><td><code>TEMPLATE_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/email-templates/{id}</code></td><td><code>TEMPLATE_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/email-templates/{id}/render</code></td><td><code>TEMPLATE_READ</code></td><td>Voorbeeld; precies één van <code>bookerId</code> of <code>bookingId</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/email-templates/{id}/send</code></td><td><code>EMAIL_SEND</code></td><td>Versturen; precies één van <code>bookerId</code> of <code>bookingId</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/sent-emails/booking/{bookingId}</code></td><td><code>BOOKING_READ</code></td><td>Verzonden e-mails van een boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/sent-emails/{id}</code></td><td><code>BOOKING_READ</code></td><td>Eén verzonden e-mail met bewaarde HTML</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/sent-emails/{id}/resend</code></td><td><code>EMAIL_SEND</code></td><td>Opnieuw versturen (nieuwe regel)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/email-images</code></td><td><code>TEMPLATE_CREATE</code> of <code>TEMPLATE_UPDATE</code></td><td>Afbeelding uploaden (multipart <code>file</code>)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/email-images</code></td><td><code>TEMPLATE_CREATE</code> of <code>TEMPLATE_UPDATE</code></td><td>Bibliotheek van de eigen organisatie</td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/email-images/{id}</code></td><td><code>TEMPLATE_DELETE</code></td><td>Verwijderen</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/public/email-images/{id}</code></td><td>–</td><td>Afbeelding uitleveren (voor mailclients)</td></tr>
+</tbody></table></div>
+<h4 id="h-betalingen-mollie">Betalingen (Mollie)</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payments/{id}</code></td><td><code>PAYMENT_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/mollie/payments/{id}</code></td><td><code>PAYMENT_UPDATE</code></td><td>Wijzigen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments/create-at-mollie</code></td><td><code>PAYMENT_CREATE</code></td><td>Direct bij Mollie aanmaken</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments/webhook</code></td><td>–</td><td>Webhook van Mollie (<code>?id=tr_…</code>)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries</code></td><td><code>PAYMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries/by-payment/{molliePaymentId}</code></td><td><code>PAYMENT_READ</code></td><td>Statushistorie van een betaling</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payment-status-entries/by-payment/{molliePaymentId}</code></td><td><code>PAYMENT_CORRECT</code></td><td>Handmatige correctie <code>{status, reason}</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments</code></td><td><code>PAYMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{bookingId}</code></td><td><code>PAYMENT_READ</code></td><td>Betalingen van een boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{bookingId}/{molliePaymentId}</code></td><td><code>PAYMENT_READ</code></td><td>Eén opvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booking-mollie-payments</code></td><td><code>PAYMENT_CREATE</code></td><td>Aanmaken</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{molliePaymentId}/relinks</code></td><td><code>PAYMENT_READ</code></td><td>Herkoppelgeschiedenis van een betaling</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booking-mollie-payments/{molliePaymentId}/relink</code></td><td><code>PAYMENT_RELINK</code></td><td>Betaling herkoppelen naar een andere boeking (met reden)</td></tr>
+</tbody></table></div>
+<h4 id="h-klantportaal">Klantportaal</h4>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">POST</th><td><code>/api/booker-auth/request-otp</code></td><td>–</td><td>OTP aanvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-auth/verify-otp</code></td><td>–</td><td>OTP verifiëren; geeft een BOOKER-token</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/overview</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Kerngegevens, reizigers en huisstijl voor het dashboard</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/messages</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Verzonden e-mails aan de hoofdboeker, zonder inhoud</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/messages/{id}</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Eén e-mail met de HTML zoals verstuurd</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/itinerary</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Reisschema van de boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/booking-lines</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/booking-activities</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/accommodations</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/activities</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/documents</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Zichtbare documenten, zonder bytes (id, naam, type, grootte, datum)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/documents/{id}/content</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Het bestand als download; alleen een zichtbaar document van de eigen boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/payments</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Betalingen met de huidige status</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/payments/status-entries</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>Statushistorie van de betalingen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-portal/payments/pay/{molliePaymentId}</code></td><td><code>BOOKER_PORTAL_UPDATE</code></td><td>Betaling bij Mollie starten; geeft de checkout-URL</td></tr>
+</tbody></table></div>
+<h3 id="h-9-4-toegang-op-padniveau-securityconfig">9.4 Toegang op padniveau (<code>SecurityConfig</code>)</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Pad</th><th>Toegang</th></tr></thead><tbody>
+<tr><th scope="row"><code>/api/auth/login</code>, <code>/api/auth/login/totp</code>, <code>/api/auth/login/recovery</code></th><td>publiek</td></tr>
+<tr><th scope="row"><code>/api/booker-auth/**</code></th><td>publiek (OTP aanvragen en verifiëren)</td></tr>
+<tr><th scope="row"><code>/api/mollie/payments/webhook</code></th><td>publiek (het id wordt gevalideerd: <code>tr_[A-Za-z0-9]+</code>)</td></tr>
+<tr><th scope="row"><code>GET /api/public/email-images/*</code></th><td>publiek (alleen GET)</td></tr>
+<tr><th scope="row"><code>/monitoring/**</code></th><td>publiek in Spring, in NGINX beperkt tot localhost en het beheer-IP</td></tr>
+<tr><th scope="row"><code>/api/booker-portal/**</code> en overige <code>/api/**</code></th><td>ingelogd, daarna <code>@PreAuthorize</code> per methode</td></tr>
+</tbody></table></div>
+<h2 id="h-10-bekende-beperkingen">10. Bekende beperkingen</h2>
+<p>Eerlijke lijst van wat nu niet af of risicovol is. Volledige lijst: <a href="open-items.html">open-items.md</a>.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderwerp</th><th>Stand</th></tr></thead><tbody>
+<tr><th scope="row"><strong>OTP-mail is een stub</strong></th><td>klanten krijgen hun inlogcode nog niet per mail; de code staat in het serverlog. Klanten kunnen dus niet echt inloggen tot dit is gekoppeld aan de e-mailinfrastructuur.</td></tr>
+<tr><th scope="row"><strong>OTP-beheer</strong></th><td>verlopen codes tellen mee voor het maximum van 3 en worden niet opgeruimd; er is geen teller voor foute pogingen (alleen de NGINX-rate-limit).</td></tr>
+<tr><th scope="row"><strong>Geen automatische vergrendeling</strong></th><td>na foutieve inlogpogingen wordt een account niet vanzelf vergrendeld; <code>locked</code> zet een beheerder handmatig.</td></tr>
+<tr><th scope="row"><strong><code>expires_at</code> van een account</strong></th><td>wordt bewaard en is bewerkbaar, maar wordt <strong>niet afgedwongen</strong> bij het inloggen.</td></tr>
+<tr><th scope="row"><strong>Eén Mollie-sleutel voor alle organisaties</strong></th><td>de sleutel per organisatie (<code>mollie_key</code>) wordt niet gebruikt voor API-aanroepen; alle betalingen gaan naar één Mollie-account.</td></tr>
+<tr><th scope="row"><strong>Twee manieren om een betaling bij Mollie te starten</strong></th><td>de portal-flow (<code>pay/{id}</code>, leidend) en <code>POST /api/mollie/payments/create-at-mollie</code> (medewerker).</td></tr>
+<tr><th scope="row"><strong>Statusovergangen van een boeking zijn vrij</strong></th><td>geen toestandsmachine; statussen volgen niet automatisch op betalingen.</td></tr>
+<tr><th scope="row"><strong>Wachtwoordregel verschilt</strong></th><td>de interface eist minimaal 8 tekens, de server accepteert bij <em>wachtwoord wijzigen</em> minimaal 6.</td></tr>
+<tr><th scope="row"><strong>Employee-dashboard</strong></th><td>is nog een plaatshouder.</td></tr>
+<tr><th scope="row"><strong>Documenten zijn niet te verwijderen</strong></th><td>een verkeerd geüpload of gegenereerd document blijft staan; het kan alleen uit het klantportaal worden gehaald (<em>Zichtbaar in het boekerportaal</em> uit).</td></tr>
+<tr><th scope="row"><strong>E-mail</strong></th><td>synchroon verzonden, geen wachtrij of herpoging, geen bijlagen, geen CC/BCC, geen tracking.</td></tr>
+<tr><th scope="row"><strong>Token in browseropslag</strong></th><td>geen intrekking/refresh; een gestolen token is tot 1 uur geldig.</td></tr>
+<tr><th scope="row"><strong>Rol↔authority is globaal</strong></th><td>een wijziging geldt voor alle organisaties tegelijk en werkt pas bij een nieuw token.</td></tr>
+<tr><th scope="row"><strong>Publiek adres is http</strong></th><td>e-mailafbeeldingen en de Mollie-webhook gaan nu via een IP-adres zonder TLS.</td></tr>
+<tr><th scope="row"><strong>Test- en demogegevens</strong></th><td>de configuratie bevat fictieve geheimen en Mollie-testsleutels; die horen in een echte omgeving niet in de repository.</td></tr>
+</tbody></table></div>
+<h2 id="h-11-problemen-oplossen">11. Problemen oplossen</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Symptoom</th><th>Waarschijnlijke oorzaak</th><th>Oplossing</th></tr></thead><tbody>
+<tr><th scope="row">Menu-item ontbreekt</th><td>je rol heeft de vereiste authority niet</td><td>§2.6; vraag een beheerder de rol te controleren</td></tr>
+<tr><th scope="row">Scherm opent maar blijft leeg of geeft een fout</th><td>geen recht op de data (<code>403</code>) of ander organisatie</td><td>§2.12</td></tr>
+<tr><th scope="row">Na een rechtenwijziging verandert er niets</th><td>het token bevat nog de oude authorities</td><td>uit- en inloggen</td></tr>
+<tr><th scope="row"><em>"Controleer gebruikersnaam en wachtwoord"</em></th><td>verkeerde gegevens, of het account is vergrendeld</td><td>wachtwoord controleren; beheerder vragen te ontgrendelen</td></tr>
+<tr><th scope="row">Je moet steeds een nieuw wachtwoord kiezen</th><td><em>Wachtwoord moet gewijzigd worden</em> staat aan</td><td>wachtwoord wijzigen; het vinkje vervalt daarna</td></tr>
+<tr><th scope="row">2FA-apparaat kwijt</th><td>geen toegang tot de authenticator</td><td>herstelcode gebruiken; anders laat een beheerder 2FA resetten</td></tr>
+<tr><th scope="row"><em>"Kan niet verwijderd worden…"</em> (<code>409</code>)</th><td>er hangen documenten, betalingen, herkoppelingen of verzonden e-mails aan</td><td>bewust; gegevens blijven bewaard</td></tr>
+<tr><th scope="row"><em>"Deze betaling bestaat al bij Mollie…"</em></th><td>de betaling is al gestart</td><td>niet meer te wijzigen; gebruik een Correctie of Herkoppelen</td></tr>
+<tr><th scope="row">E-mail versturen mislukt met <code>400</code></th><td>geen afzenderadres bij de organisatie, of de hoofdboeker heeft geen e-mailadres</td><td>afzenderadres laten instellen (ADMIN); e-mailadres bij de hoofdboeker invullen</td></tr>
+<tr><th scope="row"><em>"Onbekende of lege placeholder … <code>${booking}</code>"</em></th><td>een template met <code>${booking.*}</code> is voor een prospect gebruikt</td><td>verstuur voor een boeking, of haal de boekingsvelden weg</td></tr>
+<tr><th scope="row">Mail verstuurd maar niets aangekomen</th><td>lokaal: log-only; op de server: relay/SPF/DKIM</td><td>§12.3</td></tr>
+<tr><th scope="row">Afbeelding niet zichtbaar in ontvangen mail</th><td>het publieke adres is niet bereikbaar</td><td>NGINX-regel voor <code>/api/public/email-images/</code> en <code>app.email.public-api-base-url</code> controleren</td></tr>
+<tr><th scope="row">Template-fout <em>"Onbekende afbeelding"</em> (<code>400</code>)</th><td>de afbeelding hoort bij een andere organisatie of bestaat niet</td><td>afbeelding uit de eigen bibliotheek gebruiken</td></tr>
+<tr><th scope="row">Bedrag in document toont <code>1.250</code> i.p.v. <code>1.250,00</code></th><td>geen opmaak in de expressie</td><td><code>?string(&quot;#,##0.00&quot;)</code> gebruiken</td></tr>
+<tr><th scope="row">Klant kan niet inloggen op het portaal</th><td>combinatie e-mail + boekingsnummer klopt niet, of OTP-mail is een stub</td><td>gegevens controleren; code uit het serverlog (§10)</td></tr>
+<tr><th scope="row">Klant ziet een document niet</th><td><em>Zichtbaar in het boekerportaal</em> staat uit</td><td>potloodicoon in de tijdlijn</td></tr>
+<tr><th scope="row">Klant ziet de betaalstatus niet bijgewerkt</th><td>de webhook is nog niet binnen of niet bereikbaar</td><td>even wachten (de pagina ververst); webhook-URL en NGINX controleren</td></tr>
+<tr><th scope="row">Een verkeerd document staat in de boeking</th><td>documenten kunnen niet worden verwijderd</td><td>zet <em>Zichtbaar in het boekerportaal</em> uit (potloodicoon) en gebruik de naam/een nieuw document om het te vervangen</td></tr>
+<tr><th scope="row">Document uploaden geweigerd</th><td>geen PDF (de interface staat alleen PDF toe)</td><td>PDF gebruiken; is het bestand erg groot, controleer dan de logs van de server</td></tr>
+</tbody></table></div>
+<h2 id="h-12-beheer-en-configuratie">12. Beheer en configuratie</h2>
+<p>Voor beheerders; de volledige technische documentatie staat in <a href="build-test-deploy.html">build-test-deploy.md</a>, <a href="security.html">security.md</a>, <a href="email.html">email.md</a> en <a href="mollie.html">mollie.md</a>.</p>
+<h3 id="h-12-1-omgeving">12.1 Omgeving</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderdeel</th><th>Waarde</th></tr></thead><tbody>
+<tr><th scope="row">Backend</th><td>Spring Boot 4, Java 21, Jetty; poort <strong>8666</strong>, context-path <strong><code>/rds</code></strong>; luistert alleen op <code>127.0.0.1</code></td></tr>
+<tr><th scope="row">Database</th><td>PostgreSQL 17 (<code>rdsdb</code>); schema via <strong>Flyway</strong> (V1–V16), JPA staat op <code>validate</code></td></tr>
+<tr><th scope="row">Frontends</th><td>Angular 22; medewerkers dev-poort 4200, klanten 4300</td></tr>
+<tr><th scope="row">Reverse proxy</th><td>NGINX (<code>deploy/nginx/rds.kbtg.nl.conf</code>, <code>https://rds.kbtg.nl</code>, Let's Encrypt): <code>/rds/</code>, <code>/booker/</code>, <code>/api/</code>; rate-limits; afkappen van scanner-paden</td></tr>
+<tr><th scope="row">Tests</th><td>embedded PostgreSQL (de tests starten zelf een tijdelijke database)</td></tr>
+</tbody></table></div>
+<h3 id="h-12-2-belangrijke-instellingen-application-yaml-prefix-app">12.2 Belangrijke instellingen (<code>application.yaml</code>, prefix <code>app.</code>)</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Sleutel</th><th>Betekenis</th><th>Standaard</th></tr></thead><tbody>
+<tr><th scope="row"><code>app.jwt.expiration-ms</code></th><td>levensduur medewerkerstoken</td><td>1 uur</td></tr>
+<tr><th scope="row"><code>app.jwt.booker-expiration-ms</code></th><td>levensduur klanttoken</td><td>1 uur</td></tr>
+<tr><th scope="row"><code>app.otp.expiry-minutes</code></th><td>geldigheid OTP</td><td>10</td></tr>
+<tr><th scope="row"><code>app.otp.max-active-per-email</code></th><td>max. actieve OTP's per e-mailadres</td><td>3</td></tr>
+<tr><th scope="row"><code>app.mollie.key</code></th><td>Mollie-API-sleutel (<code>Bearer …</code>), <strong>één globale sleutel</strong></td><td>testsleutel</td></tr>
+<tr><th scope="row"><code>app.mollie.urls.webhook</code></th><td>publiek bereikbare webhook-URL</td><td>publiek IP via NGINX</td></tr>
+<tr><th scope="row"><code>app.mollie.urls.redirect</code></th><td>waar de browser na betalen heen gaat (de klant-app)</td><td>–</td></tr>
+<tr><th scope="row"><code>app.email.public-api-base-url</code></th><td>absoluut adres voor afbeeldingen in verzonden mail</td><td>publiek adres</td></tr>
+<tr><th scope="row"><code>app.email.image.max-bytes</code></th><td>maximale afbeeldingsgrootte</td><td>2 MB</td></tr>
+<tr><th scope="row"><code>spring.servlet.multipart.max-file-size</code> / <code>max-request-size</code></th><td>uploadlimiet voor multipart-uploads (de <strong>afbeeldingenbibliotheek</strong>)</td><td>2 MB / 3 MB (houd gelijk aan de afbeeldingslimiet)</td></tr>
+</tbody></table></div>
+<p>Wachtwoorden, sleutels en tokens horen <strong>niet</strong> in documentatie of logs en in een echte omgeving in omgevingsvariabelen of een secret-store.</p>
+<h3 id="h-12-3-e-mailverzending">12.3 E-mailverzending</h3>
+<ul><li>Staat <code>spring.mail.host</code> <strong>leeg</strong>, dan draait de log-only-verzender: er wordt niets echt verstuurd, alleen gelogd (From/To/Subject/body). Handig lokaal.</li><li>Staat <code>host</code> <strong>gezet</strong>, dan wordt via SMTP aan een externe relay afgeleverd. Op de server via <code>SPRING_MAIL_HOST</code>, <code>SPRING_MAIL_PORT</code>, <code>SPRING_MAIL_USERNAME</code>, <code>SPRING_MAIL_PASSWORD</code>; poort 587 = STARTTLS.</li><li>De app is een SMTP-<strong>client</strong>, geen mailserver. Voor het afzenderdomein per organisatie moet de relay geautoriseerd zijn: <strong>SPF, DKIM en DMARC</strong> moeten kloppen, anders belandt mail in spam.</li></ul>
+<h3 id="h-12-4-mollie-lokaal-testen">12.4 Mollie lokaal testen</h3>
+<p><code>start/scripts/start-mollie-tunnel.sh</code> start een Cloudflare quick-tunnel en schrijft de URL in <code>application-rds-local.yaml</code> (profiel <code>rds-local</code>, niet committen). De tunnel-URL wisselt bij elke start. Zonder bereikbare webhook komt een betaling wel bij Mollie aan, maar wordt de status niet bijgewerkt.</p>
+<h3 id="h-12-5-een-nieuwe-authority-of-rol-toevoegen-ontwikkelaar">12.5 Een nieuwe authority of rol toevoegen (ontwikkelaar)</h3>
+<ol><li>Nieuwe Flyway-migratie die de authority invoegt (<code>authority_id</code> volgt de reeks <code>d1000000-…-0000000000NN</code>) en aan de juiste rollen koppelt (zie <code>V6</code>, <code>V10</code>, <code>V12</code> als voorbeeld).</li><li><code>@PreAuthorize(&quot;hasAuthority(&#x27;…&#x27;)&quot;)</code> op de nieuwe endpoints.</li><li>In de frontend de zichtbaarheid koppelen aan de authority (menu: <code>NavItem.authority</code>; knop: <code>authService.hasAuthority(…)</code>), nooit aan een rol.</li><li>Tests voor ADMIN, MANAGER, EMPLOYEE en ongeauthenticeerd.</li></ol>
+<h2 id="h-13-bijlagen">13. Bijlagen</h2>
+<h3 id="h-bijlage-a-waardelijsten-enums">Bijlage A — Waardelijsten (enums)</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Enum</th><th>Waarden (API, lowercase)</th></tr></thead><tbody>
+<tr><th scope="row">Boekingsstatus</th><td><code>aanvraag</code>, <code>offerte</code>, <code>boeking</code>, <code>voorschot</code>, <code>betaald</code>, <code>opreis</code>, <code>weerthuis</code>, <code>afgerond</code></td></tr>
+<tr><th scope="row">Boekerstatus</th><td><code>prospect</code>, <code>active</code>, <code>nietactief</code></td></tr>
+<tr><th scope="row">Geslacht</th><td><code>man</code>, <code>vrouw</code>, <code>anders</code></td></tr>
+<tr><th scope="row">Adresrol</th><td><code>woon</code>, <code>factuur</code>, <code>accommodatie</code>, <code>leverancier</code></td></tr>
+<tr><th scope="row">Activiteitstype</th><td><code>tour</code>, <code>excursie</code>, <code>ticket</code>, <code>transfer</code></td></tr>
+<tr><th scope="row">Betaalstatus</th><td><code>open</code>, <code>pending</code>, <code>authorized</code>, <code>paid</code>, <code>failed</code>, <code>canceled</code>, <code>expired</code></td></tr>
+<tr><th scope="row">Correctiestatussen</th><td><code>open</code>, <code>paid</code>, <code>failed</code>, <code>canceled</code></td></tr>
+<tr><th scope="row">Betaalmethode</th><td><code>ideal</code>, <code>creditcard</code>, <code>bancontact</code>, <code>sofort</code>, <code>banktransfer</code>, <code>paypal</code>, <code>belfius</code>, <code>kbc</code>, <code>eps</code>, <code>giropay</code>, <code>przelewy24</code>, <code>applepay</code>, <code>googlepay</code>, <code>in3</code>, <code>klarna</code>, <code>riverty</code></td></tr>
+<tr><th scope="row">Uitvoerformaat document</th><td><code>pdf</code>, <code>docx</code></td></tr>
+</tbody></table></div>
+<p>Opmerking: in de interface heet de boekingsstatus <code>opreis</code> <em>Op reis</em> en <code>weerthuis</code> <em>Weer thuis</em>. In templates is de waarde de hoofdletternaam (bijv. <code>OPREIS</code>).</p>
+<h3 id="h-bijlage-b-overzicht-schermen-en-routes">Bijlage B — Overzicht schermen en routes</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Route</th><th>Scherm</th><th>Menu-recht</th></tr></thead><tbody>
+<tr><th scope="row"><code>/login</code></th><td>inloggen (+ 2FA, herstelcode)</td><td>publiek</td></tr>
+<tr><th scope="row"><code>/dashboard</code></th><td>dashboard (admin/manager/employee)</td><td>–</td></tr>
+<tr><th scope="row"><code>/bookings</code>, <code>/bookings/new?bookerId=…</code>, <code>/bookings/:id</code></th><td>boekingen, concept-boeking, detail</td><td><code>BOOKING_READ</code></td></tr>
+<tr><th scope="row"><code>/bookers</code></th><td>boekers</td><td><code>BOOKING_READ</code></td></tr>
+<tr><th scope="row"><code>/prospects</code></th><td>prospects</td><td><code>BOOKING_READ</code></td></tr>
+<tr><th scope="row"><code>/travelers</code></th><td>reizigers (geen menu-item)</td><td>–</td></tr>
+<tr><th scope="row"><code>/accommodations</code> (+ detail)</th><td>accommodaties</td><td><code>ACCOMMODATION_C/U/D</code></td></tr>
+<tr><th scope="row"><code>/suppliers</code> (+ detail)</th><td>leveranciers</td><td><code>SUPPLIER_C/U/D</code></td></tr>
+<tr><th scope="row"><code>/activities</code> (+ detail)</th><td>activiteiten</td><td><code>ACTIVITY_C/U/D</code></td></tr>
+<tr><th scope="row"><code>/templates</code></th><td>Word-templates</td><td><code>TEMPLATE_C/U/D</code></td></tr>
+<tr><th scope="row"><code>/email-templates</code></th><td>e-mailtemplates</td><td><code>TEMPLATE_READ</code></td></tr>
+<tr><th scope="row"><code>/payments</code></th><td>betalingen</td><td><code>PAYMENT_READ</code></td></tr>
+<tr><th scope="row"><code>/admin/organizations</code> (+ <code>new</code>, <code>onboarding</code>, <code>:id</code>)</th><td>organisaties en onboarding</td><td><code>ORGANIZATION_READ</code></td></tr>
+<tr><th scope="row"><code>/admin/persons</code> (+ <code>new</code>, <code>:id</code>)</th><td>personen</td><td><code>PERSON_CREATE</code>/<code>DELETE</code></td></tr>
+<tr><th scope="row"><code>/admin/accounts</code> (+ <code>new</code>, <code>:id</code>)</th><td>accounts</td><td><code>ACCOUNT_CREATE</code>/<code>DELETE</code></td></tr>
+<tr><th scope="row"><code>/admin/roles</code> (+ <code>new</code>, <code>:id</code>)</th><td>rollen</td><td><code>ROLE_C/U/D</code></td></tr>
+<tr><th scope="row"><code>/admin/authorities</code> (+ <code>new</code>, <code>:id</code>)</th><td>rechten</td><td><code>AUTHORITY_C/U/D</code></td></tr>
+<tr><th scope="row"><code>/admin/theme</code></th><td>huisstijl</td><td><code>ORGANIZATION_THEME_UPDATE</code></td></tr>
+<tr><th scope="row"><code>/profile</code></th><td>mijn gegevens</td><td><code>PERSON_UPDATE</code></td></tr>
+<tr><th scope="row"><code>/change-password</code></th><td>wachtwoord wijzigen</td><td><code>ACCOUNT_UPDATE</code></td></tr>
+<tr><th scope="row"><code>/totp-settings</code></th><td>2FA-instellingen</td><td>–</td></tr>
+</tbody></table></div>
+<p>Portaal (<code>frontend-booker</code>): <code>/login</code>, <code>/verify</code>, <code>/dashboard</code>, <code>/itinerary</code>, <code>/documents</code>, <code>/accommodations</code>, <code>/activities</code>, <code>/payments</code>.</p>
+<h3 id="h-bijlage-c-authority-wat-je-in-de-interface-verliest-of-krijgt">Bijlage C — Authority → wat je in de interface verliest of krijgt</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Authority</th><th>Zichtbaar/mogelijk in de UI</th></tr></thead><tbody>
+<tr><th scope="row"><code>BOOKING_READ</code></th><td>menu Boekingen/Boekers/Prospects; inzien-iconen; tijdlijn met verzonden e-mails</td></tr>
+<tr><th scope="row"><code>BOOKING_CREATE</code></th><td><em>Nieuwe boeking</em>, <em>Registreer prospect</em>; toevoegen van reizigers, accommodaties, activiteiten</td></tr>
+<tr><th scope="row"><code>BOOKING_UPDATE</code></th><td>bewerken van boeking, status, boeker, adressen, regels</td></tr>
+<tr><th scope="row"><code>BOOKING_DELETE</code></th><td>verwijderen van boekingen, boekers, reizigers, regels, activiteiten</td></tr>
+<tr><th scope="row"><code>ACCOMMODATION_*</code>, <code>SUPPLIER_*</code>, <code>ACTIVITY_*</code></th><td>READ: kiezen in een boeking; C/U/D: menu en beheer; in de boeking snel aanmaken met <code>_CREATE</code></td></tr>
+<tr><th scope="row"><code>DOCUMENT_READ</code></th><td>documenten in de tijdlijn</td></tr>
+<tr><th scope="row"><code>DOCUMENT_CREATE</code></th><td><em>Toevoegen → Document</em> (uploaden/genereren)</td></tr>
+<tr><th scope="row"><code>DOCUMENT_UPDATE</code></th><td>zichtbaarheid in het portaal wijzigen</td></tr>
+<tr><th scope="row"><code>PAYMENT_READ</code></th><td>menu Betalingen; kaart Betalingen in een boeking; oog-icoon</td></tr>
+<tr><th scope="row"><code>PAYMENT_CREATE</code></th><td><em>Nieuwe betaling</em></td></tr>
+<tr><th scope="row"><code>PAYMENT_UPDATE</code></th><td>potlood, alleen voor een betaling zonder Mollie-id</td></tr>
+<tr><th scope="row"><code>PAYMENT_CORRECT</code></th><td><em>Correctie registreren</em></td></tr>
+<tr><th scope="row"><code>PAYMENT_RELINK</code></th><td><em>Naar andere boeking koppelen</em></td></tr>
+<tr><th scope="row"><code>TEMPLATE_READ</code></th><td>menu E-mailtemplates (alleen-lezen weergave), templates kiezen en een voorbeeld genereren in de verstuur-dialoog</td></tr>
+<tr><th scope="row"><code>TEMPLATE_CREATE/UPDATE/DELETE</code></th><td>menu Templates (Word), aanmaken/wijzigen/verwijderen, afbeeldingen uploaden/verwijderen</td></tr>
+<tr><th scope="row"><code>EMAIL_SEND</code></th><td><em>Verstuur</em> in de dialoog vanuit een boeking of prospect, het mail-icoon in <em>Prospects</em>, <em>E-mail aan hoofdboeker</em>, <em>Opnieuw versturen</em></td></tr>
+<tr><th scope="row"><code>ORGANIZATION_*</code></th><td>menu Organisaties, onboarding, beheerdashboard</td></tr>
+<tr><th scope="row"><code>PERSON_*</code>, <code>ACCOUNT_*</code></th><td>Personen/Accounts, Mijn gegevens/Wachtwoord</td></tr>
+<tr><th scope="row"><code>ROLE_*</code>, <code>AUTHORITY_*</code>, <code>ROLEAUTHORITY_*</code>, <code>ACCOUNTROLE_*</code></th><td>Rollen/Rechten beheren; rollen aan accounts hangen</td></tr>
+<tr><th scope="row"><code>ORGANIZATION_THEME_*</code></th><td>menu Huisstijl; de kleuren en het logo</td></tr>
+</tbody></table></div>
+<h3 id="h-bijlage-d-verwijzingen">Bijlage D — Verwijzingen</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderwerp</th><th>Document</th></tr></thead><tbody>
+<tr><th scope="row">Overzicht en architectuur</th><td><a href="overview.html">overview.md</a>, <a href="architecture.html">architecture.md</a></td></tr>
+<tr><th scope="row">Domein en begrippen</th><td><a href="domain.html">domain.md</a>, <a href="glossary.html">glossary.md</a></td></tr>
+<tr><th scope="row">Beveiliging</th><td><a href="security.html">security.md</a></td></tr>
+<tr><th scope="row">Frontends</th><td><a href="frontend.html">frontend.md</a></td></tr>
+<tr><th scope="row">Klantportaal</th><td><a href="bookerportal.html">bookerportal.md</a></td></tr>
+<tr><th scope="row">Betalingen</th><td><a href="mollie.html">mollie.md</a></td></tr>
+<tr><th scope="row">E-mail en templates</th><td><a href="email.html">email.md</a>, <a href="templates.html">templates.md</a></td></tr>
+<tr><th scope="row">Datamodel</th><td><a href="database-model.html">database-model.md</a></td></tr>
+<tr><th scope="row">API-voorbeelden</th><td><a href="api-examples.html">api-examples.md</a></td></tr>
+<tr><th scope="row">Bouwen, testen, deployen</th><td><a href="build-test-deploy.html">build-test-deploy.md</a></td></tr>
+<tr><th scope="row">Openstaande punten</th><td><a href="open-items.html">open-items.md</a></td></tr>
+</tbody></table></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

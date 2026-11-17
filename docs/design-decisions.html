@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ontwerpkeuzes en voortschrijdend inzicht</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Ontwerpkeuzes en voortschrijdend inzicht</h1>
+<p>Waarom iets zo is gebouwd, wat de gebruiker heeft gekozen en wat we onderweg hebben geleerd. Nieuwe sessies: lees dit voordat je een keuze "verbetert". Voeg nieuwe beslissingen onderaan de juiste sectie toe.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-domein-en-datamodel">Domein en datamodel</a></li><li><a href="#h-lijsten-en-acties-15-10-2026">Lijsten en acties (15-10-2026)</a></li><li><a href="#h-backend-patronen">Backend-patronen</a></li><li><a href="#h-templates-en-e-mail">Templates en e-mail</a></li><li><a href="#h-word-templates-uit-de-editor-keuzes-van-de-gebruiker">Word-templates uit de editor (keuzes van de gebruiker)</a></li><li><a href="#h-geleerde-lessen-vallen-waar-je-niet-in-hoeft-te-trappen">Geleerde lessen (vallen waar je niet in hoeft te trappen)</a></li><li><a href="#h-nog-niet-besloten">Nog niet besloten</a></li></ul></nav>
+<h2 id="h-domein-en-datamodel">Domein en datamodel</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Keuze</th><th>Reden / alternatief</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Prospect = <code>Booker</code> met <code>status</code></strong> (V4)</th><td>geen aparte tabel; een prospect wordt zonder verhuizing een gewone boeker. Alternatief (eigen entity) is verworpen: dubbele velden en kopiëren bij omzetten.</td></tr>
+<tr><th scope="row"><strong>Booking: periode en totaal zijn afgeleid</strong> (uit boekingsregels en activiteiten)</th><td>geen dubbele waarheid; geen synchronisatieproblemen.</td></tr>
+<tr><th scope="row"><strong><code>booking_line</code> en <code>booking_activity</code> met eigen UUID</strong> (geen samengestelde sleutel; de koppeltabellen voor adressen e.d. wél)</th><td>een regel is eenvoudig te adresseren in de API (<code>/api/booking-lines/{bookingLineId}</code>).</td></tr>
+<tr><th scope="row"><strong>Mollie-pakket kent geen Booking</strong>; koppeltabel in <code>booking</code> + UNIQUE op <code>mollie_payment_id</code> (V3)</th><td>modules los houden; toch de 1:M-regel op database-niveau afdwingen.</td></tr>
+<tr><th scope="row"><strong>Concept-boeking</strong>: voorgevuld scherm, pas opslaan bij het eerste onderdeel</th><td>de gebruiker wil niet voor elke "even kijken" een lege boeking; zie <code>ensureBookingPersisted</code>. Bij een boeker met een lopende boeking eerst een waarschuwing.</td></tr>
+<tr><th scope="row"><strong>Boekingsnummer</strong> <code>BK-&lt;jaar&gt;-&lt;5 cijfers&gt;</code>, willekeurig en uniek</th><td>simpel en leesbaar voor klanten (ook de inlog van de portal). Uniek over alle organisaties heen.</td></tr>
+<tr><th scope="row"><strong>Document-/e-mailnaam bevat datum en tijd</strong></th><td>hetzelfde sjabloon kan meerdere keren bij één boeking worden ingezet zonder naamconflict.</td></tr>
+</tbody></table></div>
+<h2 id="h-lijsten-en-acties-15-10-2026">Lijsten en acties (15-10-2026)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Keuze</th><th>Reden</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Eén actie-grid voor alle menu-lijsten</strong>; klikken op de regel is uit</th><td>de gebruiker wil expliciete, uniforme iconen (inzien/bewerken/verwijderen) die per authority verschijnen</td></tr>
+<tr><th scope="row"><strong>Actie-iconen en -knoppen krijgen een kleur naar risico</strong> (blauw lezen, groen toevoegen, violet wijzigen, oranje-rood versturen, rood verwijderen)</th><td>keuze van de gebruiker: de kleur volgt de risico's van de actie, ook voor de knoppen met een rand in de kaarten (<em>Bewerken</em>, <em>Toevoegen</em>, <em>Verwijderen</em>). Vastgelegd als CSS-variabelen <code>--act-*</code> plus klassen <code>act-*</code> in beide apps, in plaats van Material's <code>color=&quot;primary&quot;/&quot;warn&quot;</code>, dat maar twee betekenissen kent (en in dit thema voor <code>warn</code> niet eens rood geeft). De volle kleuren knalden te veel, dus er ligt een grijze waas overheen (<code>$act-haze: 35%</code>, in één plek aan te passen); alle kleuren houden 4,5:1 contrast op wit. Zie <a href="frontend.html#actie-iconen-en-hun-risicokleur">frontend.md</a>.</td></tr>
+<tr><th scope="row"><strong>Om-en-om rijtint is zacht (5%) en geldt ook voor de tijdlijn <em>Berichten en documenten</strong></em></th><td>keuze van de gebruiker: de tint (eerst 8%) was te sterk. <code>--ui-primary-faint</code> is nu 5% van de organisatiekleur, lichter dan de tabelkop (12%) en de hover (18%). Lijsten die geen tabel zijn krijgen dezelfde tint met de klasse <code>zebra-rows</code>. Zie <a href="frontend.html#design-compact-en-kleurrijk">frontend.md</a>.</td></tr>
+<tr><th scope="row"><strong>Inzien in een eigen dialoog</strong> (documenten, betalingen, e-mailtemplates, bookers, leveranciers, templates) of een detailpagina met <code>?readonly=true</code></th><td>geen opengeklapt grid; één bestaand scherm hergebruiken i.p.v. aparte read-only schermen</td></tr>
+<tr><th scope="row"><strong>Geen verwijderen voor documenten en betalingen</strong> (een betaling en haar statushistorie worden zelfs in de database nooit verwijderd, ook niet zonder Mollie-id: triggers, V11) (en bewerken van een betaling alleen zolang ze niet bij Mollie bestaat). Voor documenten is dit op 20-10-2026 consequent doorgevoerd: de prullenbak in de tijdlijn, <code>DELETE /api/documents/{id}</code>, <code>DocumentService.delete</code> en de authority <code>DOCUMENT_DELETE</code> (V16) zijn weggehaald; de tijdlijn (commit <code>f07b747</code>) had de knop er per ongeluk in laten komen</th><td>ze zijn de geschiedenis ("de waarheid"); de gebruiker zei: "doe daar eerst maar geen DELETE" en koos op 20-10-2026 voor het volledig verwijderen van de documentfunctie</td></tr>
+<tr><th scope="row"><strong>Leveranciers: volledige detailpagina</strong> (<code>SupplierDetailComponent</code>: gegevens, adressen, gekoppelde accommodaties)</th><td>de oude links naar <code>/suppliers/:id</code> en <code>/suppliers/new</code> bestonden niet als route; de vertalingen voor adressen en accommodaties lagen al klaar. Een tijdelijk dialoog is daarna vervangen</td></tr>
+<tr><th scope="row"><strong>Een koppeling tussen betaling en boeking wordt nooit losgemaakt; herkoppelen kan alleen met reden en wordt geregistreerd</strong> (V12, <code>PAYMENT_RELINK</code> voor ADMIN en MANAGER)</th><td>keuze van de gebruiker (optie 3): niet loskoppelen, wel een geregistreerde herkoppeling (wie, wanneer, van→naar, waarom); betaling en statushistorie blijven onaangeroerd</td></tr>
+<tr><th scope="row"><strong>Eén tijdlijn Berichten en documenten in de boeking, betalingen blijven ook een eigen beheerkaart</strong> (variant B)</th><td>keuze van de gebruiker; pictogram = soort, gekleurde vlakjes = eigenschappen. Verzonden e-mails worden nu bewaard (alleen-toevoegen, V14); opnieuw versturen met dezelfde inhoud; een verzonden mail is alleen intern (niet in het portaal). Nog niet gebouwd: portaalvlag per document en "mail ook als document"</td></tr>
+<tr><th scope="row"><strong>Documenten zijn standaard niet zichtbaar in het boekerportaal; na het aanmaken wijzigt alleen die vlag nog</strong> (V15)</th><td>keuze van de gebruiker: een keuzevakje bij aanmaken (default uit) en daarna alleen die eigenschap wijzigen. Bestaande documenten bleven zichtbaar (V15 zet ze op aan)</td></tr>
+<tr><th scope="row"><strong>De server blokkeert verwijderen als er documenten of betalingen aan hangen</strong> (<code>DeletionGuard</code>, 409)</th><td>keuze van de gebruiker ("niet verwijderen als ze gekoppeld zijn aan documenten, e-mails of betalingen"); de database zou ze anders meeverwijderen. Verzonden e-mails aan de hoofdboeker worden sinds V14 wel bewaard en tellen mee</td></tr>
+<tr><th scope="row"><strong>Boekerportaal: één dashboard in plaats van zes tabbladen</strong> (21-10-2026)</th><td>keuze van de gebruiker: veel informatie tegelijk, zonder te klikken, ook op telefoon en tablet. Responsive met container queries op de pagina; de tijdlijn heeft één model en twee weergaven (balken, agenda). Ontwerp: <a href="voorstel-booker-dashboard.html">voorstel-booker-dashboard.md</a></td></tr>
+<tr><th scope="row"><strong>De fase van de reis (voor, tijdens, na) volgt uit de datums, niet uit de status</strong></th><td>de status zet een medewerker handmatig en kan achterlopen; de datums zijn afgeleid uit de boekingsregels</td></tr>
+<tr><th scope="row"><strong>Eén <code>overview</code>-endpoint voor de kop en de huisstijl; de overige gegevens blijven aparte endpoints</strong></th><td>de kop is in één antwoord klaar, de kaarten laden los en elk met eigen fout- en laadtoestand, zodat één mislukte aanroep de pagina niet breekt</td></tr>
+<tr><th scope="row"><strong>Portal-DTO's voor documenten en betalingen zijn slank; het bestand gaat via <code>…/documents/{id}/content</code></strong></th><td>de lijst stuurde per document de volledige bytes mee en liet auditvelden (<code>createdBy</code>, <code>tenantOrganization</code>) zien aan een externe gebruiker; de huidige betaalstatus rekent nu de server uit</td></tr>
+<tr><th scope="row"><strong>Het portaal toont reizigers met alleen de voornaam, heeft geen boekingstitel en geen adressen of foto's bij verblijven</strong></th><td>open keuzes uit het voorstel; later uit te breiden met een titelveld of adressen in de DTO</td></tr>
+<tr><th scope="row"><strong>Het portaal toont alle e-mails die via RDS aan de hoofdboeker zijn verstuurd, in één lijst met de documenten; betalingen staan daar niet in</strong> (21-10-2026)</th><td>keuze van de gebruiker: de boeker heeft ze immers ontvangen, dus geen vrijgavevlag zoals bij documenten. De lijst bevat alleen onderwerp en datum; de inhoud komt pas bij het openen en staat in een sandbox-iframe. Ontvangersadres en medewerker blijven buiten de DTO</td></tr>
+<tr><th scope="row"><strong>De dashboardstore hoort bij de pagina (<code>providers</code> op het component), niet bij de app</strong></th><td>een volgende klant op hetzelfde apparaat begint zonder gegevens van de vorige</td></tr>
+<tr><th scope="row"><strong>De oude portal-paden verwijzen naar <code>/</code></strong></th><td>Mollie stuurt de klant na het betalen naar <code>/payments</code>; bladwijzers blijven werken</td></tr>
+<tr><th scope="row"><strong>Organisatie verwijderen alleen zonder data</strong> (<code>OrganizationDeletionGuard</code>, 409)</th><td>audit-bevinding: <code>tenant_organization</code> heeft geen FK, dus verwijderen liet verweesde data achter. Gekozen voor blokkeren (niet voor een zware bevestiging + cascade): de beheerder ruimt eerst op. V21 legt dat ook in de database vast met foreign keys <code>ON DELETE RESTRICT</code> (cascade kan niet: betalingen worden nooit verwijderd, V11/V12)</td></tr>
+<tr><th scope="row"><strong>Adressen opruimen met hun eigenaar</strong> (<code>AddressCleanup</code>)</th><td>verwijderen van een booker/accommodatie/leverancier liet adresrijen verweesd achter (link-tabellen cascaden, het adres niet). Alleen adressen die in geen enkele link-tabel meer voorkomen worden verwijderd, dus een gedeeld adres blijft</td></tr>
+<tr><th scope="row"><strong>"Nieuw" vanuit keuzelijsten met alleen code + naam</strong></th><td>je hoeft een boeking niet te verlaten om een accommodatie/leverancier/booker aan te maken; het compacte dialoog vraagt het minimum, de rest volgt op de detailpagina</td></tr>
+<tr><th scope="row"><strong>Dashboard en organisatie-kolommen op authorities</strong> (<code>ORGANIZATION_READ</code>, <code>ACCOUNT_CREATE</code>)</th><td>de UI-regel is "nooit rollen"; geen nieuwe authority nodig (dat zou een migratie vragen). <code>ACCOUNT_CREATE</code> = beheert de gebruikers van de organisatie = manager-overzicht</td></tr>
+</tbody></table></div>
+<h2 id="h-backend-patronen">Backend-patronen</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Keuze</th><th>Reden</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Onveranderlijke entities</strong> met update-constructor</th><td>audit/tenant mogen nooit per ongeluk overschreven worden; geen setters. Consequentie: elke update bouwt een nieuwe instantie op basis van de bestaande.</td></tr>
+<tr><th scope="row"><strong>Enums: lowercase in JSON, naam in DB, hoofdletterongevoelig parsen</strong> (<code>EnumValues</code>)</th><td>de frontend gebruikt lowercase; een onbekende waarde geeft een nette <code>400</code> met de toegestane waarden (voorheen een lelijke "No enum constant"-fout).</td></tr>
+<tr><th scope="row"><strong>Een <code>RuntimeException</code> ⇒ <code>400</code> met <code>message</code></strong></th><td>eenvoudig, en de UI kan de melding tonen. Voor andere codes een aparte handler (409, 413, …).</td></tr>
+<tr><th scope="row"><strong>Alle tenant-controle in de services</strong></th><td>één plek; controllers blijven dun.</td></tr>
+<tr><th scope="row"><strong>Fetch-joins per use-case</strong> (bv. de drie queries van <code>BookingContextService</code>)</th><td>voorkomt lazy-fouten en N+1 zonder <code>open-in-view</code>.</td></tr>
+</tbody></table></div>
+<h2 id="h-templates-en-e-mail">Templates en e-mail</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Keuze</th><th>Reden / geleerde les</th></tr></thead><tbody>
+<tr><th scope="row"><strong>FreeMarker voor e-mail én Word</strong></th><td>één syntax voor gebruikers; xdocreport gebruikt FreeMarker.</td></tr>
+<tr><th scope="row"><strong>Afgeschermde FreeMarker + plat model</strong></th><td>een <code>/security-review</code> toonde dat <code>${&quot;freemarker.template.utility.Execute&quot;?new()(&quot;…&quot;)}</code> een commando op de server uitvoert, ook in geüploade .docx. Opgelost met <code>ALLOWS_NOTHING_RESOLVER</code>, <code>?api</code> uit, geen loader en een <strong>plat model</strong> (maps/lijsten/tekst/getallen) omdat <code>${prospect.class}</code> anders via de bean-wrapper nog bij reflectie kwam. Een Word-template uit de editor krijgt exact dezelfde afscherming.</td></tr>
+<tr><th scope="row"><strong>Eén model voor documenten en e-mail</strong> (<code>BookingContextService</code>)</th><td>geen dubbele code; e-mail werkt nu ook voor een boeking (<code>${booking.*}</code>, <code>${prospect.*}</code> = hoofdboeker). Bijwerking: <code>gender</code> in e-mail is nu de enum-naam (<code>MAN</code>).</td></tr>
+<tr><th scope="row"><strong>TipTap (WYSIWYG)</strong> met variabelen die je sleept</th><td>de eerste versie had een keuzelijst; de gebruiker wilde slepen en een echte editor. Tabellen hebben <strong>inline</strong> stijlen zodat ze ook in preview en verstuurde mail kloppen.</td></tr>
+<tr><th scope="row"><strong>Afbeeldingen in de database</strong> (<code>email_image</code>)</th><td>expliciete keuze van de gebruiker ("Database houden"): geen aparte bestandsopslag beheren. Onveranderlijk; nieuwe versie = nieuwe rij.</td></tr>
+<tr><th scope="row"><strong>Relatief pad in de opgeslagen HTML, absoluut bij versturen</strong></th><td>de editor laadt het via de eigen origin; verandert het publieke adres (IP → domein), dan blijven templates geldig.</td></tr>
+<tr><th scope="row"><strong>Afbeelding publiek uitleveren op onraadbare UUID</strong></th><td>een mailclient heeft geen JWT. Alleen <code>GET</code>, type uit bytes, geen SVG, CSP-header, rate-limit in NGINX.</td></tr>
+<tr><th scope="row"><strong>Afbeeldingen per organisatie, nooit gedeeld</strong></th><td>gebruikerscorrectie: een eerste ontwerp zocht over organisaties heen. Nu: lijst/verwijderen/in-gebruik per organisatie en controle bij het opslaan van een template (<code>TemplateImages</code>).</td></tr>
+<tr><th scope="row"><strong>Verwijderen alleen als ongebruikt</strong> (e-mailtemplates én Word-templates uit de editor)</th><td>keuze "Echt verwijderen als ongebruikt"; al verstuurde mails verliezen hun plaatje (de dialoog waarschuwt).</td></tr>
+<tr><th scope="row"><strong>Bibliotheek als tab in het editorpaneel</strong></th><td>keuze van de gebruiker; slepen of aanklikken.</td></tr>
+<tr><th scope="row"><strong>Menu "E-mailtemplates" op <code>TEMPLATE_READ</code></strong></th><td>EMPLOYEE mag de templates bekijken (alleen-lezen), alleen MANAGER beheert. Versturen gebeurt niet in dit scherm (zie de beslissing hieronder).</td></tr>
+<tr><th scope="row"><strong>E-mail versturen alleen vanuit een boeking of een prospect; documenten maken alleen vanuit een boeking</strong> (20-10-2026)</th><td>keuze van de gebruiker: in <em>E-mailtemplates</em> en <em>Templates</em> maak je alleen templates. De verstuur-dialoog heeft daarom altijd een vast doel (boeking of prospect) en kiest alleen de template; het mail-icoon in <em>Prospects</em> is erbij gekomen zodat een prospect nog steeds te mailen is. De API-endpoints blijven ongewijzigd.</td></tr>
+<tr><th scope="row"><strong><code>EMAIL_SEND</code> als eigen authority</strong></th><td>een template beheren is iets anders dan er mail mee versturen.</td></tr>
+<tr><th scope="row"><strong><code>LoggingEmailSender</code> zolang SMTP niet is geconfigureerd</strong></th><td>veilig lokaal; niets verlaat de machine.</td></tr>
+</tbody></table></div>
+<h2 id="h-word-templates-uit-de-editor-keuzes-van-de-gebruiker">Word-templates uit de editor (keuzes van de gebruiker)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Vraag</th><th>Gekozen</th></tr></thead><tbody>
+<tr><th scope="row">Hoe ontstaat het .docx?</th><td><strong>Echt .docx bij het opslaan</strong> (HTML → <code>HtmlToDocxConverter</code>), HTML bewaard in <code>source_html</code> zodat het opnieuw te bewerken is. Een geüploade .docx blijft bestaan en is niet te bewerken.</td></tr>
+<tr><th scope="row">Herhaalde rijen (reizigers, accommodaties, activiteiten)?</th><td><strong>Ja</strong>, via <code>data-repeat</code>/<code>data-item</code> op een tabel; in Word als echte samenvoegvelden.</td></tr>
+<tr><th scope="row">Afbeeldingen?</th><td>Ja, uit <strong>dezelfde bibliotheek</strong>.</td></tr>
+<tr><th scope="row">Hergebruik?</th><td>Zoveel mogelijk: dezelfde editor, hetzelfde model, dezelfde afbeeldingen, dezelfde herhaalde-tabellenlogica; e-mailtemplates ook voor boekingen.</td></tr>
+</tbody></table></div>
+<h2 id="h-geleerde-lessen-vallen-waar-je-niet-in-hoeft-te-trappen">Geleerde lessen (vallen waar je niet in hoeft te trappen)</h2>
+<p><strong>Word/xdocreport</strong></p>
+<ul><li>Een lus over <strong>tabelrijen</strong> werkt in xdocreport alleen met echte Word-<strong>samenvoegvelden</strong> (<code>@before-row[#list …]</code> en <code>@after-row[/#list]</code>). Platte tekst <code>[#list]</code> werkt alleen voor alinea's. Bewezen met een probe.</li><li>Een <code>.docx</code> zonder <strong>stijlen-onderdeel</strong> laat de PDF-conversie falen ("Expecting one Styles document part"); zonder <strong><code>tblGrid</code></strong> geeft de converter een NullPointerException (en Word verwacht het ook). De converter schrijft beide.</li><li>Een <strong>enkele aanhalingsteken</strong> in een expressie geeft een syntaxfout (xdocreport herschrijft hem naar <code>&amp;apos;</code>); gebruik overal <code>&quot;…&quot;</code>.</li><li>FreeMarker toont <code>1250.00</code> als <code>1.250</code>; gebruik <code>?string(&quot;#,##0.00&quot;)</code> voor bedragen.</li><li>POI maakt een nieuwe tabel al met randen; pas die aan i.p.v. er een tweede set bij te zetten (anders blijft de kleur op "auto").</li><li>Opsommingen en genummerde lijsten vragen om een eigen <code>numbering</code>-onderdeel; elke genummerde lijst heeft een eigen <code>num</code> met <code>startOverride</code>, anders gaat de nummering van de vorige lijst door.</li></ul>
+<p><strong>FreeMarker/e-mail</strong></p>
+<ul><li>Alleen de afscherming op één configuratie zetten is niet genoeg; zowel de e-mail- als de xdocreport-configuratie moeten worden afgeschermd, en de xdocreport-configuratie is <strong>gedeeld</strong> (dus testen kunnen niet "onbeveiligd" vergelijken).</li><li>jsoup laat aanhalingstekens in tekst ongemoeid; herhaalde e-mailtabellen worden daarom via markers omgezet (de HTML-serializer zou <code>&lt;#list&gt;</code> anders escapen).</li></ul>
+<p><strong>Angular</strong></p>
+<ul><li>Een <code>computed()</code> reageert niet op velden die via <code>ngModel</code> veranderen; gebruik een methode of signals (zo'n bug zat in de preview-dialoog).</li><li><code>--include</code> bij <code>ng test</code> slaat de globale vertaal-setup over; neem <code>translate-test.setup.spec.ts</code> altijd mee.</li><li>Firefox' synthetische <code>ClipboardEvent</code> heeft geen bestanden; test plakken via de ProseMirror-handler zelf.</li><li>De TipTap-tabel kreeg <code>repeat</code>/<code>item</code> als extra attributen via <code>Table.extend</code>; zonder deze attributen verdwijnen <code>data-repeat</code>/<code>data-item</code> uit <code>getHTML()</code>.</li></ul>
+<p><strong>Werkwijze</strong></p>
+<ul><li>Een MockMvc-IT draait in één transactie: een delete + GET lijkt dan nog te slagen door de persistence-context. Gebruik <code>flush()</code> + <code>clear()</code> voordat je controleert (zie <code>DeleteVerificationControllerTest</code>).</li><li><code>MatDialogModule</code> in de <code>imports</code> van een standalone component levert een eigen <code>MatDialog</code>; in een spec werkt alleen <code>TestBed.overrideProvider(MatDialog, …)</code>, niet een gewone provider.</li><li>Een Java-editor die tussendoor <code>.class</code>-stubs in <code>target/</code> zet veroorzaakt schijnfouten; zie <a href="build-test-deploy.html">build-test-deploy.md</a>.</li><li>Tests draaien op een eigen, tijdelijke embedded PostgreSQL (Zonky), niet op de lokale <code>rdsdb</code>: zo hangen ze niet af van lokale data en lost dat ook de Postgres.app-toestemming (trust-authenticatie vanuit de Claude-app) op. Gekozen boven Testcontainers omdat daar Docker voor nodig is.</li><li>Een geforceerde "controle op bestaan over organisaties heen" lekt informatie; foutmeldingen mogen niet verraden of iets elders bestaat.</li></ul>
+<h2 id="h-nog-niet-besloten">Nog niet besloten</h2>
+<p>Zie <a href="open-items.html">open-items.md</a>.</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

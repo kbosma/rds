@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database Model</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Database Model</h1>
+<p>Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie <strong>V26</strong>, 17-11-2026). Onderaan staan relatiediagrammen per module. Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).</p>
+<p>De waarheid is het Flyway-schema in <code>src/main/resources/db/migration</code> (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 <code>booker.status</code>, V5 <code>email_template</code>, V6 <code>organization.email_from</code> + <code>EMAIL_SEND</code>, V7 <code>email_image</code>, V8 <code>document_template.source_html</code>, V9 CHECK-constraints op <code>booking.booking_status</code> en <code>booker.status</code>, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 <code>booking_activity</code>: één datum plus van-/tot-tijd, V14 <code>sent_email</code>: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 <code>document.visible_in_portal</code>, V16 de authority <code>DOCUMENT_DELETE</code> vervalt: een document wordt nooit verwijderd, V17 <code>booking.quote_confirmed</code>/<code>quote_confirmed_at</code> en de boekerstatus eenmalig afgeleid uit de boekingen, V18 <code>organization_settings</code>, <code>sent_email.attachment_document_id</code> en de authorities <code>ORGANIZATION_SETTINGS_READ</code>/<code>_UPDATE</code> en <code>QUOTE_SEND</code>, V19 <code>mollie_payment.payment_type</code>/<code>due_date</code> en de betalingsinstellingen in <code>organization_settings</code>, V20 <code>notification</code>, <code>booking_status_change</code> (alleen-toevoegen), betaalstatus <code>CHARGED_BACK</code> en de authorities <code>NOTIFICATION_READ</code>/<code>_UPDATE</code>, <code>BOOKING_STATUS_REVERT</code>(<code>_PAID</code>) en <code>BOOKING_COMPLETE</code>, V21 foreign keys op <code>tenant_organization</code>, V22 <code>organization_id</code> → <code>tenant_organization</code>, <code>account.tenant_organization</code> en auditvelden voor rollen en koppeltabellen, V23 <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>, V24 RDS Platform, rollen per organisatie, systeemrollen, rechtenlogboek, V25 seed Wendy Vos, V26 <code>account.authz_version</code>). Hibernate staat op <code>ddl-auto: validate</code>: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus <strong>altijd</strong> via een nieuwe migratie (nooit een bestaande aanpassen).</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-conventies">Conventies</a></li><li><a href="#h-auth-module">Auth Module</a></li><li><a href="#h-booking-module">Booking Module</a></li><li><a href="#h-mollie-module">Mollie Module</a></li><li><a href="#h-booker-portal-module">Booker Portal Module</a></li><li><a href="#h-e-mail-module">E-mail Module</a></li><li><a href="#h-enums-overzicht">Enums Overzicht</a></li><li><a href="#h-relatiediagrammen">Relatiediagrammen</a></li></ul></nav>
+<h2 id="h-conventies">Conventies</h2>
+<ul><li><strong>Primary keys</strong>: UUID, auto-gegenereerd (<code>@GeneratedValue(strategy = GenerationType.UUID)</code>)</li><li><strong>Naamgeving</strong>: snake_case in database, camelCase in Java</li><li><strong>Multi-tenancy</strong>: Entiteiten met <code>tenant_organization</code> kolom worden gefilterd op organisatie via <code>TenantContext</code>. Sinds V21 is <code>tenant_organization</code> overal een foreign key naar <code>organization</code>: voor bedrijfsgegevens met <code>ON DELETE RESTRICT</code>, voor de gegevens van de organisatie zelf (<code>person</code>, <code>account</code>, <code>organization_theme</code>, <code>organization_settings</code>, V22) met <code>ON DELETE CASCADE</code>; overal met een index</li><li><strong>Audit fields</strong>: <code>created_at</code>, <code>created_by</code>, <code>modified_at</code>, <code>modified_by</code> — automatisch gezet via <code>@PrePersist</code>/<code>@PreUpdate</code></li><li><strong>Enums</strong>: Opgeslagen als <code>STRING</code> (<code>@Enumerated(EnumType.STRING)</code>), JSON-serialisatie in lowercase via <code>@JsonValue</code>/<code>@JsonCreator</code> (parsing via <code>EnumValues.parse</code>, hoofdletterongevoelig, foutmelding met toegestane waarden). In het template-model (documenten/e-mail) is een enum de hoofdletter-naam</li><li><strong>Relaties</strong>: Altijd <code>FetchType.LAZY</code></li><li><strong>Composite keys</strong>: Aparte <code>@IdClass</code> klassen die <code>Serializable</code> implementeren met <code>equals()</code>/<code>hashCode()</code></li></ul>
+<h2 id="h-auth-module">Auth Module</h2>
+<h3 id="h-organization">organization</h3>
+<p>Tenant/organisatie. Dit IS de tenant — heeft zelf geen <code>tenant_organization</code>.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">organization_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">name</th><td>VARCHAR</td><td>NOT NULL</td><td>Naam organisatie</td></tr>
+<tr><th scope="row">mollie_key</th><td>VARCHAR</td><td></td><td>Mollie API key per organisatie. <strong>Wordt nog niet gebruikt</strong> voor API-aanroepen (zie <a href="open-items.html">open-items.md</a>)</td></tr>
+<tr><th scope="row">email_from</th><td>VARCHAR(255)</td><td></td><td>Afzenderadres (<code>From</code>) voor e-mails van deze organisatie (V6)</td></tr>
+<tr><th scope="row">platform</th><td>BOOLEAN</td><td>NOT NULL, default false; uniek waar true (V24)</td><td>De ene platformorganisatie "RDS Platform" met de beheerders; niet te verwijderen (trigger)</td></tr>
+<tr><th scope="row">roles_reviewed_at</th><td>TIMESTAMP</td><td>(V24)</td><td>Wanneer de organisatie nieuwe rechten voor het laatst als gezien markeerde (rollenscherm)</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/Organization.java</code></li><li>DTO: <code>auth/dto/OrganizationDto.java</code></li><li>Mapper: <code>auth/mapper/OrganizationMapper.java</code></li><li>Service: <code>auth/service/OrganizationService.java</code></li><li>ServiceImpl: <code>auth/service/impl/OrganizationServiceImpl.java</code></li><li>Repository: <code>auth/repository/OrganizationRepository.java</code></li><li>Controller: <code>auth/controller/OrganizationController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/organization.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/admin/organization.service.ts</code></li><li>Components: <code>frontend-employee/src/app/features/admin/organization-list.component.ts</code>, <code>organization-detail.component.ts</code>, <code>organization-onboarding.component.ts</code> (wizard: organisatie → persoon → account → rol)</li></ul>
+<h3 id="h-organization-theme">organization_theme</h3>
+<p>Huisstijl per organisatie (één rij per organisatie). De UI gebruikt de kleuren als CSS-variabelen (<code>--theme-primary</code>, <code>--theme-accent</code>, <code>--theme-card-title</code>).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">organization_theme_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL, <strong>UNIQUE</strong></td><td>Organisatie (heette <code>organization_id</code> tot V22)</td></tr>
+<tr><th scope="row">primary_color</th><td>VARCHAR(7)</td><td>NOT NULL</td><td>bv. <code>#1976d2</code></td></tr>
+<tr><th scope="row">accent_color</th><td>VARCHAR(7)</td><td>NOT NULL</td><td></td></tr>
+<tr><th scope="row">logo_url</th><td>VARCHAR(500)</td><td></td><td></td></tr>
+<tr><th scope="row">card_title_color</th><td>VARCHAR(7)</td><td></td><td></td></tr>
+<tr><th scope="row">created_at / created_by / modified_at / modified_by</th><td></td><td></td><td>audit</td></tr>
+</tbody></table></div>
+<p><strong>Bestanden:</strong> <code>auth/entity/OrganizationTheme.java</code>, <code>auth/controller/OrganizationThemeController.java</code> (<code>GET /api/organization-themes/my-theme</code> voor de eigen organisatie); frontend <code>features/admin/organization-theme.component.ts</code>, <code>theme.service.ts</code>.</p>
+<h3 id="h-organization-settings-v18">organization_settings <em>(V18)</em></h3>
+<p>Instellingen per organisatie (één rij per organisatie), nodig om het systeem zelf iets te laten doen. Geen rij = alle keuzes leeg.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">organization_settings_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL, <strong>UNIQUE</strong></td><td>Organisatie (heette <code>organization_id</code> tot V22)</td></tr>
+<tr><th scope="row">quote_document_template_id</th><td>UUID</td><td>FK → document_template ON DELETE SET NULL</td><td>Word-template van de offerte</td></tr>
+<tr><th scope="row">quote_email_template_id</th><td>UUID</td><td>FK → email_template ON DELETE SET NULL</td><td>e-mail die de offerte begeleidt</td></tr>
+<tr><th scope="row">deposit_percentage</th><td>INTEGER</td><td>NOT NULL, default 30, CHECK 1–100 (V19)</td><td>voorschot als percentage van het totaal</td></tr>
+<tr><th scope="row">deposit_weeks_before_departure</th><td>INTEGER</td><td>NOT NULL, default 12 (V19)</td><td>voorschot vervalt zoveel weken voor vertrek</td></tr>
+<tr><th scope="row">balance_weeks_before_departure</th><td>INTEGER</td><td>NOT NULL, default 6, CHECK ≥ 0 en &lt; deposit_weeks (V19)</td><td>restant vervalt zoveel weken voor vertrek</td></tr>
+<tr><th scope="row">payment_email_template_id</th><td>UUID</td><td>FK → email_template ON DELETE SET NULL (V19)</td><td>betaalmail aan de hoofdboeker; leeg = geen mail</td></tr>
+<tr><th scope="row">created_at / created_by / modified_at / modified_by</th><td></td><td></td><td>audit</td></tr>
+</tbody></table></div>
+<p><strong>Bestanden:</strong> <code>settings/entity/OrganizationSettings.java</code>, <code>OrganizationSettingsService(+Impl)</code>, <code>OrganizationSettingsController</code> (<code>GET</code>/<code>PUT /api/organization-settings/mine</code>); frontend <code>features/organization-settings/*</code>. Gebruikt door <code>quote/service/QuoteService</code> (offerte versturen).</p>
+<h3 id="h-person">person</h3>
+<p>Persoon, gekoppeld aan een organisatie.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">person_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">firstname</th><td>VARCHAR</td><td></td><td>Voornaam</td></tr>
+<tr><th scope="row">prefix</th><td>VARCHAR</td><td></td><td>Tussenvoegsel</td></tr>
+<tr><th scope="row">lastname</th><td>VARCHAR</td><td></td><td>Achternaam</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL, index; UNIQUE (person_id, tenant_organization)</td><td>Organisatie (heette <code>organization_id</code> tot V22)</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → Organization</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/Person.java</code></li><li>DTO: <code>auth/dto/PersonDto.java</code></li><li>Mapper: <code>auth/mapper/PersonMapper.java</code></li><li>Service: <code>auth/service/PersonService.java</code></li><li>ServiceImpl: <code>auth/service/impl/PersonServiceImpl.java</code></li><li>Repository: <code>auth/repository/PersonRepository.java</code></li><li>Controller: <code>auth/controller/PersonController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/person.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/admin/person.service.ts</code></li><li>Component: <code>frontend-employee/src/app/features/admin/person-list.component.ts</code> <em>(placeholder)</em></li></ul>
+<h3 id="h-account">account</h3>
+<p>Gebruikersaccount met login-gegevens en optionele TOTP 2FA.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">account_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">user_name</th><td>VARCHAR</td><td>NOT NULL</td><td>Gebruikersnaam</td></tr>
+<tr><th scope="row">password_hash</th><td>VARCHAR</td><td>NOT NULL</td><td>BCrypt hash</td></tr>
+<tr><th scope="row">person_id</th><td>UUID</td><td>FK → person, NOT NULL</td><td>Gekoppelde persoon</td></tr>
+<tr><th scope="row">authz_version</th><td>INTEGER</td><td>NOT NULL, default 0 (V26)</td><td>Rechtenversie; triggers verhogen hem bij elke wijziging in de rechten of toegang van het account (claim <code>av</code> in het token)</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL, index; FK (person_id, tenant_organization) → person ON UPDATE/DELETE CASCADE (V22)</td><td>Altijd gelijk aan de organisatie van de persoon</td></tr>
+<tr><th scope="row">locked</th><td>BOOLEAN</td><td>NOT NULL</td><td>Account vergrendeld</td></tr>
+<tr><th scope="row">must_change_password</th><td>BOOLEAN</td><td>NOT NULL</td><td>Wachtwoord wijzigen verplicht</td></tr>
+<tr><th scope="row">totp_secret</th><td>VARCHAR</td><td></td><td>TOTP geheim (base32)</td></tr>
+<tr><th scope="row">totp_enabled</th><td>BOOLEAN</td><td>NOT NULL</td><td>2FA ingeschakeld</td></tr>
+<tr><th scope="row">totp_verified</th><td>BOOLEAN</td><td>NOT NULL</td><td>2FA setup bevestigd</td></tr>
+<tr><th scope="row">recovery_codes</th><td>TEXT</td><td></td><td>Herstelcodes (comma-separated)</td></tr>
+<tr><th scope="row">expires_at</th><td>TIMESTAMP</td><td></td><td>Verloopt op</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → Person</p>
+<p><strong>Bijzonderheden:</strong> <code>password</code> is een <code>@Transient</code> veld dat automatisch gehashed wordt via BCryptPasswordEncoder in <code>@PrePersist</code>/<code>@PreUpdate</code>. TOTP-velden (<code>totp_enabled</code>, <code>totp_verified</code>) worden default op <code>false</code> gezet in <code>@PrePersist</code>.</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/Account.java</code></li><li>DTO: <code>auth/dto/AccountDto.java</code></li><li>Mapper: <code>auth/mapper/AccountMapper.java</code></li><li>Service: <code>auth/service/AccountService.java</code>, <code>auth/service/TotpService.java</code></li><li>ServiceImpl: <code>auth/service/impl/AccountServiceImpl.java</code>, <code>auth/service/impl/TotpServiceImpl.java</code></li><li>Repository: <code>auth/repository/AccountRepository.java</code></li><li>Controller: <code>auth/controller/AccountController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/account.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/admin/account.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/admin/account-list.component.ts</code></li><li><code>frontend-employee/src/app/features/profile/totp-settings.component.ts</code></li><li><code>frontend-employee/src/app/features/profile/totp-setup-dialog.component.ts</code></li><li><code>frontend-employee/src/app/features/profile/totp-disable-dialog.component.ts</code></li></ul></li></ul>
+<h3 id="h-role">role</h3>
+<p>Rol voor RBAC, per organisatie (V24). Systeemrollen (<code>system_key</code>) zijn vergrendelde kopieën van <code>system_role_template</code>; eigen rollen maakt de organisatie zelf.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">role_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">description</th><td>VARCHAR</td><td>NOT NULL; uniek per organisatie (hoofdletterongevoelig)</td><td>Rolnaam</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL, index; UNIQUE (role_id, tenant_organization)</td><td>Organisatie (V24)</td></tr>
+<tr><th scope="row">system_key</th><td>VARCHAR(20)</td><td>ADMIN/MANAGER/EMPLOYEE of leeg; uniek per organisatie</td><td>Systeemrol; ADMIN alleen in het platform (trigger)</td></tr>
+<tr><th scope="row">created_at / created_by / modified_at / modified_by</th><td></td><td>created_at NOT NULL (V22)</td><td>audit</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/Role.java</code></li><li>DTO: <code>auth/dto/RoleDto.java</code></li><li>Mapper: <code>auth/mapper/RoleMapper.java</code></li><li>Service: <code>auth/service/RoleService.java</code></li><li>ServiceImpl: <code>auth/service/impl/RoleServiceImpl.java</code></li><li>Repository: <code>auth/repository/RoleRepository.java</code></li><li>Controller: <code>auth/controller/RoleController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Component: <code>frontend-employee/src/app/features/admin/role-list.component.ts</code> <em>(placeholder)</em></li></ul>
+<h3 id="h-authority">authority</h3>
+<p>Autorisatie/permissie voor RBAC. Ligt vast: alleen via Flyway, de API is alleen-lezen (V24).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">authority_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">description</th><td>VARCHAR</td><td>NOT NULL</td><td>Permissie-naam</td></tr>
+<tr><th scope="row">domain</th><td>VARCHAR(50)</td><td>NOT NULL (V24)</td><td>Onderwerp voor de rechtenmatrix (BOOKING, PAYMENT, …)</td></tr>
+<tr><th scope="row">tenant_assignable</th><td>BOOLEAN</td><td>NOT NULL (V24)</td><td>Mag een klantorganisatie dit uitdelen?</td></tr>
+<tr><th scope="row">introduced_at</th><td>DATE</td><td>NOT NULL (V24)</td><td>Sinds wanneer de authority bestaat ("nieuwe rechten")</td></tr>
+</tbody></table></div>
+<p><strong>Gerelateerd (V24):</strong> <code>authority_requires</code> (authority_id, required_authority_id: welke rechten een recht nodig heeft) en <code>system_role_template</code> (system_key, authority_id: de inhoud van ADMIN, MANAGER en EMPLOYEE). De functie <code>sync_system_roles()</code> maakt de <code>role_authority</code> van alle systeemrollen gelijk aan het sjabloon.</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/Authority.java</code></li><li>DTO: <code>auth/dto/AuthorityDto.java</code> (met <code>requires</code>)</li><li>Service: <code>auth/service/AuthorityService.java</code></li><li>ServiceImpl: <code>auth/service/impl/AuthorityServiceImpl.java</code></li><li>Repository: <code>auth/repository/AuthorityRepository.java</code></li><li>Controller: <code>auth/controller/AuthorityController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong> <em>Geen</em></p>
+<h3 id="h-authorization-log">authorization_log</h3>
+<p>Rechtenlogboek (V24): wie gaf of nam wanneer welke rol of welk recht. Alleen toevoegen: een trigger weigert wijzigen en verwijderen (behalve samen met de hele organisatie).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">authorization_log_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL, index</td><td></td></tr>
+<tr><th scope="row">action</th><td>VARCHAR(30)</td><td>NOT NULL, CHECK</td><td>ROLE_CREATED, ROLE_RENAMED, ROLE_DELETED, AUTHORITY_ADDED, AUTHORITY_REMOVED, ROLE_ASSIGNED, ROLE_REVOKED</td></tr>
+<tr><th scope="row">role_id / role_name</th><td>UUID / VARCHAR</td><td></td><td>De rol; de naam wordt bewaard</td></tr>
+<tr><th scope="row">authority</th><td>VARCHAR</td><td></td><td>Bij AUTHORITY_*</td></tr>
+<tr><th scope="row">account_id / account_user_name</th><td>UUID / VARCHAR</td><td></td><td>Bij ROLE_ASSIGNED/ROLE_REVOKED</td></tr>
+<tr><th scope="row">details</th><td>TEXT</td><td></td><td>Bijv. oude → nieuwe naam, "vereist voor …"</td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL</td><td></td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong> <code>auth/entity/AuthorizationLog.java</code>, <code>AuthorizationLogService</code>, <code>AuthorizationLogController</code> (<code>GET /api/authorization-log</code>).</p>
+<h3 id="h-account-role-koppeltabel">account_role <em>(koppeltabel)</em></h3>
+<p>Koppeling Account ↔ Role (many-to-many).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">account_id</th><td>UUID</td><td>PK (composite), FK → account, NOT NULL</td><td></td></tr>
+<tr><th scope="row">role_id</th><td>UUID</td><td>PK (composite), FK → role, NOT NULL</td><td></td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>FK → organization ON DELETE CASCADE, NOT NULL; FK (account_id, tenant_organization) → account en FK (role_id, tenant_organization) → role (V24)</td><td>Account en rol horen bij dezelfde organisatie</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/AccountRole.java</code></li><li>IdClass: <code>auth/entity/AccountRoleId.java</code></li><li>DTO: <code>auth/dto/AccountRoleDto.java</code></li><li>Service: <code>auth/service/AccountRoleService.java</code></li><li>Repository: <code>auth/repository/AccountRoleRepository.java</code></li><li>Controller: <code>auth/controller/AccountRoleController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong> <em>Geen</em></p>
+<h3 id="h-role-authority-koppeltabel">role_authority <em>(koppeltabel)</em></h3>
+<p>Koppeling Role ↔ Authority (many-to-many).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">role_id</th><td>UUID</td><td>PK (composite), FK → role, NOT NULL</td><td></td></tr>
+<tr><th scope="row">authority_id</th><td>UUID</td><td>PK (composite), FK → authority, NOT NULL</td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL (V22)</td><td>wie de koppeling wanneer maakte; een koppeling wijzigt nooit</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>auth/entity/RoleAuthority.java</code></li><li>IdClass: <code>auth/entity/RoleAuthorityId.java</code></li><li>DTO: <code>auth/dto/RoleAuthorityDto.java</code></li><li>Service: <code>auth/service/RoleAuthorityService.java</code></li><li>Repository: <code>auth/repository/RoleAuthorityRepository.java</code></li><li>Controller: <code>auth/controller/RoleAuthorityController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong> <em>Geen</em></p>
+<h2 id="h-booking-module">Booking Module</h2>
+<h3 id="h-booking">booking</h3>
+<p>Hoofdentiteit voor boekingen. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">booker_id</th><td>UUID</td><td>FK → booker</td><td>Gekoppelde booker</td></tr>
+<tr><th scope="row">booking_number</th><td>VARCHAR</td><td>NOT NULL</td><td>Boekingnummer</td></tr>
+<tr><th scope="row">booking_status</th><td>VARCHAR</td><td>NOT NULL, CHECK <code>booking_status_check</code> (V9), enum BookingStatus</td><td>Status</td></tr>
+<tr><th scope="row">quote_confirmed</th><td>BOOLEAN</td><td>NOT NULL, default FALSE (V17)</td><td>de hoofdboeker heeft de offerte bevestigd</td></tr>
+<tr><th scope="row">quote_confirmed_at</th><td>TIMESTAMP</td><td>CHECK <code>booking_quote_confirmed_check</code>: gevuld precies als <code>quote_confirmed</code> (V17)</td><td>moment van bevestigen, gezet door de server</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Berekende velden (niet in database, <code>@Transient</code>):</strong></p>
+<ul><li><code>fromDate</code> (LocalDate) — kleinste <code>fromDate</code> van alle gekoppelde BookingLines</li><li><code>untilDate</code> (LocalDate) — grootste <code>untilDate</code> van alle gekoppelde BookingLines</li><li><code>totalSum</code> (BigDecimal) — som van alle <code>BookingLine.price</code> + alle <code>BookingActivity.totalPrice</code></li></ul>
+<p><strong>Relaties:</strong></p>
+<ul><li>OneToOne → Booker (optional)</li><li>OneToMany ← Traveler (mappedBy="booking")</li><li>OneToMany ← BookingLine (mappedBy="booking")</li><li>OneToMany ← BookingActivity (mappedBy="booking")</li></ul>
+<p><strong>Enum BookingStatus:</strong> <code>AANVRAAG</code>, <code>OFFERTE</code>, <code>BOEKING</code>, <code>VOORSCHOT</code>, <code>BETAALD</code>, <code>OPREIS</code>, <code>WEERTHUIS</code>, <code>AFGEROND</code>. De database dwingt dezelfde lijst af met een CHECK-constraint (V9); een status toevoegen of hernoemen vraagt dus een migratie (zie de uitleg bovenin <code>V9__status_check_constraints.sql</code>) en <code>StatusConstraintsTest</code> faalt als enum en constraint uit elkaar lopen.</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Booking.java</code></li><li>DTO: <code>booking/dto/BookingDto.java</code></li><li>Mapper: <code>booking/mapper/BookingMapper.java</code></li><li>Service: <code>booking/service/BookingService.java</code></li><li>ServiceImpl: <code>booking/service/impl/BookingServiceImpl.java</code></li><li>Repository: <code>booking/repository/BookingRepository.java</code></li><li>Controller: <code>booking/controller/BookingController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/booking.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/bookings/booking.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/bookings/booking-list.component.ts</code> (lijst met filters)</li><li><code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (detail/bewerken)</li><li><code>frontend-employee/src/app/features/dashboard/dashboard.component.ts</code> (dashboard)</li></ul></li></ul>
+<h3 id="h-booker">booker</h3>
+<p>Boeker/opdrachtgever. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booker_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">firstname</th><td>VARCHAR</td><td></td><td>Voornaam</td></tr>
+<tr><th scope="row">prefix</th><td>VARCHAR</td><td></td><td>Tussenvoegsel</td></tr>
+<tr><th scope="row">lastname</th><td>VARCHAR</td><td></td><td>Achternaam</td></tr>
+<tr><th scope="row">callsign</th><td>VARCHAR</td><td></td><td>Roepnaam</td></tr>
+<tr><th scope="row">telephone</th><td>VARCHAR</td><td></td><td>Telefoon</td></tr>
+<tr><th scope="row">emailaddress</th><td>VARCHAR</td><td></td><td>E-mailadres</td></tr>
+<tr><th scope="row">gender</th><td>VARCHAR</td><td>enum Gender</td><td>Geslacht</td></tr>
+<tr><th scope="row">birthdate</th><td>DATE</td><td></td><td>Geboortedatum</td></tr>
+<tr><th scope="row">initials</th><td>VARCHAR</td><td></td><td>Initialen</td></tr>
+<tr><th scope="row">status</th><td>VARCHAR</td><td>NOT NULL, CHECK <code>booker_status_check</code> (V9)</td><td>enum <code>BookerStatus</code> (V4)</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Enum Gender:</strong> <code>MAN</code>, <code>VROUW</code>, <code>ANDERS</code></p>
+<p><strong>Enum BookerStatus:</strong> <code>PROSPECT</code> (potentiële klant, nog geen boeking), <code>ACTIVE</code> (reguliere boeker), <code>NIETACTIEF</code> (alle boekingen afgerond). De status wordt <strong>afgeleid</strong> uit de boekingen (<code>BookerStatusUpdater</code>, V17): geen boeking <code>PROSPECT</code>, een niet-afgeronde boeking <code>ACTIVE</code>, alles afgerond <code>NIETACTIEF</code>; de API negeert een meegestuurde status. Een prospect is dus <strong>geen aparte tabel</strong> maar een Booker met status <code>PROSPECT</code>; bestaande bookers zijn bij V4 <code>ACTIVE</code> geworden. <code>GET /api/bookers?status=prospect</code> filtert.</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Booker.java</code></li><li>DTO: <code>booking/dto/BookerDto.java</code></li><li>Mapper: <code>booking/mapper/BookerMapper.java</code></li><li>Service: <code>booking/service/BookerService.java</code></li><li>ServiceImpl: <code>booking/service/impl/BookerServiceImpl.java</code></li><li>Repository: <code>booking/repository/BookerRepository.java</code></li><li>Controller: <code>booking/controller/BookerController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/booker.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/bookers/booker.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/bookers/booker-list.component.ts</code> (lijst)</li><li><code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (booker-info in boeking)</li><li><code>frontend-booker/src/app/features/dashboard/dashboard.component.ts</code> (booker portal)</li></ul></li></ul>
+<h3 id="h-traveler">traveler</h3>
+<p>Reiziger, gekoppeld aan een boeking. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">traveler_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking, NOT NULL</td><td>Boeking</td></tr>
+<tr><th scope="row">firstname</th><td>VARCHAR</td><td></td><td>Voornaam</td></tr>
+<tr><th scope="row">prefix</th><td>VARCHAR</td><td></td><td>Tussenvoegsel</td></tr>
+<tr><th scope="row">lastname</th><td>VARCHAR</td><td></td><td>Achternaam</td></tr>
+<tr><th scope="row">gender</th><td>VARCHAR</td><td>enum Gender</td><td>Geslacht</td></tr>
+<tr><th scope="row">birthdate</th><td>DATE</td><td></td><td>Geboortedatum</td></tr>
+<tr><th scope="row">initials</th><td>VARCHAR</td><td></td><td>Initialen</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → Booking</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Traveler.java</code></li><li>DTO: <code>booking/dto/TravelerDto.java</code></li><li>Mapper: <code>booking/mapper/TravelerMapper.java</code></li><li>Service: <code>booking/service/TravelerService.java</code></li><li>ServiceImpl: <code>booking/service/impl/TravelerServiceImpl.java</code></li><li>Repository: <code>booking/repository/TravelerRepository.java</code></li><li>Controller: <code>booking/controller/TravelerController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/traveler.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/travelers/traveler.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/travelers/traveler-list.component.ts</code> <em>(placeholder)</em></li><li><code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (reizigers-tabel)</li></ul></li></ul>
+<h3 id="h-accommodation">accommodation</h3>
+<p>Accommodatie. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">accommodation_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">key</th><td>VARCHAR</td><td>NOT NULL</td><td>Unieke sleutel</td></tr>
+<tr><th scope="row">name</th><td>VARCHAR</td><td>NOT NULL</td><td>Naam</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Accommodation.java</code></li><li>DTO: <code>booking/dto/AccommodationDto.java</code></li><li>Mapper: <code>booking/mapper/AccommodationMapper.java</code></li><li>Service: <code>booking/service/AccommodationService.java</code></li><li>ServiceImpl: <code>booking/service/impl/AccommodationServiceImpl.java</code></li><li>Repository: <code>booking/repository/AccommodationRepository.java</code></li><li>Controller: <code>booking/controller/AccommodationController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/accommodation.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/accommodations/accommodation.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/accommodations/accommodation-list.component.ts</code> (kaartweergave)</li><li><code>frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts</code> (detail)</li></ul></li></ul>
+<h3 id="h-supplier">supplier</h3>
+<p>Leverancier. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">supplier_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">key</th><td>VARCHAR</td><td>NOT NULL</td><td>Unieke sleutel</td></tr>
+<tr><th scope="row">name</th><td>VARCHAR</td><td>NOT NULL</td><td>Naam</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Supplier.java</code></li><li>DTO: <code>booking/dto/SupplierDto.java</code></li><li>Mapper: <code>booking/mapper/SupplierMapper.java</code></li><li>Service: <code>booking/service/SupplierService.java</code></li><li>ServiceImpl: <code>booking/service/impl/SupplierServiceImpl.java</code></li><li>Repository: <code>booking/repository/SupplierRepository.java</code></li><li>Controller: <code>booking/controller/SupplierController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/supplier.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/suppliers/supplier.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/suppliers/supplier-list.component.ts</code> <em>(placeholder)</em></li><li><code>frontend-employee/src/app/features/accommodations/accommodation-list.component.ts</code> (leveranciernaam bij accommodatie)</li><li><code>frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts</code> (leverancier-details)</li></ul></li></ul>
+<h3 id="h-activity">activity</h3>
+<p>Activiteit (tour, excursie, ticket, transfer). Multi-tenant. Referentie-entity die door MANAGERs beheerd wordt.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">activity_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">name</th><td>VARCHAR</td><td>NOT NULL</td><td>Naam</td></tr>
+<tr><th scope="row">description</th><td>VARCHAR</td><td></td><td>Omschrijving</td></tr>
+<tr><th scope="row">activity_type</th><td>VARCHAR</td><td>NOT NULL, enum ActivityType</td><td>Type activiteit</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Enum ActivityType:</strong> <code>TOUR</code>, <code>EXCURSIE</code>, <code>TICKET</code>, <code>TRANSFER</code></p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Activity.java</code></li><li>Enum: <code>booking/entity/ActivityType.java</code></li><li>DTO: <code>booking/dto/ActivityDto.java</code></li><li>Mapper: <code>booking/mapper/ActivityMapper.java</code></li><li>Service: <code>booking/service/ActivityService.java</code></li><li>ServiceImpl: <code>booking/service/impl/ActivityServiceImpl.java</code></li><li>Repository: <code>booking/repository/ActivityRepository.java</code></li><li>Controller: <code>booking/controller/ActivityController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/activity.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/activities/activity.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/activities/activity-list.component.ts</code> (lijst)</li><li><code>frontend-employee/src/app/features/activities/activity-detail.component.ts</code> (detail/bewerken)</li></ul></li></ul>
+<h3 id="h-address">address</h3>
+<p>Adres met adresrol. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">address_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">street</th><td>VARCHAR</td><td></td><td>Straat</td></tr>
+<tr><th scope="row">housenumber</th><td>INTEGER</td><td></td><td>Huisnummer</td></tr>
+<tr><th scope="row">housenumber_addition</th><td>VARCHAR</td><td></td><td>Toevoeging</td></tr>
+<tr><th scope="row">postalcode</th><td>VARCHAR</td><td></td><td>Postcode</td></tr>
+<tr><th scope="row">city</th><td>VARCHAR</td><td></td><td>Plaats</td></tr>
+<tr><th scope="row">country</th><td>VARCHAR</td><td></td><td>Land</td></tr>
+<tr><th scope="row">addressrole</th><td>VARCHAR</td><td>NOT NULL, enum AddressRole</td><td>Adresrol</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Enum AddressRole:</strong> <code>WOON</code>, <code>FACTUUR</code>, <code>ACCOMMODATIE</code>, <code>LEVERANCIER</code></p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Address.java</code></li><li>DTO: <code>booking/dto/AddressDto.java</code></li><li>Mapper: <code>booking/mapper/AddressMapper.java</code></li><li>Service: <code>booking/service/AddressService.java</code></li><li>ServiceImpl: <code>booking/service/impl/AddressServiceImpl.java</code></li><li>Repository: <code>booking/repository/AddressRepository.java</code></li><li>Controller: <code>booking/controller/AddressController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/address.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/accommodations/address.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/accommodations/accommodation-list.component.ts</code></li><li><code>frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts</code></li></ul></li></ul>
+<h3 id="h-document">document</h3>
+<p>Document (binair), gekoppeld aan een boeking. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">document_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">visible_in_portal</th><td>BOOLEAN</td><td>NOT NULL, default FALSE</td><td>Of de boeker het document in het boekerportaal ziet (V15). Het enige veld dat na het aanmaken nog wijzigt (<code>PUT /api/documents/{id}</code>); bestaande documenten zijn bij V15 op TRUE gezet zodat er niets verdwijnt</td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking, NOT NULL</td><td>Boeking</td></tr>
+<tr><th scope="row">displayname</th><td>VARCHAR</td><td>NOT NULL</td><td>Weergavenaam</td></tr>
+<tr><th scope="row">document</th><td>BYTEA</td><td>@Lob</td><td>Binaire inhoud</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → Booking</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/Document.java</code></li><li>DTO: <code>booking/dto/DocumentDto.java</code></li><li>Mapper: <code>booking/mapper/DocumentMapper.java</code></li><li>Service: <code>booking/service/DocumentService.java</code></li><li>ServiceImpl: <code>booking/service/impl/DocumentServiceImpl.java</code></li><li>Repository: <code>booking/repository/DocumentRepository.java</code></li><li>Controller: <code>booking/controller/DocumentController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/document.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/documents/document.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/documents/document-upload-dialog.component.ts</code></li><li><code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (tijdlijn Berichten en documenten via <code>booking-messages-card.component.ts</code>; het menu-item Documenten met een eigen lijst bestaat niet meer)</li></ul></li><li>Booker portal: <code>frontend-booker/src/app/features/documents/documents.component.ts</code></li></ul>
+<h3 id="h-document-template">document_template</h3>
+<p>Documenttemplate (DOCX) voor het genereren van documenten met XDocReport. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">document_template_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">name</th><td>VARCHAR</td><td>NOT NULL</td><td>Naam</td></tr>
+<tr><th scope="row">description</th><td>VARCHAR</td><td></td><td>Omschrijving</td></tr>
+<tr><th scope="row">template_data</th><td>BYTEA</td><td>@Lob</td><td>DOCX template (binair)</td></tr>
+<tr><th scope="row">source_html</th><td>TEXT</td><td>nullable</td><td>Alleen bij een template uit de editor: de HTML waaruit <code>template_data</code> bij het opslaan is gebouwd (zie <a href="templates.html">templates.md</a>); <code>NULL</code> bij een geüploade .docx. Migratie <code>V8__document_template_source_html.sql</code></td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/DocumentTemplate.java</code></li><li>DTO: <code>booking/dto/DocumentTemplateDto.java</code></li><li>Mapper: <code>booking/mapper/DocumentTemplateMapper.java</code></li><li>Service: <code>booking/service/DocumentTemplateService.java</code></li><li>ServiceImpl: <code>booking/service/impl/DocumentTemplateServiceImpl.java</code></li><li>Repository: <code>booking/repository/DocumentTemplateRepository.java</code></li><li>Controller: <code>booking/controller/DocumentTemplateController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/document-template.model.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/templates/template-list.component.ts</code></li><li><code>frontend-employee/src/app/features/templates/template-detail.component.ts</code></li></ul></li></ul>
+<h3 id="h-booking-line">booking_line</h3>
+<p>Boekingsregel: koppeling Booking ↔ Accommodation ↔ Supplier met eigen UUID PK en extra velden. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booking_line_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking, NOT NULL</td><td>Boeking</td></tr>
+<tr><th scope="row">accommodation_id</th><td>UUID</td><td>FK → accommodation, NOT NULL</td><td>Accommodatie</td></tr>
+<tr><th scope="row">supplier_id</th><td>UUID</td><td>FK → supplier, NOT NULL</td><td>Leverancier</td></tr>
+<tr><th scope="row">from_date</th><td>DATE</td><td></td><td>Startdatum</td></tr>
+<tr><th scope="row">until_date</th><td>DATE</td><td></td><td>Einddatum</td></tr>
+<tr><th scope="row">price</th><td>DECIMAL</td><td></td><td>Prijs</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → Booking, ManyToOne → Accommodation, ManyToOne → Supplier</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/BookingLine.java</code></li><li>DTO: <code>booking/dto/BookingLineDto.java</code></li><li>Mapper: <code>booking/mapper/BookingLineMapper.java</code></li><li>Service: <code>booking/service/BookingLineService.java</code></li><li>ServiceImpl: <code>booking/service/impl/BookingLineServiceImpl.java</code></li><li>Repository: <code>booking/repository/BookingLineRepository.java</code></li><li>Controller: <code>booking/controller/BookingLineController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/booking-line.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/bookings/booking-line.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (boekingsregels)</li><li><code>frontend-employee/src/app/features/bookings/booking-line-dialog.component.ts</code> (add/edit dialog)</li></ul></li></ul>
+<h3 id="h-booking-activity">booking_activity</h3>
+<p>Boekingsactiviteit: koppeling Booking ↔ Activity met eigen UUID PK en extra velden (n:m, dezelfde activiteit kan meerdere keren in een booking). Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booking_activity_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking, NOT NULL</td><td>Boeking</td></tr>
+<tr><th scope="row">activity_id</th><td>UUID</td><td>FK → activity, NOT NULL</td><td>Activiteit</td></tr>
+<tr><th scope="row">activity_date</th><td>DATE</td><td></td><td>Dag waarop de activiteit plaatsvindt (API: verplicht)</td></tr>
+<tr><th scope="row">from_time</th><td>TIME</td><td></td><td>Van-tijd, 24-uurs (API: verplicht)</td></tr>
+<tr><th scope="row">until_time</th><td>TIME</td><td></td><td>Tot-tijd, 24-uurs (API: verplicht)</td></tr>
+<tr><th scope="row">meeting_point</th><td>VARCHAR</td><td></td><td>Trefpunt</td></tr>
+<tr><th scope="row">total_price</th><td>DECIMAL</td><td></td><td>Totaalprijs</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → Booking, ManyToOne → Activity</p>
+<p><strong>Bijzonderheden:</strong> <code>totalPrice</code> telt mee in de berekende <code>Booking.totalSum</code>. Een activiteit vindt altijd op één dag plaats; er is geen einddatum. Is <code>until_time</code> &lt; <code>from_time</code>, dan eindigt de activiteit de volgende dag (nachtelijk). De entity biedt daarvoor <code>getStartDateTime()</code>/<code>getEndDateTime()</code>; de boekerportal (<code>fromDate</code>/<code>untilDate</code> als datum-tijd) en de document-/e-mailtemplates (<code>bookingActivities[].fromDate</code>/<code>untilDate</code>) krijgen die afgeleide waarden, dus hun contract blijft gelijk. Index <code>idx_booking_activity_booking_date (booking_id, activity_date, from_time)</code>. V13 vult de nieuwe kolommen uit de oude <code>from_date</code>/<code>until_date</code> (timestamps, daarna verwijderd); een einddatum meer dan één dag na de start gaat daarbij verloren.</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/BookingActivity.java</code></li><li>DTO: <code>booking/dto/BookingActivityDto.java</code></li><li>Mapper: <code>booking/mapper/BookingActivityMapper.java</code></li><li>Service: <code>booking/service/BookingActivityService.java</code></li><li>ServiceImpl: <code>booking/service/impl/BookingActivityServiceImpl.java</code></li><li>Repository: <code>booking/repository/BookingActivityRepository.java</code></li><li>Controller: <code>booking/controller/BookingActivityController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/booking-activity.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/bookings/booking-activity.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (activiteiten-tabel)</li><li><code>frontend-employee/src/app/features/bookings/booking-activity-dialog.component.ts</code> (add/edit dialog)</li></ul></li><li>Booker portal: <code>frontend-booker/src/app/features/activities/activities.component.ts</code></li></ul>
+<h3 id="h-booker-address-koppeltabel">booker_address <em>(koppeltabel)</em></h3>
+<p>Koppeling Booker ↔ Address.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booker_id</th><td>UUID</td><td>PK (composite), FK → booker, NOT NULL</td><td></td></tr>
+<tr><th scope="row">address_id</th><td>UUID</td><td>PK (composite), FK → address, NOT NULL</td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL (V22)</td><td>wie de koppeling wanneer maakte; een koppeling wijzigt nooit</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/BookerAddress.java</code></li><li>IdClass: <code>booking/entity/BookerAddressId.java</code></li><li>DTO: <code>booking/dto/BookerAddressDto.java</code></li><li>Mapper: <code>booking/mapper/BookerAddressMapper.java</code></li><li>Service: <code>booking/service/BookerAddressService.java</code></li><li>ServiceImpl: <code>booking/service/impl/BookerAddressServiceImpl.java</code></li><li>Repository: <code>booking/repository/BookerAddressRepository.java</code></li><li>Controller: <code>booking/controller/BookerAddressController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong> <em>Geen frontend model</em></p>
+<h3 id="h-accommodation-address-koppeltabel">accommodation_address <em>(koppeltabel)</em></h3>
+<p>Koppeling Accommodation ↔ Address.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">accommodation_id</th><td>UUID</td><td>PK (composite), FK → accommodation, NOT NULL</td><td></td></tr>
+<tr><th scope="row">address_id</th><td>UUID</td><td>PK (composite), FK → address, NOT NULL</td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL (V22)</td><td>wie de koppeling wanneer maakte; een koppeling wijzigt nooit</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/AccommodationAddress.java</code></li><li>IdClass: <code>booking/entity/AccommodationAddressId.java</code></li><li>DTO: <code>booking/dto/AccommodationAddressDto.java</code></li><li>Mapper: <code>booking/mapper/AccommodationAddressMapper.java</code></li><li>Service: <code>booking/service/AccommodationAddressService.java</code></li><li>ServiceImpl: <code>booking/service/impl/AccommodationAddressServiceImpl.java</code></li><li>Repository: <code>booking/repository/AccommodationAddressRepository.java</code></li><li>Controller: <code>booking/controller/AccommodationAddressController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/accommodation-address.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/accommodations/accommodation-address.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/accommodations/accommodation-list.component.ts</code></li><li><code>frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts</code></li></ul></li></ul>
+<h3 id="h-accommodation-supplier-koppeltabel">accommodation_supplier <em>(koppeltabel)</em></h3>
+<p>Koppeling Accommodation ↔ Supplier.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">accommodation_id</th><td>UUID</td><td>PK (composite), FK → accommodation, NOT NULL</td><td></td></tr>
+<tr><th scope="row">supplier_id</th><td>UUID</td><td>PK (composite), FK → supplier, NOT NULL</td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL (V22)</td><td>wie de koppeling wanneer maakte; een koppeling wijzigt nooit</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/AccommodationSupplier.java</code></li><li>IdClass: <code>booking/entity/AccommodationSupplierId.java</code></li><li>DTO: <code>booking/dto/AccommodationSupplierDto.java</code></li><li>Mapper: <code>booking/mapper/AccommodationSupplierMapper.java</code></li><li>Service: <code>booking/service/AccommodationSupplierService.java</code></li><li>ServiceImpl: <code>booking/service/impl/AccommodationSupplierServiceImpl.java</code></li><li>Repository: <code>booking/repository/AccommodationSupplierRepository.java</code></li><li>Controller: <code>booking/controller/AccommodationSupplierController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/accommodation-supplier.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/accommodations/accommodation-supplier.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/accommodations/accommodation-list.component.ts</code></li><li><code>frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts</code></li></ul></li></ul>
+<h3 id="h-supplier-address-koppeltabel">supplier_address <em>(koppeltabel)</em></h3>
+<p>Koppeling Supplier ↔ Address.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">supplier_id</th><td>UUID</td><td>PK (composite), FK → supplier, NOT NULL</td><td></td></tr>
+<tr><th scope="row">address_id</th><td>UUID</td><td>PK (composite), FK → address, NOT NULL</td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL (V22)</td><td>wie de koppeling wanneer maakte; een koppeling wijzigt nooit</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/SupplierAddress.java</code></li><li>IdClass: <code>booking/entity/SupplierAddressId.java</code></li><li>DTO: <code>booking/dto/SupplierAddressDto.java</code></li><li>Mapper: <code>booking/mapper/SupplierAddressMapper.java</code></li><li>Service: <code>booking/service/SupplierAddressService.java</code></li><li>ServiceImpl: <code>booking/service/impl/SupplierAddressServiceImpl.java</code></li><li>Repository: <code>booking/repository/SupplierAddressRepository.java</code></li><li>Controller: <code>booking/controller/SupplierAddressController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/supplier-address.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/accommodations/supplier-address.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/accommodations/accommodation-list.component.ts</code></li><li><code>frontend-employee/src/app/features/accommodations/accommodation-detail.component.ts</code></li></ul></li></ul>
+<h3 id="h-sent-email-alleen-toevoegen-v14">sent_email <em>(alleen-toevoegen, V14)</em></h3>
+<p>Verzonden e-mail aan de hoofdboeker van een boeking, bewaard zoals verstuurd.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">sent_email_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking ON DELETE RESTRICT, NOT NULL</td><td></td></tr>
+<tr><th scope="row">from_address / to_address</th><td>VARCHAR(255)</td><td>NOT NULL</td><td></td></tr>
+<tr><th scope="row">subject</th><td>TEXT</td><td>NOT NULL</td><td>gemergd onderwerp</td></tr>
+<tr><th scope="row">body_html</th><td>TEXT</td><td>NOT NULL</td><td>gemergde HTML met absolute afbeeldings-URL's</td></tr>
+<tr><th scope="row">resent_from_id</th><td>UUID</td><td>FK → sent_email</td><td>gevuld bij opnieuw versturen</td></tr>
+<tr><th scope="row">attachment_document_id</th><td>UUID</td><td>FK → document ON DELETE RESTRICT (V18)</td><td>document dat als bijlage meeging (bv. de offerte-PDF); leeg zonder bijlage</td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>NOT NULL /</td><td>wie en wanneer</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL</td><td>uit de boeking</td></tr>
+</tbody></table></div>
+<p>Triggers <code>forbid_sent_email_change</code> (UPDATE/DELETE/TRUNCATE). Backend: <code>email/entity/SentEmail</code>, <code>SentEmailRepository</code>, <code>SentEmailService(+Impl)</code>, <code>SentEmailController</code>, <code>SentEmailDto</code>.</p>
+<h3 id="h-notification-v20">notification <em>(V20)</em></h3>
+<p>Notificatie bij een boeking: iets dat een medewerker moet oppakken. Wordt afgehandeld, nooit verwijderd.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">notification_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking ON DELETE RESTRICT, NOT NULL</td><td></td></tr>
+<tr><th scope="row">kind</th><td>VARCHAR(30)</td><td>NOT NULL, CHECK <code>ALLES_BETAALD</code>, <code>OP_REIS</code>, <code>WEER_THUIS</code>, <code>TERUGBOEKING</code></td><td>soort</td></tr>
+<tr><th scope="row">title</th><td>VARCHAR(255)</td><td>NOT NULL</td><td>titel</td></tr>
+<tr><th scope="row">notified_at</th><td>TIMESTAMP</td><td>NOT NULL</td><td>datum</td></tr>
+<tr><th scope="row">handled</th><td>BOOLEAN</td><td>NOT NULL, default FALSE; CHECK gevuld precies als handled_at</td><td>afgehandeld</td></tr>
+<tr><th scope="row">handled_at / handled_by</th><td>TIMESTAMP / UUID</td><td></td><td>wanneer en door wie afgehandeld</td></tr>
+<tr><th scope="row">created_at / created_by / tenant_organization</th><td></td><td></td><td>audit en tenant</td></tr>
+</tbody></table></div>
+<p>Backend: <code>bookingstatus/entity/Notification</code>, <code>NotificationService(+Impl)</code>, <code>NotificationController</code> (<code>/api/notifications/open</code>, <code>/booking/{id}</code>, <code>/{id}/handle</code>).</p>
+<h3 id="h-booking-status-change-alleen-toevoegen-v20">booking_status_change <em>(alleen-toevoegen, V20)</em></h3>
+<p>Statusgeschiedenis van een boeking. Triggers weigeren <code>UPDATE</code>/<code>DELETE</code>/<code>TRUNCATE</code>.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booking_status_change_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>FK → booking ON DELETE RESTRICT, NOT NULL</td><td></td></tr>
+<tr><th scope="row">from_status / to_status</th><td>VARCHAR(20)</td><td>NOT NULL, verschillend</td><td>van en naar</td></tr>
+<tr><th scope="row">automatic</th><td>BOOLEAN</td><td>NOT NULL</td><td>door het systeem (true) of een medewerker</td></tr>
+<tr><th scope="row">reason</th><td>TEXT</td><td>NOT NULL, minstens 5 tekens</td><td>reden</td></tr>
+<tr><th scope="row">created_at / created_by / tenant_organization</th><td></td><td></td><td>wie en wanneer</td></tr>
+</tbody></table></div>
+<p>Backend: <code>bookingstatus/entity/BookingStatusChange</code>, <code>BookingStatusRecorder</code>, <code>BookingStatusService(+Impl)</code>, <code>BookingStatusController</code>.</p>
+<h3 id="h-booking-mollie-payment-koppeltabel">booking_mollie_payment <em>(koppeltabel)</em></h3>
+<p>Koppeling Booking ↔ MolliePayment.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">booking_id</th><td>UUID</td><td>PK (composite), FK → booking, NOT NULL</td><td></td></tr>
+<tr><th scope="row">mollie_payment_id</th><td>UUID</td><td>PK (composite), FK → mollie_payment, NOT NULL, UNIQUE</td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>created_at NOT NULL (V22)</td><td>wie de koppeling wanneer maakte; een koppeling wijzigt nooit</td></tr>
+</tbody></table></div>
+<p>Een koppeling wordt nooit losgemaakt (V12: triggers weigeren <code>DELETE</code>/<code>TRUNCATE</code>); <code>mollie_payment_id</code> is onveranderlijk en <code>booking_id</code> wijzigt alleen via een herkoppeling met reden (zie hieronder).</p>
+<h3 id="h-booking-mollie-payment-relink-alleen-toevoegen-v12">booking_mollie_payment_relink <em>(alleen-toevoegen, V12)</em></h3>
+<p>Registratie van elke herkoppeling van een betaling naar een andere boeking.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">relink_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">relink_seq</th><td>BIGSERIAL</td><td>UNIQUE</td><td>volgorde, bepaalt de nieuwste regel voor de trigger</td></tr>
+<tr><th scope="row">mollie_payment_id</th><td>UUID</td><td>FK → mollie_payment ON DELETE RESTRICT, NOT NULL</td><td></td></tr>
+<tr><th scope="row">from_booking_id / to_booking_id</th><td>UUID</td><td>FK → booking ON DELETE RESTRICT, NOT NULL, CHECK from &lt;&gt; to</td><td></td></tr>
+<tr><th scope="row">reason</th><td>TEXT</td><td>NOT NULL, CHECK <code>char_length(btrim(reason)) &gt;= 5</code></td><td></td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td>NOT NULL</td><td>wie en wanneer</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL</td><td>uit de betaling</td></tr>
+</tbody></table></div>
+<p>Triggers: <code>forbid_relink_change</code> (UPDATE/DELETE/TRUNCATE), <code>forbid_payment_link_delete</code> (DELETE/TRUNCATE op de koppeltabel), <code>guard_payment_link_update</code> (booking_id alleen wijzigen als de nieuwste herkoppelregel van die betaling precies van OLD naar NEW gaat). V12 voegt ook authority <code>PAYMENT_RELINK</code> toe voor ADMIN en MANAGER.</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>booking/entity/BookingMolliePayment.java</code>, <code>BookingMolliePaymentRelink.java</code></li><li>IdClass: <code>booking/entity/BookingMolliePaymentId.java</code></li><li>DTO: <code>booking/dto/BookingMolliePaymentDto.java</code></li><li>Mapper: <code>booking/mapper/BookingMolliePaymentMapper.java</code></li><li>Service: <code>booking/service/BookingMolliePaymentService.java</code></li><li>ServiceImpl: <code>booking/service/impl/BookingMolliePaymentServiceImpl.java</code></li><li>Repository: <code>booking/repository/BookingMolliePaymentRepository.java</code></li><li>Controller: <code>booking/controller/BookingMolliePaymentController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong> <em>Geen frontend model</em></p>
+<h2 id="h-mollie-module">Mollie Module</h2>
+<h3 id="h-mollie-payment">mollie_payment</h3>
+<p>Mollie-betaling. Multi-tenant.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">mollie_payment_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">mollie_payment_external_id</th><td>VARCHAR</td><td></td><td>Mollie extern ID</td></tr>
+<tr><th scope="row">status</th><td>VARCHAR</td><td>NOT NULL, enum MolliePaymentStatus</td><td>Betalingsstatus</td></tr>
+<tr><th scope="row">amount</th><td>DECIMAL</td><td>NOT NULL</td><td>Bedrag</td></tr>
+<tr><th scope="row">currency</th><td>VARCHAR</td><td>NOT NULL</td><td>Valuta</td></tr>
+<tr><th scope="row">method</th><td>VARCHAR</td><td>enum MolliePaymentMethod</td><td>Betaalmethode</td></tr>
+<tr><th scope="row">description</th><td>VARCHAR</td><td></td><td>Omschrijving</td></tr>
+<tr><th scope="row">checkout_url</th><td>VARCHAR</td><td></td><td>Checkout URL</td></tr>
+<tr><th scope="row">payment_type</th><td>VARCHAR(20)</td><td>NOT NULL, default <code>OVERIG</code>, CHECK <code>mollie_payment_type_check</code> (V19)</td><td><code>VOORSCHOT</code>, <code>RESTANT</code>, <code>DEFINITIEF</code> (systeem) of <code>OVERIG</code> (handmatig)</td></tr>
+<tr><th scope="row">due_date</th><td>DATE</td><td>(V19)</td><td>uiterlijke betaaldatum</td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, immutable</td><td>Tenant</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td></td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td></td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Enum MolliePaymentStatus:</strong> <code>OPEN</code>, <code>PENDING</code>, <code>AUTHORIZED</code>, <code>PAID</code>, <code>FAILED</code>, <code>CANCELED</code>, <code>EXPIRED</code></p>
+<p><strong>Enum MolliePaymentMethod:</strong> <code>IDEAL</code>, <code>CREDITCARD</code>, <code>BANCONTACT</code>, <code>SOFORT</code>, <code>BANKTRANSFER</code>, <code>PAYPAL</code>, <code>BELFIUS</code>, <code>KBC</code>, <code>EPS</code>, <code>GIROPAY</code>, <code>PRZELEWY24</code>, <code>APPLEPAY</code>, <code>GOOGLEPAY</code>, <code>IN3</code>, <code>KLARNA</code>, <code>RIVERTY</code></p>
+<p><strong>Bijzonderheden:</strong> Status wordt automatisch op <code>OPEN</code> gezet in <code>@PrePersist</code>. Heeft een extra constructor met expliciete <code>tenantOrganization</code> voor gebruik vanuit het booker portal (waar geen <code>TenantContext</code> beschikbaar is).</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>mollie/entity/MolliePayment.java</code></li><li>Enums: <code>mollie/entity/MolliePaymentStatus.java</code>, <code>mollie/entity/MolliePaymentMethod.java</code></li><li>DTO: <code>mollie/dto/MolliePaymentDto.java</code></li><li>Mapper: <code>mollie/mapper/MolliePaymentMapper.java</code></li><li>Service: <code>mollie/service/MollieService.java</code></li><li>ServiceImpl: <code>mollie/service/impl/MollieServiceImpl.java</code></li><li>Repository: <code>mollie/repository/MolliePaymentRepository.java</code></li><li>Controller: <code>mollie/controller/MolliePaymentController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: <code>frontend-employee/src/app/shared/models/mollie-payment.model.ts</code></li><li>Model: <code>frontend-booker/src/app/shared/models/mollie-payment.model.ts</code></li><li>Service: <code>frontend-employee/src/app/features/mollie/mollie-payment.service.ts</code></li><li>Service: <code>frontend-booker/src/app/features/payments/payment.service.ts</code></li><li>Components:<ul><li><code>frontend-employee/src/app/features/mollie/mollie-payments.component.ts</code> (betalingslijst)</li><li><code>frontend-booker/src/app/features/payments/payments.component.ts</code> (booker portal)</li></ul></li></ul>
+<h3 id="h-mollie-payment-status-entry">mollie_payment_status_entry</h3>
+<p>Statushistorie van een Mollie-betaling. Geen tenant-filtering (gekoppeld via MolliePayment). <strong>Alleen-toevoegen:</strong> een regel wordt nooit gewijzigd, vervangen of verwijderd (triggers weigeren elke <code>UPDATE</code>, <code>DELETE</code> en <code>TRUNCATE</code>; V10, V11; dezelfde <code>DELETE</code>/<code>TRUNCATE</code>-triggers staan op <code>mollie_payment</code>); een handmatige correctie door een medewerker is altijd een nieuwe regel met <code>correction = true</code> en een verplichte <code>reason</code> (V10).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">mollie_payment_status_entry_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">mollie_payment_id</th><td>UUID</td><td>FK → mollie_payment, NOT NULL</td><td>Betaling</td></tr>
+<tr><th scope="row">status</th><td>VARCHAR</td><td>NOT NULL, CHECK <code>payment_status_entry_status_check</code>, enum MolliePaymentStatus</td><td>Status</td></tr>
+<tr><th scope="row">correction</th><td>BOOLEAN</td><td>NOT NULL, default false, immutable</td><td>true = handmatige correctie door een medewerker; false = Mollie, het systeem of de boeker</td></tr>
+<tr><th scope="row">reason</th><td>TEXT</td><td>immutable; verplicht (≥ 5 tekens) als <code>correction</code></td><td>Reden van de correctie (CHECK <code>payment_status_entry_correction_reason_check</code>)</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">created_by</th><td>UUID</td><td>immutable</td><td>Account van de medewerker (correctie), boeker (portal) of leeg (Mollie/systeem)</td></tr>
+<tr><th scope="row">modified_at</th><td>TIMESTAMP</td><td></td><td>ongebruikt (regels worden niet gewijzigd)</td></tr>
+<tr><th scope="row">modified_by</th><td>UUID</td><td></td><td>ongebruikt</td></tr>
+</tbody></table></div>
+<p><strong>Relaties:</strong> ManyToOne → MolliePayment</p>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>mollie/entity/MolliePaymentStatusEntry.java</code></li><li>DTO: <code>mollie/dto/MolliePaymentStatusEntryDto.java</code></li><li>Service: <code>mollie/service/MolliePaymentStatusEntryService.java</code></li><li>ServiceImpl: <code>mollie/service/impl/MolliePaymentStatusEntryServiceImpl.java</code></li><li>Repository: <code>mollie/repository/MolliePaymentStatusEntryRepository.java</code></li><li>Controller: <code>mollie/controller/MolliePaymentStatusEntryController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Model: onderdeel van <code>frontend-employee/src/app/shared/models/mollie-payment.model.ts</code></li><li>Component: <code>frontend-employee/src/app/features/bookings/booking-detail.component.ts</code> (status-historie in expanded payment row)</li><li>Booker portal: <code>frontend-booker/src/app/features/payments/payments.component.ts</code></li></ul>
+<h2 id="h-booker-portal-module">Booker Portal Module</h2>
+<h3 id="h-otp">otp</h3>
+<p>One-Time Password voor booker portal authenticatie. Geen tenant-filtering.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">otp_id</th><td>UUID</td><td>PK, auto-generated</td><td></td></tr>
+<tr><th scope="row">emailaddress</th><td>VARCHAR</td><td>NOT NULL</td><td>E-mailadres</td></tr>
+<tr><th scope="row">booking_number</th><td>VARCHAR</td><td>NOT NULL</td><td>Boekingnummer</td></tr>
+<tr><th scope="row">code</th><td>VARCHAR</td><td>NOT NULL</td><td>OTP code</td></tr>
+<tr><th scope="row">created_at</th><td>TIMESTAMP</td><td>NOT NULL, immutable</td><td></td></tr>
+<tr><th scope="row">expires_at</th><td>TIMESTAMP</td><td>NOT NULL</td><td>Verloopt op</td></tr>
+<tr><th scope="row">verified</th><td>BOOLEAN</td><td>NOT NULL</td><td>Geverifieerd</td></tr>
+</tbody></table></div>
+<p><strong>Backend bestanden:</strong></p>
+<ul><li>Entity: <code>bookerportal/entity/Otp.java</code></li><li>DTO: <code>bookerportal/dto/OtpRequestDto.java</code>, <code>bookerportal/dto/OtpVerifyDto.java</code></li><li>Service: <code>bookerportal/service/BookerAuthService.java</code>, <code>bookerportal/service/OtpEmailService.java</code></li><li>Repository: <code>bookerportal/repository/OtpRepository.java</code></li><li>Controller: <code>bookerportal/controller/BookerAuthController.java</code></li></ul>
+<p><strong>Frontend bestanden:</strong></p>
+<ul><li>Components:<ul><li><code>frontend-booker/src/app/features/otp-login/request-otp.component.ts</code></li><li><code>frontend-booker/src/app/features/otp-login/verify-otp.component.ts</code></li></ul></li></ul>
+<h2 id="h-e-mail-module">E-mail Module</h2>
+<h3 id="h-email-template">email_template</h3>
+<p>E-mailtemplate (onderwerp + HTML-body), per organisatie. FreeMarker-placeholders <code>${prospect.*}</code> en <code>${booking.*}</code> (zie <a href="email.html">email.md</a>, <a href="templates.html">templates.md</a>). Multi-tenant. Migratie V5.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">email_template_id</th><td>UUID</td><td>PK</td><td></td></tr>
+<tr><th scope="row">name</th><td>VARCHAR(255)</td><td>NOT NULL</td><td></td></tr>
+<tr><th scope="row">description</th><td>VARCHAR(255)</td><td></td><td></td></tr>
+<tr><th scope="row">subject</th><td>VARCHAR(255)</td><td>NOT NULL</td><td>platte tekst, mag placeholders bevatten</td></tr>
+<tr><th scope="row">body_html</th><td>TEXT</td><td></td><td>HTML uit de WYSIWYG-editor (afbeeldingen als relatief pad <code>/api/public/email-images/{uuid}</code>)</td></tr>
+<tr><th scope="row">tenant_organization, created_*, modified_*</th><td></td><td></td><td>zoals overal</td></tr>
+</tbody></table></div>
+<p><strong>Bestanden:</strong> <code>email/entity/EmailTemplate.java</code>, <code>email/service/EmailTemplateService(+impl)</code>, <code>email/service/EmailRenderService(+impl)</code>, <code>email/service/EmailSendService(+impl)</code>, <code>email/controller/EmailTemplateController.java</code>; frontend <code>features/email-templates/*</code>.</p>
+<h3 id="h-email-image">email_image</h3>
+<p>Afbeelding voor templates (e-mail <strong>en</strong> Word-templates; de naam is historisch). Bytes in de database; een afbeelding is onveranderlijk (nieuwe versie = nieuwe rij). Migratie V7.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Kolom</th><th>Type</th><th>Constraints</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">email_image_id</th><td>UUID</td><td>PK</td><td>tevens de onraadbare sleutel in de publieke URL</td></tr>
+<tr><th scope="row">original_filename</th><td>VARCHAR(255)</td><td></td><td>alleen informatief</td></tr>
+<tr><th scope="row">content_type</th><td>VARCHAR(100)</td><td>NOT NULL</td><td>uit de <strong>bytes</strong> bepaald (PNG, JPEG, GIF, WebP)</td></tr>
+<tr><th scope="row">size_bytes</th><td>BIGINT</td><td>NOT NULL</td><td>maximaal 2 MB</td></tr>
+<tr><th scope="row">data</th><td>BYTEA</td><td>NOT NULL</td><td></td></tr>
+<tr><th scope="row">tenant_organization</th><td>UUID</td><td>NOT NULL, index</td><td>herkomst/opruimen; niet gebruikt bij publiek uitleveren</td></tr>
+<tr><th scope="row">created_at / created_by</th><td></td><td></td><td>audit</td></tr>
+</tbody></table></div>
+<p><strong>Bestanden:</strong> <code>email/entity/EmailImage.java</code>, <code>email/service/EmailImageService(+impl)</code>, <code>ImageTypes</code>, <code>EmailImageUrlResolver</code>, <code>TemplateImages</code>; <code>email/controller/EmailImageController.java</code> (beheer) en <code>PublicEmailImageController.java</code> (publiek, GET); frontend <code>shared/template-editor/*</code>.</p>
+<h2 id="h-enums-overzicht">Enums Overzicht</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Enum</th><th>Waarden</th><th>Gebruikt in</th></tr></thead><tbody>
+<tr><th scope="row">BookingStatus</th><td>AANVRAAG, OFFERTE, BOEKING, VOORSCHOT, BETAALD, OPREIS, WEERTHUIS, AFGEROND</td><td>booking.booking_status</td></tr>
+<tr><th scope="row">Gender</th><td>MAN, VROUW, ANDERS</td><td>booker.gender, traveler.gender</td></tr>
+<tr><th scope="row">BookerStatus</th><td>PROSPECT, ACTIVE</td><td>booker.status</td></tr>
+<tr><th scope="row">AddressRole</th><td>WOON, FACTUUR, ACCOMMODATIE, LEVERANCIER</td><td>address.addressrole</td></tr>
+<tr><th scope="row">ActivityType</th><td>TOUR, EXCURSIE, TICKET, TRANSFER</td><td>activity.activity_type</td></tr>
+<tr><th scope="row">MolliePaymentStatus</th><td>OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED</td><td>mollie_payment.status, mollie_payment_status_entry.status</td></tr>
+<tr><th scope="row">MolliePaymentMethod</th><td>IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY</td><td>mollie_payment.method</td></tr>
+</tbody></table></div>
+<p>Alle enums worden als <code>STRING</code> (naam in hoofdletters) opgeslagen en serialiseren naar lowercase in JSON (<code>@JsonValue toValue()</code>); invoer wordt hoofdletterongevoelig geparsed (<code>EnumValues.parse</code>). In het template-model voor documenten en e-mail is een enum de hoofdletter-naam.</p>
+<h2 id="h-relatiediagrammen">Relatiediagrammen</h2>
+<p>Per module; koppeltabellen staan als veel-op-veel-relatie getekend. Alle tabellen met bedrijfsgegevens hebben daarnaast een <code>tenant_organization</code> naar <code>organization</code> (niet getekend, zie <em>Conventies</em>).</p>
+<h3 id="h-organisatie-accounts-en-rechten-v22-v26">Organisatie, accounts en rechten (V22–V26)</h3>
+<figure class="diagram"><pre class="mermaid">
+erDiagram
+    ORGANIZATION ||--o{ PERSON : &quot;tenant_organization&quot;
+    ORGANIZATION ||--o| ORGANIZATION_THEME : &quot;huisstijl&quot;
+    ORGANIZATION ||--o| ORGANIZATION_SETTINGS : &quot;instellingen&quot;
+    ORGANIZATION ||--o{ ROLE : &quot;rollen (systeemrol = kopie)&quot;
+    ORGANIZATION ||--o{ AUTHORIZATION_LOG : &quot;rechtenlogboek&quot;
+    PERSON ||--o{ ACCOUNT : &quot;zelfde organisatie&quot;
+    ACCOUNT ||--o{ ACCOUNT_ROLE : &quot;&quot;
+    ROLE ||--o{ ACCOUNT_ROLE : &quot;zelfde organisatie&quot;
+    ROLE ||--o{ ROLE_AUTHORITY : &quot;&quot;
+    AUTHORITY ||--o{ ROLE_AUTHORITY : &quot;&quot;
+    AUTHORITY ||--o{ AUTHORITY_REQUIRES : &quot;vereist&quot;
+    AUTHORITY ||--o{ SYSTEM_ROLE_TEMPLATE : &quot;inhoud systeemrollen&quot;
+    ORGANIZATION {
+        boolean platform &quot;precies één: RDS Platform&quot;
+    }
+    ROLE {
+        string system_key &quot;ADMIN, MANAGER, EMPLOYEE of leeg&quot;
+    }
+    ACCOUNT {
+        int authz_version &quot;rechtenversie (claim av)&quot;
+    }
+</pre></figure>
+<h3 id="h-boekingen-betalingen-en-berichten">Boekingen, betalingen en berichten</h3>
+<figure class="diagram"><pre class="mermaid">
+erDiagram
+    BOOKER |o--o{ BOOKING : &quot;hoofdboeker&quot;
+    BOOKING ||--o{ TRAVELER : &quot;&quot;
+    BOOKING ||--o{ BOOKING_LINE : &quot;&quot;
+    BOOKING_LINE }o--|| ACCOMMODATION : &quot;&quot;
+    BOOKING_LINE }o--|| SUPPLIER : &quot;&quot;
+    BOOKING ||--o{ BOOKING_ACTIVITY : &quot;&quot;
+    BOOKING_ACTIVITY }o--|| ACTIVITY : &quot;&quot;
+    BOOKING ||--o{ DOCUMENT : &quot;&quot;
+    BOOKING ||--o{ SENT_EMAIL : &quot;alleen toevoegen&quot;
+    SENT_EMAIL }o--o| DOCUMENT : &quot;bijlage&quot;
+    BOOKING ||--o{ NOTIFICATION : &quot;&quot;
+    BOOKING ||--o{ BOOKING_STATUS_CHANGE : &quot;alleen toevoegen&quot;
+    BOOKING ||--o{ BOOKING_MOLLIE_PAYMENT : &quot;&quot;
+    BOOKING_MOLLIE_PAYMENT |o--|| MOLLIE_PAYMENT : &quot;max. één boeking&quot;
+    MOLLIE_PAYMENT ||--o{ MOLLIE_PAYMENT_STATUS_ENTRY : &quot;alleen toevoegen&quot;
+    MOLLIE_PAYMENT ||--o{ BOOKING_MOLLIE_PAYMENT_RELINK : &quot;herkoppelingen&quot;
+    ACCOMMODATION }o--o{ SUPPLIER : &quot;accommodation_supplier&quot;
+    BOOKER }o--o{ ADDRESS : &quot;booker_address&quot;
+    ACCOMMODATION }o--o{ ADDRESS : &quot;accommodation_address&quot;
+    SUPPLIER }o--o{ ADDRESS : &quot;supplier_address&quot;
+</pre></figure>
+<p>Los van een boeking (per organisatie): <code>document_template</code> (optioneel <code>source_html</code> voor de editor), <code>email_template</code>, <code>email_image</code> (vanuit HTML verwezen als pad, geen foreign key). Zonder organisatie: <code>otp</code> (inloggen in het reisportaal).</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

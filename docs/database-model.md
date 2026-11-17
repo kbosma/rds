@@ -1,9 +1,9 @@
 # Database Model
 
-Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V20**, 11-11-2026).
+Dit document beschrijft het volledige databasemodel per tabel/entiteit (stand: migratie **V26**, 17-11-2026). Onderaan staan relatiediagrammen per module.
 Gebruik dit als referentie bij het aanvragen van database-wijzigingen die doorgevoerd moeten worden in alle lagen (Entity, DTO, Mapper, Service, Repository, Controller en frontend).
 
-De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`, V19 `mollie_payment.payment_type`/`due_date` en de betalingsinstellingen in `organization_settings`, V20 `notification`, `booking_status_change` (alleen-toevoegen), betaalstatus `CHARGED_BACK` en de authorities `NOTIFICATION_READ`/`_UPDATE`, `BOOKING_STATUS_REVERT`(`_PAID`) en `BOOKING_COMPLETE`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
+De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basisschema, V2 seed, V3 unieke betaling per boeking, V4 `booker.status`, V5 `email_template`, V6 `organization.email_from` + `EMAIL_SEND`, V7 `email_image`, V8 `document_template.source_html`, V9 CHECK-constraints op `booking.booking_status` en `booker.status`, V10 correcties op de betalingsstatus, V11 betalingen worden nooit verwijderd, V12 herkoppelen van een betaling met reden en koppeling nooit losmaken, V13 `booking_activity`: één datum plus van-/tot-tijd, V14 `sent_email`: verzonden e-mails aan de hoofdboeker, alleen-toevoegen, V15 `document.visible_in_portal`, V16 de authority `DOCUMENT_DELETE` vervalt: een document wordt nooit verwijderd, V17 `booking.quote_confirmed`/`quote_confirmed_at` en de boekerstatus eenmalig afgeleid uit de boekingen, V18 `organization_settings`, `sent_email.attachment_document_id` en de authorities `ORGANIZATION_SETTINGS_READ`/`_UPDATE` en `QUOTE_SEND`, V19 `mollie_payment.payment_type`/`due_date` en de betalingsinstellingen in `organization_settings`, V20 `notification`, `booking_status_change` (alleen-toevoegen), betaalstatus `CHARGED_BACK` en de authorities `NOTIFICATION_READ`/`_UPDATE`, `BOOKING_STATUS_REVERT`(`_PAID`) en `BOOKING_COMPLETE`, V21 foreign keys op `tenant_organization`, V22 `organization_id` → `tenant_organization`, `account.tenant_organization` en auditvelden voor rollen en koppeltabellen, V23 `PLATFORM_ADMIN` en `USER_SCOPE_ORGANIZATION`, V24 RDS Platform, rollen per organisatie, systeemrollen, rechtenlogboek, V25 seed Wendy Vos, V26 `account.authz_version`). Hibernate staat op `ddl-auto: validate`: een entity die niet exact bij het schema past laat de applicatie niet starten. Wijzigingen gaan dus **altijd** via een nieuwe migratie (nooit een bestaande aanpassen).
 
 ---
 
@@ -1099,29 +1099,63 @@ Alle enums worden als `STRING` (naam in hoofdletters) opgeslagen en serialiseren
 
 ---
 
-## Relatiediagram (tekstueel)
+## Relatiediagrammen
 
+Per module; koppeltabellen staan als veel-op-veel-relatie getekend. Alle tabellen met bedrijfsgegevens hebben daarnaast
+een `tenant_organization` naar `organization` (niet getekend, zie *Conventies*).
+
+### Organisatie, accounts en rechten (V22–V26)
+
+```mermaid
+erDiagram
+    ORGANIZATION ||--o{ PERSON : "tenant_organization"
+    ORGANIZATION ||--o| ORGANIZATION_THEME : "huisstijl"
+    ORGANIZATION ||--o| ORGANIZATION_SETTINGS : "instellingen"
+    ORGANIZATION ||--o{ ROLE : "rollen (systeemrol = kopie)"
+    ORGANIZATION ||--o{ AUTHORIZATION_LOG : "rechtenlogboek"
+    PERSON ||--o{ ACCOUNT : "zelfde organisatie"
+    ACCOUNT ||--o{ ACCOUNT_ROLE : ""
+    ROLE ||--o{ ACCOUNT_ROLE : "zelfde organisatie"
+    ROLE ||--o{ ROLE_AUTHORITY : ""
+    AUTHORITY ||--o{ ROLE_AUTHORITY : ""
+    AUTHORITY ||--o{ AUTHORITY_REQUIRES : "vereist"
+    AUTHORITY ||--o{ SYSTEM_ROLE_TEMPLATE : "inhoud systeemrollen"
+    ORGANIZATION {
+        boolean platform "precies één: RDS Platform"
+    }
+    ROLE {
+        string system_key "ADMIN, MANAGER, EMPLOYEE of leeg"
+    }
+    ACCOUNT {
+        int authz_version "rechtenversie (claim av)"
+    }
 ```
-Organization ──< Person ──< Account ──< AccountRole >── Role ──< RoleAuthority >── Authority
 
-Booking ──< Traveler
-Booking ── Booker
-Booking ──< Document
-Booking ──< BookingLine >── Accommodation
-                        >── Supplier
-Booking ──< BookingActivity >── Activity
-Booking ──< BookingMolliePayment >── MolliePayment ──< MolliePaymentStatusEntry
+### Boekingen, betalingen en berichten
 
-Booker  ──< BookerAddress  >── Address
-Accommodation ──< AccommodationAddress >── Address
-Accommodation ──< AccommodationSupplier >── Supplier
-Supplier ──< SupplierAddress >── Address
-
-Organization ── OrganizationTheme (1:1)
-DocumentTemplate (standalone, multi-tenant; optioneel source_html voor de editor)
-EmailTemplate (standalone, multi-tenant)
-EmailImage (standalone, multi-tenant; verwezen vanuit HTML als pad, geen FK)
-Otp (standalone, geen tenant: booker-portal-login)
+```mermaid
+erDiagram
+    BOOKER |o--o{ BOOKING : "hoofdboeker"
+    BOOKING ||--o{ TRAVELER : ""
+    BOOKING ||--o{ BOOKING_LINE : ""
+    BOOKING_LINE }o--|| ACCOMMODATION : ""
+    BOOKING_LINE }o--|| SUPPLIER : ""
+    BOOKING ||--o{ BOOKING_ACTIVITY : ""
+    BOOKING_ACTIVITY }o--|| ACTIVITY : ""
+    BOOKING ||--o{ DOCUMENT : ""
+    BOOKING ||--o{ SENT_EMAIL : "alleen toevoegen"
+    SENT_EMAIL }o--o| DOCUMENT : "bijlage"
+    BOOKING ||--o{ NOTIFICATION : ""
+    BOOKING ||--o{ BOOKING_STATUS_CHANGE : "alleen toevoegen"
+    BOOKING ||--o{ BOOKING_MOLLIE_PAYMENT : ""
+    BOOKING_MOLLIE_PAYMENT |o--|| MOLLIE_PAYMENT : "max. één boeking"
+    MOLLIE_PAYMENT ||--o{ MOLLIE_PAYMENT_STATUS_ENTRY : "alleen toevoegen"
+    MOLLIE_PAYMENT ||--o{ BOOKING_MOLLIE_PAYMENT_RELINK : "herkoppelingen"
+    ACCOMMODATION }o--o{ SUPPLIER : "accommodation_supplier"
+    BOOKER }o--o{ ADDRESS : "booker_address"
+    ACCOMMODATION }o--o{ ADDRESS : "accommodation_address"
+    SUPPLIER }o--o{ ADDRESS : "supplier_address"
 ```
 
-Legenda: `──<` = one-to-many, `──` = one-to-one, `>──` = many-to-one
+Los van een boeking (per organisatie): `document_template` (optioneel `source_html` voor de editor), `email_template`,
+`email_image` (vanuit HTML verwezen als pad, geen foreign key). Zonder organisatie: `otp` (inloggen in het reisportaal).

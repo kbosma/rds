@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Security</h1>
+<p>Samenvatting: stateless JWT, multi-tenant per organisatie, rechten op <strong>authorities</strong>, optionele TOTP-2FA voor medewerkers, OTP-login voor klanten, en een afgeschermde template-engine omdat templates door gebruikers geschreven worden. Bekende risico's staan in <a href="open-items.html">open-items.md</a>.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-tokens-jwt-hs-ondertekend-jwttokenprovider">Tokens (JWT, HS-ondertekend, JwtTokenProvider)</a></li><li><a href="#h-endpoint-toegang-securityconfig">Endpoint-toegang (SecurityConfig)</a></li><li><a href="#h-rollen-en-authorities">Rollen en authorities</a></li><li><a href="#h-tenant-isolatie">Tenant-isolatie</a></li><li><a href="#h-authenticatie-van-medewerkers">Authenticatie van medewerkers</a></li><li><a href="#h-authenticatie-van-klanten">Authenticatie van klanten</a></li><li><a href="#h-afscherming-van-templates-zeer-belangrijk">Afscherming van templates (zeer belangrijk)</a></li><li><a href="#h-netwerklaag-nginx-deploy-nginx-rds-kbtg-nl-conf">Netwerklaag (NGINX, deploy/nginx/rds.kbtg.nl.conf)</a></li><li><a href="#h-geschiedenis-niet-kwijtraken-verwijderbescherming">Geschiedenis niet kwijtraken (verwijderbescherming)</a></li><li><a href="#h-foutafhandeling">Foutafhandeling</a></li><li><a href="#h-regels-bij-nieuwe-code">Regels bij nieuwe code</a></li></ul></nav>
+<h2 id="h-tokens-jwt-hs-ondertekend-jwttokenprovider">Tokens (JWT, HS-ondertekend, <code>JwtTokenProvider</code>)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th><code>type</code></th><th>Wie</th><th>Levensduur</th><th>Belangrijkste claims</th></tr></thead><tbody>
+<tr><th scope="row"><code>EMPLOYEE</code></th><td>ingelogde medewerker</td><td><code>app.jwt.expiration-ms</code> (nu 1 uur)</td><td><code>sub</code>=accountId, <code>org</code>, <code>personId</code>, <code>userName</code>, <code>personName</code>, <code>organizationName</code>, <code>authorities</code>, <code>roles</code>, <code>av</code> (rechtenversie, V26)</td></tr>
+<tr><th scope="row"><code>TOTP_PENDING</code></th><td>tussenstap na wachtwoord als TOTP vereist is</td><td>kort</td><td><code>sub</code>=accountId; geeft alleen toegang tot de TOTP-/herstelcode-login</td></tr>
+<tr><th scope="row"><code>BOOKER</code></th><td>klant na OTP</td><td><code>app.jwt.booker-expiration-ms</code> (nu 1 uur)</td><td><code>sub</code>=bookerId, <code>bookingId</code></td></tr>
+</tbody></table></div>
+<p>Het token wordt door beide frontends in <code>localStorage</code> bewaard en als <code>Authorization: Bearer …</code> meegestuurd. Een <code>401</code> (behalve op login-endpoints) logt de gebruiker uit. Een token zonder <code>type</code> geldt als <code>EMPLOYEE</code>.</p>
+<p><strong>Rechten direct doorvoeren (V26).</strong> <code>account.authz_version</code> gaat omhoog zodra de rechten van een account veranderen: een rol toegewezen of ingetrokken, een recht toegevoegd aan of weggehaald uit een van zijn rollen (ook via <code>sync_system_roles()</code>), of het account gelockt, ontgrendeld of met een andere vervaldatum. Databasetriggers doen dat, dus ook bij directe SQL. <code>JwtAuthenticationFilter</code> vergelijkt de claim <code>av</code> met de database (één opzoeking op primaire sleutel per aanroep) en weigert een verouderd token met <code>401</code> en <code>{&quot;code&quot;:&quot;AUTHZ_CHANGED&quot;}</code>. Alleen <code>POST /api/auth/token/refresh</code> werkt dan nog: die geeft een nieuw token met de huidige rechten (<code>EmployeeTokenService</code>), zonder wachtwoord of 2FA, maar niet als het account gelockt of verlopen is of een nieuw wachtwoord moet kiezen (<code>401</code>). De frontend (<code>authInterceptor</code>) ververst bij <code>AUTHZ_CHANGED</code> één keer (gedeeld tussen gelijktijdige aanroepen), herhaalt de aanroep en zet het nieuwe token in de <code>AuthService</code>, waardoor menu, routes en kaarten direct meebewegen. Een token van vóór V26 heeft geen <code>av</code> en wordt dus ook ververst.</p>
+<figure class="diagram"><pre class="mermaid">
+flowchart TD
+    R([verzoek met Authorization: Bearer]) --&gt; V{&quot;token geldig&lt;br/&gt;(handtekening, verloop)?&quot;}
+    V -- nee --&gt; A[&quot;geen authenticatie:&lt;br/&gt;401 via Spring Security&quot;]
+    V -- ja --&gt; T{&quot;type?&quot;}
+    T -- TOTP_PENDING --&gt; TP[&quot;alleen /login/totp, /login/recovery,&lt;br/&gt;/totp/setup&quot;]
+    T -- BOOKER --&gt; B[&quot;BOOKER_PORTAL_READ/UPDATE&lt;br/&gt;BookerContext (booker, boeking)&quot;]
+    T -- EMPLOYEE --&gt; AV{&quot;claim av = account.authz_version?&lt;br/&gt;(of pad = /api/auth/token/refresh)&quot;}
+    AV -- nee --&gt; X[&quot;401 AUTHZ_CHANGED&lt;br/&gt;frontend ververst het token&quot;]
+    AV -- ja --&gt; E[&quot;authorities uit het token&lt;br/&gt;TenantContext (organisatie, account, authorities)&quot;]
+</pre></figure>
+<p><code>JwtAuthenticationFilter</code> (vóór de Spring-filter): valideert het token, zet de <code>SecurityContext</code> en de ThreadLocals (<code>TenantContext</code> of <code>BookerContext</code>) en ruimt ze in een <code>finally</code> op. Een <code>BOOKER</code>-token krijgt vast <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code>; een <code>TOTP_PENDING</code>-token alleen een pseudo-authority <code>TOTP_PENDING</code>.</p>
+<h2 id="h-endpoint-toegang-securityconfig">Endpoint-toegang (<code>SecurityConfig</code>)</h2>
+<p>CSRF uit (stateless, token in header), sessies <code>STATELESS</code>.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Pad</th><th>Toegang</th></tr></thead><tbody>
+<tr><th scope="row"><code>/api/auth/login</code>, <code>/api/auth/login/totp</code>, <code>/api/auth/login/recovery</code></th><td>publiek</td></tr>
+<tr><th scope="row"><code>/api/booker-auth/**</code></th><td>publiek (OTP aanvragen/verifiëren)</td></tr>
+<tr><th scope="row"><code>/api/mollie/payments/webhook</code></th><td>publiek (Mollie roept dit aan; id wordt gevalideerd, zie <a href="mollie.html">mollie.md</a>)</td></tr>
+<tr><th scope="row"><code>GET /api/public/email-images/*</code></th><td>publiek (alleen GET; onraadbare UUID; zie <a href="email.html">email.md</a>)</td></tr>
+<tr><th scope="row"><code>/monitoring/**</code></th><td>publiek in Spring (JavaMelody); in <strong>NGINX</strong> beperkt tot <code>127.0.0.1</code> + beheer-IP (<code>deny all</code>)</td></tr>
+<tr><th scope="row"><code>/api/booker-portal/**</code>, overige <code>/api/**</code></th><td>ingelogd; daarna <code>@PreAuthorize</code> per methode</td></tr>
+</tbody></table></div>
+<p>Elke controller-methode heeft <code>@PreAuthorize(&quot;hasAuthority(&#x27;…&#x27;)&quot;)</code>; de volledige lijst staat in <a href="api-examples.html">api-examples.md</a>. Endpoints zonder annotatie die niet publiek zijn (TOTP-instellen, wachtwoord wijzigen) werken alleen op het eigen account.</p>
+<h2 id="h-rollen-en-authorities">Rollen en authorities</h2>
+<p><strong>Model sinds V24</strong> (ontwerp: <a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.md</a>):</p>
+<ul><li><strong>Authorities liggen vast</strong>: ze komen alleen uit Flyway (<code>/api/authorities</code> is alleen-lezen; aanmaken, wijzigen en verwijderen geeft <code>405</code>). Elke authority heeft een <code>domain</code>, <code>tenant_assignable</code> (mag een klant hem uitdelen? niet: <code>PLATFORM_ADMIN</code>, <code>ORGANIZATION_*</code>, <code>BOOKER_PORTAL_*</code>) en <code>introduced_at</code>; afhankelijkheden staan in <code>authority_requires</code>.</li><li><strong>Eén platformorganisatie "RDS Platform"</strong> (<code>organization.platform</code>) met de beheerders; alle andere organisaties zijn klanten. Niet te verwijderen (service <code>409</code> én trigger).</li><li><strong>Rollen horen bij één organisatie</strong> (<code>role.tenant_organization</code> NOT NULL). <strong>Systeemrollen</strong> (<code>system_key</code> ADMIN/MANAGER/EMPLOYEE) liggen vast: hun inhoud staat in <code>system_role_template</code>; elke organisatie heeft een kopie (ADMIN alleen in het platform, MANAGER en EMPLOYEE bij elke klant, aangemaakt bij het aanmaken van de organisatie). <code>sync_system_roles()</code> houdt de kopieën gelijk; triggers weigeren elke andere wijziging aan systeemrollen.</li><li><strong>Toewijzingen</strong> (<code>account_role</code>) hebben een <code>tenant_organization</code>; samengestelde foreign keys dwingen af dat account en rol bij dezelfde organisatie horen.</li><li><strong>Regels</strong> (<code>AuthorizationRules</code>, <code>RoleServiceImpl</code>, <code>RoleAuthorityService</code>, <code>AccountRoleService</code>): je deelt alleen uit wat je zelf hebt én wat een klant mag hebben (G(u) = E(u) ∩ T, E(u) uit de database); je wijzigt alleen eigen rollen van je eigen organisatie onder je niveau; vereisten gaan automatisch mee en een recht dat een ander recht in de rol nodig heeft, gaat er niet uit (<code>409</code>). <code>PLATFORM_ADMIN</code> mag bij klanten alleen de systeemrollen toewijzen (bijv. de eerste manager). Elke organisatie houdt minstens één bruikbare beheerder (MANAGER bij een klant, ADMIN in het platform; <code>AdministratorGuard</code>, <code>409</code>).</li><li><strong>Rollenscherm</strong> (frontend <code>role-detail</code>, <code>role-authority-matrix</code>): rechtenmatrix per onderwerp, rol als kopie (<code>POST /api/roles?copyFrom=</code>), aantal accounts per rol, melding nieuwe rechten (<code>/api/roles/new-authorities</code>, <em>Gezien</em> zet <code>organization.roles_reviewed_at</code>).</li><li><strong>Rechtenlogboek</strong> <code>authorization_log</code> (alleen toevoegen, trigger): wie gaf of nam wanneer welke rol of welk recht; <code>GET /api/authorization-log?roleId=&amp;accountId=</code> (<code>ROLE_READ</code>).</li></ul>
+<p>Seed vóór V24 (V2, V6, V10, V12; V16 haalt <code>DOCUMENT_DELETE</code> weg) — letters = C(reate) R(ead) U(pdate) D(elete), S = send. Sinds V24 krijgt MANAGER daarbij <code>ROLE_CREATE/UPDATE/DELETE</code> en <code>ROLEAUTHORITY_CREATE/DELETE</code> (eigen rollen inrichten), en vervallen <code>AUTHORITY_CREATE/UPDATE/DELETE</code>:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Domein</th><th>ADMIN</th><th>MANAGER</th><th>EMPLOYEE</th></tr></thead><tbody>
+<tr><th scope="row">ORGANIZATION</th><td>CRUD</td><td>–</td><td>–</td></tr>
+<tr><th scope="row">PERSON</th><td>CRUD</td><td>CRUD</td><td>R U</td></tr>
+<tr><th scope="row">ACCOUNT</th><td>CRUD</td><td>CRUD</td><td>R U</td></tr>
+<tr><th scope="row">ACCOUNTROLE</th><td>C R D</td><td>C R D</td><td>–</td></tr>
+<tr><th scope="row">ROLE</th><td>CRUD</td><td>R</td><td>–</td></tr>
+<tr><th scope="row">AUTHORITY</th><td>CRUD</td><td>R</td><td>–</td></tr>
+<tr><th scope="row">ROLEAUTHORITY</th><td>C R D</td><td>R</td><td>–</td></tr>
+<tr><th scope="row">PAYMENT_CORRECT (status van een betaling corrigeren, V10)</th><td>✓</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">PAYMENT_RELINK (betaling met reden aan een andere boeking hangen, V12)</th><td>✓</td><td>✓</td><td>–</td></tr>
+<tr><th scope="row">BOOKING (boekingen, bookers, reizigers, adressen, regels, activiteiten)</th><td>–</td><td>CRUD</td><td>CRUD</td></tr>
+<tr><th scope="row">ACCOMMODATION, SUPPLIER, ACTIVITY</th><td>–</td><td>CRUD</td><td>R</td></tr>
+<tr><th scope="row">DOCUMENT (geen verwijderen: een document wordt nooit verwijderd)</th><td>–</td><td>C R U</td><td>C R U</td></tr>
+<tr><th scope="row">PAYMENT</th><td>–</td><td>CRUD\*</td><td>C R</td></tr>
+<tr><th scope="row">TEMPLATE (Word + e-mail + afbeeldingen)</th><td>–</td><td>CRUD</td><td>R</td></tr>
+<tr><th scope="row">EMAIL_SEND</th><td>–</td><td>S</td><td>S</td></tr>
+<tr><th scope="row">ORGANIZATION_THEME</th><td>–</td><td>CRUD</td><td>–</td></tr>
+<tr><th scope="row">BOOKER_PORTAL_READ/UPDATE</th><td>–</td><td>–</td><td>– (alleen via een BOOKER-token)</td></tr>
+</tbody></table></div>
+<p>\* <code>PAYMENT_DELETE</code> bestaat als authority (en zit bij MANAGER), maar geen enkel endpoint gebruikt het: betalingen worden nooit verwijderd. <code>PAYMENT_UPDATE</code> werkt alleen zolang een betaling nog niet bij Mollie bestaat.</p>
+<ul><li><strong>ADMIN = systeembeheer</strong>: bewust geen boekings-, template- of e-mailrechten. Vandaar <code>403</code> voor ADMIN op die endpoints (ook in de tests). ADMIN heeft wel <code>PAYMENT_CORRECT</code> en <code>PAYMENT_RELINK</code>, maar niet <code>PAYMENT_READ</code>: die twee rechten zijn in de praktijk voor MANAGER bedoeld.</li><li><strong>Nieuwe authority:</strong> een Flyway-migratie die hem toevoegt (met <code>domain</code>, <code>tenant_assignable</code>, <code>introduced_at</code> en zo nodig <code>authority_requires</code>), in <code>system_role_template</code> zet bij de systeemrollen die hem krijgen, en daarna <code>SELECT sync_system_roles();</code> aanroept. Eigen rollen van klanten krijgen hem niet vanzelf.</li><li><strong>Frontend:</strong> componenten, menu-items en routes worden getoond of toegelaten op basis van authorities, nooit rollen (<code>core/auth/access.ts</code>, <code>authorityGuard</code>; zie <a href="frontend.html">frontend.md</a>). Dat is gemak, geen beveiliging: de backend controleert zelf.</li></ul>
+<h2 id="h-tenant-isolatie">Tenant-isolatie</h2>
+<ul><li>Elke tenant-entiteit heeft <code>tenant_organization</code>; <code>@PrePersist</code> vult die uit <code>TenantContext</code>; de kolom is <code>updatable = false</code>.</li><li><strong>Services</strong> doen de controle op authorities, nooit op rolnamen (sinds V23): met <code>PLATFORM_ADMIN</code> (rol ADMIN) zie je alles, anderen alleen <code>tenantOrganization == TenantContext.getOrganizationId()</code> (<code>findByTenantOrganization</code>, <code>verifyOrganization</code> → <code>AccessDeniedException</code> → 403).</li><li><strong>Data-scope via authorities</strong> (<code>TenantContext.hasAuthority</code>, constanten in <code>auth/security/Authorities</code>):<ul><li><code>PLATFORM_ADMIN</code> (ADMIN): over organisaties heen;</li><li><code>USER_SCOPE_ORGANIZATION</code> (ADMIN, MANAGER): personen en accounts van de hele organisatie; zonder deze authority alleen het eigen persoon en account.</li><li>Een rol met een andere naam gedraagt zich dus precies volgens zijn authorities. <code>NoRoleNameChecksTest</code> laat de build falen bij <code>hasRole(</code> in de backend. Zie <a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.md</a>.</li></ul></li><li>Er is <strong>bewust geen tenant-filter</strong> op: het publiek uitleveren van een e-mailafbeelding (de ontvanger heeft geen organisatie) en op het booker-portal-pad dat aan één boeking gebonden is.</li><li><strong>Afbeeldingen/templates:</strong> een template mag alleen afbeeldingen van de eigen organisatie bevatten (<code>TemplateImages</code>), anders <code>400</code> zonder te verraden of de afbeelding elders bestaat.</li></ul>
+<h2 id="h-authenticatie-van-medewerkers">Authenticatie van medewerkers</h2>
+<figure class="diagram"><pre class="mermaid">
+sequenceDiagram
+    actor M as Medewerker
+    participant FE as frontend-employee
+    participant API as Backend
+    participant DB as Database
+    M-&gt;&gt;FE: gebruikersnaam + wachtwoord
+    FE-&gt;&gt;API: POST /api/auth/login
+    API-&gt;&gt;DB: account, wachtwoordhash, locked, expires_at
+    alt gelockt, verlopen of fout wachtwoord
+        API--&gt;&gt;FE: 401
+    else TOTP aan
+        API--&gt;&gt;FE: requiresTotp + TOTP_PENDING-token (5 min)
+        M-&gt;&gt;FE: 6-cijferige code (of herstelcode)
+        FE-&gt;&gt;API: POST /api/auth/login/totp
+        API--&gt;&gt;FE: EMPLOYEE-token
+    else zonder TOTP
+        API--&gt;&gt;FE: EMPLOYEE-token (authorities, av)
+    end
+    opt must_change_password
+        FE-&gt;&gt;M: eerst een nieuw wachtwoord kiezen
+    end
+</pre></figure>
+<ol><li><code>POST /api/auth/login</code> met gebruikersnaam + wachtwoord (BCrypt). Een <strong>vergrendeld</strong> account (<code>locked</code>) en een <strong>verlopen</strong> account (<code>expires_at</code> in het verleden) worden geweigerd met <code>401</code> (<code>CustomUserDetailsService</code>). Verversen van het token (<code>/api/auth/token/refresh</code>) weigert dezelfde accounts.</li><li>Heeft het account <code>totp_enabled</code>, dan volgt een <code>TOTP_PENDING</code>-token en een tweede stap: <code>/login/totp</code> (6-cijferige code) of <code>/login/recovery</code> (herstelcode).</li><li><code>must_change_password</code> zorgt dat de app na de login een wachtwoordwijziging afdwingt (<code>/api/auth/change-password</code>).</li><li>TOTP instellen: <code>/api/auth/totp/setup</code> (QR + herstelcodes), bevestigen met <code>/totp/verify</code>, uitzetten met <code>/totp/disable</code>. Een beheerder kan TOTP van een ander account resetten (<code>DELETE /api/accounts/{id}/totp</code>, <code>ACCOUNT_UPDATE</code>).</li><li>NGINX beperkt de login-endpoints tot een lage frequentie (zie hieronder).</li></ol>
+<h2 id="h-authenticatie-van-klanten">Authenticatie van klanten</h2>
+<p>OTP per e-mail + boekingsnummer, token gebonden aan één boeking: zie <a href="bookerportal.html">bookerportal.md</a>. <strong>Let op:</strong> de OTP-mail is nog een stub (logt de code); zie <a href="open-items.html">open-items.md</a>.</p>
+<h2 id="h-afscherming-van-templates-zeer-belangrijk">Afscherming van templates (zeer belangrijk)</h2>
+<p>Word- en e-mailtemplates worden door gebruikers (MANAGER) geschreven en zijn dus <strong>niet vertrouwd</strong>. FreeMarker kan anders met één regel een commando op de server uitvoeren (<code>?new</code> → <code>Execute</code>) of via Java-reflectie (<code>${x.class…}</code>) bij klassen komen. Maatregelen (<code>FreemarkerHardening</code>, <code>TemplateModels</code>, <code>EmailRenderServiceImpl</code>):</p>
+<ul><li><code>?new</code> uit (<code>ALLOWS_NOTHING_RESOLVER</code>), <code>?api</code> uit, geen <code>include</code>/<code>import</code> (geen template-loader).</li><li>Het model is <strong>plat</strong>: alleen maps, lijsten, tekst, getallen en booleans (datums → tekst, enums → naam). Geen Java-beans, dus geen <code>class</code>-property.</li><li>Voor e-mail: de body is <code>HTMLOutputFormat</code> (waarden worden HTML-ge-escaped); herhaalde tabellen valideren lijst- en itemnaam strikt (identifiers) voordat die in een FreeMarker-instructie komen.</li><li>De <code>.docx</code> uit de editor gaat door <strong>dezelfde</strong> afgeschermde straat; er is een test die een payload in de editor typt en bevestigt dat die geblokkeerd wordt (<code>HtmlToDocxConverterTest</code>, <code>DocgenTemplateInjectionTest</code>).</li><li>Afbeeldingen: type uit de <strong>bytes</strong> (PNG/JPEG/GIF/WebP, geen SVG), maximaal 2 MB; in een Word-template alleen uit de eigen bibliotheek, nooit via een URL opgehaald (geen SSRF).</li></ul>
+<h2 id="h-netwerklaag-nginx-deploy-nginx-rds-kbtg-nl-conf">Netwerklaag (NGINX, <code>deploy/nginx/rds.kbtg.nl.conf</code>)</h2>
+<ul><li>Eigen <code>server</code> voor <code>rds.kbtg.nl</code> met een <strong>Let's Encrypt-certificaat</strong> (automatisch vernieuwd) en HSTS; poort 80 stuurt door naar HTTPS (behalve de ACME-challenge).</li><li>Catch-all <code>default_server</code> (<code>deploy/nginx/catch-all.conf</code>): door het wildcard-DNS-record komt elk <code>*.kbtg.nl</code> bij de server uit; onbekende hostnamen en het kale IP krijgen geen antwoord (<code>444</code>) en geen TLS-handshake, dus er lekt ook geen certificaat met de namen van andere sites.</li><li>Publiek zonder login alleen wat nodig is: de Mollie-webhook (exacte location) en e-mailafbeeldingen (exact <code>/api/public/email-images/&lt;uuid&gt;</code>, alleen GET/HEAD).</li><li>Rate-limits (<code>deploy/nginx/rds-zones.conf</code>): <code>rds_login</code> (employee-login, TOTP, herstelcode, booker-OTP), <code>rds_mollie</code> (webhook), <code>rds_email_image</code> (afbeeldingen).</li><li>Scanner-/exploit-paden (<code>/.…</code>, <code>.php</code>, <code>/vendor/</code>, <code>.env</code>, <code>/mcp</code>, <code>/graphql</code>, …) worden met <code>444</code> afgekapt.</li><li><code>/api/</code> → <code>http://127.0.0.1:8666/rds/api/</code>; de backend luistert alleen op <code>127.0.0.1</code>.</li></ul>
+<h2 id="h-geschiedenis-niet-kwijtraken-verwijderbescherming">Geschiedenis niet kwijtraken (verwijderbescherming)</h2>
+<p>Aangemaakte documenten en betalingen zijn de "waarheid" en mogen niet verdwijnen. De database zou ze echter stilletjes meeverwijderen (<code>ON DELETE CASCADE</code>) zodra een boeking, of iets waaraan een boeking hangt, wordt verwijderd. <code>DeletionGuard</code> (<code>booking/service</code>) weigert daarom met <strong>409 Conflict</strong> (<code>DeletionBlockedException</code>) het verwijderen van:</p>
+<ul><li>een <strong>boeking</strong> met documenten, betalingen, een herkoppeling (als van- of naar-boeking) of verzonden e-mails (<code>sent_email</code>);</li><li>een <strong>booker, accommodatie, leverancier of activiteit</strong> die voorkomt in een boeking met documenten of betalingen.</li></ul>
+<p>De controle zit in de services (dus niet te omzeilen via de API) en geldt voor iedereen met de verwijder-authority. Documenten en betalingen kunnen niet worden verwijderd: er is geen knop en geen endpoint (<code>DELETE</code> geeft <code>405</code>). Alleen voor betalingen en hun statusregels dwingen ook databasetriggers dat af.</p>
+<p><strong>Organisatie verwijderen:</strong> <code>OrganizationDeletionGuard</code> (<code>auth/service</code>) weigert met <strong>409</strong> zolang er nog data met <code>tenant_organization</code> = die organisatie is. De tabellen komen uit de databasecatalogus: elke tabel waarvan de foreign key op <code>tenant_organization</code> <code>ON DELETE RESTRICT</code> heeft (bedrijfsgegevens), dus een nieuwe tenant-tabel is automatisch meegenomen; de melding noemt de aantallen per tabel. Reden: een verwijderde organisatie zou verweesde data achterlaten. Sinds V21 dwingt de database dat ook zelf af: elke <code>tenant_organization</code> heeft een foreign key naar <code>organization</code> met <code>ON DELETE RESTRICT</code> (bewust geen cascade: betalingen mogen nooit verdwijnen, V11/V12, en administratie hoort niet met één klik weg te gaan). Handmatige SQL of een codepad zonder guard stuit dus op een foreign-key-fout; de guard blijft voor de nette 409 met aantallen. Personen, accounts, thema en instellingen hebben sinds V22 ook <code>tenant_organization</code>, met <code>ON DELETE CASCADE</code>: die gaan mee met een lege organisatie (<code>TenantOrganizationForeignKeyTest</code> houdt die lijst vast). Verplaatsen of eerst opruimen is aan de beheerder. Verzonden e-mails aan de hoofdboeker (<code>sent_email</code>) hangen aan een boeking en blokkeren dat verwijderen al; e-mailtemplates zijn gewoon te verwijderen.</p>
+<h2 id="h-foutafhandeling">Foutafhandeling</h2>
+<p><code>@ControllerAdvice</code> (<code>GlobalExceptionHandler</code>), antwoorden <code>{ message, status, timestamp }</code>. Een onbekende of onbevoegde bron geeft bewust dezelfde soort melding (geen lekken over andermans data). Tabel met statuscodes: <a href="architecture.html">architecture.md</a>.</p>
+<h2 id="h-regels-bij-nieuwe-code">Regels bij nieuwe code</h2>
+<ul><li>Nieuwe endpoint ⇒ <code>@PreAuthorize</code> met een bestaande of nieuwe authority (nieuwe via Flyway) en een test voor ADMIN/EMPLOYEE/MANAGER/ongeauthenticeerd.</li><li>Nieuwe tenant-entiteit ⇒ <code>tenant_organization</code> NOT NULL met foreign key <code>fk_&lt;tabel&gt;_tenant_organization</code> naar <code>organization</code> (<code>ON DELETE RESTRICT</code>) en een index, service-controle, test dat een andere organisatie niets ziet. <code>TenantOrganizationForeignKeyTest</code> faalt als de foreign key ontbreekt.</li><li><strong>Verwijzingen controleren, niet alleen het object zelf.</strong> Een <code>create</code>/<code>update</code> die een ander object via id koppelt (boeking, booker, accommodatie, …) moet ook de organisatie van díe verwijzing controleren (<code>verifyOrganization(...)</code>), anders kan een gebruiker een object van een andere tenant aan zijn eigen gegevens hangen. Zo is dat bij <code>BookingServiceImpl.resolveBooker</code>, <code>DocumentServiceImpl</code> en <code>TravelerServiceImpl</code> (<code>resolveBooking</code>).</li><li><strong>Rollen toewijzen:</strong> zie <em>Rollen en authorities</em> hierboven (V24): alleen rollen van dezelfde organisatie als het account, onder je eigen niveau; ADMIN bestaat bij een klant niet en is dus nooit toe te wijzen. De frontend vraagt via <code>GET /api/account-roles/assignable-roles?accountId=…</code> welke rollen de gebruiker voor dat account mag beheren en toont alleen die; een 403 of 409 bij toewijzen of intrekken geeft een duidelijke melding.</li><li><strong>Nooit entities in een response.</strong> <code>/api/account-roles</code> gaf eerder de <code>AccountRole</code>-entity terug en lekte daarmee <code>passwordHash</code>, TOTP-geheim, herstelcodes en <code>mollieKey</code>; nu <code>AccountRoleResponseDto</code> (alleen ids en rolnaam). Hetzelfde is gedaan voor <code>/api/role-authorities</code> (<code>RoleAuthorityResponseDto</code>). <code>NoEntityInApiTest</code> laat de build falen zodra een controller-methode (parameter of return, ook geneste typen) of een DTO een JPA-entity gebruikt.</li><li>Extern bereikbare endpoints ⇒ minimale eigen DTO's.</li><li>Geen wachtwoorden, sleutels of tokens loggen of in documentatie zetten.</li></ul>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

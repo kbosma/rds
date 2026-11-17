@@ -55,6 +55,18 @@ Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onde
 
 - **Authorities, geen rollen.** Wat een scherm nodig heeft staat één keer in `core/auth/access.ts` (`ACCESS`, met `anyOf`/`allOf`); het menu (`NavItem.access`) en de route-guards lezen daaruit. Knoppen en kaarten gebruiken `authService.hasAuthority('…')` of `authService.can(ACCESS.…)`. `AuthService.authorities` is een signal, zodat alles opnieuw tekent bij een nieuw token. Er is geen `hasRole` meer; rolnamen komen alleen als tekst in beeld (welkomstkop, rolfilter in de accountlijst, die de rollen uit de lijst zelf haalt).
 - **Een kaart haalt alleen op wat mag.** Een kaart of dashboard die een eigen API-aanroep doet, toont zich en roept aan alleen met de bijbehorende authority (bijv. betalingen met `PAYMENT_READ`, documenten met `DOCUMENT_READ` in de boekingsdetails; de dashboards via `ACCESS.adminDashboard`/`managerDashboard`). Zo geeft een gedeeltelijke set rechten (eigen rol) nooit 403-fouten.
+
+```mermaid
+flowchart TD
+    L["Login / token/refresh"] --> AS["AuthService<br/>token-signal → authorities (computed)"]
+    AS --> ACC["ACCESS (core/auth/access.ts)<br/>authorities per scherm"]
+    ACC --> M["Menu (layout)"]
+    ACC --> G["authorityGuard op elke route<br/>geen recht → dashboard + melding"]
+    AS --> K["Kaarten en knoppen<br/>hasAuthority / can()"]
+    I["authInterceptor"] -- "401 AUTHZ_CHANGED" --> RF["token verversen,<br/>aanroep herhalen"]
+    RF --> AS
+    I -- "andere 401" --> LO["uitloggen"]
+```
 - **Geen API-calls in componenten:** altijd via een service (`booking.service.ts`, …) die `ApiService` of `HttpClient` gebruikt.
 - **Signals + standalone:** state in `signal()`/`computed()`; `input()` voor component-inputs; formulieren zijn reactive forms (of `ngModel` in kleine dialogen). Velden die via `ngModel` veranderen horen niet in een `computed` (die ziet de wijziging niet): gebruik een methode of een signal.
 - **Dialogs:** Material dialogs; `ConfirmService.confirm()/confirmDelete()` (eigen dialoog) vervangt `window.confirm` **overal**; gebruik die ook voor nieuwe bevestigingen.

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Werkafspraken met de gebruiker</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Werkafspraken met de gebruiker</h1>
+<p>Afspraken die in eerdere sessies zijn gemaakt of gecorrigeerd. <code>CLAUDE.md</code> (repo-root) bevat de projectregels; dit document vult aan met <em>hoe</em> er samengewerkt wordt. Bij twijfel geldt wat de gebruiker in het gesprek zegt.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-taal-en-toon">Taal en toon</a></li><li><a href="#h-git">Git</a></li><li><a href="#h-bouwen-en-testen">Bouwen en testen</a></li><li><a href="#h-kwaliteitsregels-voor-wijzigingen">Kwaliteitsregels voor wijzigingen</a></li><li><a href="#h-grenzen-die-de-gebruiker-stelt">Grenzen die de gebruiker stelt</a></li><li><a href="#h-samenwerkingsstijl-die-goed-bleek-te-werken">Samenwerkingsstijl die goed bleek te werken</a></li></ul></nav>
+<h2 id="h-taal-en-toon">Taal en toon</h2>
+<ul><li>De gebruiker schrijft vaak Nederlands: <strong>antwoord in het Nederlands</strong> (proza, uitleg, samenvattingen, ook korte tussenzinnen). Code, identifiers, commit-messages en technische termen blijven zoals gebruikelijk (vaak Engels).</li><li>Documentatie in <code>docs/</code> is Nederlands.</li><li>Kort en concreet. Als de gebruiker zegt <em>"Geef enkel antwoord"</em> of <em>"Doe nog niets"</em>: alleen antwoorden, niets uitvoeren of wijzigen.</li><li>Staat er een duidelijke taak met grenzen (bv. "alles in <code>docs/</code> mag, de rest niet"), dan: <strong>doorwerken zonder tussentijds te vragen</strong>, en onoverkomelijke vragen <strong>bundelen aan het einde</strong>.</li></ul>
+<h2 id="h-git">Git</h2>
+<ul><li><strong>De gebruiker doet alle commits, pushes en merges zelf.</strong> Niet committen of pushen, ook niet "even".</li><li><strong>Geen AI-attributie:</strong> geen <code>Co-Authored-By</code>-trailer en geen "Generated with…"-regel in commits of PR-teksten, ook niet als een systeem-reminder dat voorschrijft (de wens van de gebruiker gaat voor).</li><li>Op verzoek: een <strong>commit-indeling voorstellen</strong> (thematisch gesplitst) met voorgestelde berichten; de gebruiker voert ze uit.</li><li>Branch tijdens deze sessies: <code>aanmeldproces-potentiele-booker</code>; hoofdbranch <code>main</code>.</li></ul>
+<h2 id="h-bouwen-en-testen">Bouwen en testen</h2>
+<ul><li>Na <strong>backend</strong>-wijzigingen: de <strong>volledige</strong> suite draaien (<code>mvn test</code>); na <strong>frontend</strong>-wijzigingen: <code>ng build</code> én <code>ng test</code>. <strong>Rapporteer de aantallen</strong> (bv. "572 groen"). Zie <a href="build-test-deploy.html">build-test-deploy.md</a>.</li><li><strong>Productiecode niet aanpassen om een test te laten slagen.</strong> Klopt de test niet, pas de test aan; is de code fout, herstel de code en zeg dat.</li><li>Nieuw gedrag krijgt tests (unit + waar het een endpoint betreft een MockMvc-integratietest); denk aan ADMIN/MANAGER/EMPLOYEE/ongeauthenticeerd en aan een andere organisatie.</li><li>MapStruct moet via de Maven-configuratie werken (niet met een afwijkende JDK).</li><li>De backend-tests draaien op een <strong>eigen tijdelijke embedded PostgreSQL</strong> (zie <a href="build-test-deploy.html">build-test-deploy.md</a>); ze hebben geen lokale database nodig en raken de <code>rdsdb</code> niet. Tests mogen dus ook vanuit de Claude-app gedraaid worden (<code>./mvnw test</code>).</li><li><strong>Editor-stubs:</strong> de Java-editor van de gebruiker kan na een bestandswijziging eigen <code>.class</code>-bestanden in <code>target/</code> schrijven ("Unresolved compilation problem" / <code>NoClassDefFoundError</code>). Wacht enkele seconden, verwijder die stubs en draai opnieuw. De Maven-build zelf gebruikt <code>javac</code> en is correct.</li></ul>
+<h2 id="h-kwaliteitsregels-voor-wijzigingen">Kwaliteitsregels voor wijzigingen</h2>
+<ul><li><strong>Lees eerst, schrijf daarna:</strong> voordat je voorbeelden, segmenten, i18n-verwijzingen of DTO's schrijft, lees de echte entity/het model/het vertaalbestand. <strong>Verzin nooit velden of sleutels.</strong></li><li>Entity-<code>update()</code> mag <code>createdAt</code>, <code>createdBy</code> en <code>tenantOrganization</code> niet kwijtraken; draai de DB-tests na wijzigingen aan update-logica.</li><li>Externe/booker-portal-endpoints geven <strong>minimale eigen DTO's</strong>; nooit entities.</li><li>De UI toont op <strong>authorities</strong>, nooit op rollen. Geen API-calls in componenten.</li><li>Elke zichtbare tekst in <strong>beide</strong> talen (<code>nl.json</code>, <code>en.json</code>). Bevestigingen via <code>ConfirmService</code>, niet <code>window.confirm</code>.</li><li>Een nieuwe afhankelijkheid moet een permissieve licentie hebben (bv. jsoup = MIT) en wordt in de eindsamenvatting genoemd.</li><li><strong>Beveiligingsgevoelige code</strong> (templating, uploads, publieke endpoints, auth) krijgt aandacht voor injectie/RCE; de gebruiker heeft hiervoor <code>/security-review</code> laten draaien (dat leidde tot de FreeMarker-afscherming, zie <a href="design-decisions.html">design-decisions.md</a>).</li><li>Geen geheimen (wachtwoorden, API-sleutels, tokens) in documentatie, logs of antwoorden herhalen.</li></ul>
+<h2 id="h-grenzen-die-de-gebruiker-stelt">Grenzen die de gebruiker stelt</h2>
+<ul><li>Alleen binnen <code>/Users/keesbosma/Code/rds</code> werken; de rest van het besturingssysteem is verboden terrein. Bij een documentatietaak: alleen in <code>docs/</code> schrijven, ook geen tijdelijke bestanden buiten de repo.</li><li>Server- of netwerkwijzigingen (NGINX-config toepassen, deploy, <code>systemctl</code>) doet de gebruiker zelf; wij leveren de versioneerde config (<code>deploy/nginx/</code>) en scripts (<code>deploy/scripts/deploy-nginx.sh</code>).</li><li>Niet herhaaldelijk om computer-use-rechten vragen. Schermafbeeldingen van de draaiende app: met de Claude Preview-tools (<code>preview_screenshot</code>), geen HTML-mockups of Puppeteer.</li><li>De Maven-binary van de gebruiker: <code>/Users/keesbosma/apache-maven-3.9.16/bin/mvn</code> (naast <code>./mvnw</code>).</li></ul>
+<h2 id="h-samenwerkingsstijl-die-goed-bleek-te-werken">Samenwerkingsstijl die goed bleek te werken</h2>
+<ul><li><strong>Voorstel vóór grote wijzigingen</strong> als er echte keuzes zijn (bv. waar afbeeldingen worden opgeslagen, welke aanpak voor Word-templates): korte opties met een aanbeveling; de gebruiker beslist en de keuze wordt vastgelegd in <a href="design-decisions.html">design-decisions.md</a>.</li><li><strong>In stappen leveren</strong> (slices): eerst de backend, dan de UI, met tests per stap.</li><li>Bij een bug eerst <strong>bewijzen</strong> (reproductie/probe), dan oplossen, dan een test toevoegen.</li><li>Fouten van de server tonen in de UI waar dat de gebruiker helpt (<code>error.error.message</code>).</li></ul>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booker-portal (klanten, OTP-login)</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Booker-portal (klanten, OTP-login)</h1>
+<p>Externe klanten (bookers) loggen <strong>zonder wachtwoord</strong> in met een eenmalige code (OTP). Ze krijgen een beperkt JWT dat alleen toegang geeft tot de data van <strong>hun eigen boeking</strong> via <code>/api/booker-portal/**</code>. De frontend is <code>frontend-booker</code>: één <strong>dashboard</strong> met alles van de boeking op één pagina (zie <a href="frontend.html">frontend.md</a>; het ontwerp staat in <a href="voorstel-booker-dashboard.html">voorstel-booker-dashboard.md</a>).</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-loginflow">Loginflow</a></li><li><a href="#h-token-en-context">Token en context</a></li><li><a href="#h-endpoints">Endpoints</a></li><li><a href="#h-het-dashboard-frontend">Het dashboard (frontend)</a></li><li><a href="#h-package-structuur">Package-structuur</a></li><li><a href="#h-testen-met-curl">Testen met curl</a></li></ul></nav>
+<h2 id="h-loginflow">Loginflow</h2>
+<figure class="diagram"><pre class="mermaid">
+sequenceDiagram
+    actor K as Klant (frontend-booker)
+    participant BE as Backend
+    participant DB as PostgreSQL
+    K-&gt;&gt;BE: POST /api/booker-auth/request-otp { emailaddress, bookingNumber }
+    BE-&gt;&gt;DB: boeking zoeken op bookingNumber + e-mailadres van de hoofdboeker
+    alt combinatie bestaat en er zijn &lt; max actieve OTP&#x27;s
+        BE-&gt;&gt;DB: Otp (6 cijfers, verloopt na 10 min)
+        BE-&gt;&gt;BE: OtpEmailService.sendOtp(...)  (nu: alleen loggen!)
+    end
+    BE--&gt;&gt;K: altijd 200 (voorkomt dat je kunt raden welke combinaties bestaan)
+    K-&gt;&gt;BE: POST /api/booker-auth/verify-otp { emailaddress, bookingNumber, code }
+    BE-&gt;&gt;DB: Otp zoeken (niet verified), verloop controleren, markeren als verified
+    BE--&gt;&gt;K: { token (type=BOOKER), bookerId, bookingId }
+</pre></figure>
+<ul><li>De code is 6 cijfers (<code>SecureRandom</code>, 100000–999999). Instellingen: <code>app.otp.expiry-minutes</code> (10), <code>app.otp.max-active-per-email</code> (3).</li><li><strong>De OTP-mail wordt nog niet echt verstuurd</strong>: <code>OtpEmailService.sendOtp</code> logt de code. Zie <a href="open-items.html">open-items.md</a> (ook daar: verlopen OTP's tellen mee voor het maximum).</li><li>NGINX beperkt <code>/api/booker-auth/</code> tot een lage frequentie tegen raden.</li></ul>
+<h2 id="h-token-en-context">Token en context</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Claim</th><th>Medewerker</th><th>Booker</th></tr></thead><tbody>
+<tr><th scope="row"><code>sub</code></th><td>accountId</td><td>bookerId</td></tr>
+<tr><th scope="row"><code>type</code></th><td><code>EMPLOYEE</code></td><td><code>BOOKER</code></td></tr>
+<tr><th scope="row"><code>bookingId</code></th><td>–</td><td>de boeking</td></tr>
+<tr><th scope="row"><code>org</code>, <code>authorities</code>, <code>roles</code></th><td>ja</td><td>nee</td></tr>
+<tr><th scope="row">Levensduur</th><td><code>app.jwt.expiration-ms</code> (1 uur)</td><td><code>app.jwt.booker-expiration-ms</code> (1 uur)</td></tr>
+</tbody></table></div>
+<p><code>JwtAuthenticationFilter</code> zet bij <code>type=BOOKER</code> de <code>BookerContext</code> (ThreadLocal, parallel aan <code>TenantContext</code>): <code>getBookerId()</code>, <code>getBookingId()</code>, <code>isBooker()</code>; opgeruimd in dezelfde <code>finally</code>. Een <code>BOOKER</code>-token krijgt vast de authorities <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code> (die staan niet in de rol-tabel).</p>
+<h2 id="h-endpoints">Endpoints</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
+<tr><th scope="row">POST</th><td><code>/api/booker-auth/request-otp</code></td><td>publiek</td><td>OTP aanvragen</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-auth/verify-otp</code></td><td>publiek</td><td>OTP verifiëren → JWT</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/overview</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>kerngegevens voor het dashboard: boekingsnummer, status, periode, totaalbedrag, voornaam van de boeker, voornamen van de reizigers, naam en huisstijl van de organisatie</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/itinerary</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>reisschema van de boeking (verblijven en activiteiten door elkaar; het dashboard gebruikt de twee lijsten hieronder)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/booking-lines</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>boekingsregels (verblijven)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/booking-activities</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>boekingsactiviteiten</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/accommodations</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>accommodaties van de boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/activities</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>activiteiten van de boeking</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/documents</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>de documenten van de boeking met <code>visibleInPortal = true</code>, <strong>zonder de bytes</strong>: <code>documentId</code>, <code>displayname</code>, <code>mimeType</code>, <code>size</code>, <code>createdAt</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/documents/{id}/content</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>het bestand als download (<code>Content-Disposition: attachment</code>); alleen van de eigen boeking én zichtbaar in het portaal, anders 404</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/messages</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>de e-mails die via RDS aan de hoofdboeker van de eigen boeking zijn verstuurd (<code>sent_email</code>), nieuwste eerst, <strong>zonder inhoud</strong>: <code>messageId</code>, <code>subject</code>, <code>fromAddress</code>, <code>resent</code>, <code>createdAt</code> (geen ontvangersadres, medewerker of tenant)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/messages/{id}</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>één mail met de HTML zoals verstuurd (<code>bodyHtml</code>); een mail van een andere boeking is 404</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/payments</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>betalingen van de boeking met de <strong>huidige status</strong> al bepaald: <code>molliePaymentId</code>, <code>description</code>, <code>amount</code>, <code>currency</code>, <code>method</code>, <code>currentStatus</code>, <code>createdAt</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/payments/status-entries</code></td><td><code>BOOKER_PORTAL_READ</code></td><td>statushistorie: alleen <code>molliePaymentId</code>, <code>status</code>, <code>createdAt</code> (geen reden, correctie of naam van een medewerker)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-portal/payments/pay/{molliePaymentId}</code></td><td><code>BOOKER_PORTAL_UPDATE</code></td><td>betaling bij Mollie starten → <code>checkoutUrl</code></td></tr>
+</tbody></table></div>
+<p>Ontwerpregels: alle antwoorden zijn <strong>eigen, minimale DTO's</strong> (geen entities of brede DTO's; geen <code>createdBy</code>, <code>tenantOrganization</code> of Mollie-gegevens) en elke query is gebonden aan het <code>bookingId</code> uit de <code>BookerContext</code>; een <code>molliePaymentId</code> of document van een andere boeking wordt geweigerd. Tests (<code>BookerPortal*ControllerTest</code>) controleren per endpoint dat er niets interns meekomt. De betaalflow staat in <a href="mollie.html">mollie.md</a>.</p>
+<h2 id="h-het-dashboard-frontend">Het dashboard (frontend)</h2>
+<p>Het scherm van de klant is één pagina; de klant hoeft nergens op te klikken om iets te zien. De kaarten (kop met aftelling of dag van de reis en voortgang van de boeking, <em>wat komt eraan / nu</em>, tijdlijn, betalingen, verblijven, activiteiten, en berichten en documenten) laden elk met een eigen laad-, leeg- en foutstand. De kaart <em>Berichten en documenten</em> toont de verzonden e-mails en de vrijgegeven documenten in één lijst; <strong>alle</strong> verzonden e-mails aan de hoofdboeker staan erin (de klant heeft ze immers ontvangen), betalingen niet. De indeling past zich aan de schermbreedte aan: telefoon (&lt; 600 px) één kolom, tablet (600–999 px) twee kolommen, desktop (≥ 1000 px) een brede en een smalle kolom. Details in <a href="frontend.html#frontend-booker">frontend.md</a> en <a href="voorstel-booker-dashboard.html">voorstel-booker-dashboard.md</a>.</p>
+<ul><li>De <strong>fase van de reis</strong> (voor, tijdens, na) volgt uit de datums, niet uit de status; de status zet een medewerker handmatig.</li><li>De <strong>huisstijl</strong> van de organisatie (<code>primaryColor</code>, <code>accentColor</code>, <code>cardTitleColor</code>) komt uit <code>overview</code> en kleurt de hele pagina; zonder thema blijft de standaard-teal.</li><li><strong>Betalen:</strong> de knop start <code>POST …/payments/pay/{id}</code> en stuurt de klant naar Mollie. Na terugkeer (Mollie stuurt naar <code>/payments</code>, dat naar het dashboard verwijst) ververst het dashboard de betalingen ±30 seconden, tot de webhook de nieuwe status heeft gezet.</li></ul>
+<h2 id="h-package-structuur">Package-structuur</h2>
+<pre class="sketch">bookerportal.entity      Otp
+bookerportal.dto         OtpRequestDto, OtpVerifyDto, BookerLoginResponseDto, BookerPortalAccommodationDto, BookerPortalActivityDto, ItineraryItemDto,
+                         Portal{Overview,Booking,Booker,Traveler,Organization,Document,DocumentContent,Message,MessageContent,Payment,PaymentStatus}Dto (records)
+bookerportal.mapper      PortalMapper (MapStruct: entities → minimale DTO&#x27;s; enums als lowercase)
+bookerportal.repository  OtpRepository
+bookerportal.service     BookerAuthService, OtpEmailService, BookerPortalOverviewService, BookerPortalDocumentService, BookerPortalMessageService, BookerPortalPaymentService
+bookerportal.controller  BookerAuthController, BookerPortal{Overview,Accommodations,Activities,BookingActivity,BookingLine,Document,Itinerary,Message,Payment}Controller
+bookerportal.security    BookerContext</pre>
+<h2 id="h-testen-met-curl">Testen met curl</h2>
+<pre class="sketch"># lokaal draait de backend zonder TLS op 127.0.0.1:8666, context-path /rds
+curl -X POST http://localhost:8666/rds/api/booker-auth/request-otp \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;emailaddress&quot;:&quot;klaas@example.com&quot;,&quot;bookingNumber&quot;:&quot;BK-2026-001&quot;}&#x27;
+# de code staat in het backend-log (OtpEmailService)
+curl -X POST http://localhost:8666/rds/api/booker-auth/verify-otp \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;emailaddress&quot;:&quot;klaas@example.com&quot;,&quot;bookingNumber&quot;:&quot;BK-2026-001&quot;,&quot;code&quot;:&quot;&lt;code&gt;&quot;}&#x27;
+curl http://localhost:8666/rds/api/booker-portal/overview -H &quot;Authorization: Bearer &lt;booker-token&gt;&quot;
+curl http://localhost:8666/rds/api/booker-portal/documents -H &quot;Authorization: Bearer &lt;booker-token&gt;&quot;</pre>
+<p>(De seed-boekingen hebben andere nummers dan <code>BK-2026-001</code>; kijk in <code>V2__initial_data.sql</code> of in de UI.)</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>
