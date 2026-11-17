@@ -5,14 +5,15 @@ De HTML heeft tabellen met lijnen, duidelijke koppen en afwisselende rijkleuren,
 thema en gerenderde Mermaid-diagrammen. Het .md-bestand blijft de bron; draai dit script na elke wijziging:
 
     python3 docs/tools/md-naar-html.py docs/voorstel-eigen-rollen.md
+    python3 docs/tools/md-naar-html.py docs/*.md        (alles; links tussen de documenten wijzen dan naar de HTML)
 
-Ondersteunt de Markdown die in deze docs gebruikt wordt: koppen, alinea's, (geneste) lijsten, tabellen,
-citaatblokken, codeblokken, ```mermaid```-blokken, **vet**, *cursief*, `code` en links. Geen externe pakketten nodig.
+Ondersteunt de Markdown die in deze docs gebruikt wordt: koppen, alinea's, (geneste) lijsten met codeblokken,
+tabellen, citaatblokken, codeblokken, ```mermaid```-blokken, afbeeldingen, losse HTML-blokken, **vet**, *cursief*,
+`code` en links. Geen externe pakketten nodig.
 """
 import re, sys, html, pathlib
-md_path = pathlib.Path(sys.argv[1])
-src = md_path.read_text().split('\n')
-title = next(l[2:].strip() for l in src if l.startswith('# '))
+
+CONVERTING = {pathlib.Path(a).resolve() for a in sys.argv[1:]}
 
 TEMPLATE = r'''<!doctype html>
 <html lang="nl">
@@ -54,6 +55,7 @@ TEMPLATE = r'''<!doctype html>
   figure.diagram pre.mermaid { margin: 0; text-align: center; }
   pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
   li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
   @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
   @media print { thead th { position: static; } body { max-width: none; } }
 </style>
@@ -68,88 +70,131 @@ TEMPLATE = r'''<!doctype html>
 '''
 
 
-def inline(t):
-    parts = re.split(r'(`[^`]+`)', t)
-    out = []
-    for p in parts:
-        if p.startswith('`') and p.endswith('`') and len(p) > 1:
-            out.append('<code>' + html.escape(p[1:-1]) + '</code>')
-        else:
-            p = html.escape(p, quote=False)
-            p = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', p)
-            p = re.sub(r'(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])', r'<em>\1</em>', p)
-            p = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', lambda m: '<a href="%s">%s</a>' % (m.group(2).replace('.md', '.md'), m.group(1)), p)
-            out.append(p)
-    return ''.join(out)
+def link_target(href, base):
+    """Een link naar een ander document dat ook wordt omgezet, gaat naar diens HTML."""
+    path, _, anchor = href.partition('#')
+    if path.endswith('.md') and (base / path).resolve() in CONVERTING:
+        return path[:-3] + '.html' + ('#' + anchor if anchor else '')
+    return href
+
+
+def inline(t, base=pathlib.Path('.')):
+    # Codestukken eerst apart zetten, zodat **vet** en [links](...) eromheen kunnen staan.
+    codes = []
+    def stash(m):
+        codes.append('<code>' + html.escape(m.group(1)) + '</code>')
+        return f'\x00{len(codes) - 1}\x00'
+    p = re.sub(r'`([^`]+)`', stash, t)
+    p = html.escape(p, quote=False)
+    p = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', p)
+    p = re.sub(r'(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])', r'<em>\1</em>', p)
+    p = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', r'<img src="\2" alt="\1">', p)
+    p = re.sub(r'(?<!!)\[([^\]]+)\]\(([^)]+)\)', lambda m: '<a href="%s">%s</a>' % (link_target(m.group(2), base), m.group(1)), p)
+    return re.sub(r'\x00(\d+)\x00', lambda m: codes[int(m.group(1))], p)
+
 
 def slug(t):
     t = re.sub(r'<[^>]+>', '', t).lower()
     return 'h-' + re.sub(r'[^a-z0-9]+', '-', t).strip('-')
 
-body = []; toc = []
-i = 0
-def cells(line):
-    return [c.strip() for c in line.strip().strip('|').split('|')]
-while i < len(src):
-    l = src[i]
-    if l.startswith('```'):
-        lang = l[3:].strip(); j = i + 1; buf = []
-        while not src[j].startswith('```'): buf.append(src[j]); j += 1
-        code = '\n'.join(buf)
-        if lang == 'mermaid':
-            body.append('<figure class="diagram"><pre class="mermaid">\n' + html.escape(code) + '\n</pre></figure>')
-        else:
-            body.append('<pre class="sketch">' + html.escape(code) + '</pre>')
-        i = j + 1; continue
-    m = re.match(r'(#{1,4}) (.*)', l)
-    if m:
-        lvl = len(m.group(1)); txt = inline(m.group(2))
-        if lvl == 1:
-            i += 1; continue
-        sid = slug(txt)
-        if lvl == 2: toc.append((sid, re.sub(r'<[^>]+>', '', txt)))
-        body.append(f'<h{lvl} id="{sid}">{txt}</h{lvl}>'); i += 1; continue
-    if l.strip() == '---':
-        i += 1; continue
-    if l.startswith('|'):
-        rows = []
-        while i < len(src) and src[i].startswith('|'): rows.append(src[i]); i += 1
-        head = cells(rows[0]); data = [cells(r) for r in rows[2:]]
-        t = ['<div class="tablewrap"><table>', '<thead><tr>' + ''.join(f'<th>{inline(c)}</th>' for c in head) + '</tr></thead><tbody>']
-        for r in data:
-            t.append('<tr>' + ''.join((f'<th scope="row">{inline(c)}</th>' if k == 0 else f'<td>{inline(c)}</td>') for k, c in enumerate(r)) + '</tr>')
-        t.append('</tbody></table></div>'); body.append('\n'.join(t)); continue
-    if l.startswith('> '):
-        buf = []
-        while i < len(src) and src[i].startswith('>'): buf.append(src[i][1:].strip()); i += 1
-        body.append('<div class="callout">' + '<br>'.join(inline(b) for b in buf) + '</div>'); continue
-    if re.match(r'\s*(- |\d+\. )', l):
-        items = []
-        while i < len(src) and (re.match(r'\s*(- |\d+\. )', src[i]) or (src[i].startswith('  ') and src[i].strip())):
-            mm = re.match(r'(\s*)(- |\d+\. )(.*)', src[i])
-            if mm:
-                items.append([len(mm.group(1)), 'ul' if mm.group(2) == '- ' else 'ol', mm.group(3)])
+def convert(md_path):
+    src = md_path.read_text().split('\n')
+    title = next((l[2:].strip() for l in src if l.startswith('# ')), md_path.stem)
+    base = md_path.parent
+    inl = lambda t: inline(t, base)
+    body = []; toc = []
+    i = 0
+    def cells(line):
+        return [c.strip().replace('\\|', '|') for c in re.split(r'(?<!\\)\|', line.strip().strip('|'))]
+    while i < len(src):
+        l = src[i]
+        if l.startswith('```'):
+            lang = l[3:].strip(); j = i + 1; buf = []
+            while not src[j].startswith('```'): buf.append(src[j]); j += 1
+            code = '\n'.join(buf)
+            if lang == 'mermaid':
+                body.append('<figure class="diagram"><pre class="mermaid">\n' + html.escape(code) + '\n</pre></figure>')
             else:
-                items[-1][2] += ' ' + src[i].strip()
-            i += 1
-        def render(k, ind):
-            tag = items[k][1]; out = [f'<{tag}>']
-            while k < len(items) and items[k][0] >= ind:
-                if items[k][0] > ind:
-                    sub, k = render(k, items[k][0]); out[-1] = out[-1][:-5] + sub + '</li>'; continue
-                out.append('<li>' + inline(items[k][2]) + '</li>'); k += 1
-            out.append(f'</{tag}>'); return ''.join(out), k
-        body.append(render(0, items[0][0])[0]); continue
-    if l.strip() == '':
-        i += 1; continue
-    buf = []
-    while i < len(src) and src[i].strip() and not re.match(r'(#|\||```|> |\s*- |\s*\d+\. )', src[i]) and src[i].strip() != '---':
-        buf.append(src[i].strip()); i += 1
-    body.append('<p>' + inline(' '.join(buf)) + '</p>')
+                body.append('<pre class="sketch">' + html.escape(code) + '</pre>')
+            i = j + 1; continue
+        m = re.match(r'(#{1,4}) (.*)', l)
+        if m:
+            lvl = len(m.group(1)); txt = inl(m.group(2))
+            if lvl == 1:
+                i += 1; continue
+            sid = slug(txt)
+            if lvl == 2: toc.append((sid, re.sub(r'<[^>]+>', '', txt)))
+            body.append(f'<h{lvl} id="{sid}">{txt}</h{lvl}>'); i += 1; continue
+        if l.strip() == '---':
+            i += 1; continue
+        if l.startswith('|'):
+            rows = []
+            while i < len(src) and src[i].startswith('|'): rows.append(src[i]); i += 1
+            head = cells(rows[0]); data = [cells(r) for r in rows[2:]]
+            t = ['<div class="tablewrap"><table>', '<thead><tr>' + ''.join(f'<th>{inl(c)}</th>' for c in head) + '</tr></thead><tbody>']
+            for r in data:
+                t.append('<tr>' + ''.join((f'<th scope="row">{inl(c)}</th>' if k == 0 else f'<td>{inl(c)}</td>') for k, c in enumerate(r)) + '</tr>')
+            t.append('</tbody></table></div>'); body.append('\n'.join(t)); continue
+        if l.startswith('> '):
+            buf = []
+            while i < len(src) and src[i].startswith('>'): buf.append(src[i][1:].strip()); i += 1
+            body.append('<div class="callout">' + '<br>'.join(inl(b) for b in buf) + '</div>'); continue
+        if re.match(r'\s*(- |\d+\. )', l):
+            items = []
+            def continues(k):
+                # Een lege regel hoort bij de lijst als daarna een ingesprongen regel (vervolg) komt.
+                while k < len(src) and not src[k].strip(): k += 1
+                return k < len(src) and src[k].startswith('  ')
+            while i < len(src) and (re.match(r'\s*(- |\d+\. )', src[i]) or (src[i].startswith('  ') and src[i].strip())
+                                    or (not src[i].strip() and continues(i))):
+                if not src[i].strip():
+                    i += 1; continue
+                if src[i].strip().startswith('```'):
+                    j = i + 1; buf = []
+                    while not src[j].strip().startswith('```'): buf.append(src[j].strip()); j += 1
+                    items[-1][2].append(('raw', '<pre class="sketch">' + html.escape('\n'.join(buf)) + '</pre>'))
+                    i = j + 1; continue
+                mm = re.match(r'(\s*)(- |\d+\. )(.*)', src[i])
+                if mm:
+                    items.append([len(mm.group(1)), 'ul' if mm.group(2) == '- ' else 'ol', [('text', mm.group(3))]])
+                elif items[-1][2][-1][0] == 'text' and src[i - 1].strip():
+                    items[-1][2][-1] = ('text', items[-1][2][-1][1] + ' ' + src[i].strip())
+                else:
+                    items[-1][2].append(('text', src[i].strip()))
+                i += 1
+            def render(k, ind):
+                tag = items[k][1]; out = [f'<{tag}>']
+                while k < len(items) and items[k][0] >= ind:
+                    if items[k][0] > ind:
+                        sub, k = render(k, items[k][0]); out[-1] = out[-1][:-5] + sub + '</li>'; continue
+                    parts = items[k][2]
+                    html_parts = [inl(v) if kind == 'text' else v for kind, v in parts]
+                    if len(parts) > 1:  # meerdere alinea's of codeblokken in één punt
+                        html_parts = [f'<p>{h}</p>' if kind == 'text' else h for (kind, _), h in zip(parts, html_parts)]
+                    out.append('<li>' + ''.join(html_parts) + '</li>'); k += 1
+                out.append(f'</{tag}>'); return ''.join(out), k
+            body.append(render(0, items[0][0])[0]); continue
+        if l.startswith('<'):
+            buf = []
+            while i < len(src) and src[i].strip(): buf.append(src[i]); i += 1
+            body.append('\n'.join(buf)); continue
+        if l.strip() == '':
+            i += 1; continue
+        buf = []
+        while i < len(src) and src[i].strip() and not re.match(r'(#|\||```|> |<|\s*- |\s*\d+\. )', src[i]) and src[i].strip() != '---':
+            buf.append(src[i].strip()); i += 1
+        body.append('<p>' + inl(' '.join(buf)) + '</p>')
 
-tochtml = '<nav class="toc"><strong>Inhoud</strong><ul>' + ''.join(f'<li><a href="#{s}">{t}</a></li>' for s, t in toc) + '</ul></nav>'
-first_h2 = next(k for k, b in enumerate(body) if b.startswith('<h2'))
-body.insert(first_h2, tochtml)
-out = TEMPLATE.replace('{{TITLE}}', html.escape(title)).replace('{{BODY}}', '\n'.join(body))
-md_path.with_suffix('.html').write_text(out)
-print(f'{md_path.with_suffix(".html")} geschreven')
+    tochtml = '<nav class="toc"><strong>Inhoud</strong><ul>' + ''.join(f'<li><a href="#{s}">{t}</a></li>' for s, t in toc) + '</ul></nav>'
+    if len(toc) >= 3:
+        first_h2 = next(k for k, b in enumerate(body) if b.startswith('<h2'))
+        body.insert(first_h2, tochtml)
+    out = TEMPLATE.replace('{{TITLE}}', html.escape(title)).replace('{{BODY}}', '\n'.join(body))
+    md_path.with_suffix('.html').write_text(out)
+    print(f'{md_path.with_suffix(".html")} geschreven')
+
+
+if len(sys.argv) < 2:
+    sys.exit('Gebruik: python3 docs/tools/md-naar-html.py <bestand.md> [...]')
+for arg in sys.argv[1:]:
+    convert(pathlib.Path(arg))
