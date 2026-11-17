@@ -9,6 +9,7 @@ import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.PersonRepository;
 import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.auth.service.AdministratorGuard;
 import nl.puurkroatie.rds.auth.service.AccountService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,12 +28,15 @@ public class AccountServiceImpl implements AccountService {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountMapper accountMapper;
+    private final AdministratorGuard administratorGuard;
 
-    public AccountServiceImpl(AccountRepository accountRepository, PersonRepository personRepository, PasswordEncoder passwordEncoder, AccountMapper accountMapper) {
+    public AccountServiceImpl(AccountRepository accountRepository, PersonRepository personRepository, PasswordEncoder passwordEncoder,
+                              AccountMapper accountMapper, AdministratorGuard administratorGuard) {
         this.accountRepository = accountRepository;
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
         this.accountMapper = accountMapper;
+        this.administratorGuard = administratorGuard;
     }
 
     @Override
@@ -60,6 +64,9 @@ public class AccountServiceImpl implements AccountService {
         if (!isAdmin()) {
             verifyOrganization(existing.getTenantOrganization());
         }
+        if (Boolean.TRUE.equals(dto.getLocked()) && !Boolean.TRUE.equals(existing.getLocked())) {
+            administratorGuard.verifyNotLastAdministrator(id, existing.getTenantOrganization());
+        }
         accountRepository.updateAccount(
                 id,
                 dto.getUserName(),
@@ -82,6 +89,7 @@ public class AccountServiceImpl implements AccountService {
         if (!isAdmin()) {
             verifyOrganization(existing.getTenantOrganization());
         }
+        administratorGuard.verifyNotLastAdministrator(id, existing.getTenantOrganization());
         accountRepository.deleteById(id);
     }
 

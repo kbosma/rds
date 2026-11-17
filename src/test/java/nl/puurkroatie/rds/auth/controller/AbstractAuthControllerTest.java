@@ -16,6 +16,7 @@ public abstract class AbstractAuthControllerTest extends AbstractControllerTest 
     protected static final UUID ADMIN_ACCOUNT_ID = UUID.fromString("e1000000-0000-0000-0000-000000000001");
     protected static final UUID EMPLOYEE_ACCOUNT_ID = UUID.fromString("e1000000-0000-0000-0000-000000000002");
     protected static final UUID MANAGER_ACCOUNT_ID = UUID.fromString("e1000000-0000-0000-0000-000000000003");
+    protected static final UUID EMPLOYEE_TECHPARTNER_ACCOUNT_ID = UUID.fromString("e1000000-0000-0000-0000-000000000004");
 
     // Role UUIDs uit data.sql
     protected static final UUID ROLE_ADMIN_ID = UUID.fromString("c1000000-0000-0000-0000-000000000001");

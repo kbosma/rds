@@ -43,8 +43,8 @@ export const ACCESS = {
   accountCreate: anyOf('ACCOUNT_CREATE'),
   roles: anyOf('ROLE_CREATE', 'ROLE_UPDATE', 'ROLE_DELETE'),
   roleCreate: anyOf('ROLE_CREATE'),
-  authorities: anyOf('AUTHORITY_CREATE', 'AUTHORITY_UPDATE', 'AUTHORITY_DELETE'),
-  authorityCreate: anyOf('AUTHORITY_CREATE'),
+  /** Overzicht van alle authorities: naslag voor het platform. */
+  authorities: allOf('AUTHORITY_READ', 'PLATFORM_ADMIN'),
   theme: anyOf('ORGANIZATION_THEME_UPDATE'),
   organizationSettings: anyOf('ORGANIZATION_SETTINGS_READ'),
 

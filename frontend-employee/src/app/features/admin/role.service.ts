@@ -7,8 +7,9 @@ export class RoleService {
   private api = inject(ApiService);
   private readonly endpoint = 'roles';
 
-  getAll() {
-    return this.api.getAll<Role>(this.endpoint);
+  /** De rollen van de eigen organisatie; een beheerder kan een organisatie opgeven. */
+  getAll(organizationId?: string) {
+    return this.api.getAll<Role>(this.endpoint, organizationId ? { organizationId } : undefined);
   }
 
   getById(id: string) {

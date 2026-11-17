@@ -85,7 +85,6 @@ class DeleteVerificationControllerTest extends AbstractBookingControllerTest {
     void theAdminResources_areReallyDeleted() throws Exception {
         String token = adminToken();
         assertDeletedForReal(token, "/api/roles", create(token, "/api/roles", "roleId", "{\"description\":\"TESTROL\"}"));
-        assertDeletedForReal(token, "/api/authorities", create(token, "/api/authorities", "authorityId", "{\"description\":\"TEST_AUTH\"}"));
         String org = create(token, "/api/organizations", "organizationId", "{\"name\":\"Leeg BV\"}");
         assertDeletedForReal(token, "/api/persons", create(token, "/api/persons", "persoonId",
                 "{\"firstname\":\"Los\",\"prefix\":null,\"lastname\":\"Persoon\",\"tenantOrganization\":\"" + org + "\"}"));

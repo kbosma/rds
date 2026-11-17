@@ -16,7 +16,7 @@ import { RoleAuthorityService } from './role-authority.service';
 import { AuthorityService } from './authority.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
-import { Authority } from '../../shared/models';
+import { Authority, Role } from '../../shared/models';
 
 @Component({
   selector: 'app-role-detail',
@@ -35,8 +35,14 @@ import { Authority } from '../../shared/models';
   template: `
     <div class="page-header">
       <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
-      <h1>{{ (isNew() ? 'roles.newRole' : 'roles.editTitle') | translate }}</h1>
+      <h1>{{ (isNew() ? 'roles.newRole' : (editable() ? 'roles.editTitle' : 'roles.viewTitle')) | translate }}</h1>
     </div>
+    @if (!isNew() && !editable()) {
+      <p class="locked-note">
+        <mat-icon>lock</mat-icon>
+        {{ (role()?.systemKey ? 'roles.systemRoleLocked' : 'roles.aboveYourLevel') | translate }}
+      </p>
+    }
     <mat-card class="detail-card">
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="save()">
@@ -45,10 +51,12 @@ import { Authority } from '../../shared/models';
             <input matInput formControlName="description" />
           </mat-form-field>
           <div class="actions">
-            <button mat-button type="button" (click)="goBack()">{{ 'common.cancel' | translate }}</button>
-            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving()">
-              {{ 'common.save' | translate }}
-            </button>
+            <button mat-button type="button" (click)="goBack()">{{ (editable() ? 'common.cancel' : 'common.close') | translate }}</button>
+            @if (editable()) {
+              <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving()">
+                {{ 'common.save' | translate }}
+              </button>
+            }
           </div>
         </form>
       </mat-card-content>
@@ -60,13 +68,18 @@ import { Authority } from '../../shared/models';
           <mat-card-title>{{ 'roles.authorities' | translate }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          @if (canAssign) {
+          @if (canAssign && editable()) {
             <div class="link-row">
               <mat-form-field appearance="outline" class="flex-1">
                 <mat-label>{{ 'roles.selectAuthority' | translate }}</mat-label>
                 <mat-select [formControl]="authorityControl">
                   @for (a of availableAuthorities(); track a.authorityId) {
-                    <mat-option [value]="a.authorityId">{{ a.description }}</mat-option>
+                    <mat-option [value]="a.authorityId">
+                      {{ a.description }}
+                      @if (a.requires?.length) {
+                        <span class="requires">({{ 'roles.alsoAdds' | translate }} {{ a.requires!.join(', ') }})</span>
+                      }
+                    </mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -80,7 +93,7 @@ import { Authority } from '../../shared/models';
             @for (a of assigned(); track a.authorityId) {
               <div class="list-item">
                 <span class="item-text">{{ a.description }}</span>
-                @if (canRemove) {
+                @if (canRemove && editable()) {
                   <button mat-icon-button type="button" class="remove-authority-btn act-delete" (click)="removeAuthority(a)">
                     <mat-icon>link_off</mat-icon>
                   </button>
@@ -100,6 +113,8 @@ import { Authority } from '../../shared/models';
     .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
     .list-item { display: flex; justify-content: space-between; align-items: center; gap: 4px; min-height: 32px; padding: 0 2px 0 10px; border: 1px solid var(--ui-line); border-radius: var(--ui-radius); }
     .item-text { font-size: 12px; overflow-wrap: anywhere; }
+    .locked-note { display: flex; align-items: center; gap: 6px; color: var(--ui-text-muted, #5b6b77); margin: -4px 0 12px; }
+    .requires { color: var(--ui-text-muted, #5b6b77); font-size: 12px; }
   `],
 })
 export class RoleDetailComponent implements OnInit {
@@ -118,6 +133,11 @@ export class RoleDetailComponent implements OnInit {
   canReadAuthorities = this.authService.hasAuthority('ROLEAUTHORITY_READ');
   canAssign = this.authService.hasAuthority('ROLEAUTHORITY_CREATE');
   canRemove = this.authService.hasAuthority('ROLEAUTHORITY_DELETE');
+
+  /** De rol zoals de server hem kent, met het oordeel of de gebruiker hem mag wijzigen. */
+  role = signal<Role | null>(null);
+  /** Een nieuwe rol is altijd te bewerken; een bestaande alleen als de server dat zegt (eigen rol, onder je niveau). */
+  editable = computed(() => this.isNew() || !!this.role()?.editable);
 
   assigned = signal<Authority[]>([]);
   private allAuthorities = signal<Authority[]>([]);
@@ -140,7 +160,11 @@ export class RoleDetailComponent implements OnInit {
     this.isNew.set(!this.roleId);
     if (this.roleId) {
       this.roleService.getById(this.roleId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (role) => this.form.patchValue(role),
+        next: (role) => {
+          this.role.set(role);
+          this.form.patchValue(role);
+          if (!role.editable) this.form.disable();
+        },
       });
       if (this.canReadAuthorities) this.loadAuthorities();
     }
@@ -158,9 +182,9 @@ export class RoleDetailComponent implements OnInit {
         this.snackBar.open(this.translate.instant('common.saved'), '', { duration: 3000 });
         this.goBack();
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.snackBar.open(this.translate.instant('common.saveError'), '', { duration: 3000 });
+        this.snackBar.open(err?.error?.message || this.translate.instant('common.saveError'), '', { duration: 5000 });
       },
     });
   }
@@ -168,13 +192,14 @@ export class RoleDetailComponent implements OnInit {
   private loadAuthorities() {
     forkJoin({
       links: this.roleAuthorityService.getAll(),
-      all: this.authorityService.getAll(),
+      // Alleen wat de gebruiker zelf mag uitdelen (G(u)); de rest kan de server toch niet toestaan.
+      all: this.authorityService.getGrantable(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ links, all }) => {
         this.allAuthorities.set(all);
         this.assigned.set(
           links.filter(l => l.role.roleId === this.roleId)
-            .map(l => ({ authorityId: l.authority.authorityId, description: l.authority.description }))
+            .map(l => ({ authorityId: l.authority.authorityId, description: l.authority.description }) as Authority)
             .sort((a, b) => a.description.localeCompare(b.description))
         );
       },
@@ -190,7 +215,7 @@ export class RoleDetailComponent implements OnInit {
         this.snackBar.open(this.translate.instant('roles.authorityAssigned'), '', { duration: 3000 });
         this.loadAuthorities();
       },
-      error: () => this.snackBar.open(this.translate.instant('roles.authorityAssignError'), '', { duration: 3000 }),
+      error: (err) => this.snackBar.open(err?.error?.message || this.translate.instant('roles.authorityAssignError'), '', { duration: 5000 }),
     });
   }
 
@@ -202,7 +227,7 @@ export class RoleDetailComponent implements OnInit {
         this.snackBar.open(this.translate.instant('roles.authorityRemoved'), '', { duration: 3000 });
         this.loadAuthorities();
       },
-      error: () => this.snackBar.open(this.translate.instant('roles.authorityRemoveError'), '', { duration: 3000 }),
+      error: (err) => this.snackBar.open(err?.error?.message || this.translate.instant('roles.authorityRemoveError'), '', { duration: 5000 }),
     });
   }
 

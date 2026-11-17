@@ -31,6 +31,8 @@ Tenant/organisatie. Dit IS de tenant — heeft zelf geen `tenant_organization`.
 | name | VARCHAR | NOT NULL | Naam organisatie |
 | mollie_key | VARCHAR | | Mollie API key per organisatie. **Wordt nog niet gebruikt** voor API-aanroepen (zie [open-items.md](open-items.md)) |
 | email_from | VARCHAR(255) | | Afzenderadres (`From`) voor e-mails van deze organisatie (V6) |
+| platform | BOOLEAN | NOT NULL, default false; uniek waar true (V24) | De ene platformorganisatie "RDS Platform" met de beheerders; niet te verwijderen (trigger) |
+| roles_reviewed_at | TIMESTAMP | (V24) | Wanneer de organisatie nieuwe rechten voor het laatst als gezien markeerde (rollenscherm) |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
 | modified_at | TIMESTAMP | | |
@@ -173,12 +175,14 @@ Gebruikersaccount met login-gegevens en optionele TOTP 2FA.
 
 ### role
 
-Rol voor RBAC.
+Rol voor RBAC, per organisatie (V24). Systeemrollen (`system_key`) zijn vergrendelde kopieën van `system_role_template`; eigen rollen maakt de organisatie zelf.
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | role_id | UUID | PK, auto-generated | |
-| description | VARCHAR | NOT NULL | Rolnaam |
+| description | VARCHAR | NOT NULL; uniek per organisatie (hoofdletterongevoelig) | Rolnaam |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, index; UNIQUE (role_id, tenant_organization) | Organisatie (V24) |
+| system_key | VARCHAR(20) | ADMIN/MANAGER/EMPLOYEE of leeg; uniek per organisatie | Systeemrol; ADMIN alleen in het platform (trigger) |
 | created_at / created_by / modified_at / modified_by | | created_at NOT NULL (V22) | audit |
 
 **Backend bestanden:**
@@ -197,23 +201,46 @@ Rol voor RBAC.
 
 ### authority
 
-Autorisatie/permissie voor RBAC.
+Autorisatie/permissie voor RBAC. Ligt vast: alleen via Flyway, de API is alleen-lezen (V24).
 
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | authority_id | UUID | PK, auto-generated | |
 | description | VARCHAR | NOT NULL | Permissie-naam |
+| domain | VARCHAR(50) | NOT NULL (V24) | Onderwerp voor de rechtenmatrix (BOOKING, PAYMENT, …) |
+| tenant_assignable | BOOLEAN | NOT NULL (V24) | Mag een klantorganisatie dit uitdelen? |
+| introduced_at | DATE | NOT NULL (V24) | Sinds wanneer de authority bestaat ("nieuwe rechten") |
+
+**Gerelateerd (V24):** `authority_requires` (authority_id, required_authority_id: welke rechten een recht nodig heeft) en `system_role_template` (system_key, authority_id: de inhoud van ADMIN, MANAGER en EMPLOYEE). De functie `sync_system_roles()` maakt de `role_authority` van alle systeemrollen gelijk aan het sjabloon.
 
 **Backend bestanden:**
 - Entity: `auth/entity/Authority.java`
-- DTO: `auth/dto/AuthorityDto.java`
-- Mapper: `auth/mapper/AuthorityMapper.java`
+- DTO: `auth/dto/AuthorityDto.java` (met `requires`)
 - Service: `auth/service/AuthorityService.java`
 - ServiceImpl: `auth/service/impl/AuthorityServiceImpl.java`
 - Repository: `auth/repository/AuthorityRepository.java`
 - Controller: `auth/controller/AuthorityController.java`
 
 **Frontend bestanden:** *Geen*
+
+---
+
+### authorization_log
+
+Rechtenlogboek (V24): wie gaf of nam wanneer welke rol of welk recht. Alleen toevoegen: een trigger weigert wijzigen en verwijderen (behalve samen met de hele organisatie).
+
+| Kolom | Type | Constraints | Omschrijving |
+|-------|------|-------------|--------------|
+| authorization_log_id | UUID | PK | |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, index | |
+| action | VARCHAR(30) | NOT NULL, CHECK | ROLE_CREATED, ROLE_RENAMED, ROLE_DELETED, AUTHORITY_ADDED, AUTHORITY_REMOVED, ROLE_ASSIGNED, ROLE_REVOKED |
+| role_id / role_name | UUID / VARCHAR | | De rol; de naam wordt bewaard |
+| authority | VARCHAR | | Bij AUTHORITY_* |
+| account_id / account_user_name | UUID / VARCHAR | | Bij ROLE_ASSIGNED/ROLE_REVOKED |
+| details | TEXT | | Bijv. oude → nieuwe naam, "vereist voor …" |
+| created_at / created_by | | created_at NOT NULL | |
+
+**Backend bestanden:** `auth/entity/AuthorizationLog.java`, `AuthorizationLogService`, `AuthorizationLogController` (`GET /api/authorization-log`).
 
 ---
 
@@ -225,6 +252,7 @@ Koppeling Account ↔ Role (many-to-many).
 |-------|------|-------------|--------------|
 | account_id | UUID | PK (composite), FK → account, NOT NULL | |
 | role_id | UUID | PK (composite), FK → role, NOT NULL | |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL; FK (account_id, tenant_organization) → account en FK (role_id, tenant_organization) → role (V24) | Account en rol horen bij dezelfde organisatie |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
 | modified_at | TIMESTAMP | | |

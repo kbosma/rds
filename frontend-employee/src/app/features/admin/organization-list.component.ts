@@ -144,7 +144,8 @@ export class OrganizationListComponent implements OnInit {
   private loadData() {
     this.organizationService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (organizations) => {
-        this.dataSource.data = organizations;
+        // Alleen klanten: RDS Platform (de beheerders) wordt hier niet beheerd en is niet te verwijderen.
+        this.dataSource.data = organizations.filter((o) => !o.platform);
         this.loading.set(false);
         setTimeout(() => {
           this.dataSource.paginator = this.paginator;

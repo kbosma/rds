@@ -15,12 +15,15 @@ import { ConfirmService } from '../../shared/services/confirm.service';
 import { RoleService } from './role.service';
 import { Role } from '../../shared/models';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { RowActionsComponent } from '../../shared/components/row-actions.component';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-role-list',
   standalone: true,
   imports: [
     EmptyStateComponent,
+    RowActionsComponent,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -35,9 +38,11 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
   template: `
     <div class="page-header">
       <h1>{{ 'roles.title' | translate }}</h1>
-      <button mat-raised-button color="primary" (click)="navigateToNew()">
-        <mat-icon>add</mat-icon> {{ 'roles.newRole' | translate }}
-      </button>
+      @if (canCreate) {
+        <button mat-raised-button color="primary" (click)="navigateToNew()">
+          <mat-icon>add</mat-icon> {{ 'roles.newRole' | translate }}
+        </button>
+      }
     </div>
 
     <div class="filter-bar">
@@ -57,18 +62,20 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
         <table mat-table [dataSource]="dataSource" matSort class="full-width">
           <ng-container matColumnDef="description">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'roles.description' | translate }}</th>
-            <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+            <td mat-cell *matCellDef="let row">
+              {{ row.description }}
+              @if (row.systemKey) {
+                <mat-icon class="lock" [attr.title]="'roles.systemRole' | translate">lock</mat-icon>
+              }
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <button mat-icon-button class="act-update" (click)="navigateToEdit(row)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button class="act-delete" (click)="deleteRole(row)">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <app-row-actions [canView]="!row.editable" [canEdit]="!!row.editable && canUpdate"
+                               [canDelete]="!!row.editable && canDelete"
+                               (view)="navigateToEdit(row)" (edit)="navigateToEdit(row)" (remove)="deleteRole(row)" />
             </td>
           </ng-container>
 
@@ -78,7 +85,9 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
               <app-empty-state icon="admin_panel_settings" [filtered]="dataSource.data.length > 0" [message]="'roles.emptyState' | translate">
-                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'roles.newRole' | translate }}</button>
+                @if (canCreate) {
+                  <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'roles.newRole' | translate }}</button>
+                }
               </app-empty-state>
             </td>
           </tr>
@@ -89,6 +98,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
     }
   `,
   styles: [`
+    .lock { font-size: 16px; width: 16px; height: 16px; vertical-align: text-bottom; color: var(--ui-text-muted, #5b6b77); margin-left: 4px; }
   `],
 })
 export class RoleListComponent implements OnInit {
@@ -98,6 +108,11 @@ export class RoleListComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
   private confirmService = inject(ConfirmService);
+  private authService = inject(AuthService);
+
+  canCreate = this.authService.hasAuthority('ROLE_CREATE');
+  canUpdate = this.authService.hasAuthority('ROLE_UPDATE');
+  canDelete = this.authService.hasAuthority('ROLE_DELETE');
 
   displayedColumns = ['description', 'actions'];
   dataSource = new MatTableDataSource<Role>();
@@ -142,8 +157,9 @@ export class RoleListComponent implements OnInit {
         this.snackBar.open(this.translate.instant('roles.removed'), '', { duration: 3000 });
         this.dataSource.data = this.dataSource.data.filter(r => r.roleId !== role.roleId);
       },
-      error: () => {
-        this.snackBar.open(this.translate.instant('roles.removeError'), '', { duration: 3000 });
+      error: (err) => {
+        // De backend legt uit waarom (bijv. "nog toegewezen aan 2 account(s)").
+        this.snackBar.open(err?.error?.message || this.translate.instant('roles.removeError'), '', { duration: 5000 });
       },
     });
   }

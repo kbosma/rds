@@ -240,24 +240,6 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'admin/authorities/new',
-        canActivate: [authorityGuard],
-        data: { access: ACCESS.authorityCreate },
-        loadComponent: () =>
-          import('./features/admin/authority-detail.component').then(
-            (m) => m.AuthorityDetailComponent
-          ),
-      },
-      {
-        path: 'admin/authorities/:id',
-        canActivate: [authorityGuard],
-        data: { access: ACCESS.authorities },
-        loadComponent: () =>
-          import('./features/admin/authority-detail.component').then(
-            (m) => m.AuthorityDetailComponent
-          ),
-      },
-      {
         path: 'admin/theme',
         canActivate: [authorityGuard],
         data: { access: ACCESS.theme },

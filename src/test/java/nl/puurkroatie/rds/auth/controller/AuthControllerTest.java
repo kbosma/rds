@@ -24,7 +24,7 @@ class AuthControllerTest extends AbstractAuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.accountId").value(ADMIN_ACCOUNT_ID.toString()))
-                .andExpect(jsonPath("$.organizationId").value(ORG_PUURKROATIE_ID.toString()))
+                .andExpect(jsonPath("$.organizationId").value(ORG_PLATFORM_ID.toString())) // beheerders zitten in RDS Platform (V24)
                 .andExpect(jsonPath("$.mustChangePassword").value(false));
     }
 

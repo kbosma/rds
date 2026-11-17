@@ -289,7 +289,7 @@ export class AccountDetailComponent implements OnInit {
       account: this.accountService.getById(id),
       persons: this.personService.getAll(),
       accountRoles: this.accountRoleService.getAll(),
-      assignableRoles: this.accountRoleService.getAssignable(),
+      assignableRoles: this.accountRoleService.getAssignable(id),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ account, persons, accountRoles, assignableRoles }) => {
         this.currentName.set(account.userName);
@@ -420,8 +420,10 @@ export class AccountDetailComponent implements OnInit {
           this.snackBar.open(this.translate.instant('accounts.roleRemoved'), this.translate.instant('common.close'), { duration: 3000 });
         },
         error: (err: HttpErrorResponse) => {
+          // 409: de laatste manager van de organisatie; de backend legt het uit.
           const key = err.status === 403 ? 'accounts.roleRemoveForbidden' : 'accounts.roleRemoveError';
-          this.snackBar.open(this.translate.instant(key), this.translate.instant('common.close'), { duration: 5000 });
+          const message = err.status === 409 && err.error?.message ? err.error.message : this.translate.instant(key);
+          this.snackBar.open(message, this.translate.instant('common.close'), { duration: 5000 });
         },
       });
   }

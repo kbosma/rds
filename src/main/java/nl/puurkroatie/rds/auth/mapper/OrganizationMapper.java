@@ -17,6 +17,8 @@ public interface OrganizationMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)
     @Mapping(target = "modifiedBy", ignore = true)
+    @Mapping(target = "platform", ignore = true)
+    @Mapping(target = "rolesReviewedAt", ignore = true)
     Organization toEntity(OrganizationDto dto);
 
     default Organization toEntity(UUID id, OrganizationDto dto, Organization existing) {

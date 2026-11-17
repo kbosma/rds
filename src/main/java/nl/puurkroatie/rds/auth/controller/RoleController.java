@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,8 +31,8 @@ public class RoleController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_READ')")
-    public List<RoleDto> findAll() {
-        return roleService.findAll();
+    public List<RoleDto> findAll(@RequestParam(required = false) UUID organizationId) {
+        return roleService.findAll(organizationId);
     }
 
     @GetMapping("/{id}")

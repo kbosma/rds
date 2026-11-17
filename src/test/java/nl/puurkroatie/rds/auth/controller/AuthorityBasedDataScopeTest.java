@@ -57,10 +57,11 @@ class AuthorityBasedDataScopeTest extends AbstractAuthControllerTest {
 
         // Een rol die de code niet kent, met alleen leesrechten op personen en accounts.
         roleId = UUID.randomUUID();
-        jdbc.update("INSERT INTO role (role_id, description) VALUES (?, 'Boekhouder')", roleId);
+        jdbc.update("INSERT INTO role (role_id, description, tenant_organization) VALUES (?, 'Boekhouder', ?)", roleId, ORG_TECHPARTNER_ID);
         grant("PERSON_READ");
         grant("ACCOUNT_READ");
-        jdbc.update("INSERT INTO account_role (account_id, role_id, created_at) VALUES (?, ?, now())", accountId, roleId);
+        jdbc.update("INSERT INTO account_role (account_id, role_id, tenant_organization, created_at) VALUES (?, ?, ?, now())",
+                accountId, roleId, ORG_TECHPARTNER_ID);
     }
 
     private void grant(String authority) {

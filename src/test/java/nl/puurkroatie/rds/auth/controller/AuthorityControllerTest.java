@@ -34,16 +34,16 @@ class AuthorityControllerTest extends AbstractAuthControllerTest {
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(21))));
     }
 
-    // Test 48: MANAGER: POST /api/authorities — 403 (geen AUTHORITY_WRITE)
+    // Authorities komen alleen uit Flyway: aanmaken via de API bestaat niet (405), voor niemand
     @Test
-    void manager_createAuthority_returns403() throws Exception {
+    void createAuthority_doesNotExist_returns405() throws Exception {
         String token = managerToken();
 
         mockMvc.perform(post("/api/authorities")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"description\":\"TEST_AUTHORITY\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isMethodNotAllowed());
     }
 
     // Test 49: EMPLOYEE: GET /api/authorities — 403

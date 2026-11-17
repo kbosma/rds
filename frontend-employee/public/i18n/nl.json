@@ -615,26 +615,24 @@
     "removeAuthorityConfirm": "Weet je zeker dat je de authority \"{{authority}}\" wilt verwijderen?",
     "authorities": "Authorities",
     "selectAuthority": "Authority kiezen",
-    "emptyState": "Nog geen rollen."
+    "emptyState": "Nog geen rollen.",
+    "viewTitle": "Rol inzien",
+    "systemRole": "Systeemrol (vergrendeld)",
+    "systemRoleLocked": "Dit is een systeemrol: de inhoud ligt vast en komt met RDS mee. Wil je iets anders? Maak een eigen rol.",
+    "aboveYourLevel": "Deze rol bevat rechten die je zelf niet hebt; je kunt hem daarom niet wijzigen.",
+    "alsoAdds": "vereist:"
   },
   "authorities": {
     "title": "Authorities",
-    "newAuthority": "Nieuwe authority",
     "searchPlaceholder": "Zoek op omschrijving...",
     "description": "Omschrijving",
     "noAuthoritiesFound": "Geen authorities gevonden.",
-    "editTitle": "Authority bewerken",
-    "newTitle": "Nieuwe authority",
-    "backToAuthorities": "Terug naar authorities",
-    "saved": "Authority opgeslagen",
-    "saveError": "Fout bij opslaan authority",
-    "created": "Authority aangemaakt",
-    "createError": "Fout bij aanmaken authority",
-    "notFound": "Authority niet gevonden",
-    "deleteConfirm": "Weet je zeker dat je \"{{name}}\" wilt verwijderen?",
-    "removed": "Authority verwijderd",
-    "removeError": "Fout bij verwijderen authority",
-    "emptyState": "Nog geen rechten."
+    "emptyState": "Nog geen rechten.",
+    "readOnlyNote": "Authorities liggen vast: ze komen met een nieuwe versie van RDS. Rollen stel je samen in het rollenscherm.",
+    "domain": "Onderwerp",
+    "requires": "Vereist",
+    "tenantAssignable": "Uit te delen door klanten",
+    "platformOnly": "Alleen platform"
   },
   "profile": {
     "title": "Mijn gegevens",

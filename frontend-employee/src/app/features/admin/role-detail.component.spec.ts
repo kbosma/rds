@@ -14,7 +14,8 @@ import { RoleAuthority } from '../../shared/models';
  * Rolscherm: beschrijving bewerken én de authorities van de rol beheren (koppelen/ontkoppelen).
  */
 describe('RoleDetailComponent', () => {
-  const role = { roleId: 'r-1', description: 'MANAGER' };
+  const ownRole = { roleId: 'r-1', description: 'Boekhouder', systemKey: null, editable: true };
+  let role: { roleId: string; description: string; systemKey: string | null; editable: boolean } = ownRole;
   const authorities = [
     { authorityId: 'a-1', description: 'BOOKING_READ' },
     { authorityId: 'a-2', description: 'BOOKING_CREATE' },
@@ -40,8 +41,9 @@ describe('RoleDetailComponent', () => {
       imports: [RoleDetailComponent, NoopAnimationsModule],
       providers: [
         { provide: RoleService, useValue: { getById: () => of(role), create: () => of(role), update: () => of(role) } },
+        // Het rolscherm biedt alleen aan wat de gebruiker zelf mag uitdelen (G(u)).
         { provide: RoleAuthorityService, useValue: roleAuthorityService },
-        { provide: AuthorityService, useValue: { getAll: () => of(authorities) } },
+        { provide: AuthorityService, useValue: { getGrantable: () => of(authorities) } },
         { provide: AuthService, useValue: { hasAuthority: (a: string) => allowed.has(a) } },
         { provide: ConfirmService, useValue: confirmSpy },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => id } } } },
@@ -56,7 +58,29 @@ describe('RoleDetailComponent', () => {
 
   beforeEach(() => {
     allowed = new Set(['ROLEAUTHORITY_READ', 'ROLEAUTHORITY_CREATE', 'ROLEAUTHORITY_DELETE']);
+    role = ownRole;
   });
+
+  it('een systeemrol is alleen te bekijken: geen opslaan, koppelen of ontkoppelen', fakeAsync(() => {
+    role = { roleId: 'r-1', description: 'MANAGER', systemKey: 'MANAGER', editable: false };
+    const { component, fixture } = setup('r-1');
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(component.editable()).toBe(false);
+    expect(component.form.disabled).toBe(true);
+    expect(el.querySelector('button[type="submit"]')).toBeNull();
+    expect(el.querySelector('.add-authority-btn')).toBeNull();
+    expect(el.querySelector('.remove-authority-btn')).toBeNull();
+    expect(el.querySelector('.locked-note')).not.toBeNull();
+  }));
+
+  it('een eigen rol boven het eigen niveau is ook alleen te bekijken', fakeAsync(() => {
+    role = { ...ownRole, editable: false };
+    const { fixture } = setup('r-1');
+
+    expect(fixture.nativeElement.querySelector('.add-authority-btn')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.locked-note')).not.toBeNull();
+  }));
 
   it('toont alleen de authorities van deze rol en biedt de overige aan', fakeAsync(() => {
     const { component, fixture } = setup('r-1');

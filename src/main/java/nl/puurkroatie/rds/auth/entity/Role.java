@@ -27,6 +27,13 @@ public class Role {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
+    private UUID tenantOrganization;
+
+    /** ADMIN, MANAGER of EMPLOYEE voor een vergrendelde systeemrol; leeg voor een eigen rol van de organisatie. */
+    @Column(name = "system_key", updatable = false)
+    private String systemKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -42,14 +49,29 @@ public class Role {
     protected Role() {
     }
 
-    public Role(UUID roleId, String description) {
+    public Role(UUID roleId, String description, UUID tenantOrganization, String systemKey) {
         this.roleId = roleId;
         this.description = description;
+        this.tenantOrganization = tenantOrganization;
+        this.systemKey = systemKey;
     }
 
+    /** Een nieuwe eigen rol van een organisatie. */
     @Default
-    public Role(String description) {
-        this.description = description;
+    public Role(String description, UUID tenantOrganization) {
+        this(null, description, tenantOrganization, null);
+    }
+
+    /** Dezelfde rol met een andere naam (alleen voor eigen rollen; de database weigert het voor systeemrollen). */
+    public Role renamed(String newDescription) {
+        Role renamed = new Role(roleId, newDescription, tenantOrganization, systemKey);
+        renamed.createdAt = createdAt;
+        renamed.createdBy = createdBy;
+        return renamed;
+    }
+
+    public boolean isSystemRole() {
+        return systemKey != null;
     }
 
     public UUID getRoleId() {
@@ -58,6 +80,14 @@ public class Role {
 
     public String getDescription() {
         return description;
+    }
+
+    public UUID getTenantOrganization() {
+        return tenantOrganization;
+    }
+
+    public String getSystemKey() {
+        return systemKey;
     }
 
     @PrePersist

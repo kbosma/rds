@@ -31,7 +31,8 @@ class TenantOrganizationForeignKeyTest {
      * Alle andere tenant-tabellen zijn bedrijfsgegevens en houden het verwijderen tegen (ON DELETE RESTRICT).
      */
     private static final Set<String> OWNED_BY_THE_ORGANIZATION =
-            Set.of("person", "account", "organization_theme", "organization_settings");
+            Set.of("person", "account", "organization_theme", "organization_settings",
+                    "role", "account_role", "authorization_log");
 
     @Autowired
     private JdbcTemplate jdbc;

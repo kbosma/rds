@@ -146,7 +146,7 @@ export class AdminDashboardComponent implements OnInit {
         }
 
         // Build org overviews
-        const overviews: OrgOverview[] = organizations.map(org => {
+        const overviews: OrgOverview[] = organizations.filter(org => !org.platform).map(org => {
           const personCount = persons.filter(p => p.tenantOrganization === org.organizationId).length;
           const accountCount = accounts.filter(a => personOrgMap.get(a.personId) === org.organizationId).length;
 

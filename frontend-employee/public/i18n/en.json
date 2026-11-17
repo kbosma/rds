@@ -615,26 +615,24 @@
     "removeAuthorityConfirm": "Are you sure you want to remove the authority \"{{authority}}\"?",
     "authorities": "Authorities",
     "selectAuthority": "Select an authority",
-    "emptyState": "No roles yet."
+    "emptyState": "No roles yet.",
+    "viewTitle": "View role",
+    "systemRole": "System role (locked)",
+    "systemRoleLocked": "This is a system role: its content is fixed and comes with RDS. Need something else? Create your own role.",
+    "aboveYourLevel": "This role contains rights you do not have yourself, so you cannot change it.",
+    "alsoAdds": "requires:"
   },
   "authorities": {
     "title": "Authorities",
-    "newAuthority": "New authority",
     "searchPlaceholder": "Search by description...",
     "description": "Description",
     "noAuthoritiesFound": "No authorities found.",
-    "editTitle": "Edit authority",
-    "newTitle": "New authority",
-    "backToAuthorities": "Back to authorities",
-    "saved": "Authority saved",
-    "saveError": "Error saving authority",
-    "created": "Authority created",
-    "createError": "Error creating authority",
-    "notFound": "Authority not found",
-    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
-    "removed": "Authority removed",
-    "removeError": "Error removing authority",
-    "emptyState": "No authorities yet."
+    "emptyState": "No authorities yet.",
+    "readOnlyNote": "Authorities are fixed: they come with a new version of RDS. Roles are composed in the roles screen.",
+    "domain": "Subject",
+    "requires": "Requires",
+    "tenantAssignable": "Assignable by customers",
+    "platformOnly": "Platform only"
   },
   "profile": {
     "title": "My profile",
