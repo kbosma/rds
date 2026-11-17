@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.email.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.entity.Booking;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
@@ -86,7 +87,7 @@ public class SentEmailServiceImpl implements SentEmailService {
     }
 
     private void verifyOrganization(UUID organizationId) {
-        if (!TenantContext.hasRole("ADMIN") && !organizationId.equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: belongs to another organization");
         }
     }

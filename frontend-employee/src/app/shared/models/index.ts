@@ -29,3 +29,4 @@ export * from './booking-activity.model';
 export * from './organization-settings.model';
 export * from './quote.model';
 export * from './notification.model';
+export * from './authorization-log.model';

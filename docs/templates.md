@@ -48,7 +48,7 @@ Het model bevat alleen wat de contextklassen in `docgen/context` aanbieden. De e
 
 - **Bedragen:** zonder opmaak toont FreeMarker `1250.00` als `1.250` (afgerond, met groepering). De editor voegt bedragen daarom in als `${booking.totalSum?string("#,##0.00")}`.
 - **Gebruik dubbele aanhalingstekens** (`"…"`), nooit enkele (`'…'`): xdocreport schrijft een enkele aanhalingsteken in een Word-template om, waardoor de expressie een syntaxfout geeft bij het samenvoegen. Dit geldt ook voor een zelf geüpload .docx.
-- Datums zijn tekst (`jjjj-mm-dd`); andere opmaak kan met FreeMarker-functies op de tekst, of door er een formattering op te zetten in de template.
+- Datums zijn tekst in de notatie `dd-mm-jjjj` (bv. `10-07-2027`), datum-tijden `dd-mm-jjjj uu:mm` (activiteiten). Andere opmaak kan met FreeMarker-functies op de tekst. De opmaak zit in `TemplateModels` en geldt voor e-mail- én Word/PDF-templates.
 - Tekst als `[#` of `<#` in een Word-template wordt door FreeMarker als instructie gelezen (dat is hoe lussen werken). Gewone tekst heeft daar geen last van.
 
 ## Herhaalde tabellen

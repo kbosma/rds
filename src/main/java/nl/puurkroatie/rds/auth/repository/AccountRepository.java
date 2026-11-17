@@ -4,6 +4,7 @@ import nl.puurkroatie.rds.auth.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +14,7 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     Optional<Account> findByUserName(String userName);
 
-    List<Account> findByPersonOrganizationOrganizationId(UUID organizationId);
+    List<Account> findByTenantOrganization(UUID tenantOrganization);
 
     @Modifying
     @Query("UPDATE Account a SET a.passwordHash = :passwordHash, a.mustChangePassword = false WHERE a.accountId = :accountId")
@@ -26,4 +27,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Account a SET a.userName = :userName, a.locked = :locked, a.mustChangePassword = :mustChangePassword, a.modifiedAt = CURRENT_TIMESTAMP, a.modifiedBy = :modifiedBy WHERE a.accountId = :accountId")
     void updateAccount(UUID accountId, String userName, Boolean locked, Boolean mustChangePassword, UUID modifiedBy);
+
+    /** De huidige rechtenversie van een account (voor de controle van het token). */
+    @Query("select a.authzVersion from Account a where a.accountId = :accountId")
+    Optional<Integer> findAuthzVersion(@Param("accountId") UUID accountId);
 }

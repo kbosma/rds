@@ -61,6 +61,15 @@ describe('OrganizationListComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('toont RDS Platform niet: dat is geen klant en wordt hier niet beheerd', fakeAsync(() => {
+    serviceSpy.getAll.and.returnValue(of([...mockOrganizations, { organizationId: 'p-1', name: 'RDS Platform', platform: true } as never]));
+    fixture.detectChanges();
+    tick();
+
+    expect(component.dataSource.data.map((o) => o.name)).not.toContain('RDS Platform');
+    expect(component.dataSource.data.length).toBe(2);
+  }));
+
   it('laadt de organisaties bij init', fakeAsync(() => {
     load();
 

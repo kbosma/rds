@@ -46,8 +46,8 @@ describe('AccountListComponent', () => {
         { provide: ConfirmService, useValue: confirmSpy },
         // account-list verrijkt via forkJoin met personen, organisaties en account-rollen
         { provide: PersonService, useValue: { getAll: () => of([
-          { persoonId: 'p-1', firstname: 'Jan', prefix: 'de', lastname: 'Vries', organizationId: 'o-1' },
-          { persoonId: 'p-2', firstname: 'Piet', prefix: '', lastname: 'Jansen', organizationId: 'o-1' },
+          { persoonId: 'p-1', firstname: 'Jan', prefix: 'de', lastname: 'Vries', tenantOrganization: 'o-1' },
+          { persoonId: 'p-2', firstname: 'Piet', prefix: '', lastname: 'Jansen', tenantOrganization: 'o-1' },
         ]) } },
         { provide: OrganizationService, useValue: { getAll: () => of([
           { organizationId: 'o-1', name: 'Puur Kroatië' },
@@ -98,6 +98,13 @@ describe('AccountListComponent', () => {
 
     // org-chips bevatten de geladen organisatie
     expect(component.orgChips().some(c => c.value === 'o-1')).toBe(true);
+  }));
+
+  it('should offer the roles that occur in the list as filter chips, not a fixed set of role names', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    expect(component.roleChips().map(c => c.value)).toEqual(['ALL', 'ADMIN', 'EMPLOYEE']);
   }));
 
   it('should toggle role chip filter', fakeAsync(() => {

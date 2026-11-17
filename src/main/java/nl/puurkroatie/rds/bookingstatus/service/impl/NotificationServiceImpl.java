@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.bookingstatus.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.repository.BookingRepository;
 import nl.puurkroatie.rds.bookingstatus.dto.NotificationDto;
@@ -79,7 +80,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private static boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private static void verifyOrganization(UUID organizationId) {

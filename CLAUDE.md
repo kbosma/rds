@@ -147,6 +147,7 @@ Gebruik ALLEEN indien nodig:
 - Architecture details → docs/architecture.md
 - Booker Portal details → docs/bookerportal.md
 - Ontwerp boekerportaal-dashboard (gebouwd) → docs/voorstel-booker-dashboard.md
+- Ontwerp eigen rollen per organisatie (nog niet gebouwd) → docs/voorstel-eigen-rollen.md
 - Security details → docs/security.md
 - Domain details → docs/domain.md
 - Mollie payments → docs/mollie.md

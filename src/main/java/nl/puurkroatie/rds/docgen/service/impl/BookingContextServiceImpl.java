@@ -7,6 +7,7 @@ import nl.puurkroatie.rds.mollie.entity.MolliePayment;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatus;
 import nl.puurkroatie.rds.mollie.entity.MolliePaymentStatusEntry;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.Booking;
@@ -227,7 +228,7 @@ public class BookingContextServiceImpl implements BookingContextService {
     }
 
     private void verifyOrganization(UUID organizationId) {
-        if (!TenantContext.hasRole("ADMIN") && !organizationId.equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
     }

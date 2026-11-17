@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.bookingstatus.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingDto;
 import nl.puurkroatie.rds.booking.entity.Booking;
@@ -103,7 +104,7 @@ public class BookingStatusServiceImpl implements BookingStatusService {
     private Booking load(UUID bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-        if (!TenantContext.hasRole("ADMIN") && !booking.getTenantOrganization().equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !booking.getTenantOrganization().equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
         return booking;

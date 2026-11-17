@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 
 import nl.puurkroatie.rds.common.Default;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -20,8 +21,19 @@ public class Authority {
     @Column(name = "authority_id")
     private UUID authorityId;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = false, updatable = false)
     private String description;
+
+    /** Onderwerp voor de rechtenmatrix (BOOKING, PAYMENT, ...). Authorities komen alleen via Flyway. */
+    @Column(name = "domain", nullable = false, insertable = false, updatable = false)
+    private String domain;
+
+    /** Mag een klantorganisatie dit recht uitdelen? */
+    @Column(name = "tenant_assignable", nullable = false, insertable = false, updatable = false)
+    private boolean tenantAssignable;
+
+    @Column(name = "introduced_at", nullable = false, insertable = false, updatable = false)
+    private LocalDate introducedAt;
 
     protected Authority() {
     }
@@ -42,5 +54,17 @@ public class Authority {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public boolean isTenantAssignable() {
+        return tenantAssignable;
+    }
+
+    public LocalDate getIntroducedAt() {
+        return introducedAt;
     }
 }

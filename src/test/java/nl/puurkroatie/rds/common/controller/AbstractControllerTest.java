@@ -22,6 +22,8 @@ public abstract class AbstractControllerTest {
     // Organization UUIDs uit data.sql
     protected static final UUID ORG_PUURKROATIE_ID = UUID.fromString("a1000000-0000-0000-0000-000000000001");
     protected static final UUID ORG_TECHPARTNER_ID = UUID.fromString("a1000000-0000-0000-0000-000000000002");
+    /** RDS Platform: de beheerders (V24). */
+    protected static final UUID ORG_PLATFORM_ID = UUID.fromString("a0000000-0000-0000-0000-000000000001");
 
     protected static final String DEFAULT_PASSWORD = "password123";
 

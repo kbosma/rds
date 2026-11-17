@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.TravelerDto;
 import nl.puurkroatie.rds.booking.entity.Booking;
@@ -78,7 +79,7 @@ public class TravelerServiceImpl implements TravelerService {
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     /** De boeking waaraan dit object gekoppeld wordt moet van de eigen organisatie zijn (ADMIN: alle). */

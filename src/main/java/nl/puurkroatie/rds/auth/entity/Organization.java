@@ -33,6 +33,14 @@ public class Organization {
     @Column(name = "email_from")
     private String emailFrom;
 
+    /** De ene platformorganisatie (RDS Platform) met de beheerders; alleen via Flyway gezet. */
+    @Column(name = "platform", nullable = false, insertable = false, updatable = false)
+    private boolean platform;
+
+    /** Wanneer de organisatie de nieuwe rechten voor het laatst als gezien markeerde (rollenscherm). */
+    @Column(name = "roles_reviewed_at", insertable = false, updatable = false)
+    private LocalDateTime rolesReviewedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -110,5 +118,13 @@ public class Organization {
 
     public UUID getModifiedBy() {
         return modifiedBy;
+    }
+
+    public boolean isPlatform() {
+        return platform;
+    }
+
+    public LocalDateTime getRolesReviewedAt() {
+        return rolesReviewedAt;
     }
 }

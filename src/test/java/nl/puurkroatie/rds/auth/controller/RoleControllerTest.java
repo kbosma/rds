@@ -5,6 +5,9 @@ import org.springframework.http.MediaType;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,27 +39,28 @@ class RoleControllerTest extends AbstractAuthControllerTest {
                 .andExpect(jsonPath("$.description").value("TESTROL"));
     }
 
-    // Test 42: MANAGER: GET /api/roles — 200 (heeft ROLE_READ)
+    // MANAGER: GET /api/roles — alleen de rollen van de eigen organisatie (zijn kopieën van MANAGER en EMPLOYEE)
     @Test
-    void manager_findAll_returns200() throws Exception {
-        String token = managerToken();
-
+    void manager_findAll_returnsTheRolesOfTheOwnOrganization() throws Exception {
         mockMvc.perform(get("/api/roles")
-                        .header("Authorization", "Bearer " + token))
+                        .header("Authorization", "Bearer " + managerToken()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(3))));
+                .andExpect(jsonPath("$[*].systemKey", containsInAnyOrder("EMPLOYEE", "MANAGER")))
+                .andExpect(jsonPath("$[*].tenantOrganization", everyItem(is(ORG_TECHPARTNER_ID.toString()))))
+                .andExpect(jsonPath("$[*].editable", everyItem(is(false))));
     }
 
-    // Test 43: MANAGER: POST /api/roles — 403 (geen ROLE_WRITE)
+    // MANAGER: POST /api/roles — een eigen rol in de eigen organisatie (ROLE_CREATE sinds V24)
     @Test
-    void manager_createRole_returns403() throws Exception {
-        String token = managerToken();
-
+    void manager_createRole_inTheOwnOrganization_returns201() throws Exception {
         mockMvc.perform(post("/api/roles")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + managerToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"description\":\"TESTROL\"}"))
-                .andExpect(status().isForbidden());
+                        .content("{\"description\":\"Boekhouder\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tenantOrganization").value(ORG_TECHPARTNER_ID.toString()))
+                .andExpect(jsonPath("$.systemKey").doesNotExist())
+                .andExpect(jsonPath("$.editable").value(true));
     }
 
     // Test 44: EMPLOYEE: GET /api/roles — 403

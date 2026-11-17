@@ -56,7 +56,7 @@ public class BookerPortalOverviewService {
             return null;
         }
         OrganizationTheme theme = organizationThemeRepository
-                .findByOrganization_OrganizationId(organizationId).orElse(null);
+                .findByTenantOrganization_OrganizationId(organizationId).orElse(null);
         return portalMapper.toOrganizationDto(organization, theme);
     }
 }

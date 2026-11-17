@@ -3,7 +3,7 @@ export interface Person {
   firstname: string;
   prefix: string;
   lastname: string;
-  organizationId: string;
+  tenantOrganization: string;
   createdAt: string;
   createdBy: string;
   modifiedAt: string;

@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,13 +24,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final AccountRepository accountRepository;
     private final AccountRoleRepository accountRoleRepository;
     private final RoleAuthorityRepository roleAuthorityRepository;
+    private final Clock clock;
 
     public CustomUserDetailsService(AccountRepository accountRepository,
                                     AccountRoleRepository accountRoleRepository,
-                                    RoleAuthorityRepository roleAuthorityRepository) {
+                                    RoleAuthorityRepository roleAuthorityRepository,
+                                    Clock clock) {
         this.accountRepository = accountRepository;
         this.accountRoleRepository = accountRoleRepository;
         this.roleAuthorityRepository = roleAuthorityRepository;
+        this.clock = clock;
     }
 
     @Override
@@ -51,6 +56,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .password(account.getPasswordHash())
                 .authorities(authorities)
                 .accountLocked(account.getLocked())
+                // Een account met een vervaldatum in het verleden kan niet meer inloggen (Spring geeft dan 401).
+                .accountExpired(account.getExpiresAt() != null && !account.getExpiresAt().isAfter(LocalDateTime.now(clock)))
                 .build();
     }
 }

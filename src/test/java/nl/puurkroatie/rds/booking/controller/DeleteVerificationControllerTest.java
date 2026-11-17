@@ -85,10 +85,9 @@ class DeleteVerificationControllerTest extends AbstractBookingControllerTest {
     void theAdminResources_areReallyDeleted() throws Exception {
         String token = adminToken();
         assertDeletedForReal(token, "/api/roles", create(token, "/api/roles", "roleId", "{\"description\":\"TESTROL\"}"));
-        assertDeletedForReal(token, "/api/authorities", create(token, "/api/authorities", "authorityId", "{\"description\":\"TEST_AUTH\"}"));
         String org = create(token, "/api/organizations", "organizationId", "{\"name\":\"Leeg BV\"}");
         assertDeletedForReal(token, "/api/persons", create(token, "/api/persons", "persoonId",
-                "{\"firstname\":\"Los\",\"prefix\":null,\"lastname\":\"Persoon\",\"organizationId\":\"" + org + "\"}"));
+                "{\"firstname\":\"Los\",\"prefix\":null,\"lastname\":\"Persoon\",\"tenantOrganization\":\"" + org + "\"}"));
         assertDeletedForReal(token, "/api/organizations", org);
     }
 
@@ -186,7 +185,7 @@ class DeleteVerificationControllerTest extends AbstractBookingControllerTest {
         String token = adminToken();
         String org = create(token, "/api/organizations", "organizationId", "{\"name\":\"Alleen mensen BV\"}");
         String person = create(token, "/api/persons", "persoonId",
-                "{\"firstname\":\"Jan\",\"prefix\":null,\"lastname\":\"Mens\",\"organizationId\":\"" + org + "\"}");
+                "{\"firstname\":\"Jan\",\"prefix\":null,\"lastname\":\"Mens\",\"tenantOrganization\":\"" + org + "\"}");
 
         mockMvc.perform(delete("/api/organizations/" + org).header("Authorization", bearer(token))).andExpect(status().isNoContent());
 

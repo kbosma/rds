@@ -21,8 +21,8 @@ describe('PersonListComponent', () => {
   let organizationsSpy: jasmine.Spy;
 
   const persons = [
-    { persoonId: 'p-1', firstname: 'Jan', prefix: 'de', lastname: 'Vries', organizationId: 'o-1' },
-    { persoonId: 'p-2', firstname: 'Piet', prefix: '', lastname: 'Jansen', organizationId: 'o-1' },
+    { persoonId: 'p-1', firstname: 'Jan', prefix: 'de', lastname: 'Vries', tenantOrganization: 'o-1' },
+    { persoonId: 'p-2', firstname: 'Piet', prefix: '', lastname: 'Jansen', tenantOrganization: 'o-1' },
   ];
 
   const buttons = (cls: string) => fixture.nativeElement.querySelectorAll('button.' + cls);

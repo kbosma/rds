@@ -13,7 +13,7 @@ public class OrganizationThemeDto {
 
     private UUID organizationThemeId;
 
-    private UUID organizationId;
+    private UUID tenantOrganization;
 
     @NotNull
     @Pattern(regexp = "^#[0-9a-fA-F]{6}$")
@@ -35,10 +35,10 @@ public class OrganizationThemeDto {
     private UUID modifiedBy;
 
     @Default
-    public OrganizationThemeDto(UUID organizationThemeId, UUID organizationId, String primaryColor, String accentColor, String logoUrl,
+    public OrganizationThemeDto(UUID organizationThemeId, UUID tenantOrganization, String primaryColor, String accentColor, String logoUrl,
                                 String cardTitleColor, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.organizationThemeId = organizationThemeId;
-        this.organizationId = organizationId;
+        this.tenantOrganization = tenantOrganization;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;
@@ -67,8 +67,8 @@ public class OrganizationThemeDto {
         return organizationThemeId;
     }
 
-    public UUID getOrganizationId() {
-        return organizationId;
+    public UUID getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public String getPrimaryColor() {

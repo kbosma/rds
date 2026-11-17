@@ -1,6 +1,6 @@
 /** De instellingen van de eigen organisatie (één set per organisatie). Een lege keuze is toegestaan. */
 export interface OrganizationSettings {
-  organizationId: string;
+  tenantOrganization: string;
   quoteDocumentTemplateId: string | null;
   quoteEmailTemplateId: string | null;
   /** Voorschot als percentage van het totaal (1-100). */

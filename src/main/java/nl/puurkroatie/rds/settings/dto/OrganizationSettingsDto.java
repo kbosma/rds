@@ -13,7 +13,7 @@ import java.util.UUID;
  * offerte versturen) nog niet gebruikt worden, of gaat er (bij de betaalmail) geen mail.
  */
 public record OrganizationSettingsDto(
-        UUID organizationId,
+        UUID tenantOrganization,
         UUID quoteDocumentTemplateId,
         UUID quoteEmailTemplateId,
         @NotNull @Min(1) @Max(100) Integer depositPercentage,

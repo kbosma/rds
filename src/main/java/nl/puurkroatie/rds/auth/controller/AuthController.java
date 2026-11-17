@@ -8,15 +8,12 @@ import nl.puurkroatie.rds.auth.dto.TotpLoginRequestDto;
 import nl.puurkroatie.rds.auth.dto.TotpSetupResponseDto;
 import nl.puurkroatie.rds.auth.dto.TotpVerifyRequestDto;
 import nl.puurkroatie.rds.auth.entity.Account;
-import nl.puurkroatie.rds.auth.entity.AccountRole;
-import nl.puurkroatie.rds.auth.entity.Person;
-import nl.puurkroatie.rds.auth.entity.RoleAuthority;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
-import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
-import nl.puurkroatie.rds.auth.repository.RoleAuthorityRepository;
 import nl.puurkroatie.rds.auth.security.JwtTokenProvider;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.AccountService;
+import nl.puurkroatie.rds.auth.service.EmployeeTokenService;
 import nl.puurkroatie.rds.auth.service.TotpService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.context.ApplicationEventPublisher;
 import nl.puurkroatie.rds.auth.event.EmployeeLoggedInEvent;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -43,18 +39,16 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final AccountRepository accountRepository;
-    private final AccountRoleRepository accountRoleRepository;
-    private final RoleAuthorityRepository roleAuthorityRepository;
     private final AccountService accountService;
     private final TotpService totpService;
+    private final EmployeeTokenService employeeTokenService;
 
     private final ApplicationEventPublisher eventPublisher;
 
     public AuthController(AuthenticationManager authenticationManager,
                           JwtTokenProvider jwtTokenProvider,
                           AccountRepository accountRepository,
-                          AccountRoleRepository accountRoleRepository,
-                          RoleAuthorityRepository roleAuthorityRepository,
+                          EmployeeTokenService employeeTokenService,
                           AccountService accountService,
                           TotpService totpService,
                           ApplicationEventPublisher eventPublisher) {
@@ -62,8 +56,7 @@ public class AuthController {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.accountRepository = accountRepository;
-        this.accountRoleRepository = accountRoleRepository;
-        this.roleAuthorityRepository = roleAuthorityRepository;
+        this.employeeTokenService = employeeTokenService;
         this.accountService = accountService;
         this.totpService = totpService;
     }
@@ -149,6 +142,20 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Een nieuw token met de huidige rechten, voor een ingelogde medewerker. De frontend roept dit aan als de backend
+     * een token weigert omdat de rechten zijn gewijzigd (401 AUTHZ_CHANGED); zonder opnieuw in te loggen of 2FA.
+     */
+    @PostMapping("/token/refresh")
+    public ResponseEntity<LoginResponseDto> refreshToken() {
+        UUID accountId = TenantContext.getAccountId();
+        if (accountId == null) {
+            throw new AccessDeniedException("Alleen voor medewerkers");
+        }
+        String token = employeeTokenService.refresh(accountId);
+        return ResponseEntity.ok(new LoginResponseDto(token, accountId, TenantContext.getOrganizationId(), false));
+    }
+
     @PutMapping("/change-password")
     public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordDto request) {
         if (isAdmin()) {
@@ -171,54 +178,13 @@ public class AuthController {
 
     private LoginResponseDto buildFullLoginResponse(Account account) {
         eventPublisher.publishEvent(new EmployeeLoggedInEvent(account.getAccountId(),
-                account.getPerson().getOrganization().getOrganizationId()));
-        List<AccountRole> accountRoles = accountRoleRepository.findByAccount(account);
-
-        List<String> authorities = accountRoles.stream()
-                .flatMap(ar -> roleAuthorityRepository.findByRole(ar.getRole()).stream())
-                .map(RoleAuthority::getAuthority)
-                .map(authority -> authority.getDescription())
-                .distinct()
-                .toList();
-
-        List<String> roles = accountRoles.stream()
-                .map(ar -> ar.getRole().getDescription())
-                .distinct()
-                .toList();
-
-        String personName = buildPersonName(account.getPerson());
-        String organizationName = account.getPerson().getOrganization().getName();
-
-        String token = jwtTokenProvider.generateToken(
-                account.getAccountId(),
-                account.getPerson().getOrganization().getOrganizationId(),
-                account.getPerson().getPersoonId(),
-                account.getUserName(),
-                personName,
-                organizationName,
-                authorities,
-                roles);
-
-        return new LoginResponseDto(token, account.getAccountId(),
-                account.getPerson().getOrganization().getOrganizationId(),
+                account.getTenantOrganization()));
+        return new LoginResponseDto(employeeTokenService.issue(account), account.getAccountId(),
+                account.getTenantOrganization(),
                 account.getMustChangePassword());
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
-    }
-
-    private String buildPersonName(Person person) {
-        StringBuilder sb = new StringBuilder();
-        if (person.getFirstname() != null) {
-            sb.append(person.getFirstname());
-        }
-        if (person.getPrefix() != null && !person.getPrefix().isEmpty()) {
-            sb.append(" ").append(person.getPrefix());
-        }
-        if (person.getLastname() != null) {
-            sb.append(" ").append(person.getLastname());
-        }
-        return sb.toString().trim();
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 }

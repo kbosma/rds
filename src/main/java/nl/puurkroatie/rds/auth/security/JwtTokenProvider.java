@@ -31,7 +31,7 @@ public class JwtTokenProvider {
 
     public String generateToken(UUID accountId, UUID organizationId, UUID personId,
                                 String userName, String personName, String organizationName,
-                                Collection<String> authorities, Collection<String> roles) {
+                                Collection<String> authorities, Collection<String> roles, int authzVersion) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
@@ -45,6 +45,7 @@ public class JwtTokenProvider {
                 .claim("organizationName", organizationName)
                 .claim("authorities", authorities)
                 .claim("roles", roles)
+                .claim("av", authzVersion)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -121,5 +122,10 @@ public class JwtTokenProvider {
 
     private Claims getClaims(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+    }
+
+    /** De rechtenversie waarmee het token is uitgegeven (claim "av"); leeg voor tokens van vóór V26. */
+    public Integer getAuthzVersion(String token) {
+        return getClaims(token).get("av", Integer.class);
     }
 }

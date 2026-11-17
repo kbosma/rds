@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.booking.service.impl;
 
 import nl.puurkroatie.rds.bookingstatus.service.BookingStatusRecorder;
 import nl.puurkroatie.rds.paymentplan.service.PaymentPlanService;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookingDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
@@ -152,7 +153,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private void verifyOrganization(UUID organizationId) {

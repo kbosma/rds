@@ -1,16 +1,24 @@
 package nl.puurkroatie.rds.auth.controller;
 
 import jakarta.persistence.EntityManager;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AuthControllerTest extends AbstractAuthControllerTest {
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
 
     @Autowired
     private EntityManager entityManager;
@@ -24,7 +32,7 @@ class AuthControllerTest extends AbstractAuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.accountId").value(ADMIN_ACCOUNT_ID.toString()))
-                .andExpect(jsonPath("$.organizationId").value(ORG_PUURKROATIE_ID.toString()))
+                .andExpect(jsonPath("$.organizationId").value(ORG_PLATFORM_ID.toString())) // beheerders zitten in RDS Platform (V24)
                 .andExpect(jsonPath("$.mustChangePassword").value(false));
     }
 
@@ -126,6 +134,46 @@ class AuthControllerTest extends AbstractAuthControllerTest {
         mockMvc.perform(put("/api/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currentPassword\":\"password123\",\"newPassword\":\"nieuwwachtwoord456\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // Seed (V25): Wendy Vos is MANAGER van Puurkroatie.
+    @Test
+    void wendyVos_isManagerOfPuurkroatie() throws Exception {
+        String token = loginAndGetToken("wendy.vos", DEFAULT_PASSWORD);
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(token.split("\\.")[1]));
+        JsonNode claims = objectMapper.readTree(payload);
+
+        assertEquals(ORG_PUURKROATIE_ID.toString(), claims.get("org").asText());
+        assertEquals("MANAGER", claims.get("roles").get(0).asText());
+        assertTrue(claims.get("authorities").toString().contains("ROLE_CREATE"));
+    }
+
+    // Een verlopen account kan niet inloggen; een vervaldatum in de toekomst is geen probleem.
+    @Test
+    void anExpiredAccount_cannotLogIn() throws Exception {
+        jdbc.update("UPDATE account SET expires_at = now() - interval '1 day' WHERE user_name = 'sophie.vandijk'");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\":\"sophie.vandijk\",\"password\":\"password123\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void anAccountThatExpiresLater_canLogIn() throws Exception {
+        jdbc.update("UPDATE account SET expires_at = now() + interval '1 day' WHERE user_name = 'sophie.vandijk'");
+
+        loginAndGetToken("sophie.vandijk", DEFAULT_PASSWORD);
+    }
+
+    @Test
+    void aLockedAccount_cannotLogIn() throws Exception {
+        jdbc.update("UPDATE account SET locked = true WHERE user_name = 'sophie.vandijk'");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\":\"sophie.vandijk\",\"password\":\"password123\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }

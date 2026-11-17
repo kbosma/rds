@@ -1,21 +1,21 @@
 import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ConfirmService } from '../../shared/services/confirm.service';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthorityService } from './authority.service';
 import { Authority } from '../../shared/models';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
+/**
+ * Overzicht van alle authorities (alleen lezen). Authorities liggen vast: ze komen uit Flyway, omdat ze pas iets doen
+ * als de code ze controleert. Rollen stel je samen in het rollenscherm.
+ */
 @Component({
   selector: 'app-authority-list',
   standalone: true,
@@ -26,19 +26,15 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
     TranslatePipe,
   ],
   template: `
     <div class="page-header">
       <h1>{{ 'authorities.title' | translate }}</h1>
-      <button mat-raised-button color="primary" (click)="navigateToNew()">
-        <mat-icon>add</mat-icon> {{ 'authorities.newAuthority' | translate }}
-      </button>
     </div>
+    <p class="hint">{{ 'authorities.readOnlyNote' | translate }}</p>
 
     <div class="filter-bar">
       <mat-form-field appearance="outline" class="search-field">
@@ -55,20 +51,29 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
     } @else {
       <div class="table-container">
         <table mat-table [dataSource]="dataSource" matSort class="full-width">
+          <ng-container matColumnDef="domain">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'authorities.domain' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.domain }}</td>
+          </ng-container>
+
           <ng-container matColumnDef="description">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'authorities.description' | translate }}</th>
             <td mat-cell *matCellDef="let row">{{ row.description }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+          <ng-container matColumnDef="requires">
+            <th mat-header-cell *matHeaderCellDef>{{ 'authorities.requires' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ (row.requires ?? []).join(', ') }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="tenantAssignable">
+            <th mat-header-cell *matHeaderCellDef>{{ 'authorities.tenantAssignable' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <button mat-icon-button class="act-update" (click)="navigateToEdit(row)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button class="act-delete" (click)="deleteAuthority(row)">
-                <mat-icon>delete</mat-icon>
-              </button>
+              @if (row.tenantAssignable) {
+                <mat-icon class="yes">check</mat-icon>
+              } @else {
+                <span class="badge badge-neutral">{{ 'authorities.platformOnly' | translate }}</span>
+              }
             </td>
           </ng-container>
 
@@ -77,29 +82,25 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              <app-empty-state icon="security" [filtered]="dataSource.data.length > 0" [message]="'authorities.emptyState' | translate">
-                <button mat-stroked-button class="act-create" (click)="navigateToNew()"><mat-icon>add</mat-icon> {{ 'authorities.newAuthority' | translate }}</button>
-              </app-empty-state>
+              <app-empty-state icon="security" [filtered]="dataSource.data.length > 0" [message]="'authorities.emptyState' | translate" />
             </td>
           </tr>
         </table>
       </div>
 
-      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+      <mat-paginator [pageSizeOptions]="[25, 50, 100]" showFirstLastButtons></mat-paginator>
     }
   `,
   styles: [`
+    .hint { color: var(--ui-text-muted, #5b6b77); margin: -4px 0 12px; }
+    .yes { color: var(--theme-primary); }
   `],
 })
 export class AuthorityListComponent implements OnInit {
   private authorityService = inject(AuthorityService);
   private destroyRef = inject(DestroyRef);
-  private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
-  private translate = inject(TranslateService);
-  private confirmService = inject(ConfirmService);
 
-  displayedColumns = ['description', 'actions'];
+  displayedColumns = ['domain', 'description', 'requires', 'tenantAssignable'];
   dataSource = new MatTableDataSource<Authority>();
   loading = signal(true);
 
@@ -123,28 +124,5 @@ export class AuthorityListComponent implements OnInit {
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
-  }
-
-  navigateToNew() {
-    this.router.navigate(['/admin/authorities/new']);
-  }
-
-  navigateToEdit(authority: Authority) {
-    this.router.navigate(['/admin/authorities', authority.authorityId]);
-  }
-
-  async deleteAuthority(authority: Authority) {
-    const message = this.translate.instant('authorities.deleteConfirm', { name: authority.description });
-    if (!await this.confirmService.confirmDelete(message)) return;
-
-    this.authorityService.delete(authority.authorityId).subscribe({
-      next: () => {
-        this.snackBar.open(this.translate.instant('authorities.removed'), '', { duration: 3000 });
-        this.dataSource.data = this.dataSource.data.filter(a => a.authorityId !== authority.authorityId);
-      },
-      error: () => {
-        this.snackBar.open(this.translate.instant('authorities.removeError'), '', { duration: 3000 });
-      },
-    });
   }
 }

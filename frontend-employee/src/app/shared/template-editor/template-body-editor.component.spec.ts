@@ -498,4 +498,43 @@ describe('TemplateBodyEditorComponent', () => {
       expect(imageServiceSpy.list).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('vaste afmeting (geen verspringend dialoog)', () => {
+    const editorBodyHeight = () =>
+      Math.round((fixture.nativeElement.querySelector('.editor-body') as HTMLElement).getBoundingClientRect().height);
+
+    it('houdt dezelfde hoogte bij het wisselen tussen Variabelen en Afbeeldingen', () => {
+      // Lange variabelenlijst tegenover een lege afbeeldingenbibliotheek: vroeger bepaalde het zijpaneel de hoogte.
+      fixture.componentRef.setInput('variableGroups', EMAIL_VARIABLE_GROUPS);
+      fixture.detectChanges();
+      const withVariables = editorBodyHeight();
+
+      component.panelTab.set('images');
+      fixture.detectChanges();
+
+      expect(editorBodyHeight()).toBe(withVariables);
+      expect(withVariables).toBeGreaterThanOrEqual(280);
+    });
+
+    it('laat het zijpaneel binnen de editorhoogte scrollen in plaats van mee te groeien', () => {
+      fixture.componentRef.setInput('variableGroups', EMAIL_VARIABLE_GROUPS);
+      fixture.detectChanges();
+      const panel = fixture.nativeElement.querySelector('.var-panel') as HTMLElement;
+
+      expect(Math.round(panel.getBoundingClientRect().height)).toBe(editorBodyHeight());
+      expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight);
+    });
+
+    it('houdt de breedte van de inhoud van het zijpaneel gelijk, met of zonder scrollbalk', () => {
+      fixture.componentRef.setInput('variableGroups', EMAIL_VARIABLE_GROUPS);
+      fixture.detectChanges();
+      const panel = fixture.nativeElement.querySelector('.var-panel') as HTMLElement;
+      const withVariables = panel.clientWidth;
+
+      component.panelTab.set('images');
+      fixture.detectChanges();
+
+      expect(panel.clientWidth).toBe(withVariables);
+    });
+  });
 });

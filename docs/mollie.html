@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mollie-integratie (betalingen)</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Mollie-integratie (betalingen)</h1>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-overzicht">Overzicht</a></li><li><a href="#h-twee-id-s-niet-verwarren">Twee id's (niet verwarren)</a></li><li><a href="#h-flow">Flow</a></li><li><a href="#h-statussen-en-enums">Statussen en enums</a></li><li><a href="#h-een-betaling-wordt-nooit-verwijderd">Een betaling wordt nooit verwijderd</a></li><li><a href="#h-herkoppelen-met-reden">Herkoppelen met reden</a></li><li><a href="#h-levenscyclus-een-betaling-is-eerst-een-aankondiging">Levenscyclus: een betaling is eerst een aankondiging</a></li><li><a href="#h-statushistorie-alleen-toevoegen-en-correcties">Statushistorie: alleen-toevoegen en correcties</a></li><li><a href="#h-endpoints">Endpoints</a></li><li><a href="#h-code">Code</a></li><li><a href="#h-configuratie-application-yaml-onder-app-mollie">Configuratie (application.yaml, onder app.mollie)</a></li><li><a href="#h-testen-met-curl">Testen met curl</a></li></ul></nav>
+<h2 id="h-overzicht">Overzicht</h2>
+<ul><li>Betalingen lopen via de <strong>Mollie API</strong> (<code>https://api.mollie.com/v2/payments</code>).</li><li>Pakket <code>nl.puurkroatie.rds.mollie</code> is <strong>booking-agnostisch</strong>: <code>MolliePayment</code> kent geen <code>Booking</code> (bewust geen FK). De koppeling zit in de koppeltabel <code>booking_mollie_payment</code> (entity <code>BookingMolliePayment</code>, pakket <code>booking</code>), met een UNIQUE-constraint op <code>mollie_payment_id</code> (migratie V3): één betaling hoort bij hooguit één boeking; voorschot, restant en nieuwe pogingen zijn elk een eigen betaling.</li><li>Rolverdeling: de <strong>medewerker</strong> legt het betalingsrecord vast (bedrag, omschrijving) en koppelt het aan de boeking; de <strong>klant</strong> start in de portal de echte betaling; de <strong>webhook</strong> werkt de status bij. De webhook is de <strong>enige</strong> bron van de status, niet de redirect.</li></ul>
+<h2 id="h-twee-id-s-niet-verwarren">Twee id's (niet verwarren)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Id</th><th>Wat</th><th>Waar gebruikt</th></tr></thead><tbody>
+<tr><th scope="row"><code>molliePaymentId</code></th><td><strong>Onze</strong> interne UUID</td><td>pad van de pay-call, koppeltabel, primaire sleutel</td></tr>
+<tr><th scope="row"><code>molliePaymentExternalId</code> (<code>tr_xxx</code>)</th><td><strong>Mollie's</strong> payment-id</td><td>door Mollie aangemaakt; gebruikt in de webhook en de status-GET</td></tr>
+</tbody></table></div>
+<h2 id="h-flow">Flow</h2>
+<figure class="diagram"><pre class="mermaid">
+sequenceDiagram
+    actor E as Medewerker (frontend-employee)
+    actor B as Klant (frontend-booker)
+    participant BE as Backend (/rds)
+    participant M as Mollie
+
+    E-&gt;&gt;BE: POST /api/mollie/payments  (PAYMENT_CREATE)
+    Note over BE: MolliePayment status OPEN, nog geen externalId
+    E-&gt;&gt;BE: POST /api/booking-mollie-payments  (koppelen aan boeking)
+
+    B-&gt;&gt;BE: POST /api/booker-portal/payments/pay/{molliePaymentId}
+    Note right of B: booker-JWT; de betaling moet bij de eigen boeking horen
+    BE-&gt;&gt;M: POST /v2/payments  bedrag &quot;70.00&quot;, redirectUrl, webhookUrl
+    M--&gt;&gt;BE: 201 { id = tr_xxx, status = open, _links.checkout.href }
+    Note over BE: bewaar externalId = tr_xxx, checkoutUrl
+    BE--&gt;&gt;B: 200 { checkoutUrl }
+    B-&gt;&gt;M: navigatie naar checkoutUrl; klant betaalt
+
+    par Redirect (browser-facing)
+        M--&gt;&gt;B: GET redirectUrl (de booker-app, geen tr_xxx)
+        Note over B: app herlaadt/poll de betalingen
+    and Webhook (server-to-server)
+        M-&gt;&gt;BE: POST /rds/api/mollie/payments/webhook  id=tr_xxx
+        BE-&gt;&gt;M: GET /v2/payments/tr_xxx
+        M--&gt;&gt;BE: status = paid
+        Note over BE: zoek op externalId, schrijf MolliePaymentStatusEntry(PAID)
+        BE--&gt;&gt;M: 200 (Mollie stopt met herhalen)
+    end
+
+    B-&gt;&gt;BE: GET /api/booker-portal/payments/status-entries
+    BE--&gt;&gt;B: PAID, de klant ziet &quot;Betaald&quot;
+</pre></figure>
+<p>Toelichting:</p>
+<ol><li>De pay-call bouwt het bedrag als tekst met exact 2 decimalen (<code>&quot;70.00&quot;</code>) en stuurt <code>redirectUrl</code> en <code>webhookUrl</code> mee. De redirect-URL komt bij voorkeur uit de omgevingsconfiguratie (<code>app.mollie.urls.redirect</code>).</li><li><code>tr_xxx</code> bewaren we als <code>molliePaymentExternalId</code>; de checkout-URL uit <code>_links.checkout.href</code> als <code>checkoutUrl</code>.</li><li><strong>Redirect ≠ webhook.</strong> De redirect is browser-facing en mag een intern adres zijn; de webhook komt van Mollie's servers en moet <strong>publiek bereikbaar</strong> zijn, via NGINX op <code>https://rds.kbtg.nl/api/mollie/payments/webhook</code> (zie <code>deploy/nginx/rds.kbtg.nl.conf</code>: een exacte location met rate-limit <code>rds_mollie</code>; Let's Encrypt-certificaat, dus door Mollie vertrouwd).</li><li>De webhook-body bevat alleen het id; de backend haalt de <strong>echte</strong> status zelf bij Mollie op en legt die vast als <code>MolliePaymentStatusEntry</code> (auditspoor).</li><li><strong>Webhook-validatie:</strong> <code>id</code> moet voldoen aan <code>tr_[A-Za-z0-9]+</code> (anders <code>400</code>), zodat de endpoint niet voor willekeurige invoer misbruikt kan worden.</li><li>Er is ook <code>POST /api/mollie/payments/create-at-mollie</code> (medewerker): maakt direct een betaling bij Mollie aan en bewaart het resultaat als <code>MolliePayment</code>.</li></ol>
+<h2 id="h-statussen-en-enums">Statussen en enums</h2>
+<p><code>MolliePaymentStatus</code>: <code>OPEN, PENDING, AUTHORIZED, PAID, FAILED, CANCELED, EXPIRED</code> (spiegel van Mollie) en <code>CHARGED_BACK</code> (V20): Mollie laat bij een terugboeking de status op <code>paid</code> staan en meldt <code>amountChargedBack</code>; de webhook legt dan <code>CHARGED_BACK</code> vast. Ook als correctie te registreren.</p>
+<p>Na elke nieuwe status (webhook of correctie) publiceert de statusservice <code>PaymentStatusRecordedEvent</code>; de statusengine (pakket <code>bookingstatus</code>) werkt daarop de boekingsstatus bij. Zo blijft het pakket <code>mollie</code> boeking-agnostisch. <code>MolliePaymentMethod</code>: <code>IDEAL, CREDITCARD, BANCONTACT, SOFORT, BANKTRANSFER, PAYPAL, BELFIUS, KBC, EPS, GIROPAY, PRZELEWY24, APPLEPAY, GOOGLEPAY, IN3, KLARNA, RIVERTY</code>. Beide: naam in de database, lowercase in JSON, hoofdletterongevoelig parsen.</p>
+<h2 id="h-een-betaling-wordt-nooit-verwijderd">Een betaling wordt nooit verwijderd</h2>
+<p>Een betaling en haar statushistorie blijven altijd bewaard, <strong>ook als er (nog) geen Mollie-id is</strong>. Er is geen <code>DELETE /api/mollie/payments/{id}</code> (405) en migratie V11 zet databasetriggers op <code>mollie_payment</code> en <code>mollie_payment_status_entry</code> die elke <code>DELETE</code> en <code>TRUNCATE</code> weigeren, dus ook een cascade of handmatige SQL kan de historie niet laten verdwijnen. Ook de koppeling aan een boeking wordt nooit losgemaakt: er is geen <code>DELETE /api/booking-mollie-payments/…</code> meer (405) en een databasetrigger (V12) weigert elke <code>DELETE</code>/<code>TRUNCATE</code> op de koppeltabel. De enige manier om een betaling aan een andere boeking te hangen is een <strong>herkoppeling met reden</strong> (zie hieronder).</p>
+<h2 id="h-herkoppelen-met-reden">Herkoppelen met reden</h2>
+<p>Een medewerker met <code>PAYMENT_RELINK</code> (ADMIN en MANAGER) kan een betaling aan een andere boeking hangen: <code>POST /api/booking-mollie-payments/{molliePaymentId}/relink</code> met <code>{targetBookingId, reason}</code> (reden verplicht, 5 tot 500 tekens). Dat is altijd een <strong>nieuwe regel</strong> in <code>booking_mollie_payment_relink</code> (van boeking, naar boeking, reden, wie, wanneer) en pas daarna wordt de koppeling verplaatst; de betaling en haar statushistorie blijven onaangeroerd. <code>GET …/{molliePaymentId}/relinks</code> (<code>PAYMENT_READ</code>) geeft de geschiedenis, oudste eerst, met leesbare namen.</p>
+<p>Regels: de doelboeking moet bij dezelfde organisatie horen als de betaling (ook voor ADMIN, anders 403), dezelfde boeking als doel geeft 400, een betaling uit een andere organisatie 403. Databasetriggers (V12) maken de herkoppelregels alleen-toevoegen (<code>UPDATE</code>/<code>DELETE</code>/<code>TRUNCATE</code> geweigerd) en laten <code>booking_mollie_payment.booking_id</code> alleen wijzigen direct nadat een bijpassende herkoppelregel is ingevoegd; het betaling-id is onveranderlijk. Een boeking die in een herkoppeling voorkomt kan niet verwijderd worden (<code>DeletionGuard</code>, 409).</p>
+<h2 id="h-levenscyclus-een-betaling-is-eerst-een-aankondiging">Levenscyclus: een betaling is eerst een aankondiging</h2>
+<ol><li><strong>Soort en vervaldatum</strong> (V19): <code>payment_type</code> is <code>VOORSCHOT</code>, <code>RESTANT</code> of <code>DEFINITIEF</code> voor betalingen die het systeem aanmaakt bij het bevestigen van de offerte (zie <a href="domain.html#automatische-betalingen">domain.md</a>), en <code>OVERIG</code> voor een betaling die een medewerker zelf vastlegt (en voor alle betalingen van vóór V19). <code>due_date</code> is de uiterlijke betaaldatum. Beide bepaalt de server; bij bewerken blijven ze staan. In JSON lowercase (<code>voorschot</code>, …), ook in het portaal (<code>PortalPaymentDto.paymentType</code>, <code>dueDate</code>).</li><li><strong>Aangekondigd:</strong> een medewerker legt een betaling vast (omschrijving, bedrag), of het systeem maakt haar aan. Er is nog geen Mollie-id; de betaling bestaat alleen bij ons en mag nog worden <strong>aangepast</strong> (omschrijving, bedrag).</li><li><strong>Bij Mollie aangemaakt:</strong> zodra de klant in het portaal betaalt, maakt de backend de betaling bij Mollie aan en krijgt het record het Mollie-id (<code>tr_…</code>) en de checkout-URL. Vanaf dat moment is de betaling <strong>geschiedenis</strong>: <code>PUT</code> geeft <strong>409</strong> (<code>PaymentLockedException</code>) en de UI toont geen bewerkicoon.</li><li><strong>Statussen via de webhook:</strong> zie hieronder.</li></ol>
+<p>Het Mollie-id en de checkout-URL zijn van de server: een client kan ze bij <code>POST</code> en <code>PUT</code> niet zetten of wissen (ze worden genegeerd). De regel wordt dus door de backend afgedwongen, niet alleen door de UI.</p>
+<h2 id="h-statushistorie-alleen-toevoegen-en-correcties">Statushistorie: alleen-toevoegen en correcties</h2>
+<p>De statussen van een betaling komen van Mollie (webhook). <strong>Een regel wordt nooit gewijzigd, vervangen of verwijderd</strong>; er bestaan geen <code>PUT</code>/<code>DELETE</code> op statusregels en databasetriggers weigeren elke <code>UPDATE</code> (V10) en elke <code>DELETE</code>/<code>TRUNCATE</code> (V11). Wel kan een medewerker met <code>PAYMENT_CORRECT</code> (ADMIN en MANAGER) een <strong>correctie</strong> registreren, bv. als de klant per bank betaalde buiten Mollie om. Dat is altijd een <strong>nieuwe regel</strong> met <code>correction = true</code>, wie (<code>createdBy</code>), wanneer (<code>createdAt</code>) en een verplichte reden (minstens 5 tekens); de Mollie-regels blijven staan. De huidige status is de laatste regel.</p>
+<p>Toegestane correctiestatussen (<code>MolliePaymentStatusEntryServiceImpl.CORRECTION_STATUSES</code>): <code>open</code>, <code>paid</code>, <code>failed</code>, <code>canceled</code>. <code>pending</code>, <code>authorized</code> en <code>expired</code> bepaalt alleen Mollie. Een correctie naar de huidige status wordt geweigerd. In de UI staat de knop <strong>Correctie registreren</strong> in het betalingsdialoog (oog-icoon bij de betaling); het dialoog toont bron (<em>Correctie</em>), naam en reden.</p>
+<h2 id="h-endpoints">Endpoints</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th></tr></thead><tbody>
+<tr><th scope="row">GET/POST</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_READ</code> / <code>PAYMENT_CREATE</code></td></tr>
+<tr><th scope="row">GET/PUT</th><td><code>/api/mollie/payments/{id}</code></td><td><code>PAYMENT_READ</code> / <code>PAYMENT_UPDATE</code> (alleen zolang er geen Mollie-id is, anders 409). <strong>Geen DELETE: een betaling wordt nooit verwijderd.</strong></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments/create-at-mollie</code></td><td><code>PAYMENT_CREATE</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments/webhook</code></td><td>publiek (gevalideerd id)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries</code></td><td><code>PAYMENT_READ</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries/by-payment/{molliePaymentId}</code></td><td><code>PAYMENT_READ</code> (antwoord bevat <code>createdByName</code>, <code>correction</code>, <code>reason</code>)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payment-status-entries/by-payment/{molliePaymentId}</code></td><td><code>PAYMENT_CORRECT</code> (ADMIN, MANAGER): handmatige correctie <code>{status, reason}</code></td></tr>
+<tr><th scope="row">GET/POST</th><td><code>/api/booking-mollie-payments</code></td><td><code>PAYMENT_READ</code> / <code>PAYMENT_CREATE</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{bookingId}</code> (en <code>/{bookingId}/{molliePaymentId}</code>)</td><td><code>PAYMENT_READ</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{molliePaymentId}/relinks</code></td><td><code>PAYMENT_READ</code>: herkoppelgeschiedenis</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booking-mollie-payments/{molliePaymentId}/relink</code></td><td><code>PAYMENT_RELINK</code> (ADMIN, MANAGER): herkoppelen <code>{targetBookingId, reason}</code> → 201. <strong>Geen DELETE: een koppeling wordt nooit losgemaakt.</strong></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/payments</code> en <code>/status-entries</code></td><td><code>BOOKER_PORTAL_READ</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-portal/payments/pay/{molliePaymentId}</code></td><td><code>BOOKER_PORTAL_UPDATE</code></td></tr>
+</tbody></table></div>
+<p>Tenant-filtering: <code>ADMIN</code> ziet alles, anderen alleen de eigen organisatie (services). Het portal-pad filtert op het <code>bookingId</code> uit het token.</p>
+<h2 id="h-code">Code</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderdeel</th><th>Klassen</th></tr></thead><tbody>
+<tr><th scope="row">Pakket <code>mollie</code></th><td><code>entity</code>: <code>MolliePayment</code>, <code>MolliePaymentStatusEntry</code>, enums <code>MolliePaymentStatus</code>, <code>MolliePaymentMethod</code>; <code>dto</code>: <code>MolliePaymentDto</code>, <code>MolliePaymentStatusEntryDto</code>, <code>PaymentRequestDto</code>, <code>PaymentResponseDto</code>, <code>PaymentStatusRequestDto</code>, <code>PaymentStatusResponseDto</code>; <code>service</code>: <code>MollieService</code> (+impl), <code>MolliePaymentStatusEntryService</code> (+impl); <code>config</code>: <code>MollieConfig</code> (REST-client met de sleutel); <code>controller</code>: <code>MolliePaymentController</code>, <code>MolliePaymentStatusEntryController</code></td></tr>
+<tr><th scope="row">Pakket <code>booking</code></th><td><code>BookingMolliePayment</code> (+ <code>…Id</code>, repository, controller <code>BookingMolliePaymentController</code>)</td></tr>
+<tr><th scope="row">Pakket <code>bookerportal</code></th><td><code>BookerPortalPaymentService</code> (eigenaarschapscontrole, aanroep Mollie, bijwerken record), <code>BookerPortalPaymentController</code></td></tr>
+<tr><th scope="row">Frontend</th><td>employee: <code>features/mollie/*</code> (betalingen per boeking en overzicht); booker: <code>features/payments/*</code></td></tr>
+</tbody></table></div>
+<p>Belangrijke queries: <code>findByMolliePaymentExternalId(String)</code> (webhook), <code>findByTenantOrganization(UUID)</code>.</p>
+<h2 id="h-configuratie-application-yaml-onder-app-mollie">Configuratie (<code>application.yaml</code>, onder <code>app.mollie</code>)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Sleutel</th><th>Betekenis</th></tr></thead><tbody>
+<tr><th scope="row"><code>api.payments.base</code></th><td>basis-URL van de Mollie payments-API</td></tr>
+<tr><th scope="row"><code>key</code></th><td><code>Bearer &lt;api-key&gt;</code> voor de REST-client (<strong>één globale sleutel</strong>, zie hieronder)</td></tr>
+<tr><th scope="row"><code>urls.webhook</code></th><td>publiek bereikbare webhook-URL (nu het publieke IP via NGINX)</td></tr>
+<tr><th scope="row"><code>urls.redirect</code></th><td>waar de browser na betalen heen gaat (de booker-app)</td></tr>
+</tbody></table></div>
+<p>Lokaal testen met een tunnel: <code>start/scripts/start-mollie-tunnel.sh</code> start een Cloudflare quick-tunnel en schrijft de URL in <code>application-rds-local.yaml</code> (profiel <code>rds-local</code>, niet committen; de tunnel-URL wisselt bij elke start). Zie <a href="build-test-deploy.html">build-test-deploy.md</a>.</p>
+<div class="callout"><strong>Let op (zie <a href="open-items.html">open-items.md</a>):</strong> de REST-client gebruikt één globale sleutel uit de configuratie. De kolom <code>organization.mollie_key</code> bestaat en is te bewerken, maar wordt <strong>niet</strong> gebruikt voor de API-aanroepen. Voor echte multi-tenant betalingen (elke organisatie op eigen Mollie-account) moet de client de sleutel van de betreffende organisatie gebruiken.</div>
+<h2 id="h-testen-met-curl">Testen met curl</h2>
+<pre class="sketch">BASE=http://localhost:8666/rds
+TOKEN=&lt;employee-jwt&gt;
+
+# betalingsrecord aanmaken (medewerker)
+curl -X POST $BASE/api/mollie/payments -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;amount&quot;: 70.00, &quot;currency&quot;: &quot;EUR&quot;, &quot;description&quot;: &quot;Voorschot&quot;}&#x27;
+
+# koppelen aan een boeking
+curl -X POST $BASE/api/booking-mollie-payments -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;bookingId&quot;: &quot;&lt;bookingId&gt;&quot;, &quot;molliePaymentId&quot;: &quot;&lt;molliePaymentId&gt;&quot;}&#x27;
+
+# webhook simuleren (zoals Mollie dit stuurt)
+curl -X POST &quot;$BASE/api/mollie/payments/webhook?id=tr_xxxxxxxx&quot;</pre>
+<p>(Controleer de exacte JSON-velden in <code>MolliePaymentDto</code> voordat je een voorbeeld overneemt.)</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

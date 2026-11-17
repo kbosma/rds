@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bouwen, testen, draaien en deployen</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Bouwen, testen, draaien en deployen</h1>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-vereisten">Vereisten</a></li><li><a href="#h-lokaal-draaien">Lokaal draaien</a></li><li><a href="#h-backend-bouwen-en-testen">Backend bouwen en testen</a></li><li><a href="#h-frontend-bouwen-en-testen">Frontend bouwen en testen</a></li><li><a href="#h-deployen">Deployen</a></li><li><a href="#h-logging-en-monitoring">Logging en monitoring</a></li></ul></nav>
+<h2 id="h-vereisten">Vereisten</h2>
+<ul><li>JDK 21, Maven 3.9 (<code>./mvnw</code> of de eigen installatie, bv. <code>/Users/keesbosma/apache-maven-3.9.16/bin/mvn</code>)</li><li>Node + npm (Angular 22), een browser voor <code>ng test</code> (Firefox of Chrome)</li><li>PostgreSQL 17 lokaal (Postgres.app): database <code>rdsdb</code>, gebruiker/wachtwoord <code>rds</code>/<code>rds</code> op <code>localhost:5432</code> (zie <code>application.yaml</code>) — <strong>alleen nodig om de applicatie te draaien</strong>; de tests gebruiken hun eigen database (zie <em>Testdatabase</em> hieronder)</li></ul>
+<h2 id="h-lokaal-draaien">Lokaal draaien</h2>
+<pre class="sketch"># backend (poort 8666, context-path /rds, alleen op 127.0.0.1); Flyway migreert bij het starten
+./mvnw spring-boot:run
+
+# medewerkers-app  → http://localhost:4200  (dev-proxy: /api → http://localhost:8666/rds/api)
+cd frontend-employee &amp;&amp; npm install &amp;&amp; npm start
+
+# klanten-app      → http://localhost:4300
+cd frontend-booker &amp;&amp; npm install &amp;&amp; npm start</pre>
+<ul><li>E-mail is lokaal <strong>log-only</strong> zolang <code>spring.mail.host</code> niet gezet is (niets wordt echt verstuurd; de mail komt in het log).</li><li>Mollie lokaal: <code>start/scripts/start-mollie-tunnel.sh</code> (Cloudflare quick-tunnel) schrijft de publieke webhook-URL in <code>application-rds-local.yaml</code>; start de backend met profiel <code>rds-local</code>; stoppen met <code>stop-mollie-tunnel.sh</code>. De tunnel-URL verandert bij elke start.</li><li>De OTP-code voor de klantenportal staat in het backend-log (zie <a href="bookerportal.html">bookerportal.md</a>).</li></ul>
+<h2 id="h-backend-bouwen-en-testen">Backend bouwen en testen</h2>
+<pre class="sketch">mvn clean install        # compileert (incl. MapStruct), draait alle tests, bouwt de jar
+mvn test                 # alleen de tests
+mvn -q -DskipTests compile
+mvn -q -Dtest=&#x27;NaamTest&#x27; -DfailIfNoTests=false test   # één klasse</pre>
+<ul><li>Unit-tests (Mockito) hebben geen database nodig. De <strong>integratietests</strong> (<code>*ControllerTest</code>, <code>ApplicationTests</code>) starten de hele Spring-context met <code>@SpringBootTest</code> + MockMvc en draaien <code>@Transactional</code> (rollback per test) tegen de seeddata van V2, op een <strong>eigen tijdelijke database</strong> (zie hieronder). Basisklassen: <code>AbstractControllerTest</code> (organisaties, login-helpers) en <code>AbstractBookingControllerTest</code> (vaste UUID's voor boekingen, bookers, …).</li><li>Stand 19-10-2026: <strong>697 tests, 0 failures</strong> (waarvan ±50 testklassen); jsoup-, POI- en xdocreport-gedrag wordt door <code>HtmlToDocxConverterTest</code> end-to-end gedekt.</li><li><code>DeleteVerificationControllerTest</code> controleert voor elke resource dat een delete het record <strong>echt</strong> weghaalt (GET 200 → DELETE 204 → GET 404; daarna <code>flush()</code>/<code>clear()</code> omdat een MockMvc-IT in één transactie draait en de persistence-context anders een database-cascade verbergt).</li><li>Nieuwe migratie ⇒ nieuw bestand <code>V&lt;n&gt;__omschrijving.sql</code>; de volledige suite valideert het schema (<code>ddl-auto: validate</code>).</li></ul>
+<h3 id="h-testdatabase-embedded-postgresql">Testdatabase (embedded PostgreSQL)</h3>
+<p>De backend-tests starten zelf een <strong>tijdelijke, echte PostgreSQL 17</strong> (Zonky <em>embedded-postgres</em>) en draaien daarop alle Flyway-migraties (dus ook de seeddata). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale <code>rdsdb</code> nooit.</p>
+<ul><li><code>EmbeddedPostgresInitializer</code> (src/test/java/…/support) zet de datasource-properties van elke Spring-testcontext; geregistreerd in <code>src/test/resources/META-INF/spring.factories</code>. Eén database per testrun, gedeeld door alle contexten. Alleen in src/test: de applicatie zelf start hier nooit mee.</li><li>De properties staan bovenaan: een test draait dus nooit per ongeluk tegen een echte database, ook niet als <code>SPRING_DATASOURCE_*</code> gezet is. <code>TestDatabaseIsolationTest</code> bewaakt dat.</li><li><strong>Aannames over de seeddata zijn veilig</strong>: elke run begint met precies de data uit de migraties. Tests zijn <code>@Transactional</code> met rollback; <strong>commit dus nooit in een test</strong>, anders ziet een volgende test die data (draai de suite eens met <code>-Dsurefire.runOrder=random</code> om dat te controleren).</li><li>De eerste run downloadt de PostgreSQL-binaries (± 20 MB per platform) uit Maven Central; daarna staan ze in <code>~/.m2</code>. Ondersteund: macOS (Intel en Apple Silicon), Linux amd64, Windows amd64. De binaries zijn gepind op 17.x via <code>embedded-postgres-binaries.version</code> in de pom (productie draait PostgreSQL 17).</li><li>Draai je tests in een omgeving zonder internet, laat dan eerst één keer <code>./mvnw test</code> lopen met netwerk, of zet de binaries in een eigen Maven-mirror.</li></ul>
+<h3 id="h-bekende-kuren">Bekende kuren</h3>
+<ul><li><strong>Editor-stubs in <code>target/</code></strong> ("Unresolved compilation problem"): wacht een paar seconden na het opslaan, verwijder de betrokken <code>.class</code>-bestanden en draai opnieuw; Maven zelf is correct.</li><li>Een test die op een niet-bestaande boeking/booker uit de seed leunt: kijk naar de UUID's in de basisklassen en in <code>V2__initial_data.sql</code>.</li><li>Wijzig je een FreeMarker-instelling in <code>FreemarkerHardening</code>: die past de <strong>gedeelde</strong> xdocreport-configuratie aan, dus een test kan niet "onbeveiligd" vergelijken (zie <code>DocgenTemplateInjectionTest</code>).</li></ul>
+<h2 id="h-frontend-bouwen-en-testen">Frontend bouwen en testen</h2>
+<pre class="sketch">cd frontend-employee   # idem frontend-booker
+npx ng build                                   # standaardbuild (controleert o.a. of alles compileert)
+npx ng build --configuration production --base-href /rds/     # productie (employee)
+npx ng test --watch=false --browsers=FirefoxHeadless          # alle specs
+npx ng test --watch=false --browsers=FirefoxHeadless \
+    --include=&#x27;src/app/shared/template-editor/**/*.spec.ts&#x27; \
+    --include=&#x27;src/app/translate-test.setup.spec.ts&#x27;          # een deel (setup altijd meenemen!)</pre>
+<ul><li>Stand 20-10-2026: <strong>556 specs, 0 failures</strong> in <code>frontend-employee</code> (Firefox 158); <code>frontend-booker</code> heeft nu dezelfde opzet (Firefox headless) en <strong>158 specs, 0 failures</strong>.</li><li><code>src/app/translate-test.setup.spec.ts</code> laadt de echte nl-vertalingen in elke spec; wie specs selecteert met <code>--include</code> moet dat bestand mee-includen, anders zie je vertaalsleutels in plaats van tekst.</li><li>TipTap in een test: de editor draait echt in Firefox; plak/drop-gedrag test je door de ProseMirror-handlers rechtstreeks aan te roepen (synthetische <code>ClipboardEvent</code>s dragen geen bestanden).</li><li>Dev-proxy en <code>base href</code>: zie <a href="frontend.html">frontend.md</a>.</li><li><p><strong>Firefox start niet ("Cannot start FirefoxHeadless")</strong> terwijl je gewone Firefox open staat: een tweede Firefox met een eigen profiel geeft dan zijn opdracht door aan de draaiende instantie of wacht op die. Zet <code>MOZ_NO_REMOTE=1</code> zodat Karma een losse instantie start (de Firefox die je zelf open hebt blijft ongemoeid):</p><pre class="sketch">MOZ_NO_REMOTE=1 npx ng test --watch=false --browsers=FirefoxHeadless</pre><p>Helpt dat niet en blijft elke start hangen op <code>org.mozilla.updater</code> (te zien met <code>ps aux | grep -i updater</code>), dan staat er een Firefox-update klaar die nog niet is toegepast: sluit Firefox helemaal af (⌘Q), start hem opnieuw zodat de update installeert, en draai de specs nogmaals. Op macOS bestaat het commando <code>timeout</code> niet, dus een testrun met een tijdslimiet moet je anders afbreken (bv. <code>pkill -f &quot;ng test&quot;</code>).</p></li></ul>
+<h2 id="h-deployen">Deployen</h2>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    subgraph Lokaal[&quot;Ontwikkelmachine (deploy/scripts)&quot;]
+        BE[&quot;build-deploy-backend.sh&lt;br/&gt;mvn package&quot;]
+        FE[&quot;build-deploy-frontend-*.sh&lt;br/&gt;ng build --base-href&quot;]
+        NG[&quot;deploy-nginx.sh&quot;]
+    end
+    subgraph Server[&quot;rds.kbtg.nl (Hetzner)&quot;]
+        N[&quot;NGINX&lt;br/&gt;TLS (Let&#x27;s Encrypt), rate limits&quot;]
+        J[&quot;/opt/rds: Spring Boot (systemd rds)&lt;br/&gt;127.0.0.1:8666/rds&quot;]
+        W1[&quot;/var/www/rds&lt;br/&gt;medewerkersapp&quot;]
+        W2[&quot;/var/www/booker&lt;br/&gt;boekerportaal&quot;]
+    end
+    P[(&quot;PostgreSQL 17&quot;)]
+    BE -- &quot;scp + systemctl restart&quot; --&gt; J
+    FE -- &quot;scp + reload nginx&quot; --&gt; W1 &amp; W2
+    NG -- &quot;config + certbot&quot; --&gt; N
+    U([&quot;Browser&quot;]) --&gt; N
+    N -- &quot;/rds/, /booker/&quot; --&gt; W1 &amp; W2
+    N -- &quot;/api/&quot; --&gt; J
+    J --&gt; P
+    M([&quot;Mollie&quot;]) -- &quot;webhook&quot; --&gt; N
+</pre></figure>
+<p>Scripts staan in <code>deploy/scripts/</code> en gebruiken <code>ssh</code>/<code>scp</code> naar <code>root@kbtg.nl</code> (centraal in <code>deploy/scripts/remote.sh</code>, eenmalig te overschrijven met <code>REMOTE=root@&lt;host&gt;</code>). Dat is een publieke DNS-naam: geen HOSTS-regel nodig, vertrouwen loopt via je SSH-sleutel en de host key in <code>known_hosts</code>:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Script</th><th>Wat</th></tr></thead><tbody>
+<tr><th scope="row"><code>build-deploy-backend.sh</code></th><td><code>mvn clean package -DskipTests</code>, <code>systemctl stop rds</code>, jar naar <code>/opt/rds</code>, <code>systemctl start rds</code></td></tr>
+<tr><th scope="row"><code>build-deploy-frontend-employee.sh</code></th><td><code>ng build --configuration production --base-href /rds/</code>, kopieert naar <code>/var/www/rds</code>, <code>systemctl reload nginx</code></td></tr>
+<tr><th scope="row"><code>build-deploy-frontend-booker.sh</code></th><td>idem met <code>--base-href /booker/</code> naar <code>/var/www/booker</code></td></tr>
+<tr><th scope="row"><code>deploy-nginx.sh</code></th><td>NGINX-config voor <code>rds.kbtg.nl</code> + Let's Encrypt-certificaat (zie hieronder)</td></tr>
+<tr><th scope="row"><code>build-deploy-all.sh</code></th><td><code>deploy-nginx.sh</code> en daarna de drie builds achter elkaar</td></tr>
+</tbody></table></div>
+<p><strong>NGINX — <code>https://rds.kbtg.nl</code></strong> (<code>deploy/nginx/</code>). DNS (Hetzner DNS): <code>@</code> en wildcard <code>*</code> → <code>178.104.163.88</code> (A) en <code>2a01:4f8:c2c:f8fc::1</code> (AAAA), dus elk subdomein komt bij de server uit. De configs luisteren daarom op IPv4 én IPv6. Certificaat van Let's Encrypt, geen self-signed meer.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Bestand</th><th>Op de server</th><th>Wat</th></tr></thead><tbody>
+<tr><th scope="row"><code>rds.kbtg.nl.conf</code></th><td><code>/etc/nginx/sites-available/rds.kbtg.nl</code> (+ symlink)</td><td><code>/</code> → <code>/rds/</code>, <code>/rds/</code> en <code>/booker/</code> (assets 7 dagen cache, <code>index.html</code> niet), <code>/api/</code> → <code>http://127.0.0.1:8666/rds/api/</code>, Mollie-webhook en e-mailafbeeldingen publiek met rate-limit, login/TOTP/herstel/booker-OTP rate-limited, scanner-blokkade (444), <code>/monitoring</code> alleen voor beheer-IP's, HSTS. Poort 80 → HTTPS, behalve de ACME-challenge.</td></tr>
+<tr><th scope="row"><code>rds-zones.conf</code></th><td><code>/etc/nginx/conf.d/rds-zones.conf</code></td><td>Rate-limit-zones <code>rds_login</code>, <code>rds_mollie</code>, <code>rds_email_image</code> (eigen namen, botsen niet met andere sites)</td></tr>
+<tr><th scope="row"><code>rds.kbtg.nl.bootstrap.conf</code></th><td>tijdelijk</td><td>Alleen poort 80 + ACME, om het eerste certificaat op te halen (de echte config verwijst naar certificaatbestanden die er dan nog niet zijn)</td></tr>
+<tr><th scope="row"><code>catch-all.conf</code></th><td><code>/etc/nginx/sites-available/00-catch-all</code> (+ symlink)</td><td><code>default_server</code> voor poort 80/443 (IPv4 en IPv6): onbekende hostnamen en het kale IP krijgen geen antwoord (<code>444</code>, TLS-handshake geweigerd). Nodig door het wildcard-DNS-record <code>*.kbtg.nl</code>. Geldt voor de hele NGINX-server. Een ander subdomein toestaan = eigen site-config met <code>server_name</code> (gaat altijd voor). Vereist NGINX ≥ 1.19.4</td></tr>
+<tr><th scope="row"><code>install.sh</code></th><td>draait op de server</td><td>Plaatst bovenstaande; faalt <code>nginx -t</code>, dan wordt de vorige versie teruggezet</td></tr>
+</tbody></table></div>
+<p><code>deploy-nginx.sh</code> controleert eerst of <code>rds.kbtg.nl</code> publiek naar de server wijst (Let's Encrypt kijkt niet naar je HOSTS-bestand). De <strong>eerste keer</strong> vraagt certbot interactief om een e-mailadres en akkoord met de voorwaarden van Let's Encrypt; daarna is het script idempotent. De catch-all wordt de eerste keer alleen geplaatst met <code>./deploy-nginx.sh --with-catch-all</code> (daarna altijd bijgewerkt); doe dat pas als de Mollie-webhook en de e-mailafbeeldingen niet meer via het kale IP lopen, want die verzoeken krijgen dan geen antwoord meer. <code>install.sh</code> stopt vooraf als er al een andere <code>default_server</code> is. Vernieuwen gaat automatisch (<code>certbot.timer</code>, met <code>systemctl reload nginx</code> als deploy-hook). Vereist op de server: <code>apt install certbot</code> en poort 80 open in de Hetzner-firewall.</p>
+<p><strong>Publieke URL's van de backend</strong>: <code>app.email.public-api-base-url</code> en <code>app.mollie.urls.webhook</code> staan in <code>application.yaml</code> nog op <code>http://178.104.163.88/...</code>. Op de server worden ze overschreven; met Let's Encrypt horen ze naar <code>https://rds.kbtg.nl/api</code> resp. <code>https://rds.kbtg.nl/api/mollie/payments/webhook</code> te wijzen.</p>
+<p><strong>Serverconfig</strong> (SMTP, geheimen) hoort in omgevingsvariabelen (<code>SPRING_MAIL_HOST</code>, …), niet in de repository.</p>
+<h2 id="h-logging-en-monitoring">Logging en monitoring</h2>
+<ul><li>Jetty-access-log: <code>/opt/rds/log/access.log</code> (rotatie 30 dagen); lokaal profiel <code>rds-local</code> schrijft naar <code>access.log</code> in de werkmap.</li><li>JavaMelody op <code>/monitoring</code> (SQL, HTTP-statistieken); alleen via NGINX voor beheer-IP's.</li><li>Actuator is aanwezig; controleer welke endpoints open staan voordat je de server publiek maakt.</li></ul>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

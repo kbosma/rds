@@ -1,17 +1,22 @@
 package nl.puurkroatie.rds.auth.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
+
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 class AccountRoleControllerTest extends AbstractAuthControllerTest {
 
@@ -36,20 +41,32 @@ class AccountRoleControllerTest extends AbstractAuthControllerTest {
                 .andExpect(status().isOk());
     }
 
-    // Test 53: MANAGER: POST /api/account-roles — 201 (heeft ACCOUNTROLE_WRITE)
+    /** De rol met deze systeemsleutel in de organisatie van de ingelogde gebruiker (of van {@code organizationId}). */
+    private String systemRoleId(String token, String systemKey, UUID organizationId) throws Exception {
+        String query = organizationId == null ? "" : "?organizationId=" + organizationId;
+        JsonNode roles = objectMapper.readTree(mockMvc.perform(get("/api/roles" + query)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        for (JsonNode role : roles) {
+            if (systemKey.equals(role.path("systemKey").asText())) {
+                return role.get("roleId").asText();
+            }
+        }
+        throw new AssertionError("Geen systeemrol " + systemKey);
+    }
+
+    private ResultActions assign(String token, Object accountId, Object roleId) throws Exception {
+        return mockMvc.perform(post("/api/account-roles")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"accountId\":\"" + accountId + "\",\"roleId\":\"" + roleId + "\"}"));
+    }
+
+    // MANAGER: de EMPLOYEE-rol van de eigen organisatie aan een account van de eigen organisatie — 201
     @Test
     void manager_createAccountRole_returns201() throws Exception {
         String token = managerToken();
-
-        // Koppel manager's account aan EMPLOYEE role (extra role toewijzing)
-        String accountRoleJson = "{\"accountId\":\"" + MANAGER_ACCOUNT_ID + "\"," +
-                "\"roleId\":\"" + ROLE_EMPLOYEE_ID + "\"}";
-
-        mockMvc.perform(post("/api/account-roles")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(accountRoleJson))
-                .andExpect(status().isCreated());
+        assign(token, MANAGER_ACCOUNT_ID, systemRoleId(token, "EMPLOYEE", null)).andExpect(status().isCreated());
     }
 
     // Test 54: EMPLOYEE: GET /api/account-roles — 403
@@ -69,54 +86,44 @@ class AccountRoleControllerTest extends AbstractAuthControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // MANAGER: mag zichzelf geen ADMIN-rol geven (privilege escalation) — 403
+    // MANAGER: de rol ADMIN bestaat niet in zijn organisatie (alleen in het platform) — 404, niets lekt
     @Test
-    void manager_assignAdminRole_returns403() throws Exception {
-        String token = managerToken();
-
-        String json = "{\"accountId\":\"" + MANAGER_ACCOUNT_ID + "\"," +
-                "\"roleId\":\"" + ROLE_ADMIN_ID + "\"}";
-
-        mockMvc.perform(post("/api/account-roles")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isForbidden());
+    void manager_assignAdminRole_returns404() throws Exception {
+        assign(managerToken(), MANAGER_ACCOUNT_ID, ROLE_ADMIN_ID).andExpect(status().isNotFound());
     }
 
-    // ADMIN: mag wel een ADMIN-rol toewijzen — 201
+    // ADMIN: ook een beheerder kan ADMIN niet aan een account van een klant geven — 404
     @Test
-    void admin_assignAdminRole_returns201() throws Exception {
+    void admin_assignAdminRoleToACustomerAccount_returns404() throws Exception {
+        assign(adminToken(), EMPLOYEE_TECHPARTNER_ACCOUNT_ID, ROLE_ADMIN_ID).andExpect(status().isNotFound());
+    }
+
+    // ADMIN: mag bij een klant de systeemrollen toewijzen (bijv. een tweede manager) — 201
+    @Test
+    void admin_assignsTheManagerRoleOfACustomer_returns201() throws Exception {
         String token = adminToken();
-
-        String json = "{\"accountId\":\"" + MANAGER_ACCOUNT_ID + "\"," +
-                "\"roleId\":\"" + ROLE_ADMIN_ID + "\"}";
-
-        mockMvc.perform(post("/api/account-roles")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+        assign(token, EMPLOYEE_TECHPARTNER_ACCOUNT_ID, systemRoleId(token, "MANAGER", ORG_TECHPARTNER_ID))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.role.description").value("ADMIN"));
+                .andExpect(jsonPath("$.role.description").value("MANAGER"));
     }
 
-    // MANAGER: mag een ADMIN-rol van een account in de eigen organisatie niet intrekken — 403
+    // MANAGER: de laatste MANAGER van de organisatie kan zijn rol niet kwijt — 409
     @Test
-    void manager_removeAdminRole_returns403() throws Exception {
-        // Token vooraf ophalen: na de toewijzing zou een nieuwe login van deze manager zelf ADMIN zijn.
-        String managerToken = managerToken();
-        String adminToken = adminToken();
-        String json = "{\"accountId\":\"" + MANAGER_ACCOUNT_ID + "\"," +
-                "\"roleId\":\"" + ROLE_ADMIN_ID + "\"}";
-        mockMvc.perform(post("/api/account-roles")
-                        .header("Authorization", "Bearer " + adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated());
+    void theLastManager_cannotBeRevoked_returns409() throws Exception {
+        mockMvc.perform(delete("/api/account-roles/" + MANAGER_ACCOUNT_ID + "/" + ROLE_MANAGER_ID)
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isConflict());
+    }
 
-        mockMvc.perform(delete("/api/account-roles/" + MANAGER_ACCOUNT_ID + "/" + ROLE_ADMIN_ID)
-                        .header("Authorization", "Bearer " + managerToken))
-                .andExpect(status().isForbidden());
+    // Met een tweede manager kan de eerste zijn MANAGER-rol wel kwijt — 204
+    @Test
+    void withASecondManager_theFirstCanBeRevoked_returns204() throws Exception {
+        String admin = adminToken();
+        assign(admin, EMPLOYEE_TECHPARTNER_ACCOUNT_ID, systemRoleId(admin, "MANAGER", ORG_TECHPARTNER_ID)).andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/account-roles/" + MANAGER_ACCOUNT_ID + "/" + ROLE_MANAGER_ID)
+                        .header("Authorization", "Bearer " + managerToken()))
+                .andExpect(status().isNoContent());
     }
 
     // MANAGER: GET /api/account-roles lekt geen wachtwoord-hash, TOTP-geheim, herstelcodes of Mollie-sleutel
@@ -147,22 +154,24 @@ class AccountRoleControllerTest extends AbstractAuthControllerTest {
                 : "Response mag geen geheimen bevatten";
     }
 
-    // MANAGER: GET /api/account-roles/assignable-roles — alleen EMPLOYEE en MANAGER, geen ADMIN
+    // MANAGER: de rollen van de eigen organisatie onder zijn niveau: EMPLOYEE en MANAGER, geen ADMIN
     @Test
-    void manager_assignableRoles_excludesAdmin() throws Exception {
+    void manager_assignableRoles_areTheRolesOfTheOwnOrganization() throws Exception {
         mockMvc.perform(get("/api/account-roles/assignable-roles")
                         .header("Authorization", "Bearer " + managerToken()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].description", containsInAnyOrder("EMPLOYEE", "MANAGER")));
+                .andExpect(jsonPath("$[*].description", containsInAnyOrder("EMPLOYEE", "MANAGER")))
+                .andExpect(jsonPath("$[*].tenantOrganization", everyItem(is(ORG_TECHPARTNER_ID.toString()))));
     }
 
-    // ADMIN: GET /api/account-roles/assignable-roles — alle rollen, ook ADMIN
+    // ADMIN: voor een account van een klant de systeemrollen van die klant
     @Test
-    void admin_assignableRoles_includesAdmin() throws Exception {
-        mockMvc.perform(get("/api/account-roles/assignable-roles")
+    void admin_assignableRolesForACustomerAccount_areTheSystemRolesOfThatCustomer() throws Exception {
+        mockMvc.perform(get("/api/account-roles/assignable-roles?accountId=" + EMPLOYEE_TECHPARTNER_ACCOUNT_ID)
                         .header("Authorization", "Bearer " + adminToken()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].description", hasItems("ADMIN", "EMPLOYEE", "MANAGER")));
+                .andExpect(jsonPath("$[*].systemKey", containsInAnyOrder("EMPLOYEE", "MANAGER")))
+                .andExpect(jsonPath("$[*].tenantOrganization", everyItem(is(ORG_TECHPARTNER_ID.toString()))));
     }
 
     // EMPLOYEE: GET /api/account-roles/assignable-roles — 403 (geen ACCOUNTROLE_READ)

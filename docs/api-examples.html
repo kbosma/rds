@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API: conventies, endpoints en voorbeelden</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>API: conventies, endpoints en voorbeelden</h1>
+<p>Basis: <code>http(s)://&lt;host&gt;/rds/api/...</code> (backend, context-path <code>/rds</code>), of <code>/api/...</code> via NGINX/dev-proxy. Alles is JSON, behalve uploads (multipart) en downloads (octet-stream).</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-conventies">Conventies</a></li><li><a href="#h-voorbeelden">Voorbeelden</a></li><li><a href="#h-alle-endpoints-met-benodigde-authority">Alle endpoints met benodigde authority</a></li></ul></nav>
+<h2 id="h-conventies">Conventies</h2>
+<ul><li>REST per resource: <code>GET /resources</code>, <code>GET /resources/{id}</code>, <code>POST /resources</code>, <code>PUT /resources/{id}</code>, <code>DELETE /resources/{id}</code>. Statuscodes: <code>200</code>, <code>201</code> (aanmaken), <code>204</code> (verwijderen), <code>400</code>, <code>401</code>, <code>403</code>, <code>404</code>, <code>409</code>, <code>413</code>. Een <code>DELETE</code> op een boeking, booker, accommodatie, leverancier of activiteit geeft <code>409</code> als er een boeking met documenten of betalingen aan hangt (geschiedenis blijft bewaard).</li><li>Authenticatie: <code>Authorization: Bearer &lt;jwt&gt;</code> (zie <a href="security.html">security.md</a>). Elke methode vraagt één authority (tabellen hieronder); <code>–</code> = publiek of alleen eigen account.</li><li>Foutvorm: <code>{ &quot;message&quot;: &quot;…&quot;, &quot;status&quot;: 400, &quot;timestamp&quot;: &quot;…&quot; }</code> (zie <a href="architecture.html">architecture.md</a>).</li><li>Enums gaan als <strong>lowercase</strong> tekst heen en weer (<code>&quot;status&quot;: &quot;prospect&quot;</code>, <code>&quot;gender&quot;: &quot;vrouw&quot;</code>); onbekende waarde → <code>400</code> met de toegestane waarden.</li><li>Datums: <code>jjjj-mm-dd</code>; tijdstippen ISO. Bedragen: getal (<code>70.00</code>).</li><li>Binaire velden (<code>templateData</code>, <code>document</code>) zijn in JSON een <strong>array van bytes</strong> of base64-tekst (Jackson <code>byte[]</code>); de frontend stuurt een getallenlijst. Downloads lopen via de aparte <code>…/content</code>-endpoints.</li><li>Lijsten zijn tenant-gefilterd (ADMIN ziet alles). Een resource van een andere organisatie → <code>403</code>/<code>404</code>.</li></ul>
+<h2 id="h-voorbeelden">Voorbeelden</h2>
+<pre class="sketch">BASE=http://localhost:8666/rds
+
+# Login (medewerker). Antwoord: { token, ... } of { requiresTotp: true, tempToken }
+curl -X POST $BASE/api/auth/login -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;userName&quot;:&quot;&lt;gebruiker&gt;&quot;,&quot;password&quot;:&quot;&lt;wachtwoord&gt;&quot;}&#x27;
+TOKEN=&lt;token uit het antwoord&gt;
+
+# Boekingen en bookers
+curl $BASE/api/bookings -H &quot;Authorization: Bearer $TOKEN&quot;
+curl &quot;$BASE/api/bookers?status=prospect&quot; -H &quot;Authorization: Bearer $TOKEN&quot;
+
+# Prospect aanmaken (een Booker met status prospect)
+curl -X POST $BASE/api/bookers -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;firstname&quot;:&quot;Jan&quot;,&quot;lastname&quot;:&quot;Vries&quot;,&quot;emailaddress&quot;:&quot;jan@example.com&quot;,&quot;status&quot;:&quot;prospect&quot;}&#x27;
+
+# Document genereren uit een Word-template (outputFormat: docx | pdf)
+curl -X POST $BASE/api/documents/generate -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;templateId&quot;:&quot;&lt;id&gt;&quot;,&quot;bookingId&quot;:&quot;&lt;id&gt;&quot;,&quot;outputFormat&quot;:&quot;pdf&quot;}&#x27;
+
+# Word-template in de editor maken: HTML in, .docx uit
+curl -X POST $BASE/api/document-templates -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;name&quot;:&quot;Bevestiging&quot;,&quot;sourceHtml&quot;:&quot;&lt;p&gt;Boeking ${booking.bookingNumber}&lt;/p&gt;&quot;}&#x27;
+
+# E-mail voor een prospect of voor een boeking: precies één van bookerId / bookingId
+curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/render?bookingId=&lt;id&gt;&quot; -H &quot;Authorization: Bearer $TOKEN&quot;
+curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/send?bookerId=&lt;id&gt;&quot;    -H &quot;Authorization: Bearer $TOKEN&quot;
+
+# Afbeelding uploaden voor templates (multipart, deel &#x27;file&#x27;)
+curl -X POST $BASE/api/email-images -H &quot;Authorization: Bearer $TOKEN&quot; -F &quot;file=@logo.png&quot;</pre>
+<p>Meer voorbeelden: Mollie in <a href="mollie.html">mollie.md</a>, klantportal in <a href="bookerportal.html">bookerportal.md</a>.</p>
+<h2 id="h-alle-endpoints-met-benodigde-authority">Alle endpoints met benodigde authority</h2>
+<p><em>(Gegenereerd uit de <code>@PreAuthorize</code>-annotaties van de controllers op 15-10-2026; bij twijfel wint de code.)</em></p>
+<h3 id="h-auth-en-beheer">Auth en beheer</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th></tr></thead><tbody>
+<tr><th scope="row">POST</th><td><code>/api/auth/login</code>, <code>/api/auth/login/totp</code>, <code>/api/auth/login/recovery</code></td><td>publiek</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/auth/totp/setup</code>, <code>/api/auth/totp/verify</code>, <code>/api/auth/totp/disable</code></td><td>ingelogd (eigen account)</td></tr>
+<tr><th scope="row">PUT</th><td><code>/api/auth/change-password</code></td><td>ingelogd (eigen account)</td></tr>
+<tr><th scope="row">GET, GET <code>/{id}</code>, POST, PUT <code>/{id}</code>, DELETE <code>/{id}</code></th><td><code>/api/organizations</code></td><td><code>ORGANIZATION_READ/READ/CREATE/UPDATE/DELETE</code>; DELETE geeft <strong>409</strong> zolang de organisatie nog data heeft</td></tr>
+<tr><th scope="row">idem</th><td><code>/api/persons</code></td><td><code>PERSON_*</code></td></tr>
+<tr><th scope="row">idem</th><td><code>/api/accounts</code></td><td><code>ACCOUNT_*</code>; plus <code>DELETE /api/accounts/{id}/totp</code> = <code>ACCOUNT_UPDATE</code></td></tr>
+<tr><th scope="row">idem</th><td><code>/api/roles</code></td><td><code>ROLE_*</code></td></tr>
+<tr><th scope="row">idem</th><td><code>/api/authorities</code></td><td><code>AUTHORITY_*</code></td></tr>
+<tr><th scope="row">GET, GET <code>/{a}/{b}</code>, POST, DELETE <code>/{a}/{b}</code></th><td><code>/api/account-roles</code> (<code>accountId/roleId</code>)</td><td><code>ACCOUNTROLE_READ/READ/CREATE/DELETE</code></td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries/by-payment/{id}</code></td><td><code>PAYMENT_READ</code> (antwoord bevat <code>createdByName</code>: leesbare naam van <code>createdBy</code>, leeg bij het systeem)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/account-roles/assignable-roles</code></td><td><code>ACCOUNTROLE_READ</code> (de rollen die de ingelogde gebruiker mag toewijzen/intrekken: ADMIN alle, anderen alleen EMPLOYEE en MANAGER)</td></tr>
+<tr><th scope="row">idem</th><td><code>/api/role-authorities</code> (<code>roleId/authorityId</code>)</td><td><code>ROLEAUTHORITY_*</code></td></tr>
+<tr><th scope="row">GET, GET <code>/{id}</code>, GET <code>/my-theme</code>, POST, PUT <code>/{id}</code>, DELETE <code>/{id}</code></th><td><code>/api/organization-themes</code></td><td><code>ORGANIZATION_THEME_*</code></td></tr>
+</tbody></table></div>
+<h3 id="h-boekingen-en-stamgegevens">Boekingen en stamgegevens</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Resource (<code>/api/…</code>)</th><th>Methodes</th><th>Authority</th></tr></thead><tbody>
+<tr><th scope="row"><code>bookings</code>, <code>bookers</code> (<code>?status=</code>), <code>travelers</code>, <code>addresses</code></th><td>GET, GET <code>/{id}</code>, POST, PUT <code>/{id}</code>, DELETE <code>/{id}</code></td><td><code>BOOKING_READ/CREATE/UPDATE/DELETE</code></td></tr>
+<tr><th scope="row"><code>booking-lines</code>, <code>booking-activities</code></th><td>GET, GET <code>/{id}</code>, GET <code>/booking/{bookingId}</code>, POST, PUT <code>/{id}</code>, DELETE <code>/{id}</code></td><td><code>BOOKING_*</code></td></tr>
+<tr><th scope="row"><code>booker-addresses</code> (<code>bookerId/addressId</code>)</th><td>GET, GET <code>/{a}/{b}</code>, POST, DELETE <code>/{a}/{b}</code></td><td><code>BOOKING_*</code></td></tr>
+<tr><th scope="row"><code>accommodations</code></th><td>CRUD</td><td><code>ACCOMMODATION_*</code></td></tr>
+<tr><th scope="row"><code>accommodation-addresses</code>, <code>accommodation-suppliers</code></th><td>GET, GET <code>/{a}/{b}</code>, POST, DELETE <code>/{a}/{b}</code></td><td><code>ACCOMMODATION_*</code></td></tr>
+<tr><th scope="row"><code>suppliers</code></th><td>CRUD</td><td><code>SUPPLIER_*</code></td></tr>
+<tr><th scope="row"><code>supplier-addresses</code></th><td>GET, GET <code>/{a}/{b}</code>, POST, DELETE <code>/{a}/{b}</code></td><td><code>SUPPLIER_*</code></td></tr>
+<tr><th scope="row"><code>activities</code></th><td>CRUD</td><td><code>ACTIVITY_*</code></td></tr>
+<tr><th scope="row"><code>documents</code></th><td>GET, GET <code>/{id}</code>, GET <code>/{id}/content</code>, GET <code>/booking/{bookingId}</code>, POST (<code>visibleInPortal</code>, standaard <code>false</code>), PUT <code>/{id}</code> (body alleen <code>{visibleInPortal}</code>: de enige wijzigbare eigenschap), POST <code>/generate</code> (met optioneel <code>visibleInPortal</code>). <strong>Geen DELETE: een document wordt nooit verwijderd (405).</strong></td><td><code>DOCUMENT_READ/CREATE/UPDATE</code></td></tr>
+<tr><th scope="row"><code>documents/generate</code></th><td>POST <code>{ templateId, bookingId, outputFormat }</code></td><td><code>DOCUMENT_CREATE</code></td></tr>
+<tr><th scope="row"><code>document-templates</code></th><td>GET, GET <code>/{id}</code>, GET <code>/{id}/content</code> (.docx), POST, PUT <code>/{id}</code>, DELETE <code>/{id}</code></td><td><code>TEMPLATE_READ/CREATE/UPDATE/DELETE</code></td></tr>
+<tr><th scope="row"><code>sent-emails</code></th><td>GET <code>/booking/{bookingId}</code>, GET <code>/{id}</code>, POST <code>/{id}/resend</code> (alleen-toevoegen)</td><td><code>BOOKING_READ</code>, <code>EMAIL_SEND</code></td></tr>
+<tr><th scope="row"><code>booking-mollie-payments</code></th><td>GET, GET <code>/{bookingId}</code>, GET <code>/{bookingId}/{paymentId}</code>, POST, GET <code>/{paymentId}/relinks</code>, POST <code>/{paymentId}/relink</code> (herkoppelen met reden; geen DELETE: een koppeling wordt nooit losgemaakt)</td><td><code>PAYMENT_READ/CREATE</code>, <code>PAYMENT_RELINK</code></td></tr>
+</tbody></table></div>
+<p><code>booking-activities</code> body (alle drie verplicht; <code>untilTime</code> &lt; <code>fromTime</code> = eindigt de volgende dag): <code>{&quot;bookingId&quot;:&quot;…&quot;,&quot;activityId&quot;:&quot;…&quot;,&quot;activityDate&quot;:&quot;2026-07-02&quot;,&quot;fromTime&quot;:&quot;22:00&quot;,&quot;untilTime&quot;:&quot;02:00&quot;,&quot;meetingPoint&quot;:&quot;Haven&quot;,&quot;totalPrice&quot;:45.00}</code>.</p>
+<h3 id="h-mollie">Mollie</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th></tr></thead><tbody>
+<tr><th scope="row">GET, GET <code>/{id}</code>, POST, PUT <code>/{id}</code> (geen DELETE: betalingen worden nooit verwijderd)</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_READ/READ/CREATE/UPDATE</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments/create-at-mollie</code></td><td><code>PAYMENT_CREATE</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/mollie/payments/webhook?id=tr_…</code></td><td>publiek</td></tr>
+<tr><th scope="row">GET, GET <code>/by-payment/{id}</code>, POST <code>/by-payment/{id}</code> (correctie)</th><td><code>/api/mollie/payment-status-entries</code></td><td><code>PAYMENT_READ</code>, <code>PAYMENT_CORRECT</code> (geen PUT/DELETE: alleen-toevoegen)</td></tr>
+</tbody></table></div>
+<h3 id="h-e-mail-en-afbeeldingen">E-mail en afbeeldingen</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th></tr></thead><tbody>
+<tr><th scope="row">GET, GET <code>/{id}</code>, POST, PUT <code>/{id}</code>, DELETE <code>/{id}</code></th><td><code>/api/email-templates</code></td><td><code>TEMPLATE_READ/READ/CREATE/UPDATE/DELETE</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/email-templates/{id}/render?bookerId=</code> of <code>?bookingId=</code></td><td><code>TEMPLATE_READ</code></td></tr>
+<tr><th scope="row">POST</th><td><code>/api/email-templates/{id}/send?bookerId=</code> of <code>?bookingId=</code></td><td><code>EMAIL_SEND</code></td></tr>
+<tr><th scope="row">GET, POST (multipart <code>file</code>)</th><td><code>/api/email-images</code></td><td><code>TEMPLATE_CREATE</code> of <code>TEMPLATE_UPDATE</code></td></tr>
+<tr><th scope="row">DELETE</th><td><code>/api/email-images/{id}</code></td><td><code>TEMPLATE_DELETE</code> (<code>409</code> als in gebruik)</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/public/email-images/{uuid}</code></td><td>publiek (alleen GET)</td></tr>
+</tbody></table></div>
+<h3 id="h-klantportal">Klantportal</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Methode</th><th>Pad</th><th>Authority</th></tr></thead><tbody>
+<tr><th scope="row">POST</th><td><code>/api/booker-auth/request-otp</code>, <code>/api/booker-auth/verify-otp</code></td><td>publiek</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booker-portal/{overview, itinerary, booking-lines, booking-activities, accommodations, activities, documents, documents/{id}/content, messages, messages/{id}, payments, payments/status-entries}</code></td><td><code>BOOKER_PORTAL_READ</code> (<code>documents</code>, <code>messages</code> en <code>payments</code> geven slanke DTO's, <code>documents/{id}/content</code> de download, <code>messages/{id}</code> de HTML van één mail)</td></tr>
+<tr><th scope="row">POST</th><td><code>/api/booker-portal/payments/pay/{molliePaymentId}</code></td><td><code>BOOKER_PORTAL_UPDATE</code></td></tr>
+</tbody></table></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

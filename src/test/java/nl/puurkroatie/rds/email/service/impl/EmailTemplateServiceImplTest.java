@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.email.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.email.dto.EmailTemplateDto;
 import nl.puurkroatie.rds.email.entity.EmailTemplate;
@@ -82,7 +83,7 @@ class EmailTemplateServiceImplTest {
     @Test
     void findAll_nonAdmin_usesTenantQuery() {
         TenantContext.setOrganizationId(ORG);
-        TenantContext.setRoles(Set.of("EMPLOYEE"));
+        TenantContext.setAuthorities(Set.of());
         when(repository.findByTenantOrganization(ORG)).thenReturn(List.of());
 
         service.findAll();
@@ -92,7 +93,7 @@ class EmailTemplateServiceImplTest {
 
     @Test
     void findAll_admin_usesGlobalQuery() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         when(repository.findAll()).thenReturn(List.of());
 
         service.findAll();

@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface OrganizationSettingsRepository extends JpaRepository<OrganizationSettings, UUID> {
 
-    Optional<OrganizationSettings> findByOrganizationId(UUID organizationId);
+    Optional<OrganizationSettings> findByTenantOrganization(UUID tenantOrganization);
 }

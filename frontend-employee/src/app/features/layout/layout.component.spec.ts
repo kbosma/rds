@@ -12,9 +12,10 @@ describe('LayoutComponent', () => {
   let themeSpy: jasmine.SpyObj<ThemeService>;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('AuthService', ['logout', 'hasAuthority', 'currentUser'], {
+    authSpy = jasmine.createSpyObj('AuthService', ['logout', 'hasAuthority', 'currentUser', 'can'], {
       currentUser: () => ({ accountId: 'u-1', organizationId: 'o-1', roles: ['ADMIN'], authorities: [] }),
     });
+    authSpy.can.and.returnValue(true);
     themeSpy = jasmine.createSpyObj('ThemeService', ['loadAndApplyTheme']);
 
     await TestBed.configureTestingModule({

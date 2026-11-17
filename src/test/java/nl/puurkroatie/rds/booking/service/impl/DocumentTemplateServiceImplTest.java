@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.DocumentTemplateDto;
 import nl.puurkroatie.rds.booking.entity.DocumentTemplate;
@@ -66,7 +67,7 @@ class DocumentTemplateServiceImplTest {
     void setUp() {
         service = new DocumentTemplateServiceImpl(repository, mapper, converter, templateImages);
         TenantContext.setOrganizationId(ORG);
-        TenantContext.setRoles(Set.of("MANAGER"));
+        TenantContext.setAuthorities(Set.of(Authorities.USER_SCOPE_ORGANIZATION));
     }
 
     @AfterEach
@@ -208,7 +209,7 @@ class DocumentTemplateServiceImplTest {
 
     @Test
     void update_checksTheImagesAgainstTheOrganisationOfTheTemplate() {
-        TenantContext.setRoles(Set.of("ADMIN")); // beheerder: de organisatie is die van de template, niet de eigen
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION)); // beheerder: de organisatie is die van de template, niet de eigen
         when(repository.findById(TEMPLATE_ID)).thenReturn(Optional.of(existing(OTHER_ORG, null)));
         when(templateImages.lookupFor(OTHER_ORG)).thenReturn(lookup);
         when(converter.convert(HTML, lookup)).thenReturn(BUILT);

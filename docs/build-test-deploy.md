@@ -39,7 +39,7 @@ mvn -q -Dtest='NaamTest' -DfailIfNoTests=false test   # één klasse
 
 ### Testdatabase (embedded PostgreSQL)
 
-De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop Flyway (V1–V16, dus de seeddata uit V2). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
+De backend-tests starten zelf een **tijdelijke, echte PostgreSQL 17** (Zonky *embedded-postgres*) en draaien daarop alle Flyway-migraties (dus ook de seeddata). Na afloop verdwijnt alles. Je hoeft niets te installeren of te starten, en de tests raken je lokale `rdsdb` nooit.
 
 - `EmbeddedPostgresInitializer` (src/test/java/…/support) zet de datasource-properties van elke Spring-testcontext; geregistreerd in `src/test/resources/META-INF/spring.factories`. Eén database per testrun, gedeeld door alle contexten. Alleen in src/test: de applicatie zelf start hier nooit mee.
 - De properties staan bovenaan: een test draait dus nooit per ongeluk tegen een echte database, ook niet als `SPRING_DATASOURCE_*` gezet is. `TestDatabaseIsolationTest` bewaakt dat.
@@ -77,6 +77,30 @@ npx ng test --watch=false --browsers=FirefoxHeadless \
   Helpt dat niet en blijft elke start hangen op `org.mozilla.updater` (te zien met `ps aux | grep -i updater`), dan staat er een Firefox-update klaar die nog niet is toegepast: sluit Firefox helemaal af (⌘Q), start hem opnieuw zodat de update installeert, en draai de specs nogmaals. Op macOS bestaat het commando `timeout` niet, dus een testrun met een tijdslimiet moet je anders afbreken (bv. `pkill -f "ng test"`).
 
 ## Deployen
+
+```mermaid
+flowchart LR
+    subgraph Lokaal["Ontwikkelmachine (deploy/scripts)"]
+        BE["build-deploy-backend.sh<br/>mvn package"]
+        FE["build-deploy-frontend-*.sh<br/>ng build --base-href"]
+        NG["deploy-nginx.sh"]
+    end
+    subgraph Server["rds.kbtg.nl (Hetzner)"]
+        N["NGINX<br/>TLS (Let's Encrypt), rate limits"]
+        J["/opt/rds: Spring Boot (systemd rds)<br/>127.0.0.1:8666/rds"]
+        W1["/var/www/rds<br/>medewerkersapp"]
+        W2["/var/www/booker<br/>boekerportaal"]
+    end
+    P[("PostgreSQL 17")]
+    BE -- "scp + systemctl restart" --> J
+    FE -- "scp + reload nginx" --> W1 & W2
+    NG -- "config + certbot" --> N
+    U(["Browser"]) --> N
+    N -- "/rds/, /booker/" --> W1 & W2
+    N -- "/api/" --> J
+    J --> P
+    M(["Mollie"]) -- "webhook" --> N
+```
 
 Scripts staan in `deploy/scripts/` en gebruiken `ssh`/`scp` naar `root@kbtg.nl` (centraal in `deploy/scripts/remote.sh`, eenmalig te overschrijven met `REMOTE=root@<host>`). Dat is een publieke DNS-naam: geen HOSTS-regel nodig, vertrouwen loopt via je SSH-sleutel en de host key in `known_hosts`:
 

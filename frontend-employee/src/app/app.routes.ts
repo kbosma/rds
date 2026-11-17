@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { authorityGuard } from './core/auth/authority.guard';
+import { ACCESS } from './core/auth/access';
 import { LayoutComponent } from './features/layout/layout.component';
 
 export const routes: Routes = [
@@ -23,6 +25,8 @@ export const routes: Routes = [
       },
       {
         path: 'bookings',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.bookings },
         loadChildren: () =>
           import('./features/bookings/booking.routes').then(
             (m) => m.bookingRoutes
@@ -30,6 +34,8 @@ export const routes: Routes = [
       },
       {
         path: 'bookers',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.bookers },
         loadComponent: () =>
           import('./features/bookers/booker-list.component').then(
             (m) => m.BookerListComponent
@@ -37,6 +43,8 @@ export const routes: Routes = [
       },
       {
         path: 'prospects',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.prospects },
         loadComponent: () =>
           import('./features/prospects/prospect-list.component').then(
             (m) => m.ProspectListComponent
@@ -44,6 +52,8 @@ export const routes: Routes = [
       },
       {
         path: 'travelers',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.travelers },
         loadComponent: () =>
           import('./features/travelers/traveler-list.component').then(
             (m) => m.TravelerListComponent
@@ -51,6 +61,8 @@ export const routes: Routes = [
       },
       {
         path: 'accommodations',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.accommodations },
         loadChildren: () =>
           import('./features/accommodations/accommodation.routes').then(
             (m) => m.accommodationRoutes
@@ -58,6 +70,8 @@ export const routes: Routes = [
       },
       {
         path: 'activities',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.activities },
         loadChildren: () =>
           import('./features/activities/activity.routes').then(
             (m) => m.activityRoutes
@@ -65,6 +79,8 @@ export const routes: Routes = [
       },
       {
         path: 'suppliers',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.suppliers },
         loadChildren: () =>
           import('./features/suppliers/supplier.routes').then(
             (m) => m.supplierRoutes
@@ -72,6 +88,8 @@ export const routes: Routes = [
       },
       {
         path: 'templates',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.templates },
         loadComponent: () =>
           import('./features/templates/template-list.component').then(
             (m) => m.TemplateListComponent
@@ -79,6 +97,8 @@ export const routes: Routes = [
       },
       {
         path: 'email-templates',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.emailTemplates },
         loadComponent: () =>
           import('./features/email-templates/email-template-list.component').then(
             (m) => m.EmailTemplateListComponent
@@ -86,6 +106,8 @@ export const routes: Routes = [
       },
       {
         path: 'payments',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.payments },
         loadComponent: () =>
           import('./features/mollie/mollie-payments-overview.component').then(
             (m) => m.MolliePaymentsOverviewComponent
@@ -93,6 +115,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/organizations',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.organizations },
         loadComponent: () =>
           import('./features/admin/organization-list.component').then(
             (m) => m.OrganizationListComponent
@@ -100,6 +124,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/organizations/onboarding',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.organizationOnboarding },
         loadComponent: () =>
           import('./features/admin/organization-onboarding.component').then(
             (m) => m.OrganizationOnboardingComponent
@@ -107,6 +133,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/organizations/new',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.organizationCreate },
         loadComponent: () =>
           import('./features/admin/organization-detail.component').then(
             (m) => m.OrganizationDetailComponent
@@ -114,6 +142,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/organizations/:id',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.organizations },
         loadComponent: () =>
           import('./features/admin/organization-detail.component').then(
             (m) => m.OrganizationDetailComponent
@@ -121,6 +151,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/persons',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.persons },
         loadComponent: () =>
           import('./features/admin/person-list.component').then(
             (m) => m.PersonListComponent
@@ -128,6 +160,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/persons/new',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.personCreate },
         loadComponent: () =>
           import('./features/admin/person-detail.component').then(
             (m) => m.PersonDetailComponent
@@ -135,6 +169,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/persons/:id',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.persons },
         loadComponent: () =>
           import('./features/admin/person-detail.component').then(
             (m) => m.PersonDetailComponent
@@ -142,6 +178,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/accounts',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.accounts },
         loadComponent: () =>
           import('./features/admin/account-list.component').then(
             (m) => m.AccountListComponent
@@ -149,6 +187,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/accounts/new',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.accountCreate },
         loadComponent: () =>
           import('./features/admin/account-detail.component').then(
             (m) => m.AccountDetailComponent
@@ -156,6 +196,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/accounts/:id',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.accounts },
         loadComponent: () =>
           import('./features/admin/account-detail.component').then(
             (m) => m.AccountDetailComponent
@@ -163,6 +205,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/roles',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.roles },
         loadComponent: () =>
           import('./features/admin/role-list.component').then(
             (m) => m.RoleListComponent
@@ -170,6 +214,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/roles/new',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.roleCreate },
         loadComponent: () =>
           import('./features/admin/role-detail.component').then(
             (m) => m.RoleDetailComponent
@@ -177,6 +223,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/roles/:id',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.roles },
         loadComponent: () =>
           import('./features/admin/role-detail.component').then(
             (m) => m.RoleDetailComponent
@@ -184,27 +232,17 @@ export const routes: Routes = [
       },
       {
         path: 'admin/authorities',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.authorities },
         loadComponent: () =>
           import('./features/admin/authority-list.component').then(
             (m) => m.AuthorityListComponent
           ),
       },
       {
-        path: 'admin/authorities/new',
-        loadComponent: () =>
-          import('./features/admin/authority-detail.component').then(
-            (m) => m.AuthorityDetailComponent
-          ),
-      },
-      {
-        path: 'admin/authorities/:id',
-        loadComponent: () =>
-          import('./features/admin/authority-detail.component').then(
-            (m) => m.AuthorityDetailComponent
-          ),
-      },
-      {
         path: 'admin/theme',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.theme },
         loadComponent: () =>
           import('./features/admin/organization-theme.component').then(
             (m) => m.OrganizationThemeComponent
@@ -212,6 +250,8 @@ export const routes: Routes = [
       },
       {
         path: 'organization-settings',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.organizationSettings },
         loadComponent: () =>
           import('./features/organization-settings/organization-settings.component').then(
             (m) => m.OrganizationSettingsComponent
@@ -219,6 +259,8 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.profile },
         loadComponent: () =>
           import('./features/profile/my-profile.component').then(
             (m) => m.MyProfileComponent
@@ -226,6 +268,8 @@ export const routes: Routes = [
       },
       {
         path: 'change-password',
+        canActivate: [authorityGuard],
+        data: { access: ACCESS.changePassword },
         loadComponent: () =>
           import('./features/profile/change-password.component').then(
             (m) => m.ChangePasswordComponent

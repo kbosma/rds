@@ -2,22 +2,20 @@ package nl.puurkroatie.rds.auth.controller;
 
 import nl.puurkroatie.rds.auth.dto.AuthorityDto;
 import nl.puurkroatie.rds.auth.service.AuthorityService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Authorities zijn alleen te lezen: ze komen uit Flyway, omdat ze pas iets doen als de code ze controleert. Aanmaken,
+ * wijzigen en verwijderen via de API kan niet (405).
+ */
 @RestController
 @RequestMapping("/api/authorities")
 public class AuthorityController {
@@ -34,32 +32,18 @@ public class AuthorityController {
         return authorityService.findAll();
     }
 
+    /** De authorities die de ingelogde gebruiker aan een rol mag geven (voor het rollenscherm). */
+    @GetMapping("/grantable")
+    @PreAuthorize("hasAuthority('AUTHORITY_READ')")
+    public List<AuthorityDto> findGrantable() {
+        return authorityService.findGrantable();
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('AUTHORITY_READ')")
     public ResponseEntity<AuthorityDto> findById(@PathVariable UUID id) {
         return authorityService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    @PreAuthorize("hasAuthority('AUTHORITY_CREATE')")
-    public ResponseEntity<AuthorityDto> create(@RequestBody @Valid AuthorityDto dto) {
-        AuthorityDto created = authorityService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('AUTHORITY_UPDATE')")
-    public ResponseEntity<AuthorityDto> update(@PathVariable UUID id, @RequestBody @Valid AuthorityDto dto) {
-        AuthorityDto updated = authorityService.update(id, dto);
-        return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('AUTHORITY_DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        authorityService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }

@@ -182,7 +182,7 @@ export class PersonListComponent implements OnInit {
 
         this.allPersons = persons.map(p => ({
           ...p,
-          organizationName: orgMap.get(p.organizationId) || p.organizationId,
+          organizationName: orgMap.get(p.tenantOrganization) || p.tenantOrganization,
         }));
         this.dataSource.data = this.allPersons;
         this.loading.set(false);
@@ -213,7 +213,7 @@ export class PersonListComponent implements OnInit {
     if (orgId === 'ALL') {
       this.dataSource.data = this.allPersons;
     } else {
-      this.dataSource.data = this.allPersons.filter(p => p.organizationId === orgId);
+      this.dataSource.data = this.allPersons.filter(p => p.tenantOrganization === orgId);
     }
   }
 

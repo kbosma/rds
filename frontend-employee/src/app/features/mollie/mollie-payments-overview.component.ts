@@ -22,15 +22,8 @@ import { RowActionsComponent } from '../../shared/components/row-actions.compone
 import { MolliePaymentViewDialogComponent } from './mollie-payment-view-dialog.component';
 import { MolliePaymentEditDialogComponent } from './mollie-payment-edit-dialog.component';
 import { MolliePayment } from '../../shared/models';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
-
-interface BookingMolliePaymentLink {
-  bookingId: string;
-  molliePaymentId: string;
-}
 
 @Component({
   selector: 'app-mollie-payments-overview',
@@ -205,7 +198,6 @@ interface BookingMolliePaymentLink {
 export class MolliePaymentsOverviewComponent implements OnInit {
   private molliePaymentService = inject(MolliePaymentService);
   private bookingService = inject(BookingService);
-  private http = inject(HttpClient);
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
 
@@ -284,7 +276,7 @@ export class MolliePaymentsOverviewComponent implements OnInit {
   private load() {
     forkJoin({
       payments: this.molliePaymentService.getAll(),
-      links: this.http.get<BookingMolliePaymentLink[]>(`${environment.apiUrl}/booking-mollie-payments`),
+      links: this.molliePaymentService.getBookingLinks(),
       bookings: this.bookingService.getAll(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ payments, links, bookings }) => {
