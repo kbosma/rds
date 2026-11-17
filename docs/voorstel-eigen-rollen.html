@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorstel: eigen rollen per organisatie</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Voorstel: eigen rollen per organisatie</h1>
+<p>Status: <strong>ontwerp, nog niet gebouwd.</strong> Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar authorities aan kan hangen. Het scherm toont of verbergt dan per gebruiker alles op basis van zijn authorities.</p>
+<p>Samengevat:</p>
+<ul><li><strong>Authorities liggen vast.</strong> De software bepaalt ze en ze komen alleen via Flyway.</li><li><strong>ADMIN, MANAGER en EMPLOYEE zijn vaste systeemrollen.</strong> Niemand kan ze wijzigen.</li><li><strong>Eigen rollen zijn vrij, per organisatie,</strong> en bestaan uit de vaste authorities.</li><li><strong>Niemand kan meer uitdelen dan hij zelf heeft</strong> (<em>no-escalation</em>).</li></ul>
+<p>Verwante documenten: <a href="security.md">security.md</a> (huidige rollen en tenant-isolatie), <a href="database-model.md">database-model.md</a>, <a href="frontend.md">frontend.md</a>.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-1-uitgangspunt-hoe-het-nu-werkt">1. Uitgangspunt: hoe het nu werkt</a></li><li><a href="#h-2-het-nieuwe-model">2. Het nieuwe model</a></li><li><a href="#h-3-de-regels">3. De regels</a></li><li><a href="#h-4-data-scope-zonder-rolnamen">4. Data-scope zonder rolnamen</a></li><li><a href="#h-5-wijzigingen-direct-laten-doorwerken">5. Wijzigingen direct laten doorwerken</a></li><li><a href="#h-6-frontend-het-scherm-beweegt-mee">6. Frontend: het scherm beweegt mee</a></li><li><a href="#h-7-api-overzicht-wijzigingen">7. API-overzicht (wijzigingen)</a></li><li><a href="#h-8-fasering">8. Fasering</a></li><li><a href="#h-9-tests">9. Tests</a></li><li><a href="#h-10-open-vragen">10. Open vragen</a></li></ul></nav>
+<h2 id="h-1-uitgangspunt-hoe-het-nu-werkt">1. Uitgangspunt: hoe het nu werkt</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderdeel</th><th>Nu</th><th>Probleem voor eigen rollen</th></tr></thead><tbody>
+<tr><th scope="row">Authorities</th><td>70 rijen in <code>authority</code>; ADMIN kan ze via <code>/api/authorities</code> aanmaken, wijzigen en verwijderen</td><td>Een nieuwe authority doet niets, want geen endpoint controleert hem. Hernoemen van bijv. <code>BOOKING_READ</code> sluit iedereen buiten.</td></tr>
+<tr><th scope="row">Rollen</th><td>3 globale rollen (<code>role</code> zonder organisatie), met vaste UUID's</td><td>Een organisatie kan geen eigen rol hebben. ADMIN kan systeemrollen hernoemen of leeghalen.</td></tr>
+<tr><th scope="row">Endpoint-toegang</th><td><code>@PreAuthorize(&quot;hasAuthority(&#x27;…&#x27;)&quot;)</code> overal</td><td>Is al goed.</td></tr>
+<tr><th scope="row">Data-scope</th><td>35× <code>TenantContext.hasRole(&quot;ADMIN&quot;)</code> (over organisaties heen); <code>isEmployee()</code> op rolnaam in <code>PersonServiceImpl</code> en <code>AccountServiceImpl</code> ("alleen eigen gegevens")</td><td>Een eigen rol valt hier nergens onder. Een rol "Boekhouder" zou alle personen en accounts zien.</td></tr>
+<tr><th scope="row">Rollen toewijzen</th><td>Vaste lijst <code>ROLES_MANAGEABLE_BY_NON_ADMIN = {EMPLOYEE, MANAGER}</code> in <code>AccountRoleService</code></td><td>Werkt alleen voor de vaste namen.</td></tr>
+<tr><th scope="row">Token</th><td>JWT met <code>authorities</code> en <code>roles</code>, 1 uur geldig, geen verversing</td><td>Een wijziging in een rol werkt pas na opnieuw inloggen door.</td></tr>
+<tr><th scope="row">Frontend</th><td>Ongeveer 80× <code>hasAuthority</code>, menu op authorities</td><td>Routes zijn niet bewaakt op authority (alleen inlogcheck). Kaarten die eigen API-aanroepen doen, geven 403's bij een gedeeltelijke set rechten. Een paar plekken gebruiken nog rolnamen: onboarding kiest "MANAGER", de rolfilter in de accountlijst, de welkomstkop.</td></tr>
+</tbody></table></div>
+<h2 id="h-2-het-nieuwe-model">2. Het nieuwe model</h2>
+<figure class="diagram"><pre class="mermaid">
+erDiagram
+    ORGANIZATION ||--o{ ROLE : &quot;eigen rollen (tenant_organization)&quot;
+    ROLE ||--o{ ROLE_AUTHORITY : bevat
+    AUTHORITY ||--o{ ROLE_AUTHORITY : &quot;zit in&quot;
+    AUTHORITY ||--o{ AUTHORITY_REQUIRES : &quot;vereist&quot;
+    ACCOUNT ||--o{ ACCOUNT_ROLE : heeft
+    ROLE ||--o{ ACCOUNT_ROLE : &quot;toegewezen aan&quot;
+
+    AUTHORITY {
+        uuid authority_id PK
+        string description &quot;vast, bv. BOOKING_READ&quot;
+        string domain &quot;BOOKING, PAYMENT, ... (voor de matrix)&quot;
+        boolean tenant_assignable &quot;mag een organisatie dit uitdelen?&quot;
+    }
+    AUTHORITY_REQUIRES {
+        uuid authority_id FK
+        uuid required_authority_id FK
+    }
+    ROLE {
+        uuid role_id PK
+        string description
+        uuid tenant_organization FK &quot;NULL = systeemrol&quot;
+        boolean system &quot;true voor ADMIN, MANAGER, EMPLOYEE&quot;
+    }
+    ACCOUNT {
+        uuid account_id PK
+        int authz_version &quot;omhoog bij elke rechtenwijziging&quot;
+    }
+</pre></figure>
+<h3 id="h-2-1-drie-soorten-objecten">2.1 Drie soorten objecten</h3>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    subgraph Software[&quot;Bepaald door de software (alleen via Flyway)&quot;]
+        A[&quot;Authorities&lt;br/&gt;BOOKING_READ, PAYMENT_CORRECT, ...&quot;]
+        S[&quot;Systeemrollen&lt;br/&gt;ADMIN · MANAGER · EMPLOYEE&quot;]
+    end
+    subgraph Org[&quot;Bepaald door de organisatie&quot;]
+        E[&quot;Eigen rollen&lt;br/&gt;bv. Boekhouder, Stagiair&quot;]
+    end
+    A --&gt;|vaste inhoud| S
+    A --&gt;|&quot;vrij te kiezen, binnen de regels (§3)&quot;| E
+    S --&gt;|&quot;als kopie: startpunt&quot;| E
+</pre></figure>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Authorities</th><th>Systeemrollen</th><th>Eigen rollen</th></tr></thead><tbody>
+<tr><th scope="row">Wie maakt ze</th><td>Ontwikkelaar (Flyway)</td><td>Ontwikkelaar (Flyway)</td><td>Organisatie (gebruiker met <code>ROLE_CREATE</code>)</td></tr>
+<tr><th scope="row">Wijzigen via API/scherm</th><td>Nee, alleen lezen</td><td>Nee, ook ADMIN niet</td><td>Ja, binnen de regels</td></tr>
+<tr><th scope="row">Zichtbaar voor</th><td>Iedereen met <code>AUTHORITY_READ</code></td><td>Alle organisaties</td><td>Alleen de eigen organisatie (ADMIN: alle)</td></tr>
+<tr><th scope="row">Toewijzen aan accounts</th><td>n.v.t.</td><td>Ja, binnen de regels</td><td>Ja, binnen de regels, alleen binnen de eigen organisatie</td></tr>
+</tbody></table></div>
+<h3 id="h-2-2-wijzigingen-in-de-database-n-migratie">2.2 Wijzigingen in de database (één migratie)</h3>
+<ul><li><code>authority</code>: kolommen <code>domain</code> en <code>tenant_assignable</code> (NOT NULL). Niet uit te delen door organisaties: <code>PLATFORM_ADMIN</code>, <code>ORGANIZATION_CREATE/READ/UPDATE/DELETE</code>.</li><li><code>authority_requires</code>: afhankelijkheden (§3.4), gevuld door de migratie.</li><li><code>role</code>: kolommen <code>tenant_organization</code> (nullable, FK <code>ON DELETE RESTRICT</code>, index) en <code>system</code>.<ul><li>Check: <code>system = (tenant_organization IS NULL)</code>.</li><li>Unieke index op <code>(tenant_organization, lower(description))</code>.</li><li>Een eigen rol mag niet heten als een systeemrol.</li><li><code>role</code> is daarmee de enige tenant-tabel met een <em>nullable</em> <code>tenant_organization</code>. <code>TenantOrganizationForeignKeyTest</code> krijgt hiervoor een uitzondering.</li></ul></li><li><code>account</code>: kolom <code>authz_version</code> (int, standaard 0), zie §5.</li><li>Nieuwe authorities (§4): <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>.</li><li>Koppelingen:<ul><li>ADMIN krijgt <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>.</li><li>MANAGER krijgt <code>USER_SCOPE_ORGANIZATION</code> plus <code>ROLE_CREATE/UPDATE/DELETE</code> en <code>ROLEAUTHORITY_CREATE/DELETE</code>, voor de eigen organisatie.</li><li><code>AUTHORITY_CREATE/UPDATE/DELETE</code> verdwijnen, net als de bijbehorende endpoints (dan <code>405</code>) en schermen.</li></ul></li><li>Optioneel: een databasetrigger die wijzigingen aan <code>role_authority</code> van systeemrollen weigert, net als de triggers die betalingen beschermen. De service blokkeert het al; de trigger vangt ook directe SQL af.</li></ul>
+<h2 id="h-3-de-regels">3. De regels</h2>
+<p>Notatie:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Symbool</th><th>Betekenis</th></tr></thead><tbody>
+<tr><th scope="row"><strong>E(u)</strong></th><td>De effectieve authorities van gebruiker <em>u</em>: de vereniging van al zijn rollen, <strong>gelezen uit de database</strong>, niet uit het token</td></tr>
+<tr><th scope="row"><strong>T</strong></th><td>Alle authorities met <code>tenant_assignable = true</code></td></tr>
+<tr><th scope="row"><strong>G(u) = E(u) ∩ T</strong></th><td>Wat <em>u</em> mag uitdelen</td></tr>
+<tr><th scope="row"><strong>R(r)</strong></th><td>De authorities van rol <em>r</em></td></tr>
+<tr><th scope="row"><strong>E(x)</strong></th><td>De effectieve authorities van een ander account <em>x</em></td></tr>
+</tbody></table></div>
+<div class="callout"><strong>Kernregel:</strong> je kunt alleen doorgeven wat je zelf hebt en wat een organisatie mag hebben.<br>Je kunt alleen sleutelen aan rollen en accounts die "onder je niveau" liggen: <strong>R(r) ⊆ G(u)</strong> of <strong>E(x) ⊆ G(u)</strong>.</div>
+<p>Waarom niet "alles wat de MANAGER heeft": zie §3.6.</p>
+<h3 id="h-3-1-authority-toevoegen-aan-een-rol-post-api-role-authorities">3.1 Authority toevoegen aan een rol (<code>POST /api/role-authorities</code>)</h3>
+<figure class="diagram"><pre class="mermaid">
+flowchart TD
+    start([u wil authority a toevoegen aan rol r]) --&gt; p{&quot;u heeft ROLEAUTHORITY_CREATE?&quot;}
+    p -- nee --&gt; f403a[403]
+    p -- ja --&gt; sys{&quot;r is systeemrol?&quot;}
+    sys -- ja --&gt; f403b[&quot;403: systeemrollen liggen vast&quot;]
+    sys -- nee --&gt; org{&quot;r hoort bij de organisatie van u?&lt;br/&gt;(of u heeft PLATFORM_ADMIN)&quot;}
+    org -- nee --&gt; f404[&quot;404: geen lekken over andere organisaties&quot;]
+    org -- ja --&gt; lvl{&quot;R(r) ⊆ G(u)?&lt;br/&gt;(rol onder je niveau)&quot;}
+    lvl -- nee --&gt; f403c[&quot;403: rol bevat rechten die je zelf niet hebt&quot;]
+    lvl -- ja --&gt; own{&quot;a ∈ G(u)?&quot;}
+    own -- nee --&gt; f403d[&quot;403: je kunt alleen rechten uitdelen die je zelf hebt&quot;]
+    own -- ja --&gt; dep{&quot;alle vereisten van a&lt;br/&gt;in R(r) ∪ {a} of in G(u)?&quot;}
+    dep -- nee --&gt; f403e[&quot;403: vereiste rechten heb je zelf niet&quot;]
+    dep -- ja --&gt; ok[&quot;toevoegen, met ontbrekende vereisten erbij&lt;br/&gt;authz_version +1 voor alle accounts met rol r&quot;]
+    ok --&gt; done([201])
+</pre></figure>
+<h3 id="h-3-2-authority-weghalen-uit-een-rol-delete-api-role-authorities">3.2 Authority weghalen uit een rol (<code>DELETE /api/role-authorities</code>)</h3>
+<p>Hier gelden dezelfde controles op systeemrol, organisatie en niveau (<strong>R(r) ⊆ G(u)</strong>). Een employee kan dus niets weghalen uit een rol met meer rechten dan hij heeft. Dat voorkomt sabotage van de managerrol.</p>
+<p>Extra regel: is <em>a</em> een vereiste van een andere authority in <em>r</em>, dan geeft de API een <code>409</code> met de namen. Het scherm biedt aan om die dan ook weg te halen.</p>
+<h3 id="h-3-3-rol-toewijzen-of-intrekken-api-account-roles">3.3 Rol toewijzen of intrekken (<code>/api/account-roles</code>)</h3>
+<figure class="diagram"><pre class="mermaid">
+flowchart TD
+    start([u wil rol r toewijzen aan of intrekken bij account x]) --&gt; p{&quot;u heeft ACCOUNTROLE_CREATE / _DELETE?&quot;}
+    p -- nee --&gt; f403a[403]
+    p -- ja --&gt; orgx{&quot;x hoort bij de organisatie van u?&lt;br/&gt;(of PLATFORM_ADMIN)&quot;}
+    orgx -- nee --&gt; f404[404]
+    orgx -- ja --&gt; orgr{&quot;r is systeemrol of eigen rol van díe organisatie?&quot;}
+    orgr -- nee --&gt; f404b[404]
+    orgr -- ja --&gt; lvlr{&quot;R(r) ⊆ G(u)?&quot;}
+    lvlr -- nee --&gt; f403b[&quot;403: rol bevat rechten die je zelf niet hebt&quot;]
+    lvlr -- ja --&gt; lvlx{&quot;E(x) ⊆ G(u)?&lt;br/&gt;(account onder je niveau)&quot;}
+    lvlx -- nee --&gt; f403c[&quot;403: dit account heeft meer rechten dan jij&quot;]
+    lvlx -- ja --&gt; last{&quot;intrekken van de laatste beheerder&lt;br/&gt;van de organisatie?&quot;}
+    last -- ja --&gt; f409[&quot;409: er moet minstens één beheerder blijven&quot;]
+    last -- nee --&gt; ok[&quot;uitvoeren; authz_version van x +1&quot;]
+</pre></figure>
+<p>Deze ene regel vervangt de vaste lijst <code>ROLES_MANAGEABLE_BY_NON_ADMIN</code>:</p>
+<ul><li><strong>ADMIN</strong> toewijzen kan nooit door een organisatie, want <code>PLATFORM_ADMIN ∉ T</code>.</li><li><strong>MANAGER</strong> toewijzen kan alleen wie zelf alle manager-rechten heeft.</li><li><strong>EMPLOYEE</strong> toewijzen kan iedereen die die set zelf heeft.</li></ul>
+<p>"Laatste beheerder" is een account met <code>ROLE_*</code>, <code>ROLEAUTHORITY_*</code> en <code>ACCOUNTROLE_*</code>. Zo kan een organisatie zichzelf niet buitensluiten.</p>
+<h3 id="h-3-4-afhankelijkheden">3.4 Afhankelijkheden</h3>
+<p>Sommige rechten zijn zonder andere nutteloos, of geven half werkende schermen. Ze staan in <code>authority_requires</code>:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Authority</th><th>Vereist</th></tr></thead><tbody>
+<tr><th scope="row"><code>X_CREATE</code>, <code>X_UPDATE</code>, <code>X_DELETE</code></th><td><code>X_READ</code> (generieke regel, gevuld door de migratie)</td></tr>
+<tr><th scope="row"><code>QUOTE_SEND</code></th><td><code>BOOKING_READ</code>, <code>DOCUMENT_CREATE</code>, <code>EMAIL_SEND</code>, <code>TEMPLATE_READ</code></td></tr>
+<tr><th scope="row"><code>PAYMENT_*</code></th><td><code>BOOKING_READ</code></td></tr>
+<tr><th scope="row"><code>ROLEAUTHORITY_*</code></th><td><code>ROLE_READ</code>, <code>AUTHORITY_READ</code></td></tr>
+<tr><th scope="row"><code>ACCOUNTROLE_*</code></th><td><code>ACCOUNT_READ</code>, <code>ROLE_READ</code></td></tr>
+</tbody></table></div>
+<p><em>Bij het bouwen per scherm nalopen.</em> Het scherm vinkt de vereisten automatisch mee aan. De backend controleert hetzelfde.</p>
+<h3 id="h-3-5-rol-aanmaken-hernoemen-verwijderen-api-roles">3.5 Rol aanmaken, hernoemen, verwijderen (<code>/api/roles</code>)</h3>
+<ul><li><strong>Aanmaken</strong> (<code>ROLE_CREATE</code>): altijd in de eigen organisatie; <code>tenant_organization</code> komt uit <code>TenantContext</code>, nooit uit de request. Optioneel als kopie van een bestaande rol, waarbij §3.1 per authority geldt.</li><li><strong>Hernoemen</strong> (<code>ROLE_UPDATE</code>): alleen eigen rollen onder je niveau.</li><li><strong>Verwijderen</strong> (<code>ROLE_DELETE</code>): alleen eigen rollen onder je niveau. Is de rol nog aan accounts toegewezen, dan volgt <code>409</code> met het aantal accounts. Dat werkt net als <code>OrganizationDeletionGuard</code>.</li></ul>
+<h3 id="h-3-6-waarom-niet-een-subset-van-de-manager">3.6 Waarom niet "een subset van de MANAGER"?</h3>
+<figure class="diagram"><pre class="mermaid">
+sequenceDiagram
+    actor M as Manager
+    actor E as Employee met rolbeheer-rechten
+    participant API as RDS
+    M-&gt;&gt;API: geeft E de rechten om rollen in te richten
+    Note over E,API: Stel: de regel is &quot;subset van de MANAGER&quot;
+    E-&gt;&gt;API: maak rol &quot;Kopie manager&quot; met alle manager-rechten
+    API--&gt;&gt;E: ok (want ⊆ MANAGER)
+    E-&gt;&gt;API: wijs &quot;Kopie manager&quot; toe aan zichzelf
+    API--&gt;&gt;E: ok
+    Note over E: E is nu in feite manager.&lt;br/&gt;Dat heeft M nooit zo bedoeld.
+</pre></figure>
+<p>Met <strong>G(u) = E(u) ∩ T</strong> kan dit niet. Wil de manager dat de employee meer kan uitdelen, dan geeft hij hem eerst die rechten zelf. Dat is expliciet en zichtbaar. Bovendien bestaat "de manager" niet eenduidig: een organisatie kan meerdere managers of eigen managerachtige rollen hebben.</p>
+<h3 id="h-3-7-wat-gebeurt-er-als-u-later-rechten-verliest">3.7 Wat gebeurt er als u later rechten verliest?</h3>
+<p>De controle gebeurt <strong>bij het uitdelen</strong>, niet achteraf. Rollen die <em>u</em> eerder maakte, blijven zoals ze zijn. Bevatten ze nu meer dan <em>u</em> heeft, dan kan <em>u</em> ze niet meer wijzigen (§3.1). Dat is voorspelbaar en voorkomt kettingreacties.</p>
+<h2 id="h-4-data-scope-zonder-rolnamen">4. Data-scope zonder rolnamen</h2>
+<p>De backend gebruikt rolnamen nog voor <em>welke</em> gegevens iemand ziet. Dat gaat naar authorities:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Nu</th><th>Straks</th><th>Wie krijgt hem (migratie)</th></tr></thead><tbody>
+<tr><th scope="row"><code>hasRole(&quot;ADMIN&quot;)</code>: over organisaties heen (35×)</th><td><code>PLATFORM_ADMIN</code> (niet uit te delen door organisaties)</td><td>ADMIN</td></tr>
+<tr><th scope="row"><code>isEmployee()</code>: personen en accounts "alleen eigen"</th><td><code>USER_SCOPE_ORGANIZATION</code>: personen en accounts van de hele organisatie; zonder deze authority alleen het eigen</td><td>ADMIN, MANAGER</td></tr>
+<tr><th scope="row"><code>isAdmin()</code> in <code>AuthController</code>, <code>OrganizationThemeServiceImpl</code></th><td><code>PLATFORM_ADMIN</code></td><td>ADMIN</td></tr>
+</tbody></table></div>
+<p>Uitvoering: één helper <code>TenantContext.hasAuthority(String)</code> (of een klein <code>AccessScope</code>-component), en <code>TenantContext.hasRole</code> verdwijnt. Dan houdt een test of ArchUnit-regel nieuwe rolnaam-controles tegen.</p>
+<p>Deze stap verandert <strong>niets zichtbaars</strong>: met de migratie krijgen ADMIN, MANAGER en EMPLOYEE precies hetzelfde gedrag als nu. Hij kan dus als eerste en apart worden opgeleverd (§8, fase 1).</p>
+<h2 id="h-5-wijzigingen-direct-laten-doorwerken">5. Wijzigingen direct laten doorwerken</h2>
+<p>Het token bevat de authorities en is 1 uur geldig. Zonder extra maatregel werkt een rolwijziging pas na opnieuw inloggen door.</p>
+<p><strong>Voorstel:</strong> een versienummer per account.</p>
+<ul><li><code>account.authz_version</code> gaat omhoog bij:<ul><li>het toewijzen of intrekken van een rol aan dat account;</li><li>het wijzigen van een rol die het account heeft (bulk-update op alle accounts met die rol).</li></ul></li><li>Het token krijgt een claim <code>av</code>.</li><li><code>JwtAuthenticationFilter</code> vergelijkt <code>av</code> met de database. Een lookup op primaire sleutel, eventueel 30 seconden gecachet.</li><li>Bij een verschil volgt <code>401</code> met code <code>AUTHZ_CHANGED</code>. De frontend haalt dan een nieuw token op en doet de aanroep opnieuw.</li></ul>
+<figure class="diagram"><pre class="mermaid">
+sequenceDiagram
+    actor M as Manager
+    participant FE_D as Frontend (Daan)
+    participant API as Backend
+    participant DB as Database
+
+    M-&gt;&gt;API: POST /api/role-authorities (rol Boekhouder + PAYMENT_READ)
+    API-&gt;&gt;DB: role_authority toevoegen
+    API-&gt;&gt;DB: authz_version +1 voor accounts met rol Boekhouder (o.a. Daan)
+    API--&gt;&gt;M: 201
+
+    FE_D-&gt;&gt;API: GET /api/bookings (token met av=3)
+    API-&gt;&gt;DB: authz_version van Daan?
+    DB--&gt;&gt;API: 4
+    API--&gt;&gt;FE_D: 401 AUTHZ_CHANGED
+    FE_D-&gt;&gt;API: POST /api/auth/token/refresh (oude, nog geldige token)
+    API-&gt;&gt;DB: account geldig? rollen en authorities ophalen
+    API--&gt;&gt;FE_D: nieuw token (av=4, met PAYMENT_READ)
+    FE_D-&gt;&gt;FE_D: authorities-signal bijwerken&lt;br/&gt;menu en kaarten tekenen opnieuw
+    FE_D-&gt;&gt;API: GET /api/bookings (opnieuw, nieuw token)
+    API--&gt;&gt;FE_D: 200
+</pre></figure>
+<p>Regels voor <code>POST /api/auth/token/refresh</code>:</p>
+<ul><li>Alleen met een geldig, niet-verlopen <code>EMPLOYEE</code>-token.</li><li>Een gelockt of verlopen account of een openstaande wachtwoordwijziging geeft <code>401</code> en de gebruiker gaat naar het inlogscherm.</li><li>2FA wordt niet opnieuw gevraagd: het oude token bewijst dat al.</li></ul>
+<p>Eenvoudiger alternatief: niets bouwen en in het rollenscherm melden "wijzigingen gelden na opnieuw inloggen (uiterlijk 1 uur)". Dat kan als tussenstap.</p>
+<h2 id="h-6-frontend-het-scherm-beweegt-mee">6. Frontend: het scherm beweegt mee</h2>
+<h3 id="h-6-1-e-n-bron-van-waarheid">6.1 Eén bron van waarheid</h3>
+<figure class="diagram"><pre class="mermaid">
+flowchart TD
+    T[&quot;Token / refresh-antwoord&quot;] --&gt; S[&quot;AuthService.authorities (signal)&quot;]
+    S --&gt; C[&quot;can(...) / canAny(...) (computed)&quot;]
+    C --&gt; N[&quot;Menu: items met authority-lijst&quot;]
+    C --&gt; G[&quot;Route-guard: data.authorities&quot;]
+    C --&gt; K[&quot;Kaarten en knoppen: @if (auth.can(&#x27;X&#x27;))&quot;]
+    C --&gt; D[&quot;Services: geen aanroep zonder recht&quot;]
+    G -- geen recht --&gt; R[&quot;naar dashboard + melding &#x27;Geen toegang&#x27;&quot;]
+</pre></figure>
+<ul><li>**<code>AuthService.authorities</code> wordt een signal.** Alles wat ervan afhangt (<code>computed</code>, <code>@if</code>) tekent opnieuw zodra een nieuw token binnenkomt. Opnieuw inloggen of herladen is niet nodig.</li><li>**Route-guard <code>authorityGuard</code>.** Elke route krijgt <code>data: { authorities: [...], match: &#x27;any&#x27; | &#x27;all&#x27; }</code>. Menu en routes delen één definitie, zodat ze niet uit elkaar kunnen lopen. Een ingetypte URL zonder recht gaat naar het dashboard met een melding, in plaats van naar een half scherm met 403's.</li><li><strong>Kaarten bewaken zichzelf.</strong> Elke kaart die een eigen API-aanroep doet, krijgt een <code>@if (auth.can(...))</code> en roept zonder recht de API niet aan. Bijvoorbeeld de betalingen, documenten en e-mails in de boekingsdetails, en de dashboardwidgets.</li><li><strong>Geen rolnamen meer in de UI.</strong><ul><li>Onboarding kiest de beheerdersrol via <code>assignable-roles</code> en een vlag, niet op naam.</li><li>De rolfilter in de accountlijst toont de rollen van de organisatie.</li><li>De welkomstkop toont de rolnaam alleen als tekst; daar hangt geen logica aan.</li></ul></li><li><strong>Inventarisatie als onderdeel van het werk:</strong> een tabel scherm → benodigde authorities (bijlage A bij de bouw). Een test per route controleert dat de guard bestaat.</li></ul>
+<h3 id="h-6-2-het-rollenscherm">6.2 Het rollenscherm</h3>
+<p>Menu <em>Organisatiebeheer → Rollen</em>, voor wie <code>ROLE_READ</code> heeft.</p>
+<pre class="sketch">Rol: Boekhouder                                   [Kopie van: EMPLOYEE ▾]   [Opslaan]
+
+                       Lezen   Aanmaken   Wijzigen   Verwijderen   Overig
+Boekingen               [x]      [ ]        [ ]         [ ]
+Betalingen              [x]      [ ]        [x]         [ ]        [x] Corrigeren  [ ] Opnieuw koppelen
+Documenten              [x]      [ ]        [ ]         —
+Templates               [x]      [ ]        [ ]         [ ]
+Personen en accounts    [x]      [ ]        [ ]         [ ]        [ ] Hele organisatie
+Huisstijl               [ ]      [ ]        [ ]         [ ]
+...
+  [ ] grijs = recht dat je zelf niet hebt (niet aan te vinken)
+  Aanvinken van Wijzigen vinkt Lezen mee aan (vereiste).</pre>
+<ul><li>Rijen komen uit <code>authority.domain</code>, kolommen uit de actie in de naam. Wat niet in het CRUD-raster past, staat onder <em>Overig</em>.</li><li>Alleen <strong>G(u)</strong> is aan te vinken. De rest is zichtbaar maar grijs, met de uitleg "Dit recht heb je zelf niet".</li><li>Een rol buiten je niveau (<strong>R(r) ⊄ G(u)</strong>) is alleen-lezen, met de melding "Deze rol bevat rechten die je zelf niet hebt".</li><li>Systeemrollen staan in de lijst met een slotje en de knop <em>Kopiëren</em>.</li><li>Onderaan: "Gebruikt door 3 accounts" met links.</li><li>Het scherm is gemak, geen beveiliging: de backend dwingt §3 zelf af.</li></ul>
+<h2 id="h-7-api-overzicht-wijzigingen">7. API-overzicht (wijzigingen)</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Endpoint</th><th>Verandering</th></tr></thead><tbody>
+<tr><th scope="row"><code>GET /api/authorities</code></th><td>Plus <code>domain</code>, <code>tenantAssignable</code>, <code>requires[]</code></td></tr>
+<tr><th scope="row"><code>POST/PUT/DELETE /api/authorities</code></th><td>Vervalt (<code>405</code>)</td></tr>
+<tr><th scope="row"><code>GET /api/authorities/grantable</code></th><td><strong>Nieuw:</strong> G(u), voor het rollenscherm</td></tr>
+<tr><th scope="row"><code>GET /api/roles</code></th><td>Systeemrollen plus de eigen rollen van de organisatie (ADMIN: alle); plus <code>system</code>, <code>accountCount</code>, <code>editable</code> (R(r) ⊆ G(u))</td></tr>
+<tr><th scope="row"><code>POST /api/roles</code></th><td>Eigen rol in de eigen organisatie; optioneel <code>copyFromRoleId</code></td></tr>
+<tr><th scope="row"><code>PUT/DELETE /api/roles/{id}</code></th><td>Regels §3.5</td></tr>
+<tr><th scope="row"><code>POST/DELETE /api/role-authorities</code></th><td>Regels §3.1–3.2</td></tr>
+<tr><th scope="row"><code>GET /api/account-roles/assignable-roles</code></th><td>Rollen met R(r) ⊆ G(u) (vervangt de vaste lijst)</td></tr>
+<tr><th scope="row"><code>POST/DELETE /api/account-roles</code></th><td>Regels §3.3</td></tr>
+<tr><th scope="row"><code>POST /api/auth/token/refresh</code></th><td><strong>Nieuw</strong>, §5</td></tr>
+</tbody></table></div>
+<p>Foutmeldingen volgen <code>GlobalExceptionHandler</code> (<code>{ message, status, timestamp }</code>). Een rol of account van een andere organisatie geeft <code>404</code>, geen <code>403</code>: zo lekt er niets.</p>
+<h2 id="h-8-fasering">8. Fasering</h2>
+<p>Elke fase is los op te leveren en te testen.</p>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    F1[&quot;Fase 1&lt;br/&gt;Data-scope op authorities&lt;br/&gt;(PLATFORM_ADMIN, USER_SCOPE_ORGANIZATION)&lt;br/&gt;niets zichtbaar anders&quot;]
+    F2[&quot;Fase 2&lt;br/&gt;Frontend meebewegend&lt;br/&gt;route-guards, kaarten, signal,&lt;br/&gt;geen rolnamen&quot;]
+    F3[&quot;Fase 3&lt;br/&gt;Model en regels&lt;br/&gt;systeemrollen vast, authorities alleen-lezen,&lt;br/&gt;rollen per organisatie, §3 in de backend&quot;]
+    F4[&quot;Fase 4&lt;br/&gt;Rollenscherm&lt;br/&gt;matrix, kopiëren, vereisten&quot;]
+    F5[&quot;Fase 5&lt;br/&gt;Direct doorwerken&lt;br/&gt;authz_version + token-refresh&quot;]
+    F1 --&gt; F3
+    F2 --&gt; F4
+    F3 --&gt; F4
+    F4 --&gt; F5
+</pre></figure>
+<p>Fase 1 en 2 hebben ook zonder eigen rollen waarde:</p>
+<ul><li>Fase 1 haalt het risico "rolnaam bepaalt data-scope" weg.</li><li>Fase 2 lost de 403-fouten en de onbewaakte routes op.</li></ul>
+<p>Fase 1 en 2 kunnen tegelijk.</p>
+<h2 id="h-9-tests">9. Tests</h2>
+<ul><li><strong>Regels (§3), Mockito plus integratie op embedded Postgres:</strong><ul><li>toevoegen buiten G(u) geeft 403;</li><li>een rol boven je niveau wijzigen geeft 403;</li><li>een systeemrol wijzigen geeft 403;</li><li>een rol van een andere organisatie geeft 404;</li><li>een account boven je niveau geeft 403;</li><li>de laatste beheerder intrekken geeft 409;</li><li>vereisten worden automatisch meegenomen;</li><li>een gebruikte rol verwijderen geeft 409.</li></ul></li><li><strong>Escalatiescenario uit §3.6</strong> als test: moet falen.</li><li><strong>Data-scope:</strong><ul><li>een eigen rol zonder <code>USER_SCOPE_ORGANIZATION</code> ziet alleen het eigen persoon en account;</li><li>met die authority ziet hij de hele organisatie;</li><li>zonder <code>PLATFORM_ADMIN</code> ziet hij nooit een andere organisatie.</li></ul></li><li><strong>Architectuur:</strong> geen <code>hasRole(</code> meer in <code>src/main/java</code>.</li><li><strong>Token:</strong><ul><li>na een rolwijziging geeft een oud token <code>401 AUTHZ_CHANGED</code>;</li><li>refresh geeft de nieuwe authorities;</li><li>een gelockt account kan niet verversen.</li></ul></li><li><strong>Frontend (Jasmine/Karma):</strong><ul><li><code>authorityGuard</code>;</li><li>het menu en de kaarten reageren op een nieuw authorities-signal;</li><li>het rollenscherm grijst niet-uitdeelbare rechten uit en vinkt vereisten mee aan.</li></ul></li></ul>
+<h2 id="h-10-open-vragen">10. Open vragen</h2>
+<ol><li><strong>Audit.</strong> Rolwijzigingen krijgen de gewone <code>createdBy</code>/<code>modifiedBy</code>. Is ook een geschiedenis nodig van "wie gaf wie wanneer welk recht"? Advies: ja, als append-only tabel, net als de statusregels van betalingen.</li><li><strong>Meta-rechten doorgeven.</strong> <code>ROLE_*</code>, <code>ROLEAUTHORITY_*</code> en <code>ACCOUNTROLE_*</code> vallen nu onder dezelfde subset-regel: een employee met die rechten kan ze doorgeven. Is dat gewenst, of komt er een vlag "niet doorgeefbaar"?</li><li><strong>Wat telt als beheerder</strong> voor de regel "laatste beheerder" (§3.3)? Het voorstel is de set rolbeheer-rechten. Het kan ook expliciet de systeemrol MANAGER zijn.</li><li><strong>Nieuwe organisatie.</strong> Die begint met alleen de systeemrollen. Zijn standaard eigen rollen als voorbeeld gewenst?</li><li><strong>Nieuwe authorities in de toekomst.</strong> Een nieuwe authority komt via Flyway bij de systeemrollen. Eigen rollen krijgen hem niet vanzelf; de organisatie moet hem zelf aanvinken. Melden we "nieuwe rechten beschikbaar" in het rollenscherm?</li></ol>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

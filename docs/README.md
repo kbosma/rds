@@ -26,7 +26,7 @@
 | Alle REST-endpoints met benodigde authority + voorbeelden? | [api-examples.md](api-examples.md) |
 | Booker-portal (klant) en OTP-login? | [bookerportal.md](bookerportal.md) |
 | Ontwerp en afwegingen van het dashboard in het boekerportaal (gebouwd)? | [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md) |
-| Ontwerp: organisaties maken zelf rollen met authorities (nog niet gebouwd)? | [voorstel-eigen-rollen.md](voorstel-eigen-rollen.md) |
+| Ontwerp: organisaties maken zelf rollen met authorities (nog niet gebouwd)? | [voorstel-eigen-rollen.md](voorstel-eigen-rollen.md) (bron), leesversie [voorstel-eigen-rollen.html](voorstel-eigen-rollen.html) — opnieuw maken met `python3 docs/tools/md-naar-html.py docs/voorstel-eigen-rollen.md` |
 | Betalingen, webhook, Mollie-flow? | [mollie.md](mollie.md) |
 | E-mailtemplates, versturen, SMTP, afbeeldingen in mail? | [email.md](email.md) |
 | Gedeelde template-editor, Word-templates (.docx), herhaalde tabellen? | [templates.md](templates.md) |
