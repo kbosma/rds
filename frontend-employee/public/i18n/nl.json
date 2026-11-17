@@ -43,7 +43,8 @@
     "deleteError": "Verwijderen is mislukt",
     "saveError": "Opslaan is mislukt",
     "deleteBlocked": "Kan niet verwijderd worden: er hangen documenten of betalingen aan. Die blijven bewaard als geschiedenis.",
-    "noResults": "Niets gevonden. Pas de zoekterm of filters aan."
+    "noResults": "Niets gevonden. Pas de zoekterm of filters aan.",
+    "noAccess": "Je hebt geen toegang tot deze pagina."
   },
   "app": {
     "title": "RDS",
@@ -214,9 +215,6 @@
     "searchPlaceholder": "Zoek op gebruikersnaam...",
     "all": "Alle",
     "allOrganizations": "Alle organisaties",
-    "roleAdmin": "Admin",
-    "roleManager": "Manager",
-    "roleEmployee": "Medewerker",
     "username": "Gebruikersnaam",
     "person": "Persoon",
     "organization": "Organisatie",

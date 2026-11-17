@@ -47,3 +47,9 @@ export interface PaymentRelink {
   createdBy: string | null;
   createdByName: string | null;
 }
+
+/** Koppeling tussen een boeking en een Mollie-betaling (booking_mollie_payment). */
+export interface BookingMolliePaymentLink {
+  bookingId: string;
+  molliePaymentId: string;
+}

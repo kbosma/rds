@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { ACCESS, Access } from '../../core/auth/access';
 import { ThemeService } from '../admin/theme.service';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
 
@@ -15,7 +16,7 @@ interface NavItem {
   labelKey: string;
   route: string;
   icon: string;
-  authority?: string | string[];
+  access?: Access;
   sectionKey?: string;
 }
 
@@ -247,37 +248,31 @@ export class LayoutComponent {
 
   private allNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', route: '/dashboard', icon: 'dashboard' },
-    { labelKey: 'nav.bookings', route: '/bookings', icon: 'book_online', authority: 'BOOKING_READ' },
-    { labelKey: 'nav.bookers', route: '/bookers', icon: 'person', authority: 'BOOKING_READ' },
-    { labelKey: 'nav.prospects', route: '/prospects', icon: 'person_add', authority: 'BOOKING_READ' },
-    { labelKey: 'nav.payments', route: '/payments', icon: 'payment', authority: 'PAYMENT_READ' },
-    { labelKey: 'nav.organizations', route: '/admin/organizations', icon: 'corporate_fare', authority: 'ORGANIZATION_READ', sectionKey: 'nav.admin' },
-    { labelKey: 'nav.accommodations', route: '/accommodations', icon: 'hotel', authority: ['ACCOMMODATION_CREATE', 'ACCOMMODATION_UPDATE', 'ACCOMMODATION_DELETE'], sectionKey: 'nav.bookingAdmin' },
-    { labelKey: 'nav.suppliers', route: '/suppliers', icon: 'business', authority: ['SUPPLIER_CREATE', 'SUPPLIER_UPDATE', 'SUPPLIER_DELETE'] },
-    { labelKey: 'nav.activities', route: '/activities', icon: 'local_activity', authority: ['ACTIVITY_CREATE', 'ACTIVITY_UPDATE', 'ACTIVITY_DELETE'] },
-    { labelKey: 'nav.templates', route: '/templates', icon: 'insert_drive_file', authority: ['TEMPLATE_CREATE', 'TEMPLATE_UPDATE', 'TEMPLATE_DELETE'] },
-    { labelKey: 'nav.emailTemplates', route: '/email-templates', icon: 'mail', authority: 'TEMPLATE_READ' },
-    { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', authority: ['PERSON_CREATE', 'PERSON_DELETE'] },
-    { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', authority: ['ACCOUNT_CREATE', 'ACCOUNT_DELETE'] },
-    { labelKey: 'nav.roles', route: '/admin/roles', icon: 'admin_panel_settings', authority: ['ROLE_CREATE', 'ROLE_UPDATE', 'ROLE_DELETE'] },
-    { labelKey: 'nav.authorities', route: '/admin/authorities', icon: 'security', authority: ['AUTHORITY_CREATE', 'AUTHORITY_UPDATE', 'AUTHORITY_DELETE'] },
-    { labelKey: 'nav.theme', route: '/admin/theme', icon: 'palette', authority: ['ORGANIZATION_THEME_UPDATE'] },
-    { labelKey: 'nav.organizationSettings', route: '/organization-settings', icon: 'tune', authority: 'ORGANIZATION_SETTINGS_READ' },
-    { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', authority: 'PERSON_UPDATE', sectionKey: 'nav.myAdmin' },
-    { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', authority: 'ACCOUNT_UPDATE' },
+    { labelKey: 'nav.bookings', route: '/bookings', icon: 'book_online', access: ACCESS.bookings },
+    { labelKey: 'nav.bookers', route: '/bookers', icon: 'person', access: ACCESS.bookers },
+    { labelKey: 'nav.prospects', route: '/prospects', icon: 'person_add', access: ACCESS.prospects },
+    { labelKey: 'nav.payments', route: '/payments', icon: 'payment', access: ACCESS.payments },
+    { labelKey: 'nav.organizations', route: '/admin/organizations', icon: 'corporate_fare', access: ACCESS.organizations, sectionKey: 'nav.admin' },
+    { labelKey: 'nav.accommodations', route: '/accommodations', icon: 'hotel', access: ACCESS.accommodations, sectionKey: 'nav.bookingAdmin' },
+    { labelKey: 'nav.suppliers', route: '/suppliers', icon: 'business', access: ACCESS.suppliers },
+    { labelKey: 'nav.activities', route: '/activities', icon: 'local_activity', access: ACCESS.activities },
+    { labelKey: 'nav.templates', route: '/templates', icon: 'insert_drive_file', access: ACCESS.templates },
+    { labelKey: 'nav.emailTemplates', route: '/email-templates', icon: 'mail', access: ACCESS.emailTemplates },
+    { labelKey: 'nav.persons', route: '/admin/persons', icon: 'people', access: ACCESS.persons },
+    { labelKey: 'nav.accounts', route: '/admin/accounts', icon: 'manage_accounts', access: ACCESS.accounts },
+    { labelKey: 'nav.roles', route: '/admin/roles', icon: 'admin_panel_settings', access: ACCESS.roles },
+    { labelKey: 'nav.authorities', route: '/admin/authorities', icon: 'security', access: ACCESS.authorities },
+    { labelKey: 'nav.theme', route: '/admin/theme', icon: 'palette', access: ACCESS.theme },
+    { labelKey: 'nav.organizationSettings', route: '/organization-settings', icon: 'tune', access: ACCESS.organizationSettings },
+    { labelKey: 'nav.myProfile', route: '/profile', icon: 'person', access: ACCESS.profile, sectionKey: 'nav.myAdmin' },
+    { labelKey: 'nav.changePassword', route: '/change-password', icon: 'lock', access: ACCESS.changePassword },
     { labelKey: 'nav.totpSettings', route: '/totp-settings', icon: 'security' },
   ];
 
   visibleNavItems = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return [];
-    return this.allNavItems.filter((item) => {
-      if (!item.authority) return true;
-      if (Array.isArray(item.authority)) {
-        return item.authority.some((a) => user.authorities.includes(a));
-      }
-      return user.authorities.includes(item.authority);
-    });
+    return this.allNavItems.filter((item) => this.auth.can(item.access));
   });
 
   userName = computed(() => {

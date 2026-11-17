@@ -1,6 +1,6 @@
 # Voorstel: eigen rollen per organisatie
 
-Status: **fase 0 en 1 gebouwd (V22, V23); fase 2 t/m 5 nog niet. Alle open vragen zijn beantwoord (§11).** Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar
+Status: **fase 0, 1 en 2 gebouwd (V22, V23, frontend); fase 3 t/m 5 nog niet. Alle open vragen zijn beantwoord (§11).** Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar
 authorities aan kan hangen. Het scherm toont of verbergt dan per gebruiker alles op basis van zijn authorities.
 
 Samengevat:
@@ -660,7 +660,8 @@ Elke fase is los op te leveren en te testen.
 |---|---|
 | 0. Opschonen | **Gebouwd** (V22): `tenant_organization` in `person`, `organization_settings`, `organization_theme` en `account` (met samengestelde FK naar de persoon); auditvelden voor `role`, `role_authority` en de koppeltabellen. Deze vier tabellen houden `ON DELETE CASCADE`: een lege organisatie neemt haar personen, accounts, huisstijl en instellingen mee; `OrganizationDeletionGuard` telt alleen de `RESTRICT`-tabellen. |
 | 1. Data-scope op authorities | **Gebouwd** (V23): `PLATFORM_ADMIN` en `USER_SCOPE_ORGANIZATION`; `TenantContext.hasAuthority`, geen `hasRole` meer (`NoRoleNameChecksTest`). |
-| 2 t/m 5 | Nog niet gebouwd |
+| 2. Frontend meebewegend | **Gebouwd**: `ACCESS` in `core/auth/access.ts` voor menu en routes, `authorityGuard` op elke pagina (`app.routes.spec.ts`), `AuthService.authorities` als signal en `can()`, geen `hasRole`; boekingsdetails en dashboards halen alleen op wat mag; rolfilter in de accountlijst uit de data. Nog niet: onboarding kiest MANAGER op naam (komt met `system_key` in fase 3). |
+| 3 t/m 5 | Nog niet gebouwd |
 
 ```mermaid
 flowchart LR

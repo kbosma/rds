@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
-import { MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
+import { BookingMolliePaymentLink, MolliePayment, MolliePaymentStatusEntry, PaymentRelink } from '../../shared/models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -12,6 +12,20 @@ export class MolliePaymentService {
 
   getAll() {
     return this.api.getAll<MolliePayment>(this.endpoint);
+  }
+
+  /** Alle koppelingen tussen boekingen en betalingen (PAYMENT_READ). */
+  getBookingLinks() {
+    return this.http.get<BookingMolliePaymentLink[]>(`${environment.apiUrl}/booking-mollie-payments`);
+  }
+
+  /** De koppelingen van één boeking (PAYMENT_READ). */
+  getBookingLinksByBookingId(bookingId: string) {
+    return this.http.get<BookingMolliePaymentLink[]>(`${environment.apiUrl}/booking-mollie-payments/${bookingId}`);
+  }
+
+  linkToBooking(bookingId: string, molliePaymentId: string) {
+    return this.http.post<BookingMolliePaymentLink>(`${environment.apiUrl}/booking-mollie-payments`, { bookingId, molliePaymentId });
   }
 
   getById(id: string) {

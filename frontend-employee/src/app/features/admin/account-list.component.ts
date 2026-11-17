@@ -71,8 +71,8 @@ interface FilterChip {
 
       <mat-button-toggle-group class="filter-toggles" [value]="activeRoleChip()" (change)="filterByRole($event.value)"
                                [attr.aria-label]="'accounts.filterRole' | translate" hideSingleSelectionIndicator>
-        @for (chip of roleChips; track chip.value) {
-          <mat-button-toggle [value]="chip.value">{{ chip.labelKey | translate }}</mat-button-toggle>
+        @for (chip of roleChips(); track chip.value) {
+          <mat-button-toggle [value]="chip.value">{{ chip.labelKey ? (chip.labelKey | translate) : chip.label }}</mat-button-toggle>
         }
       </mat-button-toggle-group>
 
@@ -188,12 +188,8 @@ export class AccountListComponent implements OnInit {
   activeOrgChip = signal('ALL');
   orgChips = signal<FilterChip[]>([{ labelKey: 'accounts.allOrganizations', value: 'ALL' }]);
 
-  roleChips = [
-    { labelKey: 'accounts.all', value: 'ALL' },
-    { labelKey: 'accounts.roleAdmin', value: 'ADMIN' },
-    { labelKey: 'accounts.roleManager', value: 'MANAGER' },
-    { labelKey: 'accounts.roleEmployee', value: 'EMPLOYEE' },
-  ];
+  /** "Alle" plus de rollen die in de lijst voorkomen: geen vaste rolnamen, dus ook eigen rollen van een organisatie. */
+  roleChips = signal<{ labelKey?: string; label?: string; value: string }[]>([{ labelKey: 'accounts.all', value: 'ALL' }]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -240,6 +236,8 @@ export class AccountListComponent implements OnInit {
         });
 
         this.dataSource.data = this.allAccounts;
+        const roleNames = [...new Set(this.allAccounts.flatMap((a) => a.roleDescriptions))].sort((x, y) => x.localeCompare(y));
+        this.roleChips.set([{ labelKey: 'accounts.all', value: 'ALL' }, ...roleNames.map((name) => ({ label: name, value: name }))]);
         this.loading.set(false);
         setTimeout(() => {
           this.dataSource.paginator = this.paginator;

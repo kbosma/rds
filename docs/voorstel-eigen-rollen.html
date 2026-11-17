@@ -45,7 +45,7 @@
 </head>
 <body>
 <h1>Voorstel: eigen rollen per organisatie</h1>
-<p>Status: <strong>fase 0 en 1 gebouwd (V22, V23); fase 2 t/m 5 nog niet. Alle open vragen zijn beantwoord (§11).</strong> Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar authorities aan kan hangen. Het scherm toont of verbergt dan per gebruiker alles op basis van zijn authorities.</p>
+<p>Status: <strong>fase 0, 1 en 2 gebouwd (V22, V23, frontend); fase 3 t/m 5 nog niet. Alle open vragen zijn beantwoord (§11).</strong> Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar authorities aan kan hangen. Het scherm toont of verbergt dan per gebruiker alles op basis van zijn authorities.</p>
 <p>Samengevat:</p>
 <ul><li><strong>Eén platformorganisatie</strong> met daarin alleen de beheerders (ADMIN). Alle andere organisaties zijn klanten (reisbureaus). Een ADMIN hoort nooit bij een klant.</li><li><strong>Authorities liggen vast.</strong> De software bepaalt ze en ze komen alleen via Flyway.</li><li><strong>Systeemrollen liggen vast.</strong><ul><li>ADMIN bestaat alleen in de platformorganisatie.</li><li>Elke klant krijgt een eigen, vergrendelde kopie van MANAGER en EMPLOYEE.</li><li>Niemand kan systeemrollen wijzigen.</li></ul></li><li><strong>Eigen rollen zijn vrij, per organisatie,</strong> en bestaan uit de vaste authorities.</li><li><strong>Alles hoort bij precies één organisatie.</strong><ul><li>Elke rol, elk account en elke koppeling tussen een account en een rol heeft een verplichte <code>tenant_organization</code>.</li><li>De database dwingt af dat account en rol bij dezelfde organisatie horen.</li></ul></li><li><strong>Niemand kan meer uitdelen dan hij zelf heeft</strong> (<em>no-escalation</em>).</li></ul>
 <p>Verwante documenten: <a href="security.md">security.md</a> (huidige rollen en tenant-isolatie), <a href="database-model.md">database-model.md</a>, <a href="frontend.md">frontend.md</a>.</p>
@@ -476,7 +476,8 @@ Huisstijl               [ ]      [ ]        [ ]         [ ]
 <thead><tr><th>Fase</th><th>Status</th></tr></thead><tbody>
 <tr><th scope="row">0. Opschonen</th><td><strong>Gebouwd</strong> (V22): <code>tenant_organization</code> in <code>person</code>, <code>organization_settings</code>, <code>organization_theme</code> en <code>account</code> (met samengestelde FK naar de persoon); auditvelden voor <code>role</code>, <code>role_authority</code> en de koppeltabellen. Deze vier tabellen houden <code>ON DELETE CASCADE</code>: een lege organisatie neemt haar personen, accounts, huisstijl en instellingen mee; <code>OrganizationDeletionGuard</code> telt alleen de <code>RESTRICT</code>-tabellen.</td></tr>
 <tr><th scope="row">1. Data-scope op authorities</th><td><strong>Gebouwd</strong> (V23): <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>; <code>TenantContext.hasAuthority</code>, geen <code>hasRole</code> meer (<code>NoRoleNameChecksTest</code>).</td></tr>
-<tr><th scope="row">2 t/m 5</th><td>Nog niet gebouwd</td></tr>
+<tr><th scope="row">2. Frontend meebewegend</th><td><strong>Gebouwd</strong>: <code>ACCESS</code> in <code>core/auth/access.ts</code> voor menu en routes, <code>authorityGuard</code> op elke pagina (<code>app.routes.spec.ts</code>), <code>AuthService.authorities</code> als signal en <code>can()</code>, geen <code>hasRole</code>; boekingsdetails en dashboards halen alleen op wat mag; rolfilter in de accountlijst uit de data. Nog niet: onboarding kiest MANAGER op naam (komt met <code>system_key</code> in fase 3).</td></tr>
+<tr><th scope="row">3 t/m 5</th><td>Nog niet gebouwd</td></tr>
 </tbody></table></div>
 <figure class="diagram"><pre class="mermaid">
 flowchart LR

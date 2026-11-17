@@ -100,6 +100,13 @@ describe('AccountListComponent', () => {
     expect(component.orgChips().some(c => c.value === 'o-1')).toBe(true);
   }));
 
+  it('should offer the roles that occur in the list as filter chips, not a fixed set of role names', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    expect(component.roleChips().map(c => c.value)).toEqual(['ALL', 'ADMIN', 'EMPLOYEE']);
+  }));
+
   it('should toggle role chip filter', fakeAsync(() => {
     fixture.detectChanges();
     tick();

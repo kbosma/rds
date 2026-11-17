@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { MolliePaymentsOverviewComponent } from './mollie-payments-overview.component';
@@ -20,7 +20,6 @@ describe('MolliePaymentsOverviewComponent', () => {
   let component: MolliePaymentsOverviewComponent;
   let paymentServiceSpy: jasmine.SpyObj<MolliePaymentService>;
   let authSpy: jasmine.SpyObj<AuthService>;
-  let http: HttpTestingController;
 
   const base = { createdAt: '2026-05-01T10:00:00', createdBy: 'u', modifiedAt: '', modifiedBy: '', tenantOrganization: 'o', currency: 'EUR', checkoutUrl: '', method: null };
   const payments: MolliePayment[] = [
@@ -33,13 +32,13 @@ describe('MolliePaymentsOverviewComponent', () => {
 
   function load() {
     fixture.detectChanges();
-    http.expectOne(r => r.url.endsWith('/booking-mollie-payments')).flush([{ bookingId: 'b-1', molliePaymentId: 'p-1' }]);
     tick();
     fixture.detectChanges();
   }
 
   beforeEach(async () => {
-    paymentServiceSpy = jasmine.createSpyObj('MolliePaymentService', ['getAll', 'getStatusEntries']);
+    paymentServiceSpy = jasmine.createSpyObj('MolliePaymentService', ['getAll', 'getStatusEntries', 'getBookingLinks']);
+    paymentServiceSpy.getBookingLinks.and.returnValue(of([{ bookingId: 'b-1', molliePaymentId: 'p-1' }]));
     paymentServiceSpy.getAll.and.returnValue(of(payments));
     paymentServiceSpy.getStatusEntries.and.returnValue(of([]));
     authSpy = jasmine.createSpyObj('AuthService', ['hasAuthority']);
@@ -55,7 +54,6 @@ describe('MolliePaymentsOverviewComponent', () => {
         { provide: AuthService, useValue: authSpy },
       ],
     }).compileComponents();
-    http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(MolliePaymentsOverviewComponent);
     component = fixture.componentInstance;
   });

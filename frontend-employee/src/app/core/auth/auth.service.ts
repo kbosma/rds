@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginResponse, TokenPayload, TotpSetupResponse } from '../../shared/models';
+import { Access, isSatisfied } from './access';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -33,6 +34,12 @@ export class AuthService {
       authorities: payload.authorities ?? [],
     };
   });
+
+  /**
+   * De authorities van de ingelogde gebruiker. Een signal: alles wat ervan afhangt (computed, @if in een template)
+   * tekent opnieuw zodra er een nieuw token is. Zichtbaarheid hangt altijd aan authorities, nooit aan rolnamen.
+   */
+  authorities = computed<readonly string[]>(() => this.currentUser()?.authorities ?? []);
 
   mustChangePassword = signal(false);
   requiresTotp = signal(false);
@@ -104,12 +111,13 @@ export class AuthService {
     return this.tokenSignal();
   }
 
-  hasRole(role: string): boolean {
-    return this.currentUser()?.roles.includes(role) ?? false;
+  hasAuthority(authority: string): boolean {
+    return this.authorities().includes(authority);
   }
 
-  hasAuthority(authority: string): boolean {
-    return this.currentUser()?.authorities.includes(authority) ?? false;
+  /** Voldoet de gebruiker aan de eisen van een scherm of onderdeel (zie ACCESS)? */
+  can(access: Access | undefined): boolean {
+    return isSatisfied(access, this.authorities());
   }
 
   resetTotpState() {

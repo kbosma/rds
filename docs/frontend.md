@@ -20,7 +20,8 @@ De API-basis is `/api` (employee: `environment.apiUrl`; booker: harde `/api/...`
 
 ```
 core/
-  auth/      auth.service (signals, JWT-decode), auth.guard, auth.interceptor (Bearer + 401 → logout)
+  auth/      auth.service (signals, JWT-decode, authorities, can()), access (ACCESS: authorities per scherm),
+             auth.guard, authority.guard, auth.interceptor (Bearer + 401 → logout)
   i18n/      language.service (nl standaard, keuze in localStorage 'app-language'), translate-loader
   services/  api.service  (generieke CRUD: getAll/getById/create/update/delete)
 features/    één map per scherm-gebied (zie tabel)
@@ -48,11 +49,12 @@ translate-test.setup.spec.ts   # laadt de echte nl-vertalingen in alle specs
 | `admin` | organisaties (+ onboarding-wizard), personen, accounts, rollen, authorities, thema |
 | `profile` | mijn profiel, wachtwoord wijzigen, TOTP instellen/uitzetten |
 
-Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onder `authGuard` behalve `/login`).
+Routes staan in `app.routes.ts` (lazy `loadComponent`/`loadChildren`, alles onder `authGuard` behalve `/login`). Elke pagina behalve dashboard en 2FA-instellingen heeft ook `authorityGuard` met `data: { access: ACCESS.… }`; zonder recht ga je naar het dashboard met de melding `common.noAccess`. `app.routes.spec.ts` laat de build falen bij een route zonder guard.
 
 ### Conventies
 
-- **Authorities, geen rollen.** Menu-items en knoppen worden getoond op basis van `authService.hasAuthority('…')` (menu: `NavItem.authority`, string of lijst = "een van"). Er is nergens in de UI meer een rolcontrole: het dashboard kiest op `ORGANIZATION_READ` (beheer) en `ACCOUNT_CREATE` (manager), en de personen-/accountlijsten tonen organisaties met `ORGANIZATION_READ`. (`AuthService.hasRole` bestaat nog, maar wordt niet gebruikt.)
+- **Authorities, geen rollen.** Wat een scherm nodig heeft staat één keer in `core/auth/access.ts` (`ACCESS`, met `anyOf`/`allOf`); het menu (`NavItem.access`) en de route-guards lezen daaruit. Knoppen en kaarten gebruiken `authService.hasAuthority('…')` of `authService.can(ACCESS.…)`. `AuthService.authorities` is een signal, zodat alles opnieuw tekent bij een nieuw token. Er is geen `hasRole` meer; rolnamen komen alleen als tekst in beeld (welkomstkop, rolfilter in de accountlijst, die de rollen uit de lijst zelf haalt).
+- **Een kaart haalt alleen op wat mag.** Een kaart of dashboard die een eigen API-aanroep doet, toont zich en roept aan alleen met de bijbehorende authority (bijv. betalingen met `PAYMENT_READ`, documenten met `DOCUMENT_READ` in de boekingsdetails; de dashboards via `ACCESS.adminDashboard`/`managerDashboard`). Zo geeft een gedeeltelijke set rechten (eigen rol) nooit 403-fouten.
 - **Geen API-calls in componenten:** altijd via een service (`booking.service.ts`, …) die `ApiService` of `HttpClient` gebruikt.
 - **Signals + standalone:** state in `signal()`/`computed()`; `input()` voor component-inputs; formulieren zijn reactive forms (of `ngModel` in kleine dialogen). Velden die via `ngModel` veranderen horen niet in een `computed` (die ziet de wijziging niet): gebruik een methode of een signal.
 - **Dialogs:** Material dialogs; `ConfirmService.confirm()/confirmDelete()` (eigen dialoog) vervangt `window.confirm` **overal**; gebruik die ook voor nieuwe bevestigingen.
@@ -240,7 +242,7 @@ Lokaal bekijken zonder backend: een eigen proxy-config (`ng serve --proxy-config
 1. Model in `shared/models/` + export in `index.ts`.
 2. Service in de feature-map (gebruik `ApiService`).
 3. Component(en) standalone; route in `app.routes.ts` (lazy).
-4. Menu-item in `layout.component.ts` met de juiste **authority**.
+4. Een `ACCESS`-regel in `core/auth/access.ts`, een menu-item in `layout.component.ts` met `access: ACCESS.…` en de route met `canActivate: [authorityGuard], data: { access: ACCESS.… }`.
 5. Opbouw met de gedeelde klassen (`page-header`, `detail-card`, `row`, `actions`, …; zie *Design*), geen eigen kopieën ervan in het component.
 6. Vertalingen in `nl.json` en `en.json`.
 7. Spec-bestand naast het component; draai `ng test` en `ng build`.
