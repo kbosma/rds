@@ -39,9 +39,9 @@ public class Person {
     private String lastname;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id", nullable = false)
+    @JoinColumn(name = "tenant_organization", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Organization organization;
+    private Organization tenantOrganization;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -58,19 +58,19 @@ public class Person {
     protected Person() {
     }
 
-    public Person(UUID persoonId, String firstname, String prefix, String lastname, Organization organization) {
+    public Person(UUID persoonId, String firstname, String prefix, String lastname, Organization tenantOrganization) {
         this.persoonId = persoonId;
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
-        this.organization = organization;
+        this.tenantOrganization = tenantOrganization;
     }
 
-    public Person(String firstname, String prefix, String lastname, Organization organization) {
+    public Person(String firstname, String prefix, String lastname, Organization tenantOrganization) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
-        this.organization = organization;
+        this.tenantOrganization = tenantOrganization;
     }
 
     @PrePersist
@@ -101,8 +101,8 @@ public class Person {
         return lastname;
     }
 
-    public Organization getOrganization() {
-        return organization;
+    public Organization getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public LocalDateTime getCreatedAt() {

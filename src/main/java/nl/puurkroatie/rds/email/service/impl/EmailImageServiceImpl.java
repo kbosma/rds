@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.email.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import nl.puurkroatie.rds.booking.repository.DocumentTemplateRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.email.dto.EmailImageContentDto;
 import nl.puurkroatie.rds.email.dto.EmailImageDto;
@@ -76,7 +77,7 @@ public class EmailImageServiceImpl implements EmailImageService {
     @Override
     @Transactional(readOnly = true)
     public List<EmailImageListItemDto> findAll() {
-        List<EmailImageSummary> rows = TenantContext.hasRole("ADMIN")
+        List<EmailImageSummary> rows = TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN)
                 ? emailImageRepository.findAllByOrderByCreatedAtDesc()
                 : emailImageRepository.findByTenantOrganizationOrderByCreatedAtDesc(TenantContext.getOrganizationId());
         return rows.stream()
@@ -95,7 +96,7 @@ public class EmailImageServiceImpl implements EmailImageService {
     public void delete(UUID id) {
         EmailImage image = emailImageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("EmailImage not found with id: " + id));
-        if (!TenantContext.hasRole("ADMIN") && !image.getTenantOrganization().equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !image.getTenantOrganization().equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
         if (isUsedInTemplate(id, image.getTenantOrganization())) {

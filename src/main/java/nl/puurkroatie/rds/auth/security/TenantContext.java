@@ -8,7 +8,7 @@ public final class TenantContext {
 
     private static final ThreadLocal<UUID> ORGANIZATION_ID = new ThreadLocal<>();
     private static final ThreadLocal<UUID> ACCOUNT_ID = new ThreadLocal<>();
-    private static final ThreadLocal<Set<String>> ROLES = new ThreadLocal<>();
+    private static final ThreadLocal<Set<String>> AUTHORITIES = new ThreadLocal<>();
 
     private TenantContext() {
     }
@@ -29,22 +29,26 @@ public final class TenantContext {
         return ACCOUNT_ID.get();
     }
 
-    public static void setRoles(Set<String> roles) {
-        ROLES.set(Collections.unmodifiableSet(roles));
+    public static void setAuthorities(Set<String> authorities) {
+        AUTHORITIES.set(Collections.unmodifiableSet(authorities));
     }
 
-    public static Set<String> getRoles() {
-        Set<String> roles = ROLES.get();
-        return roles != null ? roles : Collections.emptySet();
+    public static Set<String> getAuthorities() {
+        Set<String> authorities = AUTHORITIES.get();
+        return authorities != null ? authorities : Collections.emptySet();
     }
 
-    public static boolean hasRole(String role) {
-        return getRoles().contains(role);
+    /**
+     * Voor de data-scope in services (bijv. {@link Authorities#PLATFORM_ADMIN}). Rolnamen worden bewust niet
+     * aangeboden: wat iemand mag, volgt uit zijn authorities, niet uit de naam van zijn rol.
+     */
+    public static boolean hasAuthority(String authority) {
+        return getAuthorities().contains(authority);
     }
 
     public static void clear() {
         ORGANIZATION_ID.remove();
         ACCOUNT_ID.remove();
-        ROLES.remove();
+        AUTHORITIES.remove();
     }
 }

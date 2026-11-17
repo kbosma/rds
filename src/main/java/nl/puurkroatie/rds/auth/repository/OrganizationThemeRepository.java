@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface OrganizationThemeRepository extends JpaRepository<OrganizationTheme, UUID> {
 
-    Optional<OrganizationTheme> findByOrganization_OrganizationId(UUID organizationId);
+    Optional<OrganizationTheme> findByTenantOrganization_OrganizationId(UUID organizationId);
 }

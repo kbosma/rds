@@ -77,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     TenantContext.setOrganizationId(jwtTokenProvider.getOrganizationId(token));
                     TenantContext.setAccountId(jwtTokenProvider.getAccountId(token));
-                    TenantContext.setRoles(new HashSet<>(jwtTokenProvider.getRoles(token)));
+                    TenantContext.setAuthorities(new HashSet<>(jwtTokenProvider.getAuthorities(token)));
                 }
             }
 

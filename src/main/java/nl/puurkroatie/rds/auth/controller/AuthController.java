@@ -15,6 +15,7 @@ import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
 import nl.puurkroatie.rds.auth.repository.RoleAuthorityRepository;
 import nl.puurkroatie.rds.auth.security.JwtTokenProvider;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.AccountService;
 import nl.puurkroatie.rds.auth.service.TotpService;
@@ -171,7 +172,7 @@ public class AuthController {
 
     private LoginResponseDto buildFullLoginResponse(Account account) {
         eventPublisher.publishEvent(new EmployeeLoggedInEvent(account.getAccountId(),
-                account.getPerson().getOrganization().getOrganizationId()));
+                account.getTenantOrganization()));
         List<AccountRole> accountRoles = accountRoleRepository.findByAccount(account);
 
         List<String> authorities = accountRoles.stream()
@@ -187,11 +188,11 @@ public class AuthController {
                 .toList();
 
         String personName = buildPersonName(account.getPerson());
-        String organizationName = account.getPerson().getOrganization().getName();
+        String organizationName = account.getPerson().getTenantOrganization().getName();
 
         String token = jwtTokenProvider.generateToken(
                 account.getAccountId(),
-                account.getPerson().getOrganization().getOrganizationId(),
+                account.getTenantOrganization(),
                 account.getPerson().getPersoonId(),
                 account.getUserName(),
                 personName,
@@ -200,12 +201,12 @@ public class AuthController {
                 roles);
 
         return new LoginResponseDto(token, account.getAccountId(),
-                account.getPerson().getOrganization().getOrganizationId(),
+                account.getTenantOrganization(),
                 account.getMustChangePassword());
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private String buildPersonName(Person person) {

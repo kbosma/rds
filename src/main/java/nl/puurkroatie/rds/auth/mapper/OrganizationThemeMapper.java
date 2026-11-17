@@ -11,11 +11,11 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface OrganizationThemeMapper {
 
-    @Mapping(target = "organizationId", source = "organization.organizationId")
+    @Mapping(target = "tenantOrganization", source = "tenantOrganization.organizationId")
     OrganizationThemeDto toDto(OrganizationTheme entity);
 
     @Mapping(target = "organizationThemeId", ignore = true)
-    @Mapping(target = "organization", ignore = true)
+    @Mapping(target = "tenantOrganization", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)

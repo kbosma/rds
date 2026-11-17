@@ -19,7 +19,7 @@ describe('OrganizationSettingsComponent', () => {
   let settingsSpy: jasmine.SpyObj<OrganizationSettingsService>;
 
   const settings: OrganizationSettings = {
-    organizationId: 'o-1', quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: null,
+    tenantOrganization: 'o-1', quoteDocumentTemplateId: 'dt-1', quoteEmailTemplateId: null,
     depositPercentage: 25, depositWeeksBeforeDeparture: 10, balanceWeeksBeforeDeparture: 4, paymentEmailTemplateId: 'et-1',
     modifiedAt: null, modifiedBy: null,
   };

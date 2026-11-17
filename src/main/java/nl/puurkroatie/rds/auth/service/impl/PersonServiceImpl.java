@@ -7,6 +7,7 @@ import nl.puurkroatie.rds.auth.mapper.PersonMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
 import nl.puurkroatie.rds.auth.repository.PersonRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.PersonService;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,15 +36,15 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonDto create(PersonDto dto) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             throw new AccessDeniedException("Access denied: employees cannot create persons");
         }
         UUID organizationId;
         if (isAdmin()) {
-            if (dto.getOrganizationId() == null) {
+            if (dto.getTenantOrganization() == null) {
                 throw new IllegalArgumentException("organizationId is required for admin");
             }
-            organizationId = dto.getOrganizationId();
+            organizationId = dto.getTenantOrganization();
         } else {
             organizationId = TenantContext.getOrganizationId();
         }
@@ -56,7 +57,7 @@ public class PersonServiceImpl implements PersonService {
     public PersonDto update(UUID id, PersonDto dto) {
         Person existing = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             UUID ownPersonId = accountRepository.findById(TenantContext.getAccountId())
                     .map(account -> account.getPerson().getPersoonId())
                     .orElseThrow(() -> new AccessDeniedException("Access denied"));
@@ -64,14 +65,14 @@ public class PersonServiceImpl implements PersonService {
                 throw new AccessDeniedException("Access denied: employees can only update their own person");
             }
         } else if (!isAdmin()) {
-            verifyOrganization(existing.getOrganization().getOrganizationId());
+            verifyOrganization(existing.getTenantOrganization().getOrganizationId());
         }
         Person entity = new Person(
                 id,
                 dto.getFirstname(),
                 dto.getPrefix(),
                 dto.getLastname(),
-                existing.getOrganization()
+                existing.getTenantOrganization()
         );
         Person saved = personRepository.save(entity);
         return personMapper.toDto(saved);
@@ -79,13 +80,13 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public void delete(UUID id) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             throw new AccessDeniedException("Access denied: employees cannot delete persons");
         }
         Person existing = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
         if (!isAdmin()) {
-            verifyOrganization(existing.getOrganization().getOrganizationId());
+            verifyOrganization(existing.getTenantOrganization().getOrganizationId());
         }
         personRepository.deleteById(id);
     }
@@ -98,13 +99,13 @@ public class PersonServiceImpl implements PersonService {
                     .map(personMapper::toDto)
                     .toList();
         }
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             return accountRepository.findById(TenantContext.getAccountId())
                     .map(account -> personMapper.toDto(account.getPerson()))
                     .map(List::of)
                     .orElse(List.of());
         }
-        return personRepository.findByOrganizationOrganizationId(TenantContext.getOrganizationId()).stream()
+        return personRepository.findByTenantOrganizationOrganizationId(TenantContext.getOrganizationId()).stream()
                 .map(personMapper::toDto)
                 .toList();
     }
@@ -112,22 +113,22 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public Optional<PersonDto> findById(UUID id) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             return accountRepository.findById(TenantContext.getAccountId())
                     .filter(account -> account.getPerson().getPersoonId().equals(id))
                     .map(account -> personMapper.toDto(account.getPerson()));
         }
         return personRepository.findById(id)
-                .filter(person -> isAdmin() || person.getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
+                .filter(person -> isAdmin() || person.getTenantOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
                 .map(personMapper::toDto);
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
-    private boolean isEmployee() {
-        return TenantContext.hasRole("EMPLOYEE") && !TenantContext.hasRole("MANAGER") && !TenantContext.hasRole("ADMIN");
+    private boolean isLimitedToOwnData() {
+        return !TenantContext.hasAuthority(Authorities.USER_SCOPE_ORGANIZATION);
     }
 
     private void verifyOrganization(UUID organizationId) {

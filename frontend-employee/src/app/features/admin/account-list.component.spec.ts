@@ -46,8 +46,8 @@ describe('AccountListComponent', () => {
         { provide: ConfirmService, useValue: confirmSpy },
         // account-list verrijkt via forkJoin met personen, organisaties en account-rollen
         { provide: PersonService, useValue: { getAll: () => of([
-          { persoonId: 'p-1', firstname: 'Jan', prefix: 'de', lastname: 'Vries', organizationId: 'o-1' },
-          { persoonId: 'p-2', firstname: 'Piet', prefix: '', lastname: 'Jansen', organizationId: 'o-1' },
+          { persoonId: 'p-1', firstname: 'Jan', prefix: 'de', lastname: 'Vries', tenantOrganization: 'o-1' },
+          { persoonId: 'p-2', firstname: 'Piet', prefix: '', lastname: 'Jansen', tenantOrganization: 'o-1' },
         ]) } },
         { provide: OrganizationService, useValue: { getAll: () => of([
           { organizationId: 'o-1', name: 'Puur Kroatië' },

@@ -45,6 +45,10 @@ public class Account {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Person person;
 
+    /** Altijd gelijk aan de organisatie van de persoon; de database dwingt dat af (V22). */
+    @Column(name = "tenant_organization", nullable = false)
+    private UUID tenantOrganization;
+
     @Column(name = "locked", nullable = false)
     private Boolean locked;
 
@@ -108,6 +112,7 @@ public class Account {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.createdBy = TenantContext.getAccountId();
+        this.tenantOrganization = person.getTenantOrganization().getOrganizationId();
         if (this.locked == null) {
             this.locked = false;
         }
@@ -129,6 +134,7 @@ public class Account {
     protected void onUpdate() {
         this.modifiedAt = LocalDateTime.now();
         this.modifiedBy = TenantContext.getAccountId();
+        this.tenantOrganization = person.getTenantOrganization().getOrganizationId();
         if (this.password != null) {
             this.passwordHash = PASSWORD_ENCODER.encode(this.password);
         }
@@ -152,6 +158,10 @@ public class Account {
 
     public Person getPerson() {
         return person;
+    }
+
+    public UUID getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public Boolean getLocked() {

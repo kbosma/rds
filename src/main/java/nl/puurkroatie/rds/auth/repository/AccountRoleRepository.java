@@ -12,5 +12,5 @@ public interface AccountRoleRepository extends JpaRepository<AccountRole, Accoun
 
     List<AccountRole> findByAccount(Account account);
 
-    List<AccountRole> findByAccountPersonOrganizationOrganizationId(UUID organizationId);
+    List<AccountRole> findByAccountTenantOrganization(UUID tenantOrganization);
 }

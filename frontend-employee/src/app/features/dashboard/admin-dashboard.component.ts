@@ -136,7 +136,7 @@ export class AdminDashboardComponent implements OnInit {
         const roleMap = new Map(roles.map(r => [r.roleId, r.description]));
 
         // Map personId → organizationId
-        const personOrgMap = new Map(persons.map(p => [p.persoonId, p.organizationId]));
+        const personOrgMap = new Map(persons.map(p => [p.persoonId, p.tenantOrganization]));
 
         // Map accountId → organizationId (via person)
         const accountOrgMap = new Map<string, string>();
@@ -147,7 +147,7 @@ export class AdminDashboardComponent implements OnInit {
 
         // Build org overviews
         const overviews: OrgOverview[] = organizations.map(org => {
-          const personCount = persons.filter(p => p.organizationId === org.organizationId).length;
+          const personCount = persons.filter(p => p.tenantOrganization === org.organizationId).length;
           const accountCount = accounts.filter(a => personOrgMap.get(a.personId) === org.organizationId).length;
 
           // Count roles for this org's accounts

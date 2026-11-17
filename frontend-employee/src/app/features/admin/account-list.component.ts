@@ -226,7 +226,7 @@ export class AccountListComponent implements OnInit {
 
         this.allAccounts = accounts.map(a => {
           const person = personMap.get(a.personId);
-          const orgId = person?.organizationId || '';
+          const orgId = person?.tenantOrganization || '';
           const personName = person
             ? `${person.firstname} ${person.prefix ? person.prefix + ' ' : ''}${person.lastname}`
             : a.personId;

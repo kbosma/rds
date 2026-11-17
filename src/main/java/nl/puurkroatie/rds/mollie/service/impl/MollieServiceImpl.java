@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.mollie.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.common.PaymentLockedException;
 import nl.puurkroatie.rds.mollie.dto.MolliePaymentDto;
@@ -146,7 +147,7 @@ public class MollieServiceImpl implements MollieService {
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private void verifyOrganization(UUID organizationId) {

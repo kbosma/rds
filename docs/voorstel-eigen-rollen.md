@@ -1,6 +1,6 @@
 # Voorstel: eigen rollen per organisatie
 
-Status: **ontwerp, nog niet gebouwd; alle open vragen beantwoord (§11).** Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar
+Status: **fase 0 en 1 gebouwd (V22, V23); fase 2 t/m 5 nog niet. Alle open vragen zijn beantwoord (§11).** Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar
 authorities aan kan hangen. Het scherm toont of verbergt dan per gebruiker alles op basis van zijn authorities.
 
 Samengevat:
@@ -655,6 +655,12 @@ organisatie geeft `404`, geen `403`: zo lekt er niets.
 ## 9. Fasering
 
 Elke fase is los op te leveren en te testen.
+
+| Fase | Status |
+|---|---|
+| 0. Opschonen | **Gebouwd** (V22): `tenant_organization` in `person`, `organization_settings`, `organization_theme` en `account` (met samengestelde FK naar de persoon); auditvelden voor `role`, `role_authority` en de koppeltabellen. Deze vier tabellen houden `ON DELETE CASCADE`: een lege organisatie neemt haar personen, accounts, huisstijl en instellingen mee; `OrganizationDeletionGuard` telt alleen de `RESTRICT`-tabellen. |
+| 1. Data-scope op authorities | **Gebouwd** (V23): `PLATFORM_ADMIN` en `USER_SCOPE_ORGANIZATION`; `TenantContext.hasAuthority`, geen `hasRole` meer (`NoRoleNameChecksTest`). |
+| 2 t/m 5 | Nog niet gebouwd |
 
 ```mermaid
 flowchart LR

@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.docgen.service.impl;
 
 import nl.puurkroatie.rds.booking.repository.BookingMolliePaymentRepository;
 import nl.puurkroatie.rds.mollie.repository.MolliePaymentStatusEntryRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.entity.Booker;
 import nl.puurkroatie.rds.booking.entity.BookerStatus;
@@ -68,7 +69,7 @@ class BookingContextServiceImplTest {
         service = new BookingContextServiceImpl(bookingRepository, bookerRepository, bookerAddressRepository,
                 accommodationAddressRepository, supplierAddressRepository, bookingMolliePaymentRepository, statusEntryRepository);
         TenantContext.setOrganizationId(ORG);
-        TenantContext.setRoles(Set.of("MANAGER"));
+        TenantContext.setAuthorities(Set.of(Authorities.USER_SCOPE_ORGANIZATION));
     }
 
     @AfterEach
@@ -116,7 +117,7 @@ class BookingContextServiceImplTest {
 
     @Test
     void forBooker_admin_mayReadAnyOrganisation() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         when(bookerRepository.findById(BOOKER_ID)).thenReturn(Optional.of(booker(OTHER_ORG)));
         when(bookerAddressRepository.findByBookerBookerId(BOOKER_ID)).thenReturn(List.of());
 

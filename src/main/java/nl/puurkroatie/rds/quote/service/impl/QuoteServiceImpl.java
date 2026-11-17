@@ -1,6 +1,7 @@
 package nl.puurkroatie.rds.quote.service.impl;
 
 import nl.puurkroatie.rds.bookingstatus.service.BookingStatusRecorder;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
@@ -100,7 +101,7 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     private void verifyOrganization(UUID organizationId) {
-        if (!TenantContext.hasRole("ADMIN") && !organizationId.equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
     }

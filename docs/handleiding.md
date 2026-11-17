@@ -299,7 +299,7 @@ Een BOOKER-token werkt **niet** op `/api/bookings` e.d., en omgekeerd werkt een 
 ### 2.8 Tenant-isolatie (organisatiegrenzen)
 
 - Elke tenant-entiteit heeft een onveranderlijke `tenant_organization`; die wordt bij het aanmaken gevuld uit de ingelogde organisatie.
-- **Services** filteren: ADMIN ziet alles, MANAGER en EMPLOYEE alleen de eigen organisatie. Een resource van een andere organisatie geeft `403` (of `404`).
+- **Services** filteren op authorities: met `PLATFORM_ADMIN` (ADMIN) zie je alles, anderen alleen de eigen organisatie; personen en accounts van de hele organisatie alleen met `USER_SCOPE_ORGANIZATION` (MANAGER), anders alleen het eigen. Een resource van een andere organisatie geeft `403` (of `404`).
 - Verwijzingen worden óók gecontroleerd: je kunt geen boeker, accommodatie of boeking van een andere organisatie aan je eigen gegevens hangen.
 - **Rollen en authorities zijn globaal**, niet per organisatie. Wijzig je in *Rollen* welke authorities `EMPLOYEE` heeft, dan geldt dat voor *alle* organisaties tegelijk.
 - Bewuste uitzondering: e-mailafbeeldingen worden publiek uitgeleverd via een onraadbare UUID (een ontvanger heeft geen login).

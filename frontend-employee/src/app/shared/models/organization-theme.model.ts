@@ -1,6 +1,6 @@
 export interface OrganizationTheme {
   organizationThemeId: string;
-  organizationId: string;
+  tenantOrganization: string;
   primaryColor: string;
   accentColor: string;
   logoUrl: string | null;

@@ -11,6 +11,7 @@ import nl.puurkroatie.rds.auth.mapper.RoleMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
 import nl.puurkroatie.rds.auth.repository.RoleRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,7 @@ public class AccountRoleService {
     public List<AccountRoleResponseDto> findAll() {
         List<AccountRole> accountRoles = isAdmin()
                 ? accountRoleRepository.findAll()
-                : accountRoleRepository.findByAccountPersonOrganizationOrganizationId(TenantContext.getOrganizationId());
+                : accountRoleRepository.findByAccountTenantOrganization(TenantContext.getOrganizationId());
         return accountRoles.stream().map(accountRoleMapper::toDto).toList();
     }
 
@@ -71,7 +72,7 @@ public class AccountRoleService {
     @Transactional(readOnly = true)
     public Optional<AccountRoleResponseDto> findById(UUID accountId, UUID roleId) {
         return accountRoleRepository.findById(new AccountRoleId(accountId, roleId))
-                .filter(ar -> isAdmin() || ar.getAccount().getPerson().getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
+                .filter(ar -> isAdmin() || ar.getAccount().getTenantOrganization().equals(TenantContext.getOrganizationId()))
                 .map(accountRoleMapper::toDto);
     }
 
@@ -81,7 +82,7 @@ public class AccountRoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
         if (!isAdmin()) {
-            verifyOrganization(account.getPerson().getOrganization().getOrganizationId());
+            verifyOrganization(account.getTenantOrganization());
             verifyRoleManageable(role);
         }
         return accountRoleMapper.toDto(accountRoleRepository.save(new AccountRole(account, role)));
@@ -91,14 +92,14 @@ public class AccountRoleService {
         if (!isAdmin()) {
             AccountRole existing = accountRoleRepository.findById(new AccountRoleId(accountId, roleId))
                     .orElseThrow(() -> new RuntimeException("AccountRole not found"));
-            verifyOrganization(existing.getAccount().getPerson().getOrganization().getOrganizationId());
+            verifyOrganization(existing.getAccount().getTenantOrganization());
             verifyRoleManageable(existing.getRole());
         }
         accountRoleRepository.deleteById(new AccountRoleId(accountId, roleId));
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private void verifyRoleManageable(Role role) {

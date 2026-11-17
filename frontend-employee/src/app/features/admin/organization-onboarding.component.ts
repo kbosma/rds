@@ -291,7 +291,7 @@ export class OrganizationOnboardingComponent {
 
     const personData = {
       ...this.personForm.value,
-      organizationId: this.createdOrganizationId,
+      tenantOrganization: this.createdOrganizationId,
     };
 
     this.personService.create(personData as any).subscribe({

@@ -11,7 +11,7 @@ De waarheid is het Flyway-schema in `src/main/resources/db/migration` (V1 basiss
 
 - **Primary keys**: UUID, auto-gegenereerd (`@GeneratedValue(strategy = GenerationType.UUID)`)
 - **Naamgeving**: snake_case in database, camelCase in Java
-- **Multi-tenancy**: Entiteiten met `tenant_organization` kolom worden gefilterd op organisatie via `TenantContext`. Sinds V21 is `tenant_organization` overal een foreign key naar `organization` met `ON DELETE RESTRICT` en een index
+- **Multi-tenancy**: Entiteiten met `tenant_organization` kolom worden gefilterd op organisatie via `TenantContext`. Sinds V21 is `tenant_organization` overal een foreign key naar `organization`: voor bedrijfsgegevens met `ON DELETE RESTRICT`, voor de gegevens van de organisatie zelf (`person`, `account`, `organization_theme`, `organization_settings`, V22) met `ON DELETE CASCADE`; overal met een index
 - **Audit fields**: `created_at`, `created_by`, `modified_at`, `modified_by` — automatisch gezet via `@PrePersist`/`@PreUpdate`
 - **Enums**: Opgeslagen als `STRING` (`@Enumerated(EnumType.STRING)`), JSON-serialisatie in lowercase via `@JsonValue`/`@JsonCreator` (parsing via `EnumValues.parse`, hoofdletterongevoelig, foutmelding met toegestane waarden). In het template-model (documenten/e-mail) is een enum de hoofdletter-naam
 - **Relaties**: Altijd `FetchType.LAZY`
@@ -59,7 +59,7 @@ Huisstijl per organisatie (één rij per organisatie). De UI gebruikt de kleuren
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | organization_theme_id | UUID | PK | |
-| organization_id | UUID | FK → organization, NOT NULL, **UNIQUE** | Organisatie |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, **UNIQUE** | Organisatie (heette `organization_id` tot V22) |
 | primary_color | VARCHAR(7) | NOT NULL | bv. `#1976d2` |
 | accent_color | VARCHAR(7) | NOT NULL | |
 | logo_url | VARCHAR(500) | | |
@@ -77,7 +77,7 @@ Instellingen per organisatie (één rij per organisatie), nodig om het systeem z
 | Kolom | Type | Constraints | Omschrijving |
 |-------|------|-------------|--------------|
 | organization_settings_id | UUID | PK | |
-| organization_id | UUID | FK → organization ON DELETE CASCADE, NOT NULL, **UNIQUE** | Organisatie |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, **UNIQUE** | Organisatie (heette `organization_id` tot V22) |
 | quote_document_template_id | UUID | FK → document_template ON DELETE SET NULL | Word-template van de offerte |
 | quote_email_template_id | UUID | FK → email_template ON DELETE SET NULL | e-mail die de offerte begeleidt |
 | deposit_percentage | INTEGER | NOT NULL, default 30, CHECK 1–100 (V19) | voorschot als percentage van het totaal |
@@ -100,7 +100,7 @@ Persoon, gekoppeld aan een organisatie.
 | firstname | VARCHAR | | Voornaam |
 | prefix | VARCHAR | | Tussenvoegsel |
 | lastname | VARCHAR | | Achternaam |
-| organization_id | UUID | FK → organization, NOT NULL | Organisatie |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, index; UNIQUE (person_id, tenant_organization) | Organisatie (heette `organization_id` tot V22) |
 | created_at | TIMESTAMP | NOT NULL, immutable | |
 | created_by | UUID | immutable | |
 | modified_at | TIMESTAMP | | |
@@ -134,6 +134,7 @@ Gebruikersaccount met login-gegevens en optionele TOTP 2FA.
 | user_name | VARCHAR | NOT NULL | Gebruikersnaam |
 | password_hash | VARCHAR | NOT NULL | BCrypt hash |
 | person_id | UUID | FK → person, NOT NULL | Gekoppelde persoon |
+| tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, index; FK (person_id, tenant_organization) → person ON UPDATE/DELETE CASCADE (V22) | Altijd gelijk aan de organisatie van de persoon |
 | locked | BOOLEAN | NOT NULL | Account vergrendeld |
 | must_change_password | BOOLEAN | NOT NULL | Wachtwoord wijzigen verplicht |
 | totp_secret | VARCHAR | | TOTP geheim (base32) |
@@ -178,6 +179,7 @@ Rol voor RBAC.
 |-------|------|-------------|--------------|
 | role_id | UUID | PK, auto-generated | |
 | description | VARCHAR | NOT NULL | Rolnaam |
+| created_at / created_by / modified_at / modified_by | | created_at NOT NULL (V22) | audit |
 
 **Backend bestanden:**
 - Entity: `auth/entity/Role.java`
@@ -248,6 +250,7 @@ Koppeling Role ↔ Authority (many-to-many).
 |-------|------|-------------|--------------|
 | role_id | UUID | PK (composite), FK → role, NOT NULL | |
 | authority_id | UUID | PK (composite), FK → authority, NOT NULL | |
+| created_at / created_by | | created_at NOT NULL (V22) | wie de koppeling wanneer maakte; een koppeling wijzigt nooit |
 
 **Backend bestanden:**
 - Entity: `auth/entity/RoleAuthority.java`
@@ -705,6 +708,7 @@ Koppeling Booker ↔ Address.
 |-------|------|-------------|--------------|
 | booker_id | UUID | PK (composite), FK → booker, NOT NULL | |
 | address_id | UUID | PK (composite), FK → address, NOT NULL | |
+| created_at / created_by | | created_at NOT NULL (V22) | wie de koppeling wanneer maakte; een koppeling wijzigt nooit |
 
 **Backend bestanden:**
 - Entity: `booking/entity/BookerAddress.java`
@@ -728,6 +732,7 @@ Koppeling Accommodation ↔ Address.
 |-------|------|-------------|--------------|
 | accommodation_id | UUID | PK (composite), FK → accommodation, NOT NULL | |
 | address_id | UUID | PK (composite), FK → address, NOT NULL | |
+| created_at / created_by | | created_at NOT NULL (V22) | wie de koppeling wanneer maakte; een koppeling wijzigt nooit |
 
 **Backend bestanden:**
 - Entity: `booking/entity/AccommodationAddress.java`
@@ -756,6 +761,7 @@ Koppeling Accommodation ↔ Supplier.
 |-------|------|-------------|--------------|
 | accommodation_id | UUID | PK (composite), FK → accommodation, NOT NULL | |
 | supplier_id | UUID | PK (composite), FK → supplier, NOT NULL | |
+| created_at / created_by | | created_at NOT NULL (V22) | wie de koppeling wanneer maakte; een koppeling wijzigt nooit |
 
 **Backend bestanden:**
 - Entity: `booking/entity/AccommodationSupplier.java`
@@ -784,6 +790,7 @@ Koppeling Supplier ↔ Address.
 |-------|------|-------------|--------------|
 | supplier_id | UUID | PK (composite), FK → supplier, NOT NULL | |
 | address_id | UUID | PK (composite), FK → address, NOT NULL | |
+| created_at / created_by | | created_at NOT NULL (V22) | wie de koppeling wanneer maakte; een koppeling wijzigt nooit |
 
 **Backend bestanden:**
 - Entity: `booking/entity/SupplierAddress.java`
@@ -862,6 +869,7 @@ Koppeling Booking ↔ MolliePayment.
 |-------|------|-------------|--------------|
 | booking_id | UUID | PK (composite), FK → booking, NOT NULL | |
 | mollie_payment_id | UUID | PK (composite), FK → mollie_payment, NOT NULL, UNIQUE | |
+| created_at / created_by | | created_at NOT NULL (V22) | wie de koppeling wanneer maakte; een koppeling wijzigt nooit |
 
 Een koppeling wordt nooit losgemaakt (V12: triggers weigeren `DELETE`/`TRUNCATE`); `mollie_payment_id` is onveranderlijk en `booking_id` wijzigt alleen via een herkoppeling met reden (zie hieronder).
 

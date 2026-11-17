@@ -13,7 +13,7 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     Optional<Account> findByUserName(String userName);
 
-    List<Account> findByPersonOrganizationOrganizationId(UUID organizationId);
+    List<Account> findByTenantOrganization(UUID tenantOrganization);
 
     @Modifying
     @Query("UPDATE Account a SET a.passwordHash = :passwordHash, a.mustChangePassword = false WHERE a.accountId = :accountId")

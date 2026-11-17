@@ -52,7 +52,7 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
         OrganizationSettings choices = new OrganizationSettings(organizationId, dto.quoteDocumentTemplateId(),
                 dto.quoteEmailTemplateId(), dto.depositPercentage(), dto.depositWeeksBeforeDeparture(),
                 dto.balanceWeeksBeforeDeparture(), dto.paymentEmailTemplateId());
-        OrganizationSettings settings = settingsRepository.findByOrganizationId(organizationId)
+        OrganizationSettings settings = settingsRepository.findByTenantOrganization(organizationId)
                 .map(existing -> existing.withChoicesOf(choices))
                 .orElse(choices);
         return mapper.toDto(settingsRepository.save(settings));
@@ -61,7 +61,7 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
     @Override
     @Transactional(readOnly = true)
     public OrganizationSettings forOrganization(UUID organizationId) {
-        return settingsRepository.findByOrganizationId(organizationId)
+        return settingsRepository.findByTenantOrganization(organizationId)
                 .orElseGet(() -> OrganizationSettings.defaults(organizationId));
     }
 

@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface PersonRepository extends JpaRepository<Person, UUID> {
 
-    List<Person> findByOrganizationOrganizationId(UUID organizationId);
+    List<Person> findByTenantOrganizationOrganizationId(UUID organizationId);
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Transactional
 class TenantOrganizationForeignKeyTest {
+
+    /**
+     * Gegevens van de organisatie zelf: die gaan mee als een (lege) organisatie wordt verwijderd (ON DELETE CASCADE).
+     * Alle andere tenant-tabellen zijn bedrijfsgegevens en houden het verwijderen tegen (ON DELETE RESTRICT).
+     */
+    private static final Set<String> OWNED_BY_THE_ORGANIZATION =
+            Set.of("person", "account", "organization_theme", "organization_settings");
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -60,9 +68,10 @@ class TenantOrganizationForeignKeyTest {
                         row -> row.get("on_delete") + "/" + row.get("convalidated")));
 
         for (String table : tenantTables) {
-            // 'r' = ON DELETE RESTRICT; true = bestaande rijen zijn gevalideerd (geen NOT VALID)
-            assertEquals("r/true", foreignKeys.get(table),
-                    table + ".tenant_organization mist een gevalideerde foreign key met ON DELETE RESTRICT naar organization");
+            // 'r' = ON DELETE RESTRICT, 'c' = CASCADE; true = bestaande rijen zijn gevalideerd (geen NOT VALID)
+            String expected = OWNED_BY_THE_ORGANIZATION.contains(table) ? "c/true" : "r/true";
+            assertEquals(expected, foreignKeys.get(table),
+                    table + ".tenant_organization mist een gevalideerde foreign key (" + expected + ") naar organization");
         }
     }
 
@@ -86,10 +95,40 @@ class TenantOrganizationForeignKeyTest {
     @Test
     void anOrganizationWithOnlyAPerson_canStillBeDeleted_andTakesThePersonAlong() {
         String org = newOrganization();
-        jdbc.update("INSERT INTO person (person_id, firstname, lastname, organization_id, created_at) "
+        jdbc.update("INSERT INTO person (person_id, firstname, lastname, tenant_organization, created_at) "
                 + "VALUES (gen_random_uuid(), 'Jan', 'Mens', ?::uuid, now())", org);
 
         assertEquals(1, jdbc.update("DELETE FROM organization WHERE organization_id = ?::uuid", org));
-        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM person WHERE organization_id = ?::uuid", Integer.class, org));
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM person WHERE tenant_organization = ?::uuid", Integer.class, org));
+    }
+
+    @Test
+    void anAccountAlwaysBelongsToTheOrganizationOfItsPerson() {
+        String own = newOrganization();
+        String other = newOrganization();
+        String person = jdbc.queryForObject("INSERT INTO person (person_id, firstname, lastname, tenant_organization, created_at) "
+                + "VALUES (gen_random_uuid(), 'Jan', 'Mens', ?::uuid, now()) RETURNING person_id::text", String.class, own);
+
+        DataIntegrityViolationException ex = assertThrows(DataIntegrityViolationException.class,
+                () -> jdbc.update("INSERT INTO account (account_id, user_name, password_hash, person_id, locked, must_change_password, "
+                        + "totp_enabled, totp_verified, created_at, tenant_organization) "
+                        + "VALUES (gen_random_uuid(), 'fk.test', 'x', ?::uuid, false, false, false, false, now(), ?::uuid)", person, other));
+        assertTrue(ex.getMessage().contains("fk_account_person_tenant_organization"), ex.getMessage());
+    }
+
+    @Test
+    void whenAPersonMovesToAnotherOrganization_hisAccountsMoveAlong() {
+        String own = newOrganization();
+        String other = newOrganization();
+        String person = jdbc.queryForObject("INSERT INTO person (person_id, firstname, lastname, tenant_organization, created_at) "
+                + "VALUES (gen_random_uuid(), 'Jan', 'Mens', ?::uuid, now()) RETURNING person_id::text", String.class, own);
+        jdbc.update("INSERT INTO account (account_id, user_name, password_hash, person_id, locked, must_change_password, "
+                + "totp_enabled, totp_verified, created_at, tenant_organization) "
+                + "VALUES (gen_random_uuid(), 'fk.test', 'x', ?::uuid, false, false, false, false, now(), ?::uuid)", person, own);
+
+        jdbc.update("UPDATE person SET tenant_organization = ?::uuid WHERE person_id = ?::uuid", other, person);
+
+        assertEquals(other, jdbc.queryForObject("SELECT tenant_organization::text FROM account WHERE person_id = ?::uuid",
+                String.class, person));
     }
 }

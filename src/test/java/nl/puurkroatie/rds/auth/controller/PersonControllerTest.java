@@ -50,7 +50,7 @@ class PersonControllerTest extends AbstractAuthControllerTest {
 
         JsonNode persons = objectMapper.readTree(response);
         for (JsonNode person : persons) {
-            assert person.get("organizationId").asText().equals(ORG_TECHPARTNER_ID.toString())
+            assert person.get("tenantOrganization").asText().equals(ORG_TECHPARTNER_ID.toString())
                     : "Manager should only see persons from own organization";
         }
     }
@@ -68,7 +68,7 @@ class PersonControllerTest extends AbstractAuthControllerTest {
                         .content(personJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstname").value("Test"))
-                .andExpect(jsonPath("$.organizationId").value(ORG_TECHPARTNER_ID.toString()));
+                .andExpect(jsonPath("$.tenantOrganization").value(ORG_TECHPARTNER_ID.toString()));
     }
 
     // Test 14: MANAGER: POST /api/persons met foreign orgId — orgId wordt genegeerd, 201 met eigen org
@@ -77,14 +77,14 @@ class PersonControllerTest extends AbstractAuthControllerTest {
         String token = managerToken();
 
         String personJson = "{\"firstname\":\"Test\",\"prefix\":null,\"lastname\":\"Medewerker\"," +
-                "\"organizationId\":\"" + ORG_PUURKROATIE_ID + "\"}";
+                "\"tenantOrganization\":\"" + ORG_PUURKROATIE_ID + "\"}";
 
         mockMvc.perform(post("/api/persons")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(personJson))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.organizationId").value(ORG_TECHPARTNER_ID.toString()));
+                .andExpect(jsonPath("$.tenantOrganization").value(ORG_TECHPARTNER_ID.toString()));
     }
 
     // Test 15: EMPLOYEE: GET /api/persons — alleen eigen person (1 resultaat)

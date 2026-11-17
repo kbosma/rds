@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.email.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.docgen.context.BookerContext;
 import nl.puurkroatie.rds.docgen.context.BookingContext;
@@ -51,7 +52,7 @@ class EmailRenderServiceImplTest {
     void setUp() {
         service = new EmailRenderServiceImpl(emailTemplateRepository, bookingContextService);
         TenantContext.setOrganizationId(ORG);
-        TenantContext.setRoles(Set.of("EMPLOYEE"));
+        TenantContext.setAuthorities(Set.of());
     }
 
     @AfterEach
@@ -79,7 +80,7 @@ class EmailRenderServiceImplTest {
     @Test
     void render_mergesProspectFieldsIntoSubjectAndBody() {
         // Als ADMIN draaien zodat de tenant-check van de (tenantloze) test-template slaagt.
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         stub("Welkom ${prospect.firstname}", "<p>Beste ${prospect.fullName}</p>", "Jan", "Vries");
 
         EmailRenderDto result = service.render(lastTemplateId, lastBookerId);
@@ -90,7 +91,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void render_escapesHtmlInBodyButNotInSubject() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         stub("Beste ${prospect.lastname}", "<p>${prospect.lastname}</p>", "Jan", "Vries & Co");
 
         EmailRenderDto result = service.render(lastTemplateId, lastBookerId);
@@ -104,7 +105,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void render_unknownPlaceholder_throwsFriendlyException() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         // 'fullname' (kleine n) bestaat niet; de getter is getFullName() -> ${prospect.fullName}
         stub("Welkom", "<p>${prospect.fullname}</p>", "Jan", "Vries");
 
@@ -142,7 +143,7 @@ class EmailRenderServiceImplTest {
             "<#import \"/etc/passwd\" as p>"
     })
     void render_maliciousTemplate_isRejectedInBodyAndSubject(String payload) {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
 
         stub("Onderwerp", payload, "Jan", "Vries");
         TemplateRenderException inBody = assertThrows(TemplateRenderException.class,
@@ -159,7 +160,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void render_includeAndImport_giveAClearAuthorMessage() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         stub("Onderwerp", "<#include \"/etc/passwd\">", "Jan", "Vries");
 
         TemplateRenderException ex = assertThrows(TemplateRenderException.class,
@@ -170,7 +171,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void render_afterHardening_normalPropertiesStillWork() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         UUID templateId = UUID.randomUUID();
         UUID bookerId = UUID.randomUUID();
         when(emailTemplateRepository.findById(templateId)).thenReturn(Optional.of(new EmailTemplate(
@@ -208,7 +209,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void renderForBooking_hasTheBookingAndTheRecipientAsProspect() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         UUID templateId = stubBookingTemplate("Boeking ${booking.bookingNumber}",
                 "<p>Beste ${prospect.fullName}, uw boeking ${booking.bookingNumber} (${booking.booker.firstname}) is ${booking.bookingStatus}.</p>",
                 booking(JAN));
@@ -222,7 +223,7 @@ class EmailRenderServiceImplTest {
     @Test
     void renderForBooking_aTemplateForProspectsAlsoWorksForABooking() {
         // Eén template voor beide doelen: ${prospect.*} is de ontvanger.
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         UUID templateId = stubBookingTemplate("Hallo ${prospect.firstname}", "<p>${prospect.fullName}</p>", booking(JAN));
 
         EmailRenderDto result = service.renderForBooking(templateId, BOOKING_ID);
@@ -233,7 +234,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void renderForBooking_repeatedTableBecomesOneRowPerTraveler() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         String html = "<table data-repeat=\"booking.travelers\" data-item=\"t\"><tbody>"
                 + "<tr><th>Naam</th></tr>"
                 + "<tr><td>${t.firstname} ${t.lastname}</td></tr></tbody></table>";
@@ -250,7 +251,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void renderForBooking_repeatedTableWithNoItemsKeepsOnlyTheHeader() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         String html = "<table data-repeat=\"booking.travelers\" data-item=\"t\"><tbody>"
                 + "<tr><th>Naam</th></tr><tr><td>${t.firstname}</td></tr></tbody></table>";
         UUID templateId = stubBookingTemplate("S", html, booking(JAN));
@@ -262,7 +263,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void renderForBooking_aRepeatedTableCannotSmuggleADirective() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         String html = "<table data-repeat=\"booking.travelers as x><#assign y=1><#list booking.travelers\" data-item=\"t\"><tbody>"
                 + "<tr><td>${t.firstname}</td></tr></tbody></table>";
         UUID templateId = stubBookingTemplate("S", html, booking(JAN));
@@ -275,7 +276,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void renderForBooking_aBookingWithoutMainBookerGivesAClearMessageForProspectPlaceholders() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         UUID templateId = stubBookingTemplate("S", "<p>${prospect.firstname}</p>", booking(null));
 
         TemplateRenderException ex = assertThrows(TemplateRenderException.class,
@@ -286,7 +287,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void render_forAProspect_hasNoBookingPlaceholders() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         stub("S", "<p>${booking.bookingNumber}</p>", "Jan", "Vries");
 
         TemplateRenderException ex = assertThrows(TemplateRenderException.class,
@@ -297,7 +298,7 @@ class EmailRenderServiceImplTest {
 
     @Test
     void renderForBooking_theBookingModelIsAsHardenedAsTheProspectModel() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         UUID templateId = stubBookingTemplate("S", "${booking.class}", booking(JAN));
 
         assertThrows(TemplateRenderException.class, () -> service.renderForBooking(templateId, BOOKING_ID));
@@ -306,7 +307,7 @@ class EmailRenderServiceImplTest {
     @Test
     void renderForBooking_aMoneyAmountWithAFormat_alwaysHasTwoDecimals() {
         // Dit is wat de editor voor "Totaalbedrag" invoegt; zonder opmaak toont FreeMarker 1250.00 als "1.250".
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         UUID templateId = stubBookingTemplate("S", "<p>${booking.totalSum?string(\"#,##0.00\")}</p>", booking(JAN));
 
         String body = service.renderForBooking(templateId, BOOKING_ID).getBodyHtml();
