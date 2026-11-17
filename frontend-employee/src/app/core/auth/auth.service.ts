@@ -1,9 +1,10 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { finalize, map, Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginResponse, TokenPayload, TotpSetupResponse } from '../../shared/models';
+import { Access, isSatisfied } from './access';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -33,6 +34,14 @@ export class AuthService {
       authorities: payload.authorities ?? [],
     };
   });
+
+  /**
+   * De authorities van de ingelogde gebruiker. Een signal: alles wat ervan afhangt (computed, @if in een template)
+   * tekent opnieuw zodra er een nieuw token is. Zichtbaarheid hangt altijd aan authorities, nooit aan rolnamen.
+   */
+  authorities = computed<readonly string[]>(() => this.currentUser()?.authorities ?? []);
+
+  private refreshInFlight: Observable<string> | null = null;
 
   mustChangePassword = signal(false);
   requiresTotp = signal(false);
@@ -93,6 +102,22 @@ export class AuthService {
       .pipe(tap(() => this.mustChangePassword.set(false)));
   }
 
+  /**
+   * Een nieuw token met de huidige rechten, na een wijziging in de rechten (backend: 401 AUTHZ_CHANGED). Gelijktijdige
+   * aanroepen delen één verzoek. Het nieuwe token zet de signals bij, dus menu, routes en kaarten bewegen direct mee.
+   */
+  refreshToken(): Observable<string> {
+    if (!this.refreshInFlight) {
+      this.refreshInFlight = this.http.post<LoginResponse>(`${environment.apiUrl}/auth/token/refresh`, {}).pipe(
+        map((res) => res.token!),
+        tap((token) => this.storeToken(token)),
+        finalize(() => (this.refreshInFlight = null)),
+        shareReplay(1),
+      );
+    }
+    return this.refreshInFlight;
+  }
+
   logout() {
     localStorage.removeItem(this.TOKEN_KEY);
     this.tokenSignal.set(null);
@@ -104,12 +129,13 @@ export class AuthService {
     return this.tokenSignal();
   }
 
-  hasRole(role: string): boolean {
-    return this.currentUser()?.roles.includes(role) ?? false;
+  hasAuthority(authority: string): boolean {
+    return this.authorities().includes(authority);
   }
 
-  hasAuthority(authority: string): boolean {
-    return this.currentUser()?.authorities.includes(authority) ?? false;
+  /** Voldoet de gebruiker aan de eisen van een scherm of onderdeel (zie ACCESS)? */
+  can(access: Access | undefined): boolean {
+    return isSatisfied(access, this.authorities());
   }
 
   resetTotpState() {
@@ -120,11 +146,15 @@ export class AuthService {
 
   private completeLogin(res: LoginResponse) {
     if (res.token) {
-      localStorage.setItem(this.TOKEN_KEY, res.token);
-      this.tokenSignal.set(res.token);
+      this.storeToken(res.token);
       this.mustChangePassword.set(res.mustChangePassword ?? false);
       this.resetTotpState();
     }
+  }
+
+  private storeToken(token: string) {
+    localStorage.setItem(this.TOKEN_KEY, token);
+    this.tokenSignal.set(token);
   }
 
   private getStoredToken(): string | null {

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architectuur (backend)</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Architectuur (backend)</h1>
+<p>De frontends staan in <a href="frontend.html">frontend.md</a>; het geheel in <a href="overview.html">overview.md</a>.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-techniek">Techniek</a></li><li><a href="#h-pakketten">Pakketten</a></li><li><a href="#h-lagen-en-verantwoordelijkheden">Lagen en verantwoordelijkheden</a></li><li><a href="#h-patronen-in-de-code-houd-je-hieraan">Patronen in de code (houd je hieraan)</a></li><li><a href="#h-foutafhandeling-globalexceptionhandler">Foutafhandeling (GlobalExceptionHandler)</a></li><li><a href="#h-tenant-isolatie-in-de-code">Tenant-isolatie in de code</a></li><li><a href="#h-documentgeneratie-en-templates-docgen">Documentgeneratie en templates (docgen)</a></li><li><a href="#h-e-mail-email">E-mail (email)</a></li><li><a href="#h-configuratie">Configuratie</a></li><li><a href="#h-frontend-samenvatting">Frontend (samenvatting)</a></li></ul></nav>
+<h2 id="h-techniek">Techniek</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderdeel</th><th>Keuze</th></tr></thead><tbody>
+<tr><th scope="row">Taal / framework</th><td>Java 21, Spring Boot <strong>4.0.3</strong> (webmvc, data-jpa, security, validation, actuator, mail)</td></tr>
+<tr><th scope="row">Webserver</th><td><strong>Jetty</strong> (Tomcat uitgesloten), poort 8666, <code>server.servlet.context-path: /rds</code>, access-log naar <code>/opt/rds/log</code></td></tr>
+<tr><th scope="row">Database</th><td>PostgreSQL 17; <strong>Flyway</strong> (<code>db/migration</code>, V1–V16); Hibernate <code>ddl-auto: validate</code> — een entity moet exact bij het schema passen</td></tr>
+<tr><th scope="row">Mapping</th><td><strong>MapStruct</strong> 1.6.3 (<code>componentModel=spring</code>, compiler-arg <code>-parameters</code>)</td></tr>
+<tr><th scope="row">Beveiliging</th><td>Spring Security, stateless JWT (jjwt 0.12.6), TOTP (<code>dev.samstevens.totp</code>, QR via zxing), BCrypt</td></tr>
+<tr><th scope="row">Documenten</th><td><strong>xdocreport</strong> 2.1.0 (docx-merge via FreeMarker, pdf via XWPF-converter), Apache POI (komt mee), <strong>jsoup</strong> 1.18.3 (HTML → docx, herhaalde tabellen)</td></tr>
+<tr><th scope="row">Monitoring</th><td>JavaMelody (<code>/monitoring</code>), Actuator</td></tr>
+<tr><th scope="row">Tests</th><td>JUnit 5, Mockito, Spring MockMvc (<code>@SpringBootTest</code>) — zie <a href="build-test-deploy.html">build-test-deploy.md</a></td></tr>
+</tbody></table></div>
+<h2 id="h-pakketten">Pakketten</h2>
+<p>Eén pakket per domein onder <code>nl.puurkroatie.rds</code>, elk met dezelfde subpakketten waar van toepassing: <code>controller</code>, <code>service</code> (+ <code>service/impl</code>), <code>repository</code>, <code>entity</code>, <code>dto</code>, <code>mapper</code>, <code>config</code>.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Pakket</th><th>Inhoud</th></tr></thead><tbody>
+<tr><th scope="row"><code>auth</code></th><td>organisatie, persoon, account, rol, authority (+koppeltabellen), organisatiethema; JWT (<code>JwtTokenProvider</code>, <code>JwtAuthenticationFilter</code>), <code>TenantContext</code>, TOTP, <code>SecurityConfig</code>, <code>GlobalExceptionHandler</code></td></tr>
+<tr><th scope="row"><code>booking</code></th><td>boeking, booker (incl. prospect), reiziger, accommodatie, leverancier, activiteit, adres (+koppeltabellen), boekingsregel/-activiteit, document, document-template, boeking↔betaling-koppeling</td></tr>
+<tr><th scope="row"><code>mollie</code></th><td><code>MolliePayment</code>, status-entries, Mollie-REST-client, webhook</td></tr>
+<tr><th scope="row"><code>bookerportal</code></th><td>OTP-login (<code>Otp</code>), <code>BookerContext</code>, alleen-lezen portal-controllers voor de klant</td></tr>
+<tr><th scope="row"><code>email</code></th><td>e-mailtemplate, afbeeldingenbibliotheek, render + versturen, <code>EmailSender</code>-abstractie</td></tr>
+<tr><th scope="row"><code>docgen</code></th><td>gedeeld template-model (<code>BookingContextService</code>), <code>DocumentGenerationService</code>, <code>HtmlToDocxConverter</code>, <code>RepeatTables</code>, <code>TemplateModels</code>, <code>FreemarkerHardening</code></td></tr>
+<tr><th scope="row"><code>common</code></th><td><code>EnumValues</code>/<code>InvalidEnumValueException</code> (enum-parsing), <code>@Default</code> (MapStruct-constructorkeuze)</td></tr>
+</tbody></table></div>
+<p>De modules zijn los gehouden: <code>mollie</code> kent geen <code>Booking</code>; de koppeltabel <code>BookingMolliePayment</code> hoort bij <code>booking</code>.</p>
+<h2 id="h-lagen-en-verantwoordelijkheden">Lagen en verantwoordelijkheden</h2>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    C([&quot;Frontend / curl&quot;]) --&gt; N[&quot;NGINX&lt;br/&gt;(TLS, rate limit login)&quot;]
+    N --&gt; F[&quot;JwtAuthenticationFilter&lt;br/&gt;token → SecurityContext + TenantContext&lt;br/&gt;(rechtenversie, V26)&quot;]
+    F --&gt; CT[&quot;Controller&lt;br/&gt;@PreAuthorize, @Valid, mapping&quot;]
+    CT --&gt; S[&quot;Service (interface + impl)&lt;br/&gt;business-logica, tenant-controle,&lt;br/&gt;@Transactional&quot;]
+    S --&gt; R[&quot;Repository&lt;br/&gt;Spring Data JPA&quot;]
+    R --&gt; DB[(&quot;PostgreSQL&lt;br/&gt;Flyway, constraints, triggers&quot;)]
+    S -. &quot;fout&quot; .-&gt; E[&quot;GlobalExceptionHandler&lt;br/&gt;{ message, status, timestamp }&quot;]
+    CT -. &quot;fout&quot; .-&gt; E
+</pre></figure>
+<ul><li><strong>Controller:</strong> dun. Mapt HTTP naar service-aanroepen, <code>@PreAuthorize(&quot;hasAuthority(&#x27;…&#x27;)&quot;)</code> per methode, <code>@Valid</code> op de request-DTO. Geen business-logica.</li><li><strong>Service:</strong> alle logica en <strong>tenant-controle</strong> (<code>verifyOrganization</code>). Interface + <code>impl</code>. <code>@Transactional</code> (leesmethoden <code>readOnly = true</code>).</li><li><strong>Repository:</strong> <code>JpaRepository</code>; tenant-queries als <code>findByTenantOrganization(UUID)</code>.</li><li><strong>DTO's:</strong> entities worden <strong>nooit</strong> blootgesteld. Booker-portal en andere externe endpoints krijgen eigen, minimale DTO's.</li></ul>
+<h2 id="h-patronen-in-de-code-houd-je-hieraan">Patronen in de code (houd je hieraan)</h2>
+<ul><li><strong>Entities zijn onveranderlijk:</strong> geen setters; <code>protected</code> no-arg constructor voor JPA, constructors voor aanmaak en een <strong>update-constructor</strong> die <code>createdAt</code>, <code>createdBy</code> en <code>tenantOrganization</code> van de bestaande entity overneemt (die kolommen zijn <code>updatable = false</code>; anders worden ze <code>null</code>). Een update bouwt dus een nieuwe instantie op basis van de bestaande.</li><li><strong>Audit en tenant:</strong> <code>@PrePersist</code> zet <code>createdAt</code>, <code>createdBy</code>, <code>tenantOrganization</code> (uit <code>TenantContext</code>); <code>@PreUpdate</code> zet <code>modifiedAt/By</code>.</li><li><strong>DTO's</strong> zijn gewone klassen met getters; één constructor met <code>@Default</code> (voor MapStruct) en één met <code>@JsonCreator</code> (voor Jackson). Validatie met Jakarta-annotaties op de DTO.</li><li><strong>Enums</strong> worden als <strong>naam</strong> opgeslagen (<code>@Enumerated(STRING)</code>) en gaan als <strong>lowercase</strong> tekst over de API (<code>@JsonValue toValue()</code>, <code>@JsonCreator fromValue()</code> via <code>EnumValues.parse</code>, hoofdletterongevoelig). Een onbekende waarde geeft een <code>400</code> met de toegestane waarden. In het <strong>template-model</strong> (documenten/e-mail) is een enum juist de <strong>hoofdletter-naam</strong> (<code>MAN</code>).</li><li><strong>Koppeltabellen</strong> met samengestelde sleutel gebruiken een <code>@IdClass</code> (<code>BookerAddress</code>, <code>AccommodationAddress</code>, <code>AccommodationSupplier</code>, <code>SupplierAddress</code>, <code>BookingMolliePayment</code>, <code>AccountRole</code>, <code>RoleAuthority</code>). <code>BookingLine</code> en <code>BookingActivity</code> hebben een eigen UUID.</li><li><strong>Relaties</strong> zijn altijd <code>FetchType.LAZY</code>. Waar een scherm of document meer nodig heeft, zijn er gerichte <strong>fetch-join-queries</strong> (bv. <code>findByIdWithBookerAndTravelers</code> in <code>BookingRepository</code>).</li><li><strong>Transacties:</strong> services zijn <code>@Transactional</code>; lees-only waar mogelijk. Een <code>LazyInitializationException</code> los je op met een fetch-join of door het werk in de service-methode te doen (binnen de transactie), niet door lazy te laden in de controller.</li><li><strong>Verwijderen met geschiedenis:</strong> services die iets verwijderen waar boekingen aan hangen roepen eerst <code>DeletionGuard</code> aan (409 als er documenten of betalingen aan hangen); zie <a href="security.html">security.md</a>.</li><li><strong>Fail fast:</strong> ongeldige invoer wordt aan de controller-grens (Bean Validation) of in de service geweigerd met een duidelijke melding.</li></ul>
+<h2 id="h-foutafhandeling-globalexceptionhandler">Foutafhandeling (<code>GlobalExceptionHandler</code>)</h2>
+<p>Antwoorden hebben vorm <code>{ message, status, timestamp }</code> (<code>ErrorResponse</code>).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Exception</th><th>HTTP</th></tr></thead><tbody>
+<tr><th scope="row"><code>AuthenticationException</code></th><td>401</td></tr>
+<tr><th scope="row"><code>AccessDeniedException</code></th><td>403</td></tr>
+<tr><th scope="row"><code>EntityNotFoundException</code>, <code>NoHandlerFoundException</code></th><td>404</td></tr>
+<tr><th scope="row"><code>MethodArgumentNotValidException</code>, <code>ConstraintViolationException</code>, ontbrekende request-parameter of -part</th><td>400</td></tr>
+<tr><th scope="row"><code>EmailImageInUseException</code>, <code>DeletionBlockedException</code></th><td>409</td></tr>
+<tr><th scope="row"><code>MaxUploadSizeExceededException</code></th><td>413</td></tr>
+<tr><th scope="row">elke andere <code>RuntimeException</code> (o.a. <code>InvalidEnumValueException</code>, <code>TemplateRenderException</code>, <code>EmailNotConfiguredException</code>, <code>InvalidImageException</code>, <code>InvalidImageReferenceException</code>, <code>DocxConversionException</code>, <code>RepeatTables.InvalidRepeatException</code>, <code>IllegalArgumentException</code>)</th><td><strong>400</strong> met <code>message</code></td></tr>
+<tr><th scope="row"><code>Exception</code></th><td>500</td></tr>
+</tbody></table></div>
+<p>Praktisch gevolg: een nieuwe, bedoelde fout voor de gebruiker is een <code>RuntimeException</code> met een duidelijke Engelse of Nederlandse melding; de frontend toont <code>error.message</code> waar dat zinvol is.</p>
+<h2 id="h-tenant-isolatie-in-de-code">Tenant-isolatie in de code</h2>
+<p><code>JwtAuthenticationFilter</code> zet <code>TenantContext</code> (organisatie, account, authorities; ThreadLocal) en ruimt op in een <code>finally</code>. Services lezen daaruit:</p>
+<ul><li><strong><code>PLATFORM_ADMIN</code></strong> (rol ADMIN): geen filtering (maar ook geen business-authorities).</li><li><strong>Anderen:</strong> alleen eigen organisatie (<code>findByTenantOrganization</code>, <code>verifyOrganization</code>); personen en accounts van de hele organisatie alleen met <code>USER_SCOPE_ORGANIZATION</code>, anders alleen het eigen.</li><li>Nooit op rolnaam: <code>TenantContext.hasAuthority(...)</code>.</li></ul>
+<p>Details en de rest van de beveiliging: <a href="security.html">security.md</a>.</p>
+<h2 id="h-documentgeneratie-en-templates-docgen">Documentgeneratie en templates (<code>docgen</code>)</h2>
+<p><code>BookingContextService.forBooking(id)</code> bouwt het model (<code>BookingContext</code> met booker, reizigers, boekingsregels, activiteiten); het wordt door <code>TemplateModels</code> omgezet naar <strong>platte</strong> maps/lijsten. <code>DocumentGenerationServiceImpl</code> voegt dat samen met het .docx van een <code>DocumentTemplate</code> (xdocreport, afgeschermd via <code>FreemarkerHardening</code>) en bewaart het resultaat als <code>Document</code> bij de boeking. E-mail gebruikt hetzelfde model. Alles over de editor, de converter en herhaalde tabellen: <a href="templates.html">templates.md</a>.</p>
+<h2 id="h-e-mail-email">E-mail (<code>email</code>)</h2>
+<p>Templates in de database, FreeMarker-merge, versturen via de abstractie <code>EmailSender</code> (<code>SmtpEmailSender</code> zodra <code>spring.mail.host</code> gezet is, anders <code>LoggingEmailSender</code>: log-only). Zie <a href="email.html">email.md</a>.</p>
+<h2 id="h-configuratie">Configuratie</h2>
+<p><code>application.yaml</code> bevat o.a. JWT-secret en -verlooptijd, OTP-instellingen, <code>app.email.*</code> (publiek API-adres, maximale afbeeldingsgrootte), <code>app.mollie.*</code> (URL's, sleutel) en multipart-limieten (2 MB per bestand). SMTP staat bewust uitgecommentarieerd (log-only lokaal). Profiel <strong><code>rds-local</code></strong> (<code>application-rds-local.yaml</code>, niet committen) overschrijft de Mollie-webhook- en redirect-URL voor lokaal testen via een tunnel. Let op de geheimen in de configuratie: zie <a href="open-items.html">open-items.md</a>.</p>
+<h2 id="h-frontend-samenvatting">Frontend (samenvatting)</h2>
+<p>Twee losse Angular 22-apps (standalone componenten, signals, Angular Material, ngx-translate) die dezelfde API aanroepen: <code>frontend-employee</code> met JWT <code>type=EMPLOYEE</code>, <code>frontend-booker</code> met JWT <code>type=BOOKER</code>. Een dev-proxy stuurt <code>/api</code> naar <code>localhost:8666/rds/api</code>; in productie doet NGINX dat (zie <a href="build-test-deploy.html">build-test-deploy.md</a>). Alles over structuur en conventies: <a href="frontend.html">frontend.md</a>.</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

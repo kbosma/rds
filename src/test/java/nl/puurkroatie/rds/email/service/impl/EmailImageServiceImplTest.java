@@ -1,6 +1,7 @@
 package nl.puurkroatie.rds.email.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.email.dto.EmailImageContentDto;
 import nl.puurkroatie.rds.email.dto.EmailImageDto;
@@ -74,7 +75,7 @@ class EmailImageServiceImplTest {
     void setUp() {
         service = new EmailImageServiceImpl(repository, mapper, templateRepository, documentTemplateRepository, MAX_BYTES);
         TenantContext.setOrganizationId(ORG);
-        TenantContext.setRoles(Set.of("MANAGER"));
+        TenantContext.setAuthorities(Set.of(Authorities.USER_SCOPE_ORGANIZATION));
     }
 
     @AfterEach
@@ -247,7 +248,7 @@ class EmailImageServiceImplTest {
 
     @Test
     void findAll_asAdmin_seesAllOrganisations() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         when(repository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(summary(IMAGE_ID, "logo.png")));
         when(templateRepository.existsByTenantOrganizationAndBodyHtmlContaining(any(), anyString())).thenReturn(false);
 
@@ -345,7 +346,7 @@ class EmailImageServiceImplTest {
 
     @Test
     void findAll_asAdmin_checksUsageWithinEachImagesOwnOrganisation() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         when(repository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(
                 summary(IMAGE_ID, "van-a.png", ORG), summary(OTHER_IMAGE_ID, "van-b.png", OTHER_ORG)));
         when(templateRepository.existsByTenantOrganizationAndBodyHtmlContaining(any(), anyString())).thenReturn(false);

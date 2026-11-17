@@ -36,6 +36,10 @@ public class AccountRole {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Role role;
 
+    /** Organisatie van account én rol; de database dwingt af dat die gelijk zijn (V24). */
+    @Column(name = "tenant_organization", nullable = false, updatable = false)
+    private UUID tenantOrganization;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -54,6 +58,7 @@ public class AccountRole {
     public AccountRole(Account account, Role role) {
         this.account = account;
         this.role = role;
+        this.tenantOrganization = account.getTenantOrganization();
     }
 
     @PrePersist
@@ -74,6 +79,10 @@ public class AccountRole {
 
     public Role getRole() {
         return role;
+    }
+
+    public UUID getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public LocalDateTime getCreatedAt() {

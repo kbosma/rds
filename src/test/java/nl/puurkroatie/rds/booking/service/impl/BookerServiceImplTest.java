@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.BookerDto;
 import nl.puurkroatie.rds.booking.entity.Booker;
@@ -92,7 +93,7 @@ class BookerServiceImplTest {
     @Test
     void update_withoutStatus_keepsExistingStatus() {
         TenantContext.setOrganizationId(ORG_ID);
-        TenantContext.setRoles(Set.of("EMPLOYEE"));
+        TenantContext.setAuthorities(Set.of());
         UUID id = UUID.randomUUID();
         Booker existing = new Booker(id, "Jan", null, "Jansen", null, null,
                 "jan@example.com", null, null, null, BookerStatus.PROSPECT, null, null, ORG_ID);
@@ -111,7 +112,7 @@ class BookerServiceImplTest {
     @Test
     void findAll_nonAdminWithStatus_usesTenantAndStatusQuery() {
         TenantContext.setOrganizationId(ORG_ID);
-        TenantContext.setRoles(Set.of("EMPLOYEE"));
+        TenantContext.setAuthorities(Set.of());
         when(bookerRepository.findByTenantOrganizationAndStatus(ORG_ID, BookerStatus.PROSPECT))
                 .thenReturn(List.of());
 
@@ -123,7 +124,7 @@ class BookerServiceImplTest {
     @Test
     void findAll_nonAdminWithoutStatus_usesTenantQuery() {
         TenantContext.setOrganizationId(ORG_ID);
-        TenantContext.setRoles(Set.of("EMPLOYEE"));
+        TenantContext.setAuthorities(Set.of());
         when(bookerRepository.findByTenantOrganization(ORG_ID)).thenReturn(List.of());
 
         service.findAll(null);
@@ -133,7 +134,7 @@ class BookerServiceImplTest {
 
     @Test
     void findAll_adminWithStatus_usesGlobalStatusQuery() {
-        TenantContext.setRoles(Set.of("ADMIN"));
+        TenantContext.setAuthorities(Set.of(Authorities.PLATFORM_ADMIN, Authorities.USER_SCOPE_ORGANIZATION));
         when(bookerRepository.findByStatus(BookerStatus.PROSPECT)).thenReturn(List.of());
 
         service.findAll(BookerStatus.PROSPECT);

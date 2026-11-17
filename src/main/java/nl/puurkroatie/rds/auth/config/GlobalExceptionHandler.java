@@ -2,6 +2,7 @@ package nl.puurkroatie.rds.auth.config;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import nl.puurkroatie.rds.common.ConflictException;
 import nl.puurkroatie.rds.common.DeletionBlockedException;
 import nl.puurkroatie.rds.common.PaymentLockedException;
 import nl.puurkroatie.rds.email.service.EmailImageInUseException;
@@ -79,6 +80,16 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getMessage(),
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     // Verwijderen van iets waaraan geschiedenis hangt (documenten, betalingen): conflict met de huidige staat.

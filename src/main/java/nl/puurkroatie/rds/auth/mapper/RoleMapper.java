@@ -5,17 +5,11 @@ import nl.puurkroatie.rds.auth.entity.Role;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.UUID;
-
 @Mapper(componentModel = "spring")
 public interface RoleMapper {
 
+    /** Zonder oordeel over wijzigbaarheid ({@code editable} leeg); de service vult dat in waar het ertoe doet. */
+    @Mapping(target = "editable", ignore = true)
+    @Mapping(target = "accountCount", ignore = true)
     RoleDto toDto(Role entity);
-
-    @Mapping(target = "roleId", ignore = true)
-    Role toEntity(RoleDto dto);
-
-    default Role toEntity(UUID id, RoleDto dto) {
-        return new Role(id, dto.getDescription());
-    }
 }

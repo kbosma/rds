@@ -13,9 +13,13 @@ export class AccountRoleService {
     return this.http.get<AccountRole[]>(this.baseUrl);
   }
 
-  /** Rollen die de ingelogde gebruiker mag toewijzen en intrekken (bepaald door de backend). */
-  getAssignable(): Observable<Role[]> {
-    return this.http.get<Role[]>(`${this.baseUrl}/assignable-roles`);
+  /**
+   * Rollen die de ingelogde gebruiker aan dit account mag toewijzen of ervan mag intrekken (bepaald door de backend).
+   * Zonder account: de rollen van de eigen organisatie onder het eigen niveau.
+   */
+  getAssignable(accountId?: string): Observable<Role[]> {
+    const query = accountId ? `?accountId=${encodeURIComponent(accountId)}` : '';
+    return this.http.get<Role[]>(`${this.baseUrl}/assignable-roles${query}`);
   }
 
   create(accountId: string, roleId: string): Observable<AccountRole> {

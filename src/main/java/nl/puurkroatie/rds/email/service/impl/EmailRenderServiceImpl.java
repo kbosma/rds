@@ -11,6 +11,7 @@ import freemarker.template.TemplateNotFoundException;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.core.TemplateClassResolver;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.docgen.service.BookingContextService;
 import nl.puurkroatie.rds.docgen.service.RepeatTables;
@@ -168,7 +169,7 @@ public class EmailRenderServiceImpl implements EmailRenderService {
     }
 
     private void verifyOrganization(UUID organizationId) {
-        if (!TenantContext.hasRole("ADMIN") && !organizationId.equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
     }

@@ -18,17 +18,29 @@ Een organisatie heeft daarnaast: een **Mollie-sleutel** (`mollie_key`), een **af
 
 ## Boekingsdomein
 
+```mermaid
+erDiagram
+    BOOKER |o--o{ BOOKING : "hoofdboeker van"
+    BOOKING ||--o{ TRAVELER : "reizigers"
+    BOOKING ||--o{ BOOKING_LINE : "verblijven"
+    BOOKING_LINE }o--|| ACCOMMODATION : "in"
+    BOOKING_LINE }o--|| SUPPLIER : "via"
+    BOOKING ||--o{ BOOKING_ACTIVITY : "activiteiten"
+    BOOKING_ACTIVITY }o--|| ACTIVITY : "van"
+    BOOKING ||--o{ DOCUMENT : "documenten"
+    BOOKING ||--o{ SENT_EMAIL : "verzonden mails"
+    BOOKING ||--o{ BOOKING_MOLLIE_PAYMENT : "koppeling"
+    BOOKING_MOLLIE_PAYMENT |o--|| MOLLIE_PAYMENT : "max. één boeking"
+    MOLLIE_PAYMENT ||--o{ MOLLIE_PAYMENT_STATUS_ENTRY : "statushistorie"
+    BOOKING ||--o{ BOOKING_STATUS_CHANGE : "statusgeschiedenis"
+    BOOKING ||--o{ NOTIFICATION : "meldingen"
+    ACCOMMODATION }o--o{ SUPPLIER : "accommodation_supplier"
+    BOOKER }o--o{ ADDRESS : "booker_address"
+    ACCOMMODATION }o--o{ ADDRESS : "accommodation_address"
+    SUPPLIER }o--o{ ADDRESS : "supplier_address"
 ```
-Booker ──< Booking >── (hoofdboeker, optioneel)
-Booking ──< Traveler
-Booking ──< BookingLine >── Accommodation, Supplier
-Booking ──< BookingActivity >── Activity
-Booking ──< Document
-Booking ──< BookingMolliePayment >── MolliePayment ──< MolliePaymentStatusEntry
-Accommodation ──< AccommodationSupplier >── Supplier
-Booker / Accommodation / Supplier ──< (koppeltabel) >── Address
-DocumentTemplate, EmailTemplate, EmailImage   (per organisatie, los van een boeking)
-```
+
+Per organisatie en los van een boeking: `DocumentTemplate`, `EmailTemplate`, `EmailImage` en de organisatie-instellingen.
 
 | Begrip | Betekenis |
 |---|---|
@@ -58,6 +70,15 @@ Een **prospect** is **geen apart type**: het is een `Booker` met `status = PROSP
 1. Medewerker registreert een potentiële klant op het scherm *Prospects* (status `PROSPECT`, nog geen boeking).
 2. Mail met een e-mailtemplate versturen: mail-icoon op de regel in het scherm *Prospects* (template kiezen, voorbeeld bekijken, verzenden).
 3. Vanaf een boeker (rij-icoon) of via de boekingenlijst een **concept-boeking** starten. **Een boeking ontstaat alleen vanuit een bestaande boeker** (de API weigert een boeking zonder `bookerId`, en een nieuwe boeking begint altijd als `AANVRAAG`); in het keuzevenster staat dus geen *Nieuwe boeker* meer.
+```mermaid
+stateDiagram-v2
+    [*] --> PROSPECT: nieuwe boeker
+    PROSPECT --> ACTIVE: eerste boeking
+    ACTIVE --> NIETACTIEF: alle boekingen afgerond
+    NIETACTIEF --> ACTIVE: nieuwe boeking
+    ACTIVE --> PROSPECT: laatste boeking verwijderd
+```
+
 4. **De status van een boeker volgt uit zijn boekingen** en is niet te kiezen (`BookerStatusUpdater`, sinds V17): geen boeking `PROSPECT`, minstens één boeking die nog niet is afgerond `ACTIVE`, alle boekingen afgerond `NIETACTIEF`. Elke nieuwe boeker begint als `PROSPECT`; een `status` in het verzoek wordt genegeerd. De backend rekent de status opnieuw na aanmaken, koppelen, ontkoppelen, een statuswijziging en verwijderen van een boeking. De knop *Maak boeker* is vervallen.
 
 ### Offerte bevestigen
@@ -113,6 +134,20 @@ Zonder verblijf met een prijs kan niet bevestigd worden (`400`, er verandert nie
 "Betaald" kijkt naar de betalingen uit het betalingsschema (voorschot, restant, definitief); heeft een boeking die niet (van vóór stap 3), dan naar alle betalingen. Mislukte, geannuleerde en verlopen betalingen tellen niet mee; zonder betalingen beslist de engine niets. Vertrek = vroegste begindatum, terugkeer = laatste einddatum van de verblijven.
 
 **Automatisch afronden** (stap 5): staat een boeking op `WEERTHUIS` en heeft ze geen openstaande notificaties meer, dan zet de engine haar op `AFGEROND` (statusgeschiedenis: *Systeem: weer thuis en alle meldingen afgehandeld*) en rekent de status van de boeker opnieuw uit (alle boekingen afgerond = `NIETACTIEF`). De notificatie *Weer thuis* moet dus eerst afgehandeld zijn. Een boeking die al op `WEERTHUIS` stond zonder notificaties (van vóór stap 4) wordt bij de eerstvolgende run afgerond.
+
+```mermaid
+flowchart LR
+    subgraph Aanleiding
+        W["Mollie-webhook of correctie<br/>(PaymentStatusRecordedEvent)"]
+        N["notificatie afgehandeld"]
+        L["medewerker logt in<br/>(eigen organisatie)"]
+        C["elke nacht 02:15<br/>(alle organisaties)"]
+    end
+    W & N & L & C --> E["BookingStatusEngine<br/>StatusTarget: betalingen + datums"]
+    E --> S["nieuwe status<br/>+ booking_status_change"]
+    E --> M["notificaties bij BETAALD, OPREIS,<br/>WEERTHUIS of terugval"]
+    E --> A["WEERTHUIS zonder open meldingen<br/>→ AFGEROND, boekerstatus opnieuw"]
+```
 
 **Wanneer.** Direct na het afhandelen van een notificatie (voor die boeking), direct na elke nieuwe betaalstatus (Mollie-webhook of correctie, via het event `PaymentStatusRecordedEvent` in dezelfde transactie), bij het **inloggen** van een medewerker (alle boekingen van diens organisatie, eigen transactie; een fout breekt het inloggen niet) en **elke nacht** om 02:15 (alle organisaties). Instelbaar onder `app.status-engine` (`on-login`, `cron`); in tests staat `on-login` uit.
 

@@ -20,11 +20,14 @@ public class OrganizationDto {
     private UUID createdBy;
     private LocalDateTime modifiedAt;
     private UUID modifiedBy;
+    /** De platformorganisatie (RDS Platform); alleen-lezen, wordt genegeerd bij aanmaken en wijzigen. */
+    private Boolean platform;
 
     @Default
     @JsonCreator
-    public OrganizationDto(UUID organizationId, String name, String mollieKey, String emailFrom, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public OrganizationDto(UUID organizationId, String name, String mollieKey, String emailFrom, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy, Boolean platform) {
         this.organizationId = organizationId;
+        this.platform = platform;
         this.name = name;
         this.mollieKey = mollieKey;
         this.emailFrom = emailFrom;
@@ -74,5 +77,9 @@ public class OrganizationDto {
 
     public UUID getModifiedBy() {
         return modifiedBy;
+    }
+
+    public boolean isPlatform() {
+        return Boolean.TRUE.equals(platform);
     }
 }

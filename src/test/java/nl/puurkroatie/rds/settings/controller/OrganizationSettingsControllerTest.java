@@ -59,7 +59,7 @@ class OrganizationSettingsControllerTest extends AbstractBookingControllerTest {
     void manager_withoutSavedSettings_getsEmptyChoices() throws Exception {
         mockMvc.perform(get(MINE).header("Authorization", "Bearer " + managerToken()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.organizationId").isNotEmpty())
+                .andExpect(jsonPath("$.tenantOrganization").isNotEmpty())
                 .andExpect(jsonPath("$.quoteDocumentTemplateId").isEmpty())
                 .andExpect(jsonPath("$.quoteEmailTemplateId").isEmpty())
                 .andExpect(jsonPath("$.depositPercentage").value(30))

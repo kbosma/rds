@@ -31,9 +31,9 @@ public class OrganizationTheme {
     private UUID organizationThemeId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id", nullable = false, unique = true)
+    @JoinColumn(name = "tenant_organization", nullable = false, unique = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Organization organization;
+    private Organization tenantOrganization;
 
     @Column(name = "primary_color", nullable = false, length = 7)
     private String primaryColor;
@@ -62,9 +62,9 @@ public class OrganizationTheme {
     protected OrganizationTheme() {
     }
 
-    public OrganizationTheme(UUID organizationThemeId, Organization organization, String primaryColor, String accentColor, String logoUrl, String cardTitleColor) {
+    public OrganizationTheme(UUID organizationThemeId, Organization tenantOrganization, String primaryColor, String accentColor, String logoUrl, String cardTitleColor) {
         this.organizationThemeId = organizationThemeId;
-        this.organization = organization;
+        this.tenantOrganization = tenantOrganization;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;
@@ -72,8 +72,8 @@ public class OrganizationTheme {
     }
 
     @Default
-    public OrganizationTheme(Organization organization, String primaryColor, String accentColor, String logoUrl, String cardTitleColor) {
-        this.organization = organization;
+    public OrganizationTheme(Organization tenantOrganization, String primaryColor, String accentColor, String logoUrl, String cardTitleColor) {
+        this.tenantOrganization = tenantOrganization;
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.logoUrl = logoUrl;
@@ -96,8 +96,8 @@ public class OrganizationTheme {
         return organizationThemeId;
     }
 
-    public Organization getOrganization() {
-        return organization;
+    public Organization getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public String getPrimaryColor() {

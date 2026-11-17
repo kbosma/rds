@@ -75,12 +75,12 @@ class TemplateModelsTest {
     }
 
     @Test
-    void datesAndTimes_becomTheirIsoText_exactlyWhatInterpolationShowedBefore() {
+    void datesAndTimes_becomeDutchText_ddMMyyyy() {
         Map<String, Object> model = TemplateModels.toModel(booking);
 
-        assertEquals("2026-06-01", model.get("fromDate"));
-        assertEquals("1985-03-15", map(model.get("booker")).get("birthdate"));
-        assertEquals("2026-06-02T10:30", map(((List<?>) model.get("bookingActivities")).get(0)).get("fromDate"));
+        assertEquals("01-06-2026", model.get("fromDate"));
+        assertEquals("15-03-1985", map(model.get("booker")).get("birthdate"));
+        assertEquals("02-06-2026 10:30", map(((List<?>) model.get("bookingActivities")).get(0)).get("fromDate"));
     }
 
     @Test

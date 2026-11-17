@@ -7,7 +7,9 @@ import nl.puurkroatie.rds.auth.entity.Person;
 import nl.puurkroatie.rds.auth.mapper.AccountMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.auth.repository.PersonRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.auth.service.AdministratorGuard;
 import nl.puurkroatie.rds.auth.service.AccountService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,23 +28,26 @@ public class AccountServiceImpl implements AccountService {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountMapper accountMapper;
+    private final AdministratorGuard administratorGuard;
 
-    public AccountServiceImpl(AccountRepository accountRepository, PersonRepository personRepository, PasswordEncoder passwordEncoder, AccountMapper accountMapper) {
+    public AccountServiceImpl(AccountRepository accountRepository, PersonRepository personRepository, PasswordEncoder passwordEncoder,
+                              AccountMapper accountMapper, AdministratorGuard administratorGuard) {
         this.accountRepository = accountRepository;
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
         this.accountMapper = accountMapper;
+        this.administratorGuard = administratorGuard;
     }
 
     @Override
     public AccountDto create(AccountDto dto) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             throw new AccessDeniedException("Access denied: employees cannot create accounts");
         }
         if (!isAdmin()) {
             Person person = personRepository.findById(dto.getPersonId())
                     .orElseThrow(() -> new RuntimeException("Person not found with id: " + dto.getPersonId()));
-            verifyOrganization(person.getOrganization().getOrganizationId());
+            verifyOrganization(person.getTenantOrganization().getOrganizationId());
         }
         Account entity = toEntity(dto);
         Account saved = accountRepository.save(entity);
@@ -51,13 +56,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountDto update(UUID id, AccountDto dto) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             throw new AccessDeniedException("Access denied: employees cannot update accounts");
         }
         Account existing = accountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
         if (!isAdmin()) {
-            verifyOrganization(existing.getPerson().getOrganization().getOrganizationId());
+            verifyOrganization(existing.getTenantOrganization());
+        }
+        if (Boolean.TRUE.equals(dto.getLocked()) && !Boolean.TRUE.equals(existing.getLocked())) {
+            administratorGuard.verifyNotLastAdministrator(id, existing.getTenantOrganization());
         }
         accountRepository.updateAccount(
                 id,
@@ -73,14 +81,15 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void delete(UUID id) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             throw new AccessDeniedException("Access denied: employees cannot delete accounts");
         }
         Account existing = accountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
         if (!isAdmin()) {
-            verifyOrganization(existing.getPerson().getOrganization().getOrganizationId());
+            verifyOrganization(existing.getTenantOrganization());
         }
+        administratorGuard.verifyNotLastAdministrator(id, existing.getTenantOrganization());
         accountRepository.deleteById(id);
     }
 
@@ -92,13 +101,13 @@ public class AccountServiceImpl implements AccountService {
                     .map(accountMapper::toDto)
                     .toList();
         }
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             return accountRepository.findById(TenantContext.getAccountId())
                     .map(accountMapper::toDto)
                     .map(List::of)
                     .orElse(List.of());
         }
-        return accountRepository.findByPersonOrganizationOrganizationId(TenantContext.getOrganizationId()).stream()
+        return accountRepository.findByTenantOrganization(TenantContext.getOrganizationId()).stream()
                 .map(accountMapper::toDto)
                 .toList();
     }
@@ -106,13 +115,13 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional(readOnly = true)
     public Optional<AccountDto> findById(UUID id) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             if (!id.equals(TenantContext.getAccountId())) {
                 return Optional.empty();
             }
         }
         return accountRepository.findById(id)
-                .filter(account -> isAdmin() || account.getPerson().getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
+                .filter(account -> isAdmin() || account.getTenantOrganization().equals(TenantContext.getOrganizationId()))
                 .map(accountMapper::toDto);
     }
 
@@ -132,22 +141,22 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional(readOnly = true)
     public void verifyAccountAccess(UUID accountId) {
-        if (isEmployee()) {
+        if (isLimitedToOwnData()) {
             throw new AccessDeniedException("Access denied: employees cannot manage accounts");
         }
         if (!isAdmin()) {
             Account account = accountRepository.findById(accountId)
                     .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
-            verifyOrganization(account.getPerson().getOrganization().getOrganizationId());
+            verifyOrganization(account.getTenantOrganization());
         }
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
-    private boolean isEmployee() {
-        return TenantContext.hasRole("EMPLOYEE") && !TenantContext.hasRole("MANAGER") && !TenantContext.hasRole("ADMIN");
+    private boolean isLimitedToOwnData() {
+        return !TenantContext.hasAuthority(Authorities.USER_SCOPE_ORGANIZATION);
     }
 
     private void verifyOrganization(UUID organizationId) {

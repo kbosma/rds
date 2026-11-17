@@ -10,6 +10,19 @@
 >
 > Daarna alleen het document dat bij de taak past (tabel hieronder). De regels in `CLAUDE.md` (repo-root) blijven leidend; deze map is de uitleg erbij.
 
+## Leesversies (HTML) en diagrammen
+
+Elk document hier heeft een leesversie ernaast (`<naam>.html`): tabellen met lijnen en afwisselende rijkleuren, een
+inhoudsopgave, licht/donker thema en getekende diagrammen (Mermaid: flowcharts, sequence-, state- en ER-diagrammen). De
+`.md` is de bron; na een wijziging maak je de HTML opnieuw:
+
+```bash
+python3 docs/tools/md-naar-html.py docs/*.md
+```
+
+Een diagram schrijf je in de `.md` als codeblok met de taal `mermaid`; GitHub toont het ook. Gebruik er een waar het iets
+verheldert (een stroom, een volgorde van stappen, een toestandsverloop, een datamodel), niet om tekst te herhalen.
+
 ## Welk document bij welke vraag?
 
 | Ik wil weten… | Open |
@@ -27,6 +40,7 @@
 | Alle REST-endpoints met benodigde authority + voorbeelden? | [api-examples.md](api-examples.md) |
 | Booker-portal (klant) en OTP-login? | [bookerportal.md](bookerportal.md) |
 | Ontwerp en afwegingen van het dashboard in het boekerportaal (gebouwd)? | [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md) |
+| Ontwerp en stand van eigen rollen per organisatie (gebouwd, fase 0–5)? | [voorstel-eigen-rollen.md](voorstel-eigen-rollen.md) (bron), leesversie [voorstel-eigen-rollen.html](voorstel-eigen-rollen.html) — opnieuw maken met `python3 docs/tools/md-naar-html.py docs/voorstel-eigen-rollen.md` |
 | Betalingen, webhook, Mollie-flow? | [mollie.md](mollie.md) |
 | E-mailtemplates, versturen, SMTP, afbeeldingen in mail? | [email.md](email.md) |
 | Gedeelde template-editor, Word-templates (.docx), herhaalde tabellen? | [templates.md](templates.md) |

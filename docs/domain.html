@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domein</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Domein</h1>
+<p>Het volledige tabelmodel staat in <a href="database-model.html">database-model.md</a>; begrippen in <a href="glossary.html">glossary.md</a>. Hier staat wat het model <strong>betekent</strong> en welke regels gelden.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-tenant-organisatie">Tenant (organisatie)</a></li><li><a href="#h-gebruikersmodel-auth">Gebruikersmodel (auth)</a></li><li><a href="#h-boekingsdomein">Boekingsdomein</a></li><li><a href="#h-documenten-en-templates">Documenten en templates</a></li><li><a href="#h-betalen">Betalen</a></li><li><a href="#h-domeinregels-om-te-onthouden">Domeinregels om te onthouden</a></li></ul></nav>
+<h2 id="h-tenant-organisatie">Tenant (organisatie)</h2>
+<p>Het systeem is multi-tenant per <strong>ORGANIZATION</strong>. Elke tenant-entiteit heeft <code>tenantOrganization</code> (UUID, onveranderlijk) en audit-velden (<code>createdAt/By</code>, <code>modifiedAt/By</code>). Een gebruiker ziet en wijzigt uitsluitend data van de eigen organisatie; zie <a href="security.html">security.md</a>.</p>
+<p>Een organisatie heeft daarnaast: een <strong>Mollie-sleutel</strong> (<code>mollie_key</code>), een <strong>afzenderadres voor e-mail</strong> (<code>email_from</code>), en een <strong>thema</strong> (<code>organization_theme</code>: primaire/accentkleur, logo-URL, kaarttitelkleur).</p>
+<h2 id="h-gebruikersmodel-auth">Gebruikersmodel (auth)</h2>
+<p><code>ORGANIZATION → PERSON → ACCOUNT → (ACCOUNT_ROLE) ROLE → (ROLE_AUTHORITY) AUTHORITY</code></p>
+<ul><li>Een <strong>persoon</strong> hoort bij één organisatie; een <strong>account</strong> (login) hoort bij één persoon.</li><li>Een account kan vergrendeld zijn, een vervaldatum hebben, een wachtwoordwijziging afdwingen en <strong>TOTP</strong> (2FA) hebben.</li><li>Rollen: <code>ADMIN</code>, <code>MANAGER</code>, <code>EMPLOYEE</code>. Rechten zitten op <strong>authorities</strong> (granulair, bv. <code>BOOKING_READ</code>); de UI en <code>@PreAuthorize</code> kijken naar authorities.</li></ul>
+<h2 id="h-boekingsdomein">Boekingsdomein</h2>
+<figure class="diagram"><pre class="mermaid">
+erDiagram
+    BOOKER |o--o{ BOOKING : &quot;hoofdboeker van&quot;
+    BOOKING ||--o{ TRAVELER : &quot;reizigers&quot;
+    BOOKING ||--o{ BOOKING_LINE : &quot;verblijven&quot;
+    BOOKING_LINE }o--|| ACCOMMODATION : &quot;in&quot;
+    BOOKING_LINE }o--|| SUPPLIER : &quot;via&quot;
+    BOOKING ||--o{ BOOKING_ACTIVITY : &quot;activiteiten&quot;
+    BOOKING_ACTIVITY }o--|| ACTIVITY : &quot;van&quot;
+    BOOKING ||--o{ DOCUMENT : &quot;documenten&quot;
+    BOOKING ||--o{ SENT_EMAIL : &quot;verzonden mails&quot;
+    BOOKING ||--o{ BOOKING_MOLLIE_PAYMENT : &quot;koppeling&quot;
+    BOOKING_MOLLIE_PAYMENT |o--|| MOLLIE_PAYMENT : &quot;max. één boeking&quot;
+    MOLLIE_PAYMENT ||--o{ MOLLIE_PAYMENT_STATUS_ENTRY : &quot;statushistorie&quot;
+    BOOKING ||--o{ BOOKING_STATUS_CHANGE : &quot;statusgeschiedenis&quot;
+    BOOKING ||--o{ NOTIFICATION : &quot;meldingen&quot;
+    ACCOMMODATION }o--o{ SUPPLIER : &quot;accommodation_supplier&quot;
+    BOOKER }o--o{ ADDRESS : &quot;booker_address&quot;
+    ACCOMMODATION }o--o{ ADDRESS : &quot;accommodation_address&quot;
+    SUPPLIER }o--o{ ADDRESS : &quot;supplier_address&quot;
+</pre></figure>
+<p>Per organisatie en los van een boeking: <code>DocumentTemplate</code>, <code>EmailTemplate</code>, <code>EmailImage</code> en de organisatie-instellingen.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Begrip</th><th>Betekenis</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Booking</strong></th><td>het reisdossier. Heeft een <strong>boekingsnummer</strong> (<code>BK-&lt;jaar&gt;-&lt;5 cijfers&gt;</code>, gegenereerd, uniek) en een <strong>status</strong>. <code>fromDate</code>, <code>untilDate</code> en <code>totalSum</code> worden <strong>afgeleid</strong> uit de boekingsregels (min/max datum, som van prijzen) plus de activiteiten — ze worden niet apart opgeslagen.</td></tr>
+<tr><th scope="row"><strong>Booker</strong></th><td>de opdrachtgever/hoofdboeker (persoon, geen login). Een boeking verwijst naar maximaal één booker (de koppeling mag leeg zijn).</td></tr>
+<tr><th scope="row"><strong>Traveler</strong></th><td>een reiziger bij één boeking (naam, geslacht, geboortedatum, initialen).</td></tr>
+<tr><th scope="row"><strong>Accommodation</strong> / <strong>Supplier</strong></th><td>verblijfplaats en leverancier; een <strong>BookingLine</strong> koppelt een boeking aan een combinatie met periode en prijs.</td></tr>
+<tr><th scope="row"><strong>Activity</strong></th><td>activiteit (tour, excursie, ticket, transfer); <strong>BookingActivity</strong> plaatst die in een boeking met datum/tijd, ontmoetingspunt en totaalprijs.</td></tr>
+<tr><th scope="row"><strong>Address</strong></th><td>herbruikbaar adres met rol (woon, factuur, accommodatie, leverancier)</td></tr>
+<tr><th scope="row"><strong>Document</strong></th><td>een bestand bij een boeking (geüpload of gegenereerd uit een template; docx of pdf)</td></tr>
+<tr><th scope="row"><strong>MolliePayment</strong></th><td>een (verwachte of echte) betaling; losstaand van Booking, gekoppeld via een koppeltabel (maximaal één boeking per betaling, afgedwongen met een UNIQUE-constraint)</td></tr>
+</tbody></table></div>
+<h3 id="h-levenscyclus-van-een-boeking">Levenscyclus van een boeking</h3>
+<p><code>AANVRAAG → OFFERTE → BOEKING → VOORSCHOT → BETAALD → OPREIS → WEERTHUIS → AFGEROND</code></p>
+<p>De status is een enum (<code>BookingStatus</code>, in de database bewaakt door een CHECK-constraint). <strong>De status kies je niet vrij</strong>: <code>PUT /api/bookings/{id}</code> met een andere status geeft <code>400</code>. Het systeem zet hem (offerte versturen, offerte bevestigen, betalingen, reisdatums); een medewerker kan alleen terugzetten (met reden) en afronden. In de API en UI is de waarde lowercase (<code>aanvraag</code>, …), in het template-model de hoofdletter-naam (<code>BOEKING</code>).</p>
+<p><img src="img/boeking-statusflow.svg" alt="Stroomdiagram boekingsstatussen"></p>
+<p>Het diagram toont de <strong>automatische statussen</strong> (stap 1 t/m 5, alle gebouwd): paars = handmatig met de rol die het mag, groen = systeem, oranje gestreept = terugval. Een nieuwe boeking start als <code>AANVRAAG</code>, <em>Offerte versturen</em> zet <code>OFFERTE</code>, het vinkje <em>Offerte bevestigd</em> zet <code>BOEKING</code> en maakt de betalingen aan (zie <em>Automatische betalingen</em>), de statusengine zet daarna <code>VOORSCHOT</code>, <code>BETAALD</code>, <code>OPREIS</code> en <code>WEERTHUIS</code> en rondt af (<code>AFGEROND</code>) zodra de boeking weer thuis is en alle meldingen zijn afgehandeld (zie <em>Statusengine en notificaties</em>). Een MANAGER kan ook zelf afronden. <em>Terugzetten met reden</em> kan naar elke eerdere status; zolang er niets betaald is mogen EMPLOYEE en MANAGER dat, daarna alleen een MANAGER. Een terugboeking via Mollie zet de status één stap terug (<code>BETAALD → VOORSCHOT</code>, <code>VOORSCHOT → BOEKING</code>).</p>
+<h3 id="h-booker-prospect-en-het-aanmeldproces">Booker, prospect en het aanmeldproces</h3>
+<p>Een <strong>prospect</strong> is <strong>geen apart type</strong>: het is een <code>Booker</code> met <code>status = PROSPECT</code> (kolom <code>booker.status</code>, migratie V4; waarden <code>PROSPECT</code>, <code>ACTIVE</code>, <code>NIETACTIEF</code>). Zo blijft het datamodel klein en kan een prospect zonder verhuizing een gewone boeker worden.</p>
+<ol><li>Medewerker registreert een potentiële klant op het scherm <em>Prospects</em> (status <code>PROSPECT</code>, nog geen boeking).</li><li>Mail met een e-mailtemplate versturen: mail-icoon op de regel in het scherm <em>Prospects</em> (template kiezen, voorbeeld bekijken, verzenden).</li><li>Vanaf een boeker (rij-icoon) of via de boekingenlijst een <strong>concept-boeking</strong> starten. <strong>Een boeking ontstaat alleen vanuit een bestaande boeker</strong> (de API weigert een boeking zonder <code>bookerId</code>, en een nieuwe boeking begint altijd als <code>AANVRAAG</code>); in het keuzevenster staat dus geen <em>Nieuwe boeker</em> meer.</li></ol>
+<figure class="diagram"><pre class="mermaid">
+stateDiagram-v2
+    [*] --&gt; PROSPECT: nieuwe boeker
+    PROSPECT --&gt; ACTIVE: eerste boeking
+    ACTIVE --&gt; NIETACTIEF: alle boekingen afgerond
+    NIETACTIEF --&gt; ACTIVE: nieuwe boeking
+    ACTIVE --&gt; PROSPECT: laatste boeking verwijderd
+</pre></figure>
+<ol><li><strong>De status van een boeker volgt uit zijn boekingen</strong> en is niet te kiezen (<code>BookerStatusUpdater</code>, sinds V17): geen boeking <code>PROSPECT</code>, minstens één boeking die nog niet is afgerond <code>ACTIVE</code>, alle boekingen afgerond <code>NIETACTIEF</code>. Elke nieuwe boeker begint als <code>PROSPECT</code>; een <code>status</code> in het verzoek wordt genegeerd. De backend rekent de status opnieuw na aanmaken, koppelen, ontkoppelen, een statuswijziging en verwijderen van een boeking. De knop <em>Maak boeker</em> is vervallen.</li></ol>
+<h3 id="h-offerte-bevestigen">Offerte bevestigen</h3>
+<p>De hoofdboeker bevestigt de (laatste) offerte van een <strong>boeking</strong>: <code>booking.quote_confirmed</code> met <code>quote_confirmed_at</code> (V17). Een medewerker zet het vinkje <em>Offerte bevestigd</em> in de dialoog <em>Boekinggegevens</em>. Dat kan alleen in status <code>OFFERTE</code> en met een hoofdboeker; de server zet dan het moment (<code>now()</code>) en de status op <code>BOEKING</code>. Uitvinken kan niet (<code>400</code>); terugzetten gaat later via een statuswijziging met reden.</p>
+<h3 id="h-offerte-versturen">Offerte versturen</h3>
+<p><code>POST /api/bookings/{id}/send-quote</code> (<code>QUOTE_SEND</code>, EMPLOYEE en MANAGER; <code>QuoteService</code>, sinds V18). Kan in status <code>AANVRAAG</code> of <code>OFFERTE</code>, zolang de offerte niet bevestigd is, en alleen met een hoofdboeker met e-mailadres. In één transactie:</p>
+<ol><li>de status wordt <code>OFFERTE</code> (eerst, zodat document en mail die status al tonen);</li><li>met de <strong>offertetemplate</strong> uit de organisatie-instellingen wordt een PDF gemaakt en als document bij de boeking bewaard, <strong>zichtbaar in het portaal</strong>;</li><li>de <strong>offertemail</strong> gaat naar de hoofdboeker met die PDF als bijlage; de verzonden mail wordt bewaard met een verwijzing naar het document (<code>sent_email.attachment_document_id</code>), zodat <em>Opnieuw versturen</em> dezelfde PDF weer meestuurt.</li></ol>
+<p>Mislukt een stap (PDF, mail), dan wordt alles teruggedraaid. Opnieuw versturen in <code>OFFERTE</code> maakt een nieuwe PDF en mail; eerdere offertes blijven staan.</p>
+<h3 id="h-organisatie-instellingen">Organisatie-instellingen</h3>
+<p><code>organization_settings</code> (V18): per organisatie één rij met keuzes die het systeem nodig heeft. Offerte (V18): <code>quote_document_template_id</code> en <code>quote_email_template_id</code> (beide optioneel; zonder beide kan geen offerte verstuurd worden). Betalingen (V19): <code>deposit_percentage</code> (1–100, standaard 30), <code>deposit_weeks_before_departure</code> (standaard 12), <code>balance_weeks_before_departure</code> (standaard 6; het voorschot moet eerder vervallen dan het restant) en <code>payment_email_template_id</code> (optioneel). Een gekozen template moet van de eigen organisatie zijn; verwijderen van de template maakt de keuze leeg (<code>ON DELETE SET NULL</code>). Zonder opgeslagen rij gelden de standaardwaarden. API: <code>GET</code>/<code>PUT /api/organization-settings/mine</code>.</p>
+<h3 id="h-automatische-betalingen">Automatische betalingen</h3>
+<p>Bij het bevestigen van de offerte (vinkje <em>Offerte bevestigd</em>, status wordt <code>BOEKING</code>) maakt <code>PaymentPlanService</code> in dezelfde transactie de betalingen aan, koppelt ze aan de boeking (status <code>OPEN</code>, nog niet bij Mollie) en stuurt de <strong>betaalmail</strong> naar de hoofdboeker als de organisatie er een heeft gekozen. Het schema (<code>PaymentPlan</code>, pure berekening) gaat uit van het totaal (verblijven plus activiteiten) en de <strong>vertrekdatum</strong> (de vroegste begindatum van de verblijven):</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Situatie (vandaag)</th><th>Betalingen</th></tr></thead><tbody>
+<tr><th scope="row">restanttermijn (vertrek − y weken) ligt nog voor ons</th><td><strong>VOORSCHOT</strong> (x% van het totaal, op centen afgerond) uiterlijk vertrek − x weken, of vandaag als dat al voorbij is; <strong>RESTANT</strong> (de rest) uiterlijk vertrek − y weken</td></tr>
+<tr><th scope="row">restanttermijn is al voorbij</th><td>één <strong>DEFINITIEF</strong>: het hele bedrag, uiterlijk vandaag</td></tr>
+<tr><th scope="row">voorschot is 100%</th><td>alleen een VOORSCHOT</td></tr>
+</tbody></table></div>
+<p>Zonder verblijf met een prijs kan niet bevestigd worden (<code>400</code>, er verandert niets). Handmatig vastgelegde betalingen hebben soort <strong>OVERIG</strong> (ook alle betalingen van vóór V19) en tellen niet mee in het schema.</p>
+<p><strong>Restant herberekenen.</strong> Na elke wijziging van een verblijf of activiteit (toevoegen, wijzigen, verwijderen) rekent het systeem bij een bevestigde boeking het restant (of de definitieve betaling) opnieuw uit: totaal min voorschot. Dat gebeurt alleen zolang die betaling nog niet bij Mollie bestaat; zou het restant 0 of negatief worden, dan blijft het bedrag staan (gelogd).</p>
+<p><strong>In templates</strong> staan de betalingen als <code>booking.payments</code> (zie <a href="templates.html">templates.md</a>), zodat de betaalmail ze kan opsommen.</p>
+<h3 id="h-concept-boeking">Concept-boeking</h3>
+<p><code>/bookings/new?bookerId=…</code> opent het boekingsdetail voorgevuld met de hoofdboeker, maar <strong>persisteert niets</strong>. De boeking wordt pas aangemaakt (<code>ensureBookingPersisted</code>) zodra de eerste onderdelen worden toegevoegd (reiziger, boekingsregel, activiteit, betaling, …). Is er al een lopende (niet-afgeronde) boeking voor die boeker, dan vraagt het scherm eerst bevestiging. Een nieuwe boeking zonder boeker wordt teruggestuurd naar het overzicht.</p>
+<h3 id="h-statusengine-en-notificaties">Statusengine en notificaties</h3>
+<p><code>BookingStatusEngine</code> (pakket <code>bookingstatus</code>) bepaalt de status van een bevestigde boeking (status <code>BOEKING</code> t/m <code>WEERTHUIS</code>; <code>AANVRAAG</code>, <code>OFFERTE</code> en <code>AFGEROND</code> laat hij met rust) met een pure berekening (<code>StatusTarget</code>):</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Betalingen</th><th>Datum (vandaag)</th><th>Status</th></tr></thead><tbody>
+<tr><th scope="row">niets betaald</th><td>–</td><td><code>BOEKING</code></td></tr>
+<tr><th scope="row">een deel betaald (het voorschot)</th><td>–</td><td><code>VOORSCHOT</code></td></tr>
+<tr><th scope="row">alles betaald</th><td>vóór de vertrekdatum</td><td><code>BETAALD</code></td></tr>
+<tr><th scope="row">alles betaald</th><td>vanaf de vertrekdatum t/m de terugkeerdatum</td><td><code>OPREIS</code></td></tr>
+<tr><th scope="row">alles betaald</th><td>na de terugkeerdatum</td><td><code>WEERTHUIS</code></td></tr>
+</tbody></table></div>
+<p>"Betaald" kijkt naar de betalingen uit het betalingsschema (voorschot, restant, definitief); heeft een boeking die niet (van vóór stap 3), dan naar alle betalingen. Mislukte, geannuleerde en verlopen betalingen tellen niet mee; zonder betalingen beslist de engine niets. Vertrek = vroegste begindatum, terugkeer = laatste einddatum van de verblijven.</p>
+<p><strong>Automatisch afronden</strong> (stap 5): staat een boeking op <code>WEERTHUIS</code> en heeft ze geen openstaande notificaties meer, dan zet de engine haar op <code>AFGEROND</code> (statusgeschiedenis: <em>Systeem: weer thuis en alle meldingen afgehandeld</em>) en rekent de status van de boeker opnieuw uit (alle boekingen afgerond = <code>NIETACTIEF</code>). De notificatie <em>Weer thuis</em> moet dus eerst afgehandeld zijn. Een boeking die al op <code>WEERTHUIS</code> stond zonder notificaties (van vóór stap 4) wordt bij de eerstvolgende run afgerond.</p>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    subgraph Aanleiding
+        W[&quot;Mollie-webhook of correctie&lt;br/&gt;(PaymentStatusRecordedEvent)&quot;]
+        N[&quot;notificatie afgehandeld&quot;]
+        L[&quot;medewerker logt in&lt;br/&gt;(eigen organisatie)&quot;]
+        C[&quot;elke nacht 02:15&lt;br/&gt;(alle organisaties)&quot;]
+    end
+    W &amp; N &amp; L &amp; C --&gt; E[&quot;BookingStatusEngine&lt;br/&gt;StatusTarget: betalingen + datums&quot;]
+    E --&gt; S[&quot;nieuwe status&lt;br/&gt;+ booking_status_change&quot;]
+    E --&gt; M[&quot;notificaties bij BETAALD, OPREIS,&lt;br/&gt;WEERTHUIS of terugval&quot;]
+    E --&gt; A[&quot;WEERTHUIS zonder open meldingen&lt;br/&gt;→ AFGEROND, boekerstatus opnieuw&quot;]
+</pre></figure>
+<p><strong>Wanneer.</strong> Direct na het afhandelen van een notificatie (voor die boeking), direct na elke nieuwe betaalstatus (Mollie-webhook of correctie, via het event <code>PaymentStatusRecordedEvent</code> in dezelfde transactie), bij het <strong>inloggen</strong> van een medewerker (alle boekingen van diens organisatie, eigen transactie; een fout breekt het inloggen niet) en <strong>elke nacht</strong> om 02:15 (alle organisaties). Instelbaar onder <code>app.status-engine</code> (<code>on-login</code>, <code>cron</code>); in tests staat <code>on-login</code> uit.</p>
+<p><strong>Terugboeking.</strong> Meldt Mollie een teruggeboekt bedrag (<code>amountChargedBack</code>), dan legt de webhook de betaalstatus <code>CHARGED_BACK</code> vast (ook als correctie te registreren). Die betaling telt dan niet meer als betaald en de engine zet de status terug (bv. <code>BETAALD → VOORSCHOT</code>).</p>
+<p><strong>Notificaties</strong> (<code>notification</code>, V20): bij het bereiken van <code>BETAALD</code> (<em>Alles betaald: de reisgegevens kunnen verstuurd worden</em>), <code>OPREIS</code>, <code>WEERTHUIS</code>, en bij een terugval (<em>Betaling teruggedraaid</em>). Springt de status over een mijlpaal heen (bv. in één keer betaald tijdens de reis), dan komen alle bijbehorende notificaties. Geen dubbele: zolang er een open notificatie van dezelfde soort is, komt er geen nieuwe. Een medewerker handelt een notificatie af (wie en wanneer); verwijderd wordt er niets. Wat de knop <em>Reisgegevens versturen</em> moet doen is nog niet bepaald.</p>
+<p><strong>Terugzetten en afronden.</strong> <code>POST /api/bookings/{id}/status-revert</code> met <code>{targetStatus, reason}</code> (reden 5–500 tekens) zet terug naar een eerdere status: met <code>BOOKING_STATUS_REVERT</code> (EMPLOYEE, MANAGER) zolang er niets betaald is, daarna alleen met <code>BOOKING_STATUS_REVERT_PAID</code> (MANAGER; anders <code>403</code>). Terug naar <code>AANVRAAG</code> of <code>OFFERTE</code> maakt de bevestiging van de offerte ongedaan (opnieuw bevestigen maakt geen nieuwe betalingen: het schema bestaat al). Let op: zet je terug binnen <code>BOEKING</code>–<code>WEERTHUIS</code>, dan rekent de engine bij de volgende gelegenheid de status opnieuw uit. <code>POST /api/bookings/{id}/complete</code> (<code>BOOKING_COMPLETE</code>, MANAGER) rondt af, met optionele toelichting.</p>
+<p><strong>Statusgeschiedenis</strong> (<code>booking_status_change</code>, V20, alleen-toevoegen): elke statuswijziging met van, naar, door het systeem of een medewerker, reden, wie en wanneer. <code>GET /api/bookings/{id}/status-changes</code> (<code>BOOKING_READ</code>).</p>
+<h2 id="h-documenten-en-templates">Documenten en templates</h2>
+<ul><li><strong>DocumentTemplate</strong> (Word, <code>.docx</code>) → met een boeking samengevoegd tot een <strong>Document</strong> (docx of pdf). Naam: <code>&lt;sjabloonnaam&gt; - &lt;boekingsnummer&gt; - &lt;datum tijd&gt;.ext</code> (het tijdstip voorkomt naamconflicten bij herhaald gebruik).</li><li><strong>EmailTemplate</strong> → met een booker of boeking samengevoegd tot onderwerp + HTML, te bekijken (voorbeeld) of te versturen, alleen vanuit een boeking of een prospect.</li><li>Beide gebruiken <strong>hetzelfde model</strong> (<code>booking.*</code>, bij e-mail ook <code>prospect.*</code>) en dezelfde editor: zie <a href="templates.html">templates.md</a>.</li></ul>
+<h2 id="h-betalen">Betalen</h2>
+<p>Het systeem maakt bij het bevestigen van de offerte het betalingsschema aan (zie <em>Automatische betalingen</em>); een medewerker kan daarnaast zelf een betaling vastleggen (soort OVERIG). De klant betaalt in de portal; de webhook werkt de status bij (<code>OPEN → … → PAID</code>). Zie <a href="mollie.html">mollie.md</a>.</p>
+<h2 id="h-domeinregels-om-te-onthouden">Domeinregels om te onthouden</h2>
+<ul><li><strong>Geschiedenis blijft:</strong> een boeking (en een booker, accommodatie, leverancier of activiteit waarin zo'n boeking voorkomt) met documenten of betalingen kan niet verwijderd worden (409). Documenten en betalingen hebben geen verwijderfunctie (geen knop en geen endpoint; <code>DELETE</code> geeft <code>405</code>). Zie <a href="security.html">security.md</a>.</li><li>Altijd tenant-filtering respecteren; nooit een entity naar buiten (DTO's).</li><li>Entities zijn onveranderlijk; een update behoudt <code>createdAt/By</code> en <code>tenantOrganization</code>.</li><li>Booker-portal-endpoints geven <strong>minimale</strong> eigen DTO's en zijn gebonden aan de boeking uit het token.</li><li>Een afbeelding in de bibliotheek hoort bij één organisatie en wordt nooit tussen organisaties gedeeld.</li></ul>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

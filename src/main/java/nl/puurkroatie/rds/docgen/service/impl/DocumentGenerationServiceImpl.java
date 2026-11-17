@@ -8,6 +8,7 @@ import fr.opensagres.xdocreport.document.registry.XDocReportRegistry;
 import fr.opensagres.xdocreport.template.IContext;
 import fr.opensagres.xdocreport.template.TemplateEngineKind;
 import fr.opensagres.xdocreport.template.formatter.FieldsMetadata;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.DocumentDto;
 import nl.puurkroatie.rds.booking.entity.Booking;
@@ -114,7 +115,7 @@ public class DocumentGenerationServiceImpl implements DocumentGenerationService 
     }
 
     private void verifyOrganization(UUID organizationId) {
-        if (!TenantContext.hasRole("ADMIN") && !organizationId.equals(TenantContext.getOrganizationId())) {
+        if (!TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN) && !organizationId.equals(TenantContext.getOrganizationId())) {
             throw new AccessDeniedException("Access denied: resource belongs to another organization");
         }
     }

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Openstaande punten, risico&#x27;s en ideeën</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Openstaande punten, risico&#x27;s en ideeën</h1>
+<p>Eerlijke lijst van wat niet af, niet getest of risicovol is, gevonden bij het nalopen van code en configuratie op 15-10-2026; aangevuld op 20-10-2026 (punten 28, 29, 31, 32 en 34, gevonden bij het schrijven van <a href="handleiding.html">handleiding.md</a>). Prioriteit: <strong>H</strong>oog / <strong>M</strong>idden / <strong>L</strong>aag. Haal een punt weg als het is opgelost, en noteer de oplossing in <a href="design-decisions.html">design-decisions.md</a> als er een keuze achter zat.</p>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-beveiliging-en-configuratie">Beveiliging en configuratie</a></li><li><a href="#h-functionaliteit-en-gedrag">Functionaliteit en gedrag</a></li><li><a href="#h-testen-en-kwaliteit">Testen en kwaliteit</a></li><li><a href="#h-documentatie-en-repo-hygi-ne-buiten-docs">Documentatie en repo-hygiëne (buiten docs/)</a></li><li><a href="#h-idee-n-nog-niet-gevraagd">Ideeën (nog niet gevraagd)</a></li></ul></nav>
+<h2 id="h-beveiliging-en-configuratie">Beveiliging en configuratie</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Prio</th><th>Punt</th><th>Toelichting</th></tr></thead><tbody>
+<tr><th scope="row">1</th><td>M</td><td><strong>Geheimen in de repository</strong></td><td><code>src/main/resources/application.yaml</code> staat in git en bevat het JWT-secret, databasegegevens en een Mollie-sleutel; <code>V2__initial_data.sql</code> bevat Mollie-sleutels per organisatie en <code>rds-platform.p12</code> (keystore) staat in git. De Mollie-sleutels zijn <strong>test-only</strong> (bevestigd door de gebruiker). Blijft staan: het JWT-secret en de keystore horen in een secret-store/omgevingsvariabelen zodra er echte data of een publieke omgeving komt, en een productie-Mollie-sleutel mag hier nooit komen.</td></tr>
+<tr><th scope="row">2</th><td>H</td><td><strong>Eén globale Mollie-sleutel</strong></td><td><code>MollieConfig</code> gebruikt <code>app.mollie.key</code>; <code>organization.mollie_key</code> wordt nergens gebruikt. Alle betalingen van alle organisaties gaan dus naar één Mollie-account. Fix: de REST-client per organisatie bouwen (sleutel van de boeking/organisatie).</td></tr>
+<tr><th scope="row">3</th><td>H</td><td><strong>OTP-mail is een stub</strong></td><td><code>OtpEmailService.sendOtp</code> logt de code. Klanten kunnen dus niet echt inloggen. De e-mailinfrastructuur (<code>EmailSender</code>, afzender per organisatie) bestaat nu; hergebruik die en maak er een systeem-template van.</td></tr>
+<tr><th scope="row">4</th><td>M</td><td><strong>OTP-beheer</strong></td><td><code>max-active-per-email</code> telt ook <strong>verlopen</strong> (niet-geverifieerde) codes mee: na een paar aanvragen kan een klant geen nieuwe code meer krijgen. Verlopen rijen worden nooit opgeruimd (<code>OtpRepository.deleteByExpiresAtBefore</code> bestaat, maar wordt nergens aangeroepen en er is geen scheduler). Er is geen teller voor foute pogingen (alleen de NGINX-rate-limit). Voeg opschoning en een limiet per code toe.</td></tr>
+<tr><th scope="row">7</th><td>M</td><td><strong>Publiek adres is http</strong></td><td>E-mailafbeeldingen en de Mollie-webhook gaan via <code>http://178.104.163.88</code>. Een domein met TLS (en <code>app.email.public-api-base-url</code> aanpassen) is het doel.</td></tr>
+<tr><th scope="row">8</th><td>M</td><td>JWT in <code>localStorage</code>, geen intrekking</td><td>Een gestolen token is tot 1 uur geldig (employee én booker); geen refresh/revocation. Acceptabel voor nu, maar bewust: XSS-risico beperken door de editor-HTML nooit zonder sanitizer te renderen (de preview gebruikt een sandbox-iframe zonder scripts).</td></tr>
+<tr><th scope="row">9</th><td>L</td><td>Actuator en <code>/monitoring</code></td><td>Alleen via NGINX afgeschermd; controleer welke Actuator-endpoints Spring zelf blootstelt.</td></tr>
+<tr><th scope="row">10</th><td>L</td><td>Mollie-webhook heeft geen handtekening</td><td>Mollie's klassieke webhooks zijn niet getekend; de backend haalt de status zelf op en valideert het id. Verder niets te doen, maar houd het in de gaten.</td></tr>
+<tr><th scope="row">28</th><td>M</td><td><strong>Geen automatische vergrendeling bij foute logins</strong></td><td>Een account wordt niet vanzelf <code>locked</code> na herhaalde foute wachtwoorden of codes; alleen de NGINX-rate-limit remt dat. <code>locked</code> zet een beheerder handmatig.</td></tr>
+<tr><th scope="row">29</th><td>L</td><td><strong>Wachtwoordregel verschilt tussen UI en server</strong></td><td>De interface (<code>change-password*.component.ts</code>) eist minimaal 8 tekens; <code>ChangePasswordDto</code> accepteert minimaal 6. Maak beide gelijk (liefst op de server de strengste).</td></tr>
+</tbody></table></div>
+<h2 id="h-functionaliteit-en-gedrag">Functionaliteit en gedrag</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Prio</th><th>Punt</th><th>Toelichting</th></tr></thead><tbody>
+<tr><th scope="row">11</th><td>M</td><td><strong>E-mail is synchroon en zonder retry</strong></td><td>Een trage of falende relay komt als fout op de request terug; geen wachtrij, geen bijlagen, geen CC/BCC, geen tracking. Zie <a href="email.html">email.md</a>.</td></tr>
+<tr><th scope="row">12</th><td>M</td><td><strong>SMTP in productie</strong></td><td>Lokaal is alles log-only. Controleer dat <code>SPRING_MAIL_*</code> op de server staat, dat <code>email_from</code> per organisatie gevuld is (alleen ADMIN kan dat bewerken) en dat SPF/DKIM bij de relay kloppen.</td></tr>
+<tr><th scope="row">13</th><td>M</td><td>Twee manieren om een Mollie-betaling te starten</td><td><code>POST /api/mollie/payments/create-at-mollie</code> (medewerker, maakt direct een betaling bij Mollie en een nieuw record) en de portal-flow (<code>…/pay/{id}</code>, werkt een bestaand record bij). Kies één leidend pad en verwijder of documenteer het andere.</td></tr>
+<tr><th scope="row">14b</th><td>L</td><td>Rol↔authority is globaal</td><td>Een wijziging in het rolscherm geldt voor alle organisaties tegelijk; ADMIN heeft <code>ROLEAUTHORITY_READ/CREATE/DELETE</code>, MANAGER alleen <code>_READ</code>. Ontkoppel je een authority die een ingelogde gebruiker nu gebruikt, dan merkt die dat pas bij een nieuw token (tot een uur).</td></tr>
+<tr><th scope="row">14a</th><td>L</td><td>Verwijderbescherming kijkt alleen naar documenten en betalingen</td><td><code>DeletionGuard</code> weigert verwijderen als er documenten of betalingen aan hangen. Een boeking zonder die geschiedenis, of een accommodatie/leverancier/activiteit in zo'n boeking, mag nog wel weg en neemt dan zijn boekingsregels en -activiteiten mee (database-cascade). Is dat te ruim, breid de guard dan uit (bv. ook reizigers of de status).</td></tr>
+<tr><th scope="row">14</th><td>M</td><td>Statusovergangen van een boeking zijn vrij</td><td>Geen toestandsmachine; elke status kan op elk moment gezet worden. Bepaal of dat zo moet blijven.</td></tr>
+<tr><th scope="row">15</th><td>L</td><td>Word-template-editor: beperkingen</td><td>Geen geneste tabellen, geen kop-/voettekst of paginanummers, maximaal 64 kolommen, WebP niet; een geüploade .docx is niet te bewerken. Zie <a href="templates.html">templates.md</a>.</td></tr>
+<tr><th scope="row">16</th><td>L</td><td>"In gebruik" van een afbeelding = tekst zoeken in de HTML</td><td><code>LIKE</code> op <code>body_html</code>/<code>source_html</code>; geen echte koppeling afbeelding ↔ template. Bij veel templates of een formaatwijziging van het pad is een koppeltabel robuuster.</td></tr>
+<tr><th scope="row">17</th><td>L</td><td><code>${prospect.gender}</code> is nu <code>MAN</code> i.p.v. <code>man</code></td><td>Bewuste wijziging voor één model; bestaande e-mailtemplates met die waarde (indien al in gebruik) kunnen anders ogen.</td></tr>
+<tr><th scope="row">18</th><td>L</td><td>Bedragen in templates</td><td>Zonder <code>?string(&quot;#,##0.00&quot;)</code> toont FreeMarker <code>1250.00</code> als <code>1.250</code>. Bestaande, geüploade Word-templates kunnen dit probleem hebben.</td></tr>
+<tr><th scope="row">19</th><td>L</td><td>Datums in templates zijn ISO-tekst</td><td>Geen lokale opmaak (<code>dd-MM-jjjj</code>); dat kan in de template (FreeMarker-functies) of centraal in <code>TemplateModels</code>.</td></tr>
+<tr><th scope="row">31</th><td>L</td><td>Employee-dashboard is een plaatshouder</td><td>Voor gebruikers zonder <code>ORGANIZATION_READ</code> en <code>ACCOUNT_CREATE</code> (EMPLOYEE) toont het dashboard alleen een welkomstkaart en <em>"Deze pagina wordt binnenkort beschikbaar."</em></td></tr>
+<tr><th scope="row">32</th><td>L</td><td>Authority <code>PAYMENT_DELETE</code> heeft geen endpoint</td><td>De authority staat in de seed (MANAGER) maar geen controller gebruikt hem: betalingen worden nooit verwijderd. Verwijder de authority of leg vast dat hij bewust ongebruikt blijft.</td></tr>
+<tr><th scope="row">34</th><td>L</td><td>ADMIN heeft <code>PAYMENT_CORRECT</code> en <code>PAYMENT_RELINK</code>, maar niet <code>PAYMENT_READ</code></td><td>ADMIN kan de betalingen dus niet inzien waarop die rechten werken. Bedoeld voor MANAGER; overweeg ze bij ADMIN weg te halen.</td></tr>
+</tbody></table></div>
+<h2 id="h-testen-en-kwaliteit">Testen en kwaliteit</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Prio</th><th>Punt</th><th>Toelichting</th></tr></thead><tbody>
+<tr><th scope="row">20</th><td>L</td><td><code>frontend-booker</code>: nog geen test van de OTP-schermen en de inlogflow</td><td>Het dashboard heeft 158 specs (store, zuivere logica, alle kaarten, layout). <code>otp-login</code> (aanvragen en verifiëren) en de interceptor/guard hebben nog geen spec.</td></tr>
+<tr><th scope="row">21</th><td>M</td><td><strong>29 van 63 componenten in <code>frontend-employee</code> hebben geen spec</strong></td><td>o.a. boekingsregel-/activiteit-/bewerk-dialogen, organisatie-onboarding, rol-/authority-/accountdetails, profiel/TOTP-dialogen, accommodatie- en activiteitdetails, document-upload, de detailpagina's van persoon en account. 10 van 29 services hebben geen spec.</td></tr>
+<tr><th scope="row">22</th><td>M</td><td>Geen test van volledige UI-flows (e2e)</td><td>Alles is unit-/MockMvc-niveau; de editor-in-een-browser is alleen met Karma getest.</td></tr>
+<tr><th scope="row">24</th><td>L</td><td>Geen CI-pipeline in de repository</td><td>Bouwen/testen/deployen gaat via lokale scripts.</td></tr>
+</tbody></table></div>
+<h2 id="h-documentatie-en-repo-hygi-ne-buiten-docs">Documentatie en repo-hygiëne (buiten <code>docs/</code>)</h2>
+<p><em>Opgelost op 15-10-2026: de losse tekst onderaan <code>CLAUDE.md</code> is verwijderd (de regels staan in <a href="working-agreements.html">working-agreements.md</a>) en <code>CLAUDE.md</code> verwijst nu naar de index, de werkafspraken en build-test-deploy.</em></p>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Punt</th></tr></thead><tbody>
+<tr><th scope="row">25</th><td><code>frontend-employee/README.md</code> en <code>frontend-booker/README.md</code> zijn de standaard Angular-CLI-tekst (noemen Angular 19.2); verwijs naar deze map of vervang ze.</td></tr>
+<tr><th scope="row">26</th><td>Er is geen README in de repo-root; <code>docs/README.md</code> kan die rol vervullen (of een korte root-README die ernaar verwijst).</td></tr>
+<tr><th scope="row">27</th><td><code>access.log</code> en <code>application-rds-local.yaml</code> staan terecht in <code>.gitignore</code>; controleer periodiek dat er geen logs of lokale configuratie in een commit belanden.</td></tr>
+</tbody></table></div>
+<h2 id="h-idee-n-nog-niet-gevraagd">Ideeën (nog niet gevraagd)</h2>
+<ul><li>Systeem-e-mails (OTP, welkom) als template per organisatie.</li><li>Boekingsstatus automatisch laten volgen op betalingen (voorschot betaald → <code>voorschot</code>/<code>betaald</code>).</li><li>Herhaalde tabellen met meer lijsten (adressen, betalingen) en een kop-/voettekst in Word-templates.</li><li>Eén centrale foutvertaling in de frontend (<code>error.error.message</code> → vertaalde tekst via een foutcode).</li></ul>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

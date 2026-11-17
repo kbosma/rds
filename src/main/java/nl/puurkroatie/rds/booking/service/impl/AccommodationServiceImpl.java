@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.booking.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.booking.dto.AccommodationDto;
 import nl.puurkroatie.rds.booking.entity.Accommodation;
@@ -86,7 +87,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private void verifyOrganization(UUID organizationId) {

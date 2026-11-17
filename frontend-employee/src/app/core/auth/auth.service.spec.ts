@@ -124,7 +124,7 @@ describe('AuthService', () => {
   // =================================================================
   // Role en authority checks
   // =================================================================
-  it('hasRole() should return true for matching role', () => {
+  it('can() checks an access definition against the authorities, never against role names', () => {
     service.login('jan', 'password').subscribe();
     httpTesting.expectOne('/api/auth/login').flush({
       token: validToken,
@@ -133,8 +133,11 @@ describe('AuthService', () => {
       mustChangePassword: false,
     });
 
-    expect(service.hasRole('ADMIN')).toBe(true);
-    expect(service.hasRole('EMPLOYEE')).toBe(false);
+    expect(service.authorities()).toEqual(['BOOKING_READ']);
+    expect(service.can({ anyOf: ['BOOKING_READ', 'PAYMENT_READ'] })).toBe(true);
+    expect(service.can({ allOf: ['BOOKING_READ', 'PAYMENT_READ'] })).toBe(false);
+    expect(service.can(undefined)).toBe(true);
+    expect((service as unknown as Record<string, unknown>)['hasRole']).toBeUndefined();
   });
 
   it('hasAuthority() should return true for matching authority', () => {

@@ -18,7 +18,7 @@ public class PersonDto {
     @NotNull
     @Size(max = 255)
     private String lastname;
-    private UUID organizationId;
+    private UUID tenantOrganization;
     private LocalDateTime createdAt;
     private UUID createdBy;
     private LocalDateTime modifiedAt;
@@ -26,23 +26,23 @@ public class PersonDto {
 
     @Default
     @JsonCreator
-    public PersonDto(UUID persoonId, String firstname, String prefix, String lastname, UUID organizationId, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public PersonDto(UUID persoonId, String firstname, String prefix, String lastname, UUID tenantOrganization, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.persoonId = persoonId;
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
-        this.organizationId = organizationId;
+        this.tenantOrganization = tenantOrganization;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
     }
 
-    public PersonDto(String firstname, String prefix, String lastname, UUID organizationId, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+    public PersonDto(String firstname, String prefix, String lastname, UUID tenantOrganization, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.firstname = firstname;
         this.prefix = prefix;
         this.lastname = lastname;
-        this.organizationId = organizationId;
+        this.tenantOrganization = tenantOrganization;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -65,8 +65,8 @@ public class PersonDto {
         return lastname;
     }
 
-    public UUID getOrganizationId() {
-        return organizationId;
+    public UUID getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public LocalDateTime getCreatedAt() {

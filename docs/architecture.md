@@ -33,10 +33,16 @@ De modules zijn los gehouden: `mollie` kent geen `Booking`; de koppeltabel `Book
 
 ## Lagen en verantwoordelijkheden
 
-```
-Controller  →  Service (interface + impl)  →  Repository (Spring Data JPA)
-   dun            business-logica, tenant-       alleen data-toegang
- (mapping+HTTP)   controle, @Transactional
+```mermaid
+flowchart LR
+    C(["Frontend / curl"]) --> N["NGINX<br/>(TLS, rate limit login)"]
+    N --> F["JwtAuthenticationFilter<br/>token → SecurityContext + TenantContext<br/>(rechtenversie, V26)"]
+    F --> CT["Controller<br/>@PreAuthorize, @Valid, mapping"]
+    CT --> S["Service (interface + impl)<br/>business-logica, tenant-controle,<br/>@Transactional"]
+    S --> R["Repository<br/>Spring Data JPA"]
+    R --> DB[("PostgreSQL<br/>Flyway, constraints, triggers")]
+    S -. "fout" .-> E["GlobalExceptionHandler<br/>{ message, status, timestamp }"]
+    CT -. "fout" .-> E
 ```
 
 - **Controller:** dun. Mapt HTTP naar service-aanroepen, `@PreAuthorize("hasAuthority('…')")` per methode, `@Valid` op de request-DTO. Geen business-logica.
@@ -75,9 +81,10 @@ Praktisch gevolg: een nieuwe, bedoelde fout voor de gebruiker is een `RuntimeExc
 
 ## Tenant-isolatie in de code
 
-`JwtAuthenticationFilter` zet `TenantContext` (organisatie, account, rollen; ThreadLocal) en ruimt op in een `finally`. Services lezen daaruit:
-- **ADMIN:** geen filtering (maar ook geen business-authorities).
-- **MANAGER/EMPLOYEE:** alleen eigen organisatie (`findByTenantOrganization`, `verifyOrganization`).
+`JwtAuthenticationFilter` zet `TenantContext` (organisatie, account, authorities; ThreadLocal) en ruimt op in een `finally`. Services lezen daaruit:
+- **`PLATFORM_ADMIN`** (rol ADMIN): geen filtering (maar ook geen business-authorities).
+- **Anderen:** alleen eigen organisatie (`findByTenantOrganization`, `verifyOrganization`); personen en accounts van de hele organisatie alleen met `USER_SCOPE_ORGANIZATION`, anders alleen het eigen.
+- Nooit op rolnaam: `TenantContext.hasAuthority(...)`.
 Details en de rest van de beveiliging: [security.md](security.md).
 
 ## Documentgeneratie en templates (`docgen`)

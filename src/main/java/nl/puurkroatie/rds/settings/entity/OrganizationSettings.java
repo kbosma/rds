@@ -31,8 +31,8 @@ public class OrganizationSettings {
     @Column(name = "organization_settings_id")
     private UUID organizationSettingsId;
 
-    @Column(name = "organization_id", nullable = false, unique = true, updatable = false)
-    private UUID organizationId;
+    @Column(name = "tenant_organization", nullable = false, unique = true, updatable = false)
+    private UUID tenantOrganization;
 
     @Column(name = "quote_document_template_id")
     private UUID quoteDocumentTemplateId;
@@ -71,10 +71,10 @@ public class OrganizationSettings {
     protected OrganizationSettings() {
     }
 
-    public OrganizationSettings(UUID organizationId, UUID quoteDocumentTemplateId, UUID quoteEmailTemplateId,
+    public OrganizationSettings(UUID tenantOrganization, UUID quoteDocumentTemplateId, UUID quoteEmailTemplateId,
                                 int depositPercentage, int depositWeeksBeforeDeparture, int balanceWeeksBeforeDeparture,
                                 UUID paymentEmailTemplateId) {
-        this.organizationId = organizationId;
+        this.tenantOrganization = tenantOrganization;
         this.quoteDocumentTemplateId = quoteDocumentTemplateId;
         this.quoteEmailTemplateId = quoteEmailTemplateId;
         this.depositPercentage = depositPercentage;
@@ -84,14 +84,14 @@ public class OrganizationSettings {
     }
 
     /** De instellingen van een organisatie die nog niets heeft opgeslagen (niet bewaard). */
-    public static OrganizationSettings defaults(UUID organizationId) {
-        return new OrganizationSettings(organizationId, null, null, DEFAULT_DEPOSIT_PERCENTAGE,
+    public static OrganizationSettings defaults(UUID tenantOrganization) {
+        return new OrganizationSettings(tenantOrganization, null, null, DEFAULT_DEPOSIT_PERCENTAGE,
                 DEFAULT_DEPOSIT_WEEKS_BEFORE_DEPARTURE, DEFAULT_BALANCE_WEEKS_BEFORE_DEPARTURE, null);
     }
 
     /** Bijgewerkte instellingen: id en aanmaakgegevens blijven, de keuzes komen uit {@code choices}. */
     public OrganizationSettings withChoicesOf(OrganizationSettings choices) {
-        OrganizationSettings updated = new OrganizationSettings(organizationId, choices.quoteDocumentTemplateId,
+        OrganizationSettings updated = new OrganizationSettings(tenantOrganization, choices.quoteDocumentTemplateId,
                 choices.quoteEmailTemplateId, choices.depositPercentage, choices.depositWeeksBeforeDeparture,
                 choices.balanceWeeksBeforeDeparture, choices.paymentEmailTemplateId);
         updated.organizationSettingsId = organizationSettingsId;
@@ -116,8 +116,8 @@ public class OrganizationSettings {
         return organizationSettingsId;
     }
 
-    public UUID getOrganizationId() {
-        return organizationId;
+    public UUID getTenantOrganization() {
+        return tenantOrganization;
     }
 
     public UUID getQuoteDocumentTemplateId() {

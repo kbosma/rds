@@ -250,17 +250,17 @@ export class OrganizationOnboardingComponent {
     roleId: ['', Validators.required],
   });
 
-  constructor() {
-    this.loadRoles();
-  }
-
-  private loadRoles() {
-    this.roleService.getAll().subscribe({
+  /**
+   * De nieuwe organisatie heeft haar eigen, vergrendelde MANAGER-rol (aangemaakt door de backend). Die krijgt de
+   * eerste gebruiker; gekozen op systeemsleutel, niet op naam.
+   */
+  private loadManagerRole(organizationId: string) {
+    this.roleService.getAll(organizationId).subscribe({
       next: (roles) => {
-        const managerRole = roles.find(r => r.description === 'MANAGER');
+        const managerRole = roles.find(r => r.systemKey === 'MANAGER');
         if (managerRole) {
           this.roleForm.patchValue({ roleId: managerRole.roleId });
-          this.selectedRoleName.set('MANAGER');
+          this.selectedRoleName.set(managerRole.description);
         }
       },
     });
@@ -274,6 +274,7 @@ export class OrganizationOnboardingComponent {
       next: (org) => {
         this.createdOrganizationId = org.organizationId;
         this.createdOrganizationName.set(org.name);
+        this.loadManagerRole(org.organizationId);
         this.snackBar.open(this.translate.instant('onboarding.organizationCreated'), '', { duration: 3000 });
         this.saving.set(false);
         stepper.next();
@@ -291,7 +292,7 @@ export class OrganizationOnboardingComponent {
 
     const personData = {
       ...this.personForm.value,
-      organizationId: this.createdOrganizationId,
+      tenantOrganization: this.createdOrganizationId,
     };
 
     this.personService.create(personData as any).subscribe({

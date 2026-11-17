@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * daarna, dan rekent het restant mee zolang het nog niet bij Mollie bestaat.
  */
 class PaymentPlanControllerTest extends AbstractBookingControllerTest {
+
+    private static final DateTimeFormatter DUTCH_DATE = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private static final UUID ACCOMMODATION = UUID.fromString("04000000-0000-0000-0000-000000000004");
     private static final UUID SUPPLIER = UUID.fromString("05000000-0000-0000-0000-000000000003");
@@ -212,8 +215,8 @@ class PaymentPlanControllerTest extends AbstractBookingControllerTest {
         assertEquals(1, mails.size());
         String html = mails.get(0).get("bodyHtml").asText();
         assertTrue(html.contains("Totaal 2000,00"), html);
-        assertTrue(html.contains("voorschot") && html.contains("600,00") && html.contains(departure.minusWeeks(12).toString()), html);
-        assertTrue(html.contains("restant") && html.contains("1400,00") && html.contains(departure.minusWeeks(6).toString()), html);
+        assertTrue(html.contains("voorschot") && html.contains("600,00") && html.contains(DUTCH_DATE.format(departure.minusWeeks(12))), html);
+        assertTrue(html.contains("restant") && html.contains("1400,00") && html.contains(DUTCH_DATE.format(departure.minusWeeks(6))), html);
     }
 
     @Test

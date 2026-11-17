@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -35,11 +36,11 @@ public class AccountRoleController {
         return accountRoleService.findAll();
     }
 
-    // Rollen die de ingelogde gebruiker mag toewijzen/intrekken (ADMIN: alle, anderen: een beperkte set).
+    // Rollen die de ingelogde gebruiker aan dit account mag toewijzen of ervan mag intrekken.
     @GetMapping("/assignable-roles")
     @PreAuthorize("hasAuthority('ACCOUNTROLE_READ')")
-    public List<RoleDto> findAssignableRoles() {
-        return accountRoleService.findAssignableRoles();
+    public List<RoleDto> findAssignableRoles(@RequestParam(required = false) UUID accountId) {
+        return accountRoleService.findAssignableRoles(accountId);
     }
 
     @GetMapping("/{accountId}/{roleId}")

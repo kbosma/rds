@@ -84,7 +84,13 @@ class DocumentGenerationServiceTest {
         String withMap = extractText(renderDocument(templateBytes, TemplateModels.toModel(bookingContext), false));
 
         assertTrue(withBean.contains(bookingContext.getBookingNumber()), "sanity: boekingsnummer moet in de uitvoer staan");
-        assertEquals(withBean, withMap);
+        assertEquals(dutchDates(withBean), withMap);
+    }
+
+    /** De bean-weergave toont ISO-datums; het model zet ze bewust in de notatie dd-MM-yyyy (en dd-MM-yyyy HH:mm). */
+    private static String dutchDates(String text) {
+        return text.replaceAll("(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}:\\d{2})", "$3-$2-$1 $4")
+                .replaceAll("(\\d{4})-(\\d{2})-(\\d{2})", "$3-$2-$1");
     }
 
     private String extractText(byte[] docx) throws Exception {

@@ -5,6 +5,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +29,8 @@ import java.util.Map;
  *   <li>bean-properties worden map-sleutels met dezelfde naam (incl. berekende getters);</li>
  *   <li>getallen blijven getallen (FreeMarker maakt ze op met zijn getalnotatie; naar tekst
  *       omzetten zou de weergave veranderen);</li>
- *   <li>datums/tijden worden hun ISO-tekst, precies wat {@code ${...}} voorheen toonde;</li>
+ *   <li>datums worden tekst in de Nederlandse notatie {@code dd-MM-yyyy}, datum-tijden
+ *       {@code dd-MM-yyyy HH:mm}; andere tijdtypen worden hun ISO-tekst;</li>
  *   <li>lijsten blijven lijsten (voor {@code [#list ...]});</li>
  *   <li>{@code null} blijft {@code null} (zodat {@code ${x!""}} blijft werken).</li>
  * </ul>
@@ -38,6 +42,9 @@ public final class TemplateModels {
 
     /** Alleen beans uit dit package worden omgezet; alles daarbuiten is onbekend. */
     private static final String CONTEXT_PACKAGE = "nl.puurkroatie.rds.docgen.context.";
+
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 
     private TemplateModels() {
     }
@@ -60,6 +67,12 @@ public final class TemplateModels {
         }
         if (value instanceof String || value instanceof Number || value instanceof Boolean) {
             return value;
+        }
+        if (value instanceof LocalDate date) {
+            return DATE.format(date);
+        }
+        if (value instanceof LocalDateTime dateTime) {
+            return DATE_TIME.format(dateTime);
         }
         if (value instanceof TemporalAccessor || value instanceof Enum) {
             return value.toString();

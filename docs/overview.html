@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overzicht: wat is RDS en hoe zit het in elkaar?</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Overzicht: wat is RDS en hoe zit het in elkaar?</h1>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-in-n-alinea">In één alinea</a></li><li><a href="#h-gebruikers-en-wat-ze-doen">Gebruikers en wat ze doen</a></li><li><a href="#h-functionaliteit-per-gebied">Functionaliteit per gebied</a></li><li><a href="#h-architectuur-in-het-kort">Architectuur in het kort</a></li><li><a href="#h-repository-indeling">Repository-indeling</a></li><li><a href="#h-demo-seeddata">Demo-/seeddata</a></li></ul></nav>
+<h2 id="h-in-n-alinea">In één alinea</h2>
+<p>RDS (<strong>R</strong>eis <strong>D</strong>ossier <strong>S</strong>ysteem) is een multi-tenant SaaS voor reisorganisaties. Medewerkers beheren <strong>boekingen</strong> (een dossier per reis: hoofdboeker, reizigers, accommodaties, activiteiten, documenten, betalingen). Het systeem genereert <strong>Word/PDF-documenten</strong> en verstuurt <strong>e-mails</strong> vanuit templates, laat klanten via een <strong>portal</strong> hun dossier bekijken en laat ze via <strong>Mollie</strong> betalen. Elke organisatie (tenant) ziet alleen eigen data.</p>
+<h2 id="h-gebruikers-en-wat-ze-doen">Gebruikers en wat ze doen</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Gebruiker</th><th>App</th><th>Doet</th></tr></thead><tbody>
+<tr><th scope="row"><strong>ADMIN</strong> (systeembeheer)</th><td><code>frontend-employee</code></td><td>organisaties, personen, accounts, rollen, authorities beheren. Heeft bewust géén boekingsrechten.</td></tr>
+<tr><th scope="row"><strong>MANAGER</strong></th><td><code>frontend-employee</code></td><td>alles binnen de eigen organisatie: boekingen, stamgegevens, templates (Word + e-mail), documenten, betalingen, thema, gebruikersbeheer</td></tr>
+<tr><th scope="row"><strong>EMPLOYEE</strong></th><td><code>frontend-employee</code></td><td>dagelijks werk: boekingen, bookers/prospects, documenten, mails versturen; templates alleen lezen</td></tr>
+<tr><th scope="row"><strong>Booker</strong> (klant, extern)</th><td><code>frontend-booker</code></td><td>inloggen met e-mailadres + boekingsnummer + eenmalige code (OTP); één dashboard met kerngegevens, tijdlijn, verblijven, activiteiten, betalingen, verzonden e-mails (lezen) en documenten (downloaden) van de eigen boeking; betalen</td></tr>
+</tbody></table></div>
+<p>De precieze rechten staan in <a href="security.html">security.md</a> (rollen → authorities).</p>
+<h2 id="h-functionaliteit-per-gebied">Functionaliteit per gebied</h2>
+<h3 id="h-boekingen-frontend-employee-boekingen">Boekingen (<code>frontend-employee</code> → <em>Boekingen</em>)</h3>
+<ul><li>Lijst en detailscherm per boeking: boekingsnummer, <strong>status</strong> (<code>aanvraag → offerte → boeking → voorschot → betaald → opreis → weerthuis → afgerond</code>), periode en totaalbedrag, <strong>hoofdboeker</strong>, <strong>reizigers</strong>, <strong>boekingsregels</strong> (accommodatie + leverancier + periode + prijs), <strong>boekingsactiviteiten</strong>, <strong>documenten</strong>, <strong>betalingen</strong>.</li><li>Acties in het detail: documenten uploaden of <strong>genereren</strong> uit een Word-template (docx of pdf), een Mollie-betaling aanmaken, <strong>e-mail versturen</strong> naar de hoofdboeker (<em>Toevoegen → E-mail aan hoofdboeker</em> in de tijdlijn <em>Berichten en documenten</em>).</li><li><strong>Concept-boeking:</strong> vanuit een boeker/prospect een nieuwe boeking starten (<code>/bookings/new?bookerId=…</code>). Het scherm is voorgevuld, maar er wordt <strong>niets opgeslagen</strong> totdat de eerste onderdelen (reiziger, boekingsregel, …) worden toegevoegd (<code>ensureBookingPersisted</code>). Heeft de gekozen boeker al een lopende (niet afgeronde) boeking, dan volgt een waarschuwing.</li></ul>
+<h3 id="h-bookers-en-prospects">Bookers en prospects</h3>
+<ul><li>Een <strong>prospect</strong> is in het datamodel gewoon een <code>Booker</code> met <code>status = PROSPECT</code> (zie <a href="domain.html">domain.md</a>). Het scherm <em>Prospects</em> is het aanmeldproces: potentiële klanten registreren en ze mailen. In het booker-dialoog zet <strong>Maak boeker</strong> een prospect om naar <code>ACTIVE</code>.</li><li><em>Bookers</em> toont de reguliere boekers; een icoon per rij start een concept-boeking.</li><li><em>Reizigers</em> (<code>travelers</code>) hangen aan een boeking.</li></ul>
+<h3 id="h-stamgegevens">Stamgegevens</h3>
+<p>Accommodaties (met adressen en leveranciers), leveranciers (met adressen), activiteiten (soort: tour, excursie, ticket, transfer). Alleen met de bijbehorende <code>*_CREATE/UPDATE/DELETE</code>-authorities zichtbaar.</p>
+<h3 id="h-documenten-en-word-templates">Documenten en Word-templates</h3>
+<ul><li>Een <strong>Word-template</strong> is een <code>.docx</code> met velden zoals <code>${booking.bookingNumber}</code>; de backend voegt dit samen met de boekingsgegevens (xdocreport + FreeMarker) tot een document (docx of pdf), dat aan de boeking hangt. De naam bevat sjabloonnaam, boekingsnummer en datum+tijd, zodat hetzelfde sjabloon meerdere keren kan worden ingezet.</li><li>Een template kan <strong>geüpload</strong> worden of in de <strong>WYSIWYG-editor</strong> gemaakt worden (met variabelen, afbeeldingen en herhaalde tabellen); zie <a href="templates.html">templates.md</a>.</li></ul>
+<h3 id="h-e-mail">E-mail</h3>
+<p>E-mailtemplates (onderwerp + HTML) met dezelfde editor; het scherm <em>E-mailtemplates</em> is alleen voor het beheren ervan. Versturen (met voorbeeld) gebeurt <strong>alleen</strong> vanuit een boeking (naar de hoofdboeker) of vanuit een prospect (mail-icoon in <em>Prospects</em>). Zie <a href="email.html">email.md</a>.</p>
+<h3 id="h-betalingen-mollie">Betalingen (Mollie)</h3>
+<p>De medewerker maakt een betalingsrecord voor een boeking; de klant triggert in de portal de echte betaling; een webhook werkt de status bij. Zie <a href="mollie.html">mollie.md</a>.</p>
+<h3 id="h-beheer-alleen-met-de-juiste-authorities">Beheer (alleen met de juiste authorities)</h3>
+<p>Organisaties (incl. afzenderadres voor e-mail en Mollie-sleutel), een <strong>onboarding-wizard</strong> voor een nieuwe organisatie (organisatie → persoon → account → rol), personen, accounts (vergrendelen, TOTP resetten), rollen, authorities, en het <strong>organisatiethema</strong> (kleuren, logo) dat de hele UI inkleurt.</p>
+<h3 id="h-profiel-en-beveiliging-van-het-eigen-account">Profiel en beveiliging van het eigen account</h3>
+<p>Wachtwoord wijzigen (afgedwongen bij eerste login als <code>must_change_password</code>), <strong>TOTP</strong> (2FA) instellen/uitzetten met herstelcodes.</p>
+<h3 id="h-booker-portal-frontend-booker">Booker-portal (<code>frontend-booker</code>)</h3>
+<p>Inloggen met OTP; daarna <strong>één dashboard</strong> met alles van de <strong>eigen boeking</strong> op één pagina, responsive voor telefoon, tablet en desktop, in de huisstijl van de organisatie. Zie <a href="bookerportal.html">bookerportal.md</a> en <a href="frontend.html">frontend.md</a>.</p>
+<h2 id="h-architectuur-in-het-kort">Architectuur in het kort</h2>
+<figure class="diagram"><pre class="mermaid">
+flowchart LR
+    subgraph Browser
+      EMP[frontend-employee&lt;br/&gt;Angular 22]
+      BOK[frontend-booker&lt;br/&gt;Angular 22]
+    end
+    NGX[NGINX&lt;br/&gt;/rds/ /booker/ /api/]
+    API[Spring Boot 4&lt;br/&gt;Jetty :8666 /rds]
+    DB[(PostgreSQL 17&lt;br/&gt;Flyway V1-V16)]
+    MOL[Mollie API]
+    SMTP[Mail-relay SMTP]
+
+    EMP --&gt;|JWT type=EMPLOYEE| NGX
+    BOK --&gt;|JWT type=BOOKER| NGX
+    NGX --&gt;|/api -&gt; /rds/api| API
+    API --&gt; DB
+    API --&gt;|betaling aanmaken| MOL
+    MOL --&gt;|webhook| NGX
+    API --&gt;|e-mail| SMTP
+</pre></figure>
+<ul><li><strong>Backend:</strong> per domeinmodule de lagen <em>controller → service (+impl) → repository</em>, DTO's + MapStruct, Flyway, <code>TenantContext</code>. Details: <a href="architecture.html">architecture.md</a>.</li><li><strong>Frontends:</strong> standalone componenten, services voor API-calls, authority-gestuurde UI, ngx-translate. Details: <a href="frontend.html">frontend.md</a>.</li><li><strong>Templating:</strong> één FreeMarker-model voor e-mail en Word, strikt afgeschermd. Details: <a href="templates.html">templates.md</a>.</li></ul>
+<h2 id="h-repository-indeling">Repository-indeling</h2>
+<pre class="sketch">rds/
+├── CLAUDE.md                    # projectregels voor Claude (leidend)
+├── pom.xml                      # backend (Maven, Java 21)
+├── src/main/java/nl/puurkroatie/rds/
+│   ├── auth/        # organisaties, personen, accounts, rollen, authorities, JWT, TOTP, thema, security-config
+│   ├── booking/     # boekingen, bookers, reizigers, accommodaties, leveranciers, activiteiten, adressen, documenten, document-templates
+│   ├── mollie/      # betalingen + webhook
+│   ├── bookerportal/# OTP-login en portal-endpoints voor klanten
+│   ├── email/       # e-mailtemplates, versturen, afbeeldingenbibliotheek
+│   ├── docgen/      # gedeeld template-model, documentgeneratie, HTML→docx, herhaalde tabellen
+│   └── common/      # kleine gedeelde hulpmiddelen (enum-parsing)
+├── src/main/resources/db/migration/   # Flyway V1..V16
+├── src/test/java/…                    # backend-tests (unit + MockMvc-integratie)
+├── frontend-employee/           # Angular-app voor medewerkers
+├── frontend-booker/             # Angular-app voor klanten
+├── deploy/nginx/               # NGINX-config rds.kbtg.nl + install-script (Let&#x27;s Encrypt)
+├── deploy/scripts/              # build+deploy-scripts (backend, beide frontends)
+├── start/scripts/               # lokale Mollie-tunnel (cloudflared)
+└── docs/                        # deze documentatie</pre>
+<h2 id="h-demo-seeddata">Demo-/seeddata</h2>
+<p><code>V2__initial_data.sql</code> vult twee organisaties (<strong>Puurkroatie</strong> en <strong>TechPartner BV</strong>), de rollen ADMIN/EMPLOYEE/MANAGER, de authorities, personen/accounts en voorbeeldboekingen. Tests leunen op deze vaste UUID's (zie <code>AbstractControllerTest</code>, <code>AbstractBookingControllerTest</code>). Productiedata hoort daar niet in.</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

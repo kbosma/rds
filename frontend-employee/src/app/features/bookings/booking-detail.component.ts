@@ -47,15 +47,8 @@ import {
 import { AuthService } from '../../core/auth/auth.service';
 import { Booker, Traveler, BookingLine, BookingActivity, MolliePayment, Document, SentEmail } from '../../shared/models';
 import { DatePipe, Location } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { forkJoin } from 'rxjs';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
-
-interface BookingMolliePaymentLink {
-  bookingId: string;
-  molliePaymentId: string;
-}
 
 @Component({
   selector: 'app-booking-detail',
@@ -174,7 +167,7 @@ interface BookingMolliePaymentLink {
         <mat-card class="detail-card">
           <mat-card-header>
             <mat-card-title>{{ 'bookings.accommodations' | translate }}</mat-card-title>
-            @if (!readOnly()) {
+            @if (can('BOOKING_CREATE')) {
               <button mat-stroked-button class="act-create card-header-btn"
                       (click)="openBookingLineDialog()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
@@ -207,7 +200,7 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
                   <td mat-cell *matCellDef="let line" class="actions-cell">
-                    <app-row-actions [canEdit]="!readOnly()" [canDelete]="!readOnly()"
+                    <app-row-actions [canEdit]="can('BOOKING_UPDATE')" [canDelete]="can('BOOKING_DELETE')"
                                      (edit)="openBookingLineDialog(line)" (remove)="deleteBookingLine(line)" />
                   </td>
                 </ng-container>
@@ -224,7 +217,7 @@ interface BookingMolliePaymentLink {
         <mat-card class="detail-card">
           <mat-card-header>
             <mat-card-title>{{ 'bookingActivity.title' | translate }}</mat-card-title>
-            @if (!readOnly()) {
+            @if (can('BOOKING_CREATE')) {
               <button mat-stroked-button class="act-create card-header-btn"
                       (click)="openBookingActivityDialog()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
@@ -267,7 +260,7 @@ interface BookingMolliePaymentLink {
                 <ng-container matColumnDef="activityActions">
                   <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
                   <td mat-cell *matCellDef="let ba" class="actions-cell">
-                    <app-row-actions [canEdit]="!readOnly()" [canDelete]="!readOnly()"
+                    <app-row-actions [canEdit]="can('BOOKING_UPDATE')" [canDelete]="can('BOOKING_DELETE')"
                                      (edit)="openBookingActivityDialog(ba)" (remove)="deleteBookingActivity(ba)" />
                   </td>
                 </ng-container>
@@ -280,97 +273,99 @@ interface BookingMolliePaymentLink {
           </mat-card-content>
         </mat-card>
 
-          <mat-card class="detail-card">
-            <mat-card-header>
-              <mat-card-title>{{ 'bookings.payments' | translate }}</mat-card-title>
-              @if (!readOnly()) {
-                <button mat-stroked-button class="act-create card-header-btn"
-                        (click)="showNewPaymentForm.set(!showNewPaymentForm())">
-                  <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
-                </button>
-              }
-            </mat-card-header>
-            <mat-card-content>
-              <!-- New payment form -->
-              @if (showNewPaymentForm()) {
-                <div class="new-payment-form">
-                  <form [formGroup]="newPaymentForm" (ngSubmit)="onCreatePayment()">
-                    <div class="row">
-                      <mat-form-field appearance="outline">
-                        <mat-label>{{ 'common.description' | translate }}</mat-label>
-                        <input matInput formControlName="description" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline">
-                        <mat-label>{{ 'common.amount' | translate }}</mat-label>
-                        <span matTextPrefix>&euro;&nbsp;</span>
-                        <input matInput type="number" formControlName="amount" />
-                      </mat-form-field>
-                    </div>
-                    <div class="actions">
-                      <button mat-button type="button" (click)="showNewPaymentForm.set(false)">{{ 'common.cancel' | translate }}</button>
-                      <button mat-raised-button color="primary" type="submit"
-                              [disabled]="creatingPayment() || newPaymentForm.invalid">
-                        @if (creatingPayment()) {
-                          <mat-spinner diameter="20"></mat-spinner>
-                        } @else {
-                          <ng-container><mat-icon>add</mat-icon> {{ 'common.add' | translate }}</ng-container>
+          @if (authService.hasAuthority('PAYMENT_READ')) {
+            <mat-card class="detail-card">
+              <mat-card-header>
+                <mat-card-title>{{ 'bookings.payments' | translate }}</mat-card-title>
+                @if (can('PAYMENT_CREATE')) {
+                  <button mat-stroked-button class="act-create card-header-btn"
+                          (click)="showNewPaymentForm.set(!showNewPaymentForm())">
+                    <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
+                  </button>
+                }
+              </mat-card-header>
+              <mat-card-content>
+                <!-- New payment form -->
+                @if (showNewPaymentForm()) {
+                  <div class="new-payment-form">
+                    <form [formGroup]="newPaymentForm" (ngSubmit)="onCreatePayment()">
+                      <div class="row">
+                        <mat-form-field appearance="outline">
+                          <mat-label>{{ 'common.description' | translate }}</mat-label>
+                          <input matInput formControlName="description" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline">
+                          <mat-label>{{ 'common.amount' | translate }}</mat-label>
+                          <span matTextPrefix>&euro;&nbsp;</span>
+                          <input matInput type="number" formControlName="amount" />
+                        </mat-form-field>
+                      </div>
+                      <div class="actions">
+                        <button mat-button type="button" (click)="showNewPaymentForm.set(false)">{{ 'common.cancel' | translate }}</button>
+                        <button mat-raised-button color="primary" type="submit"
+                                [disabled]="creatingPayment() || newPaymentForm.invalid">
+                          @if (creatingPayment()) {
+                            <mat-spinner diameter="20"></mat-spinner>
+                          } @else {
+                            <ng-container><mat-icon>add</mat-icon> {{ 'common.add' | translate }}</ng-container>
+                          }
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <mat-divider class="form-divider"></mat-divider>
+                }
+
+                <!-- Payments table -->
+                @if (paymentsLoading()) {
+                  <div class="loading-inline">
+                    <mat-spinner diameter="30"></mat-spinner>
+                  </div>
+                } @else if (payments().length > 0) {
+                  <table mat-table [dataSource]="payments()" class="full-width">
+                    <ng-container matColumnDef="description">
+                      <th mat-header-cell *matHeaderCellDef>{{ 'common.description' | translate }}</th>
+                      <td mat-cell *matCellDef="let p">
+                        {{ p.description }}
+                        @if (p.paymentType && p.paymentType !== 'overig') {
+                          <div class="payment-type">{{ 'payments.types.' + p.paymentType | translate }}</div>
                         }
-                      </button>
-                    </div>
-                  </form>
-                </div>
-                <mat-divider class="form-divider"></mat-divider>
-              }
+                      </td>
+                    </ng-container>
 
-              <!-- Payments table -->
-              @if (paymentsLoading()) {
-                <div class="loading-inline">
-                  <mat-spinner diameter="30"></mat-spinner>
-                </div>
-              } @else if (payments().length > 0) {
-                <table mat-table [dataSource]="payments()" class="full-width">
-                  <ng-container matColumnDef="description">
-                    <th mat-header-cell *matHeaderCellDef>{{ 'common.description' | translate }}</th>
-                    <td mat-cell *matCellDef="let p">
-                      {{ p.description }}
-                      @if (p.paymentType && p.paymentType !== 'overig') {
-                        <div class="payment-type">{{ 'payments.types.' + p.paymentType | translate }}</div>
-                      }
-                    </td>
-                  </ng-container>
+                    <ng-container matColumnDef="amount">
+                      <th mat-header-cell *matHeaderCellDef class="cell-num">{{ 'common.amount' | translate }}</th>
+                      <td mat-cell *matCellDef="let p" class="cell-num">{{ p.amount | money }}</td>
+                    </ng-container>
 
-                  <ng-container matColumnDef="amount">
-                    <th mat-header-cell *matHeaderCellDef class="cell-num">{{ 'common.amount' | translate }}</th>
-                    <td mat-cell *matCellDef="let p" class="cell-num">{{ p.amount | money }}</td>
-                  </ng-container>
+                    <ng-container matColumnDef="status">
+                      <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
+                      <td mat-cell *matCellDef="let p">
+                        <app-payment-status-badge [status]="currentPaymentStatus(p.molliePaymentId)" />
+                      </td>
+                    </ng-container>
 
-                  <ng-container matColumnDef="status">
-                    <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
-                    <td mat-cell *matCellDef="let p">
-                      <app-payment-status-badge [status]="currentPaymentStatus(p.molliePaymentId)" />
-                    </td>
-                  </ng-container>
+                    <ng-container matColumnDef="dueDate">
+                      <th mat-header-cell *matHeaderCellDef>{{ 'payments.dueDate' | translate }}</th>
+                      <td mat-cell *matCellDef="let p" class="due-date cell-nowrap">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
+                    </ng-container>
 
-                  <ng-container matColumnDef="dueDate">
-                    <th mat-header-cell *matHeaderCellDef>{{ 'payments.dueDate' | translate }}</th>
-                    <td mat-cell *matCellDef="let p" class="due-date cell-nowrap">{{ p.dueDate ? (p.dueDate | date:'dd-MM-yyyy') : '—' }}</td>
-                  </ng-container>
+                    <ng-container matColumnDef="actions">
+                      <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
+                      <td mat-cell *matCellDef="let p" class="actions-cell">
+                        <app-row-actions [canView]="authService.hasAuthority('PAYMENT_READ')" (view)="viewPayment(p)" />
+                      </td>
+                    </ng-container>
 
-                  <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'common.actions' | translate }}</th>
-                    <td mat-cell *matCellDef="let p" class="actions-cell">
-                      <app-row-actions [canView]="authService.hasAuthority('PAYMENT_READ')" (view)="viewPayment(p)" />
-                    </td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="paymentColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: paymentColumns;"></tr>
-                </table>
-              } @else {
-                <p class="empty-text">{{ 'bookings.noPaymentsLinked' | translate }}</p>
-              }
-            </mat-card-content>
-          </mat-card>
+                    <tr mat-header-row *matHeaderRowDef="paymentColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: paymentColumns;"></tr>
+                  </table>
+                } @else {
+                  <p class="empty-text">{{ 'bookings.noPaymentsLinked' | translate }}</p>
+                }
+              </mat-card-content>
+            </mat-card>
+          }
       }
         </div>
 
@@ -548,7 +543,6 @@ export class BookingDetailComponent implements OnInit {
   private documentService = inject(DocumentService);
   private sentEmailService = inject(SentEmailService);
   authService = inject(AuthService);
-  private http = inject(HttpClient);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
@@ -836,10 +830,7 @@ export class BookingDetailComponent implements OnInit {
       currency: 'EUR',
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (payment) => {
-        this.http.post<BookingMolliePaymentLink>(
-          `${environment.apiUrl}/booking-mollie-payments`,
-          { bookingId: this.bookingId, molliePaymentId: payment.molliePaymentId }
-        ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        this.molliePaymentService.linkToBooking(this.bookingId!, payment.molliePaymentId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
             this.creatingPayment.set(false);
             this.showNewPaymentForm.set(false);
@@ -1160,13 +1151,11 @@ export class BookingDetailComponent implements OnInit {
   }
 
   private loadPayments() {
-    if (!this.bookingId) return;
+    if (!this.bookingId || !this.authService.hasAuthority('PAYMENT_READ')) return;
 
     this.paymentsLoading.set(true);
 
-    this.http.get<BookingMolliePaymentLink[]>(
-      `${environment.apiUrl}/booking-mollie-payments/${this.bookingId}`
-    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.molliePaymentService.getBookingLinksByBookingId(this.bookingId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (links) => {
         if (links.length === 0) {
           this.payments.set([]);
@@ -1210,7 +1199,7 @@ export class BookingDetailComponent implements OnInit {
   }
 
   private loadDocuments() {
-    if (!this.bookingId) return;
+    if (!this.bookingId || !this.authService.hasAuthority('DOCUMENT_READ')) return;
 
     this.documentService.getByBookingId(this.bookingId)
       .pipe(takeUntilDestroyed(this.destroyRef))

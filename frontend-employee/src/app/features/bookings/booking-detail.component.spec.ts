@@ -12,6 +12,8 @@ import { TravelerService } from '../travelers/traveler.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Booking, Booker, Traveler, BookingLine, MolliePayment } from '../../shared/models';
+import { MolliePaymentService } from '../mollie/mollie-payment.service';
+import { DocumentService } from '../documents/document.service';
 
 describe('BookingDetailComponent', () => {
   let component: BookingDetailComponent;
@@ -362,6 +364,38 @@ describe('BookingDetailComponent', () => {
     expect(paymentRows[1].querySelector('.payment-type')).toBeNull();
     expect(paymentRows[1].querySelector('.due-date')?.textContent).toContain('—');
   }));
+
+  describe('alleen wat de authorities toelaten', () => {
+    function render(authorities: string[]) {
+      createComponent();
+      spyOn(component.authService, 'hasAuthority').and.callFake((a: string) => authorities.includes(a));
+      const payments = spyOn(TestBed.inject(MolliePaymentService), 'getBookingLinksByBookingId').and.returnValue(of([]));
+      const documents = spyOn(TestBed.inject(DocumentService), 'getByBookingId').and.returnValue(of([]));
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      return { el: fixture.nativeElement as HTMLElement, payments, documents };
+    }
+
+    // De specs laden de echte nl-vertalingen (translate-test.setup.spec.ts).
+    const hasPaymentsCard = (el: HTMLElement) =>
+      [...el.querySelectorAll('mat-card-title')].some((t) => ['Betalingen', 'bookings.payments'].includes(t.textContent?.trim() ?? ''));
+
+    it('met alleen BOOKING_READ: geen betalingen of documenten ophalen, geen betalingenkaart en geen knoppen', fakeAsync(() => {
+      const { el, payments, documents } = render(['BOOKING_READ']);
+      expect(payments).not.toHaveBeenCalled();
+      expect(documents).not.toHaveBeenCalled();
+      expect(hasPaymentsCard(el)).toBe(false);
+      expect(el.querySelectorAll('button.act-create').length).toBe(0);
+    }));
+
+    it('met PAYMENT_READ en DOCUMENT_READ worden betalingen en documenten wel opgehaald', fakeAsync(() => {
+      const { el, payments, documents } = render(['BOOKING_READ', 'PAYMENT_READ', 'DOCUMENT_READ']);
+      expect(payments).toHaveBeenCalled();
+      expect(documents).toHaveBeenCalled();
+      expect(hasPaymentsCard(el)).toBe(true);
+    }));
+  });
 
   describe('status terugzetten en afronden', () => {
     function render(booking: Partial<Booking>, authorities: string[]) {

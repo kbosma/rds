@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.email.service.impl;
 
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.email.dto.EmailTemplateDto;
 import nl.puurkroatie.rds.email.entity.EmailTemplate;
@@ -78,7 +79,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private void verifyOrganization(UUID organizationId) {

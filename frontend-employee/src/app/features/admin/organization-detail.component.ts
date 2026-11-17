@@ -172,7 +172,7 @@ export class OrganizationDetailComponent implements OnInit {
       next: ({ organization, persons }) => {
         this.currentName.set(organization.name);
         this.form.patchValue({ name: organization.name, emailFrom: organization.emailFrom ?? '' });
-        this.persons.set(persons.filter(p => p.organizationId === id));
+        this.persons.set(persons.filter(p => p.tenantOrganization === id));
         this.loading.set(false);
       },
       error: () => {

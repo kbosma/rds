@@ -1,35 +1,18 @@
 package nl.puurkroatie.rds.auth.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import nl.puurkroatie.rds.common.Default;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
-public class AuthorityDto {
-
-    private UUID authorityId;
-    @NotNull
-    @Size(max = 255)
-    private String description;
-
-    @Default
-    @JsonCreator
-    public AuthorityDto(UUID authorityId, String description) {
-        this.authorityId = authorityId;
-        this.description = description;
-    }
-
-    public AuthorityDto(String description) {
-        this.description = description;
-    }
-
-    public UUID getAuthorityId() {
-        return authorityId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
+/**
+ * Een authority (alleen lezen: authorities komen uit Flyway). {@code requires}: de namen van de authorities die dit
+ * recht nodig heeft; het rollenscherm vinkt die automatisch mee aan.
+ */
+public record AuthorityDto(
+        UUID authorityId,
+        String description,
+        String domain,
+        boolean tenantAssignable,
+        LocalDate introducedAt,
+        List<String> requires) {
 }

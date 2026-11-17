@@ -254,7 +254,7 @@ export class PersonDetailComponent implements OnInit {
           firstname: person.firstname,
           prefix: person.prefix || '',
           lastname: person.lastname,
-          organizationId: person.organizationId,
+          organizationId: person.tenantOrganization,
         });
         this.loading.set(false);
       },
@@ -275,7 +275,7 @@ export class PersonDetailComponent implements OnInit {
       firstname: firstname!,
       prefix: prefix || '',
       lastname: lastname!,
-      organizationId: organizationId!,
+      tenantOrganization: organizationId!,
     };
 
     if (this.isNew()) {

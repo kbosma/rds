@@ -6,6 +6,7 @@ import nl.puurkroatie.rds.auth.entity.OrganizationTheme;
 import nl.puurkroatie.rds.auth.mapper.OrganizationThemeMapper;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
 import nl.puurkroatie.rds.auth.repository.OrganizationThemeRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.OrganizationThemeService;
 import org.springframework.security.access.AccessDeniedException;
@@ -45,8 +46,8 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
     public OrganizationThemeDto update(UUID id, OrganizationThemeDto dto) {
         OrganizationTheme existing = organizationThemeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrganizationTheme not found with id: " + id));
-        verifyOrganization(existing.getOrganization().getOrganizationId());
-        OrganizationTheme entity = organizationThemeMapper.toEntity(id, dto, existing.getOrganization());
+        verifyOrganization(existing.getTenantOrganization().getOrganizationId());
+        OrganizationTheme entity = organizationThemeMapper.toEntity(id, dto, existing.getTenantOrganization());
         return organizationThemeMapper.toDto(organizationThemeRepository.save(entity));
     }
 
@@ -54,7 +55,7 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
     public void delete(UUID id) {
         OrganizationTheme existing = organizationThemeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrganizationTheme not found with id: " + id));
-        verifyOrganization(existing.getOrganization().getOrganizationId());
+        verifyOrganization(existing.getTenantOrganization().getOrganizationId());
         organizationThemeRepository.deleteById(id);
     }
 
@@ -67,7 +68,7 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
                     .toList();
         }
         return organizationThemeRepository
-                .findByOrganization_OrganizationId(TenantContext.getOrganizationId())
+                .findByTenantOrganization_OrganizationId(TenantContext.getOrganizationId())
                 .map(organizationThemeMapper::toDto)
                 .map(List::of)
                 .orElse(List.of());
@@ -77,19 +78,19 @@ public class OrganizationThemeServiceImpl implements OrganizationThemeService {
     @Transactional(readOnly = true)
     public Optional<OrganizationThemeDto> findById(UUID id) {
         return organizationThemeRepository.findById(id)
-                .filter(t -> isAdmin() || t.getOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
+                .filter(t -> isAdmin() || t.getTenantOrganization().getOrganizationId().equals(TenantContext.getOrganizationId()))
                 .map(organizationThemeMapper::toDto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<OrganizationThemeDto> findByOrganizationId(UUID organizationId) {
-        return organizationThemeRepository.findByOrganization_OrganizationId(organizationId)
+        return organizationThemeRepository.findByTenantOrganization_OrganizationId(organizationId)
                 .map(organizationThemeMapper::toDto);
     }
 
     private boolean isAdmin() {
-        return TenantContext.hasRole("ADMIN");
+        return TenantContext.hasAuthority(Authorities.PLATFORM_ADMIN);
     }
 
     private void verifyOrganization(UUID organizationId) {

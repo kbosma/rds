@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voorstel: dashboard voor het boekerportaal (`frontend-booker`)</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Voorstel: dashboard voor het boekerportaal (`frontend-booker`)</h1>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th></th></tr></thead><tbody>
+<tr><th scope="row">Status</th><td><strong>gebouwd</strong> (21-10-2026). Dit document blijft het ontwerp met de afwegingen; de uitgewerkte beschrijving staat in <a href="frontend.html#frontend-booker">frontend.md</a> en <a href="bookerportal.html">bookerportal.md</a>. Afwijkingen van het voorstel staan onderaan (§11)</td></tr>
+<tr><th scope="row">Datum</th><td>21-10-2026</td></tr>
+<tr><th scope="row">Doel</th><td>in plaats van zes tabbladen waarbij je telkens één onderdeel ziet, <strong>één dashboard met veel informatie tegelijk, zonder te klikken</strong>, en dat <strong>responsive</strong> werkt op telefoon, tablet en desktop</td></tr>
+<tr><th scope="row">Raakt</th><td><code>frontend-booker</code>, en in de backend het pakket <code>bookerportal</code> (nieuw overview-endpoint, slankere DTO's, document-download)</td></tr>
+<tr><th scope="row">Zie ook</th><td><a href="bookerportal.html">bookerportal.md</a>, <a href="frontend.html">frontend.md</a>, <a href="security.html">security.md</a>, <a href="open-items.html">open-items.md</a></td></tr>
+</tbody></table></div>
+<div class="callout">De afbeeldingen in §3 zijn <strong>echte schermen</strong> uit de gebouwde app (<code>ng serve</code>, 21-10-2026), op 1280, 768 en 375 px, voor, tijdens en na de reis en met een geopende e-mail. Ze zijn opnieuw gemaakt na de invoering van de risicokleuren en de om-en-om tint in <em>Berichten en documenten</em>. De gegevens zijn <strong>fictief</strong>: ze komen van een stub van <code>/api/booker-portal/**</code>, omdat de lokale database niet voor de tooling bereikbaar was. De huisstijl is die van de organisatie <em>Puurkroatie</em> uit de seeddata. De oorspronkelijke schema's staan nog per breedte onder <em>Schema van het ontwerp</em>.</div>
+<nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-1-waar-we-nu-staan">1. Waar we nu staan</a></li><li><a href="#h-2-ontwerpprincipes">2. Ontwerpprincipes</a></li><li><a href="#h-3-het-scherm">3. Het scherm</a></li><li><a href="#h-4-technisch-voorstel-frontend">4. Technisch voorstel: frontend</a></li><li><a href="#h-5-technisch-voorstel-backend">5. Technisch voorstel: backend</a></li><li><a href="#h-6-prestaties-en-kwaliteit">6. Prestaties en kwaliteit</a></li><li><a href="#h-7-fasering">7. Fasering</a></li><li><a href="#h-8-open-keuzes">8. Open keuzes</a></li><li><a href="#h-9-risico-s-en-afhankelijkheden">9. Risico's en afhankelijkheden</a></li><li><a href="#h-10-buiten-bereik">10. Buiten bereik</a></li><li><a href="#h-11-wat-er-gebouwd-is-en-waar-het-afwijkt">11. Wat er gebouwd is en waar het afwijkt</a></li></ul></nav>
+<h2 id="h-1-waar-we-nu-staan">1. Waar we nu staan</h2>
+<ul><li>Zes tabbladen (<em>Overzicht, Reisschema, Documenten, Accommodaties, Activiteiten, Betalingen</em>) in een inhoudsbreedte van maximaal 700 px. Je ziet steeds één onderdeel.</li><li>Het dashboard toont alleen het <strong>boeking-ID</strong> en vier doorklik-tegels.</li><li>Per scherm een eigen API-aanroep; geen gedeelde toestand.</li></ul>
+<p><strong>Wat de portal-API nu niet levert</strong> en dus eerst aan de backend moet worden toegevoegd:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Ontbreekt</th><th>Gevolg voor het dashboard</th></tr></thead><tbody>
+<tr><th scope="row">boekingsnummer, status, periode, totaalbedrag</th><td>geen kop met de kerngegevens, geen voortgang</td></tr>
+<tr><th scope="row">voornaam van de boeker, reizigers</th><td>geen persoonlijke aanhef, geen reizigersoverzicht</td></tr>
+<tr><th scope="row">naam, kleuren en logo van de organisatie</th><td>geen huisstijl (de app heeft geen <code>ThemeService</code>; de kleuren zijn nu de standaard-teal)</td></tr>
+<tr><th scope="row">huidige betaalstatus per betaling</th><td>de client moet nu zelf de statusregels doorlopen</td></tr>
+<tr><th scope="row">documentgrootte en een aparte download</th><td>zie hieronder</td></tr>
+</tbody></table></div>
+<p><strong>Bestaande zwakke plekken die bij deze klus meegenomen horen:</strong></p>
+<ol><li><code>GET /api/booker-portal/documents</code> geeft per document de <strong>volledige bytes</strong> (<code>byte[] document</code>) terug. Een dashboard dat alle documenten in één keer laadt zou alle PDF's meesturen.</li><li>De portal-DTO's voor documenten en betalingen bevatten velden als <code>createdBy</code>, <code>modifiedBy</code> en <code>tenantOrganization</code>. <a href="bookerportal.html">bookerportal.md</a> schrijft <em>minimale</em> DTO's voor externe gebruikers voor.</li><li>De documentenlijst in de huidige UI heeft <strong>geen download-knop</strong> (<a href="open-items.html">open-items.md</a> punt 30).</li></ol>
+<h2 id="h-2-ontwerpprincipes">2. Ontwerpprincipes</h2>
+<ol><li><strong>Eén pagina, geen tabbladen.</strong> Alles staat in kaarten; klikken is alleen voor acties (betalen, downloaden).</li><li><strong>Volgorde naar urgentie.</strong> Eerst wat je moet doen (een openstaande betaling), dan wat er nu of straks gebeurt, dan het overzicht, dan de documenten.</li><li><strong>Eén tijdlijn in plaats van losse lijsten.</strong> Verblijven zijn balken over de dagen, activiteiten genummerde punten; de lijst eronder legt ze uit.</li><li><strong>Het scherm past zich aan het moment aan</strong> (§3.2).</li><li><strong>Dezelfde gegevens, andere weergave per schermbreedte.</strong> Geen afgeslankte telefoonversie: wat op desktop staat, staat ook op de telefoon, alleen anders gerangschikt.</li><li><strong>Een kaart die faalt of leeg is breekt de pagina niet.</strong> Elke kaart heeft zijn eigen laad-, leeg- en foutstand.</li></ol>
+<h2 id="h-3-het-scherm">3. Het scherm</h2>
+<h3 id="h-3-1-kaarten">3.1 Kaarten</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Kaart</th><th>Inhoud</th><th>Bron</th></tr></thead><tbody>
+<tr><th scope="row"><strong>Kop</strong></th><td>aanhef (<em>Hallo Klaas</em>), boekingsnummer, periode en aantal nachten, reizigers (namen), statusbalk met 8 stappen, aftelling</td><td><code>overview</code> (nieuw)</td></tr>
+<tr><th scope="row"><strong>Betaalbalk</strong> (alleen telefoon)</th><td><em>Openstaand € 2.200</em> met knop <em>Betaal nu</em>, onder de kop</td><td>betalingen</td></tr>
+<tr><th scope="row"><strong>Wat komt eraan</strong> (tijdens de reis <em>Nu en straks</em>)</th><td>de eerstvolgende stap, of tijdens de reis wat er nu en hierna is; na de reis een bedankje</td><td>afgeleid uit het reisschema</td></tr>
+<tr><th scope="row"><strong>Tijdlijn</strong></th><td>balken per verblijf, genummerde punten per activiteit, vandaag-markering; op de telefoon een verticale agenda</td><td><code>itinerary</code></td></tr>
+<tr><th scope="row"><strong>Betalingen</strong></th><td>donut (betaald/totaal), totaal-betaald-openstaand, regel per betaling met statuschip, knop <em>Betaal</em></td><td><code>payments</code> (+ status)</td></tr>
+<tr><th scope="row"><strong>Verblijven</strong></th><td>kaart per verblijf met naam, plaats, leverancier, periode, aantal nachten</td><td><code>booking-lines</code></td></tr>
+<tr><th scope="row"><strong>Activiteiten</strong></th><td>genummerde lijst met datum, tijd, trefpunt, soort</td><td><code>booking-activities</code></td></tr>
+<tr><th scope="row"><strong>Berichten en documenten</strong></th><td>de verzonden e-mails en de vrijgegeven documenten in één lijst, nieuwste eerst, met filter; betalingen niet</td><td><code>messages</code> en <code>documents</code> (slank)</td></tr>
+</tbody></table></div>
+<h3 id="h-3-2-het-scherm-per-moment-van-de-reis">3.2 Het scherm per moment van de reis</h3>
+<p>De fase volgt uit de <strong>datums</strong>, niet uit de status (de status zet een medewerker handmatig).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Fase</th><th>Wanneer</th><th>Kop</th><th><em>Wat komt eraan</em></th><th>Tijdlijn</th></tr></thead><tbody>
+<tr><th scope="row">Voor de reis</th><td>vandaag &lt; vertrekdatum</td><td>aftelling (<em>234 dagen tot vertrek</em>)</td><td>eerste verblijf of activiteit</td><td>geen vandaag-markering</td></tr>
+<tr><th scope="row">Tijdens de reis</th><td>vertrek ≤ vandaag ≤ terugkomst</td><td><em>Dag 9 van 15, nog 6 nachten</em></td><td><strong>Nu</strong> en <strong>Hierna</strong></td><td>vandaag gemarkeerd</td></tr>
+<tr><th scope="row">Na de reis</th><td>vandaag &gt; terugkomst</td><td><em>Bedankt voor uw reis</em></td><td>een bedankje</td><td>zonder markering</td></tr>
+</tbody></table></div>
+<p><strong>Voor de reis</strong> — aftelling, de eerstvolgende stap, de statusbalk op <em>Voorschot</em> en een openstaande betaling:</p>
+<p><img src="img/booker-dashboard-desktop.jpg" alt="Dashboard voor de reis (desktop)"></p>
+<p><strong>Tijdens de reis</strong> — dag 9 van 15, vandaag gemarkeerd in de tijdlijn, <em>Nu en straks</em>, alles betaald:</p>
+<p><img src="img/booker-dashboard-fase-tijdens.jpg" alt="Dashboard tijdens de reis (desktop)"></p>
+<p><strong>Na de reis</strong> — bedankje in de kop en bij <em>Wat komt eraan</em>, statusbalk op <em>Afgerond</em>:</p>
+<p><img src="img/booker-dashboard-fase-na.jpg" alt="Dashboard na de reis (desktop)"></p>
+<h3 id="h-3-3-indeling-per-breedte">3.3 Indeling per breedte</h3>
+<p>Breekpunten (container queries op de pagina): <strong>telefoon &lt; 600 px</strong>, <strong>tablet 600–999 px</strong>, <strong>desktop ≥ 1000 px</strong>.</p>
+<p><strong>Desktop (≥ 1000 px)</strong> — brede kolom met planning, verblijven en activiteiten; smalle kolom met <em>wat komt eraan</em>, betalingen en berichten en documenten:</p>
+<p><img src="img/booker-dashboard-desktop.jpg" alt="Dashboard op desktop, voor de reis"></p>
+<p><strong>Tablet (600–999 px)</strong> — twee kolommen: <em>wat komt eraan</em> naast betalingen, de tijdlijn over de volle breedte, verblijven naast activiteiten, daaronder berichten en documenten:</p>
+<img src="img/booker-dashboard-tablet.jpg" alt="Dashboard op tablet" width="520">
+<p><strong>Telefoon (&lt; 600 px)</strong> — één kolom in volgorde van urgentie: kop, betaalbalk, wat komt eraan, de tijdlijn als agenda per dag, betalingen, verblijven (zwiepbaar), activiteiten, berichten en documenten. Op de telefoon staan <em>Betalingen</em> en de betaalbalk bovenaan als er iets openstaat; zijn alle betalingen voldaan, dan verdwijnt de balk.</p>
+<img src="img/booker-dashboard-telefoon.jpg" alt="Dashboard op een telefoon, volledige pagina" width="320">
+<details>
+<summary>Schema van het ontwerp (voor de bouw)</summary>
+<p>Desktop:</p>
+<pre class="sketch">┌──────────────────────────────────────────────────────────────┐
+│ KOP: Hallo Klaas · BK-… · 12–26 jun · 4 reizigers · 234 dgn  │
+│ statusbalk ▮▮▮▮▯▯▯▯                                          │
+├───────────────────────────────────────────┬──────────────────┤
+│ TIJDLIJN                                  │ EERSTVOLGENDE    │
+│ 12 13 14 15 … 26   (balken + punten)      ├──────────────────┤
+│                                           │ BETALINGEN       │
+├───────────────────────────────────────────┤ (donut + regels) │
+│ VERBLIJVEN (2 kaarten)                    ├──────────────────┤
+├───────────────────────────────────────────┤ DOCUMENTEN       │
+│ ACTIVITEITEN (genummerd)                  │                  │
+└───────────────────────────────────────────┴──────────────────┘</pre>
+<p>Tablet:</p>
+<pre class="sketch">┌──────────────────────────────────────────┐
+│ KOP                                      │
+├────────────────────┬─────────────────────┤
+│ EERSTVOLGENDE      │ BETALINGEN          │
+├────────────────────┴─────────────────────┤
+│ TIJDLIJN (balken)                        │
+├────────────────────┬─────────────────────┤
+│ VERBLIJVEN         │ ACTIVITEITEN        │
+├────────────────────┴─────────────────────┤
+│ DOCUMENTEN                               │
+└──────────────────────────────────────────┘</pre>
+<p>Telefoon:</p>
+<pre class="sketch">┌────────────────────────┐
+│ KOP (compact)          │
+│ Openstaand € 2.200 [Betaal nu] │
+│ EERSTVOLGENDE          │
+│ TIJDLIJN (agenda)      │
+│  12 jun  Check-in …    │
+│  14 jun  Kajaktour …   │
+│ BETALINGEN             │
+│ VERBLIJVEN  ◀ swipe ▶  │
+│ ACTIVITEITEN           │
+│ DOCUMENTEN             │
+└────────────────────────┘</pre>
+</details>
+<h3 id="h-3-4-een-e-mail-lezen">3.4 Een e-mail lezen</h3>
+<p>Het oog-icoon bij een e-mail opent het bericht zoals de klant het ontving, in een afgeschermd venster (geen scripts):</p>
+<p><img src="img/booker-dashboard-email.jpg" alt="Een verzonden e-mail in het berichtenvenster"></p>
+<h2 id="h-4-technisch-voorstel-frontend">4. Technisch voorstel: frontend</h2>
+<p>Hetzelfde stack als nu (Angular 22, standalone, signals, Material, ngx-translate). <strong>Geen nieuwe bibliotheken</strong>, met het oog op de bundelgrootte op mobiel.</p>
+<h3 id="h-4-1-structuur">4.1 Structuur</h3>
+<pre class="sketch">frontend-booker/src/app/
+  core/portal/portal.store.ts        signals + computed (fase, aftelling, tijdlijn, totalen, eerstvolgende)
+  core/portal/portal.service.ts      API-aanroepen (overview, betalingen, documenten)
+  features/dashboard/
+    dashboard.page.ts                grid met areas per breekpunt
+    trip-hero.component.ts           kop, statusbalk, aftelling
+    next-up.component.ts             eerstvolgende / nu
+    trip-timeline.component.ts       balken + punten (≥ 600 px) of agenda (&lt; 600 px)
+    stays.component.ts               verblijven (scroll-snap op telefoon)
+    activities.component.ts
+    payments.component.ts            donut, regels, betalen, statuspolling (zoals nu, 2,5 s)
+    documents.component.ts           lijst + download
+  shared/section-card.component.ts   kaartschil met skeleton / leeg / fout</pre>
+<ul><li>Routes: <code>/login</code> en <code>/verify</code> blijven. Alle oude routes (<code>/itinerary</code>, <code>/documents</code>, …) verwijzen naar <code>/</code> (eventueel met een ankerlink).</li><li><code>OnPush</code> en signals overal; geen API-calls in componenten (alleen via de service), conform <a href="frontend.html">frontend.md</a>.</li></ul>
+<h3 id="h-4-2-responsive-aanpak">4.2 Responsive aanpak</h3>
+<ul><li><strong>CSS Grid met <code>grid-template-areas</code></strong>, per breekpunt een eigen indeling; geen JavaScript nodig voor de lay-out.</li><li><strong>Container queries</strong> op de pagina en per kaart, zodat een kaart ook goed werkt in een smallere kolom. Dit werkt in de browsers die Angular 22 ondersteunt.</li><li>De tijdlijn heeft één model en twee weergaven (balken en agenda). Alleen hier is <code>BreakpointObserver</code> (CDK) of een container query nodig om de weergave te kiezen.</li><li>Verblijven op telefoon: horizontaal scrollen met <code>scroll-snap</code>; op tablet en desktop een gewoon grid.</li><li>Tikdoelen minimaal 44 × 44 px, <code>env(safe-area-inset-*)</code> voor telefoons met een inkeping.</li></ul>
+<h3 id="h-4-3-tijdlijn-en-grafieken-zonder-bibliotheek">4.3 Tijdlijn en grafieken zonder bibliotheek</h3>
+<ul><li><strong>Tijdlijn:</strong> een grid met één kolom per dag. Een verblijf is een element met <code>grid-column: start / end</code>, berekend uit de datums. Activiteiten zijn punten in de kolom van hun datum, genummerd zoals in de lijst.</li><li><strong>Donut:</strong> SVG met twee cirkels (<code>stroke-dasharray</code>); de waarden komen uit de totalen. Het percentage staat ook als tekst en in een <code>aria-label</code>.</li><li><strong>Statusbalk:</strong> acht segmenten in een grid; de huidige stap is gemarkeerd en benoemd (niet alleen met kleur).</li></ul>
+<h3 id="h-4-4-toestand-laden-en-fouten">4.4 Toestand, laden en fouten</h3>
+<ul><li>Eén <code>overview</code>-aanroep voor de kop en de kerngegevens; de rest laadt parallel, elk met eigen <code>resource</code>/<code>httpResource</code> en eigen fout- en laadtoestand. Skeletons in plaats van spinners.</li><li>Kaarten onder de vouw kunnen met <code>@defer (on viewport)</code> worden uitgesteld, vooral op telefoon.</li><li>Een mislukte kaart toont een korte melding met <em>Opnieuw proberen</em>; de rest blijft werken.</li><li>Geen offline-modus in deze fase.</li></ul>
+<h3 id="h-4-5-overig">4.5 Overig</h3>
+<ul><li><strong>Huisstijl:</strong> de kleuren uit <code>overview</code> worden op <code>:root</code> gezet als <code>--theme-primary</code>, <code>--theme-accent</code> en <code>--theme-card-title</code>; de afgeleide tinten bestaan al (<code>color-mix</code> in <code>styles.scss</code>). Zonder thema blijft de standaard-teal.</li><li><strong>Toegankelijkheid:</strong> landmarks per kaart, koppen in volgorde, contrast ≥ 4,5 : 1, status nooit alleen met kleur, <code>prefers-reduced-motion</code>, optioneel <code>prefers-color-scheme: dark</code>.</li><li><strong>i18n:</strong> alle teksten in <code>nl.json</code> en <code>en.json</code>; datums en bedragen via <code>DatePipe</code> en <code>CurrencyPipe</code> met de gekozen taal.</li><li><strong>Datums:</strong> de reisdata zijn <code>LocalDate</code> zonder tijdzone. De fase wordt bepaald met de lokale datum van het apparaat.</li></ul>
+<h2 id="h-5-technisch-voorstel-backend">5. Technisch voorstel: backend</h2>
+<h3 id="h-5-1-nieuw-endpoint">5.1 Nieuw endpoint</h3>
+<p><code>GET /api/booker-portal/overview</code> (<code>BOOKER_PORTAL_READ</code>), gebonden aan het <code>bookingId</code> uit de <code>BookerContext</code>.</p>
+<pre class="sketch">{
+  &quot;booking&quot;: { &quot;bookingNumber&quot;: &quot;BK-2026-00042&quot;, &quot;status&quot;: &quot;voorschot&quot;,
+               &quot;fromDate&quot;: &quot;2027-06-12&quot;, &quot;untilDate&quot;: &quot;2027-06-26&quot;, &quot;totalSum&quot;: 3850.00 },
+  &quot;booker&quot;: { &quot;firstname&quot;: &quot;Klaas&quot; },
+  &quot;travelers&quot;: [ { &quot;firstname&quot;: &quot;Klaas&quot; }, { &quot;firstname&quot;: &quot;Marieke&quot; } ],
+  &quot;organization&quot;: { &quot;name&quot;: &quot;Puurkroatie&quot;, &quot;primaryColor&quot;: &quot;#0e8f8a&quot;,
+                    &quot;accentColor&quot;: &quot;#e0a100&quot;, &quot;cardTitleColor&quot;: &quot;#12303b&quot;, &quot;logoUrl&quot;: null }
+}</pre>
+<ul><li>Een eigen minimale DTO (<code>PortalOverviewDto</code>, record), via een service en MapStruct waar dat past; <strong>geen entities</strong> en geen interne velden (<code>createdBy</code>, <code>tenantOrganization</code>, …).</li><li>De organisatiekleuren komen uit <code>organization_theme</code>; ontbreekt het thema, dan zijn ze <code>null</code> en geldt de standaard.</li><li>Of reizigers met achternaam of alleen met voornaam worden getoond is een open keuze (§8).</li></ul>
+<h3 id="h-5-2-wijzigingen-aan-bestaande-portal-endpoints">5.2 Wijzigingen aan bestaande portal-endpoints</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Endpoint</th><th>Wijziging</th></tr></thead><tbody>
+<tr><th scope="row"><code>GET /documents</code></th><td>slanke DTO: <code>documentId</code>, <code>displayname</code>, <code>mimeType</code>, <code>size</code>, <code>createdAt</code>; <strong>zonder bytes</strong></td></tr>
+<tr><th scope="row"><code>GET /documents/{id}/content</code> (nieuw)</th><td>levert het bestand; alleen als het document bij de eigen boeking hoort <strong>en</strong> <code>visibleInPortal</code> is, anders <code>404</code>; <code>Content-Disposition</code> met de bestandsnaam</td></tr>
+<tr><th scope="row"><code>GET /documents/{id}</code></th><td>vervalt of wordt dezelfde slanke DTO</td></tr>
+<tr><th scope="row"><code>GET /payments</code></th><td>slanke DTO: <code>molliePaymentId</code>, <code>description</code>, <code>amount</code>, <code>currency</code>, <code>method</code>, <code>currentStatus</code>, <code>createdAt</code>; <strong>zonder</strong> <code>createdBy</code>, <code>tenantOrganization</code>, interne ids</td></tr>
+<tr><th scope="row"><code>GET /payments/status-entries</code></th><td>blijft voor de statushistorie in een uitklapregel</td></tr>
+</tbody></table></div>
+<p>De overige endpoints (<code>itinerary</code>, <code>booking-lines</code>, <code>booking-activities</code>, <code>accommodations</code>, <code>activities</code>) blijven; het dashboard gebruikt <code>itinerary</code>, <code>booking-lines</code> en <code>booking-activities</code>. Wat daarna ongebruikt blijft, kan in een latere ronde weg.</p>
+<h3 id="h-5-3-beveiliging-en-tests">5.3 Beveiliging en tests</h3>
+<ul><li>Elke query bindt aan <code>BookerContext.getBookingId()</code>; een betaling of document van een andere boeking geeft <code>404</code>/<code>403</code>, zoals nu bij het betalen.</li><li><code>NoEntityInApiTest</code> blijft de build bewaken tegen entities in API's.</li><li>Nieuwe MockMvc-tests: BOOKER-token (200), medewerkerstoken (403), geen token (401), andere boeking (geen data), niet-zichtbaar document (404), <code>content</code>-endpoint met de juiste <code>Content-Type</code>.</li><li>De rate-limit van NGINX op <code>/api/booker-auth/</code> verandert niet.</li></ul>
+<h2 id="h-6-prestaties-en-kwaliteit">6. Prestaties en kwaliteit</h2>
+<p>Streefwaarden, nog niet gemeten:</p>
+<ul><li>Lighthouse (mobiel): performance ≥ 90, toegankelijkheid ≥ 95.</li><li>LCP &lt; 2,5 s op een gemiddelde 4G-verbinding; één <code>overview</code>-aanroep vóór de eerste weergave.</li><li>Geen layout-sprongen: skeletons hebben de hoogte van de uiteindelijke kaart.</li></ul>
+<p>Tests: Jasmine-specs voor de store (fase, aftelling, tijdlijnmodel, betaaltotalen, eerstvolgende), voor de weergave per breekpunt en voor de leeg- en foutstanden. Daarna echte screenshots met de Claude Preview-tools bij 375, 768 en 1280 px.</p>
+<h2 id="h-7-fasering">7. Fasering</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Stap</th><th>Inhoud</th><th>Resultaat</th></tr></thead><tbody>
+<tr><th scope="row"><strong>0</strong></th><td><code>overview</code>-endpoint, slanke documenten en betalingen, document-download, backendtests</td><td>API klaar; oude UI blijft werken</td></tr>
+<tr><th scope="row"><strong>1</strong></th><td>schil en <code>PortalStore</code>, kop, betaalbalk en betalingenkaart</td><td>meeste waarde: kerngegevens en betalen op één scherm</td></tr>
+<tr><th scope="row"><strong>2</strong></th><td>tijdlijn (balken en agenda), <em>Eerstvolgende/Nu</em>, fasesturing</td><td>het hart van het dashboard</td></tr>
+<tr><th scope="row"><strong>3</strong></th><td>verblijven, activiteiten, documenten (met download), skeleton-, leeg- en foutstanden</td><td>alle informatie op één pagina</td></tr>
+<tr><th scope="row"><strong>4</strong></th><td>organisatiekleuren, toegankelijkheids- en prestatiecheck, oude schermen en routes opruimen</td><td>afgerond; docs bijwerken</td></tr>
+</tbody></table></div>
+<p>Elke stap is los te testen en te reviewen; na stap 1 staat er al een bruikbaar dashboard.</p>
+<h2 id="h-8-open-keuzes">8. Open keuzes</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Keuze</th><th>Voorstel</th></tr></thead><tbody>
+<tr><th scope="row">1</th><td><strong>Aggregator-endpoint of bestaande endpoints hergebruiken?</strong></td><td><code>overview</code> voor kop en kerngegevens, bestaande endpoints voor de rest (minder werk dan alles in één DTO)</td></tr>
+<tr><th scope="row">2</th><td><strong>Reizigers tonen met achternaam?</strong></td><td>alleen voornamen, voor de hoofdboeker zichtbaar</td></tr>
+<tr><th scope="row">3</th><td><strong>Boekingstitel</strong> (bijv. <em>Dalmatië rondreis</em>)</td><td>nu niet beschikbaar; de kop toont periode en boekingsnummer. Een titelveld op <code>Booking</code> kan later</td></tr>
+<tr><th scope="row">4</th><td><strong>Adressen en foto's bij verblijven</strong></td><td>niet in deze ronde; de kaarten gebruiken een gekleurd vlak met een icoon. Adressen (voor een kaartlink) of foto's vragen uitbreiding van de portal-DTO</td></tr>
+<tr><th scope="row">5</th><td><strong>Mobiele navigatie</strong></td><td>geen; de pagina scrolt. Optioneel een rij ankerlinks bovenaan bij weinig ruimte</td></tr>
+<tr><th scope="row">6</th><td><strong>Donkere modus</strong></td><td>optioneel, later</td></tr>
+</tbody></table></div>
+<h2 id="h-9-risico-s-en-afhankelijkheden">9. Risico's en afhankelijkheden</h2>
+<ul><li><strong>OTP-mail is een stub</strong> (<a href="open-items.html">open-items.md</a> punt 3): klanten kunnen pas echt inloggen als dat is gekoppeld. Dit dashboard is daar niet van afhankelijk om te bouwen, wel om gebruikt te worden.</li><li><strong>Eén Mollie-sleutel voor alle organisaties</strong> (punt 2) blijft gelden voor betalen vanuit het dashboard.</li><li><strong>Statusovergangen zijn vrij</strong> (punt 14): de statusbalk toont wat een medewerker zet; de fase van de reis volgt daarom uit de datums.</li><li><strong>Weinig frontendtests voor <code>frontend-booker</code></strong> (punt 20): dit voorstel verhoogt de dekking bewust, vooral voor de store en de weergave per breekpunt.</li><li><strong>Gedrag zonder gegevens:</strong> een boeking zonder boekingsregels heeft geen datums (die zijn afgeleid). De kop en de tijdlijn tonen dan een leeg-stand in plaats van een lege balk.</li></ul>
+<h2 id="h-10-buiten-bereik">10. Buiten bereik</h2>
+<p>Geen wijzigen van gegevens door de klant, geen chat of berichten, geen pushmeldingen, geen offline-modus, geen eigen kaartweergave.</p>
+<h2 id="h-11-wat-er-gebouwd-is-en-waar-het-afwijkt">11. Wat er gebouwd is en waar het afwijkt</h2>
+<p>Alle vijf stappen uit §7 zijn in één keer opgeleverd. Verschillen met het voorstel:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Onderwerp</th><th>Voorstel</th><th>Gebouwd</th></tr></thead><tbody>
+<tr><th scope="row">Tijdlijn</th><td>balken en agenda</td><td>zo gebouwd; overlappende verblijven krijgen een eigen rij, activiteiten van dezelfde dag staan onder elkaar, en een periode langer dan 62 dagen toont alleen de agenda</td></tr>
+<tr><th scope="row">Laden</th><td>per kaart een <code>resource</code>/<code>httpResource</code></td><td>een kleine eigen <code>Loadable</code> (signals + RxJS), met stille verversing voor de betaalstatus</td></tr>
+<tr><th scope="row">Betalingen</th><td>statushistorie in een uitklapregel</td><td>geen uitklap meer (niets verborgen achter een klik); de kaart toont wel wanneer er is betaald</td></tr>
+<tr><th scope="row">Overview</th><td>boeking, boeker, reizigers, organisatie</td><td>zo gebouwd; de totale som komt uit de boekingsregels en activiteiten</td></tr>
+<tr><th scope="row">Documenten</th><td>slanke lijst en download</td><td>zo gebouwd (<code>size</code> met <code>octet_length</code> in de query, het bestand via <code>…/content</code>); daarna uitgebreid met de verzonden e-mails: de kaart heet nu <em>Berichten en documenten</em> (<code>/messages</code>, alle mails aan de hoofdboeker, betalingen niet)</td></tr>
+<tr><th scope="row">Betaalbalk</th><td>knop start de betaling of brengt je naar de kaart</td><td>zo gebouwd</td></tr>
+<tr><th scope="row">Kleur en rijtint</th><td>niet uitgewerkt</td><td>bekijken en downloaden hebben de risicokleur <em>info</em> (gedempt blauw, <code>act-info</code>); de regels in <em>Berichten en documenten</em> hebben een zachte om-en-om tint (<code>zebra-rows</code>) en de pictogrammen links geen eigen achtergrond. De afbeeldingen in §3 zijn hiermee opnieuw gemaakt. Zie <a href="frontend.html#actie-iconen-en-hun-risicokleur">frontend.md</a></td></tr>
+<tr><th scope="row">Donkere modus, ankerrij op de telefoon</th><td>optioneel</td><td>niet gebouwd</td></tr>
+<tr><th scope="row">Mobiele test</th><td>Lighthouse-score</td><td>niet gemeten; wel visueel gecontroleerd op 375, 768 en 1280 px met echte schermen uit de draaiende app (tegen een stub van de API)</td></tr>
+</tbody></table></div>
+<p>De oude schermen (<code>itinerary</code>, <code>documents</code>, <code>accommodations</code>, <code>activities</code>, <code>payments</code>) en <code>ApiService</code> zijn verwijderd; hun paden verwijzen naar het dashboard. Het verwijderen van <code>GET /api/booker-portal/documents/{id}</code> is een wijziging van het contract: de interface gebruikte dat endpoint niet.</p>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>
