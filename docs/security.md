@@ -56,6 +56,7 @@ Elke controller-methode heeft `@PreAuthorize("hasAuthority('…')")`; de volledi
 \* `PAYMENT_DELETE` bestaat als authority (en zit bij MANAGER), maar geen enkel endpoint gebruikt het: betalingen worden nooit verwijderd. `PAYMENT_UPDATE` werkt alleen zolang een betaling nog niet bij Mollie bestaat.
 
 - **ADMIN = systeembeheer**: bewust geen boekings-, template- of e-mailrechten. Vandaar `403` voor ADMIN op die endpoints (ook in de tests). ADMIN heeft wel `PAYMENT_CORRECT` en `PAYMENT_RELINK`, maar niet `PAYMENT_READ`: die twee rechten zijn in de praktijk voor MANAGER bedoeld.
+- Voorstel (nog niet gebouwd) voor eigen rollen per organisatie, vaste systeemrollen en alleen-lezen authorities: [voorstel-eigen-rollen.md](voorstel-eigen-rollen.md).
 - De rol-authority-koppelingen staan in de database en zijn in het beheer te wijzigen; nieuwe authorities komen via een Flyway-migratie (zie V6 voor `EMAIL_SEND` als voorbeeld).
 - **Frontend:** componenten en menu-items worden getoond op basis van authorities, nooit rollen. Het dashboard kiest bijvoorbeeld op `ORGANIZATION_READ` (beheer) en `ACCOUNT_CREATE` (manager); organisaties tonen vraagt `ORGANIZATION_READ`.
 
