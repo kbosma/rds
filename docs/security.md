@@ -84,7 +84,7 @@ Seed vóór V24 (V2, V6, V10, V12; V16 haalt `DOCUMENT_DELETE` weg) — letters 
 
 ## Authenticatie van medewerkers
 
-1. `POST /api/auth/login` met gebruikersnaam + wachtwoord (BCrypt). Een **vergrendeld** account (`locked`) wordt geweigerd. (`expires_at` wordt momenteel niet afgedwongen: zie [open-items.md](open-items.md).)
+1. `POST /api/auth/login` met gebruikersnaam + wachtwoord (BCrypt). Een **vergrendeld** account (`locked`) en een **verlopen** account (`expires_at` in het verleden) worden geweigerd met `401` (`CustomUserDetailsService`). Verversen van het token (`/api/auth/token/refresh`) weigert dezelfde accounts.
 2. Heeft het account `totp_enabled`, dan volgt een `TOTP_PENDING`-token en een tweede stap: `/login/totp` (6-cijferige code) of `/login/recovery` (herstelcode).
 3. `must_change_password` zorgt dat de app na de login een wachtwoordwijziging afdwingt (`/api/auth/change-password`).
 4. TOTP instellen: `/api/auth/totp/setup` (QR + herstelcodes), bevestigen met `/totp/verify`, uitzetten met `/totp/disable`. Een beheerder kan TOTP van een ander account resetten (`DELETE /api/accounts/{id}/totp`, `ACCOUNT_UPDATE`).

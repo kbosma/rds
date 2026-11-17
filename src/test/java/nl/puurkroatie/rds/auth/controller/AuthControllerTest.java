@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,6 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AuthControllerTest extends AbstractAuthControllerTest {
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
 
     @Autowired
     private EntityManager entityManager;
@@ -142,5 +147,33 @@ class AuthControllerTest extends AbstractAuthControllerTest {
         assertEquals(ORG_PUURKROATIE_ID.toString(), claims.get("org").asText());
         assertEquals("MANAGER", claims.get("roles").get(0).asText());
         assertTrue(claims.get("authorities").toString().contains("ROLE_CREATE"));
+    }
+
+    // Een verlopen account kan niet inloggen; een vervaldatum in de toekomst is geen probleem.
+    @Test
+    void anExpiredAccount_cannotLogIn() throws Exception {
+        jdbc.update("UPDATE account SET expires_at = now() - interval '1 day' WHERE user_name = 'sophie.vandijk'");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\":\"sophie.vandijk\",\"password\":\"password123\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void anAccountThatExpiresLater_canLogIn() throws Exception {
+        jdbc.update("UPDATE account SET expires_at = now() + interval '1 day' WHERE user_name = 'sophie.vandijk'");
+
+        loginAndGetToken("sophie.vandijk", DEFAULT_PASSWORD);
+    }
+
+    @Test
+    void aLockedAccount_cannotLogIn() throws Exception {
+        jdbc.update("UPDATE account SET locked = true WHERE user_name = 'sophie.vandijk'");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\":\"sophie.vandijk\",\"password\":\"password123\"}"))
+                .andExpect(status().isUnauthorized());
     }
 }
