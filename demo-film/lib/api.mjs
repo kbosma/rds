@@ -37,3 +37,10 @@ export async function setDemoToday(date) {
   if (!res.ok) throw new Error(`Demo-klok zetten mislukt: ${res.status}`);
   return res.json();
 }
+
+/** Een binair antwoord (bijvoorbeeld de inhoud van een document) als Buffer. */
+export async function apiBytes(token, path) {
+  const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`GET ${path}: ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
+}

@@ -47,3 +47,6 @@ src/main/resources/application-rds-local.yaml
 
 ### Claude Code (lokale toolconfiguratie) ###
 .claude/
+
+# Video's van de gebruikershandleiding (groot; worden apart verspreid, zie demo-film/README.md)
+docs/gebruikershandleiding/video/

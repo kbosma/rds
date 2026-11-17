@@ -1,8 +1,14 @@
-# Boekingsfilmpje
+# Filmpjes voor de gebruikershandleiding
 
-Een video van een fictieve klant van prospect tot afgeronde reis, opgenomen in de echte schermen van RDS
-(medewerkersapp en boekerportaal) met ondertitels. Het resultaat staat in de gebruikershandleiding
-(`docs/gebruikershandleiding/video/boekingsfilmpje.webm`, hoofdstuk 12).
+Video's die in de echte schermen van RDS (medewerkersapp en boekerportaal) zijn opgenomen, met ondertitels:
+
+| Filmpje | Script | In de handleiding |
+|---|---|---|
+| Van aanvraag tot afgeronde reis (prospect → afgerond) | `record.mjs` → `out/boekingsfilmpje.webm` | hoofdstuk 12 |
+| Templates maken (e-mail en Word/PDF) | `record-templates.mjs` → `out/templatesfilmpje.webm` | hoofdstuk 11 |
+
+De video's staan niet in git (te groot; `docs/gebruikershandleiding/video/` staat in `.gitignore`). Kopieer ze na het
+opnemen naar die map, of verspreid ze apart.
 
 Een script bedient de app (Playwright) en neemt het op. Na een wijziging in de schermen draai je het opnieuw en is het
 filmpje weer actueel.
@@ -47,13 +53,15 @@ Eenmalig: `npm install` en `npx playwright install chromium` in deze map.
    cd demo-film && npm run seed && npm run record
    ```
    Het filmpje komt in `demo-film/out/boekingsfilmpje.webm`. Kopieer het naar `docs/gebruikershandleiding/video/`.
+   Het templatefilmpje: `npm run record:templates` (ook op een verse, geseede database; het maakt buiten beeld zelf
+   een voorbeeldboeking). Voor de PDF in beeld gebruikt het `sips` (macOS).
 
-Opnieuw opnemen kan alleen op een lege database (de seed maakt de organisatie één keer aan en het script verwacht één
-klant Anna de Vries). Begin dus met een nieuwe `rdsdemo` en een herstart van de backend.
+Opnieuw opnemen kan alleen op een lege database (de seed maakt de organisatie één keer aan en elk script verwacht één
+klant Anna de Vries). Begin dus voor elk filmpje met een nieuwe `rdsdemo` en een herstart van de backend.
 
 Handig bij het aanpassen: `PACE=0.4 npm run record` (sneller) en `HEADED=1 npm run record` (browser zichtbaar).
 
-## Draaiboek
+## Draaiboek boekingsfilmpje
 
 1. Inloggen als Sanne (manager van Zonnige Reizen).
 2. Anna de Vries registreren als prospect.
@@ -64,3 +72,12 @@ Handig bij het aanpassen: `PACE=0.4 npm run record` (sneller) en `HEADED=1 npm r
 7. Melding "alles betaald" afhandelen.
 8. Klok naar de reisdatum → Op reis; daarna naar na de reis → Weer thuis; meldingen afhandelen → Afgerond;
    statusgeschiedenis.
+
+## Draaiboek templatefilmpje
+
+1. E-mailtemplate "Reisbescheiden": onderwerp met boekingsnummer, tekst met variabelen (voornaam, vertrekdatum), vet,
+   een logo uploaden en invoegen.
+2. Vanuit de boeking van Anna: E-mail aan hoofdboeker, voorbeeld genereren, versturen; de mail in Anna's postbus.
+3. Word-template "Reisbevestiging" in de editor: kop met boekingsnummer, aanhef, herhaalde tabellen voor reizigers en
+   accommodaties.
+4. Vanuit de boeking: Document, PDF, zichtbaar in het portaal; de eerste pagina van de echte PDF in beeld.
