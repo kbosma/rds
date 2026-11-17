@@ -45,6 +45,10 @@ public class Account {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Person person;
 
+    /** Gaat omhoog als de rechten van het account veranderen; alleen databasetriggers zetten hem (V26). */
+    @Column(name = "authz_version", nullable = false, insertable = false, updatable = false)
+    private int authzVersion;
+
     /** Altijd gelijk aan de organisatie van de persoon; de database dwingt dat af (V22). */
     @Column(name = "tenant_organization", nullable = false)
     private UUID tenantOrganization;
@@ -162,6 +166,10 @@ public class Account {
 
     public UUID getTenantOrganization() {
         return tenantOrganization;
+    }
+
+    public int getAuthzVersion() {
+        return authzVersion;
     }
 
     public Boolean getLocked() {

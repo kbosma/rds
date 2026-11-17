@@ -1,6 +1,6 @@
 # Voorstel: eigen rollen per organisatie
 
-Status: **fase 0 t/m 4 gebouwd (V22–V25, frontend); fase 5 (direct doorwerken) nog niet. Alle open vragen zijn beantwoord (§11).** Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar
+Status: **alle fasen gebouwd (V22–V26, backend en frontend). Alle open vragen zijn beantwoord (§11).** Dit document beschrijft hoe een organisatie zelf rollen kan maken en daar
 authorities aan kan hangen. Het scherm toont of verbergt dan per gebruiker alles op basis van zijn authorities.
 
 Samengevat:
@@ -664,7 +664,7 @@ Elke fase is los op te leveren en te testen.
 | 2. Frontend meebewegend | **Gebouwd**: `ACCESS` in `core/auth/access.ts` voor menu en routes, `authorityGuard` op elke pagina (`app.routes.spec.ts`), `AuthService.authorities` als signal en `can()`, geen `hasRole`; boekingsdetails en dashboards halen alleen op wat mag; rolfilter in de accountlijst uit de data. Nog niet: onboarding kiest MANAGER op naam (komt met `system_key` in fase 3). |
 | 3. Platform en rollen per organisatie | **Gebouwd** (V24): RDS Platform, rollen en toewijzingen per organisatie met samengestelde FK's, sjabloon + kopieën + `sync_system_roles()` + triggers, authorities alleen-lezen met domein/vereisten/introductiedatum, de regels van §4 in de backend (incl. laatste beheerder en de uitzondering voor PLATFORM_ADMIN), het rechtenlogboek met `GET /api/authorization-log`. Frontend: onboarding kiest MANAGER op `systemKey`, systeemrollen en rollen boven je niveau zijn alleen te bekijken, het rolscherm biedt alleen uitdeelbare rechten aan, authorities-overzicht alleen-lezen, RDS Platform niet in de klantenlijst. `organization.roles_reviewed_at` en `authority.introduced_at` bestaan al, het scherm ervoor komt in fase 4. |
 | 4. Rollenscherm | **Gebouwd**: rechtenmatrix per onderwerp (Lezen/Aanmaken/Wijzigen/Verwijderen/Overig; alleen G(u) aan te vinken, vereisten gaan via de server mee, label *Nieuw*), een rol aanmaken als kopie (`POST /api/roles?copyFrom=`, alleen als je alle rechten zelf mag uitdelen), "gebruikt door N accounts" (`accountCount`), geschiedenis uit het rechtenlogboek, melding nieuwe rechten met *Gezien* (`GET /api/roles/new-authorities`, `POST /api/roles/new-authorities/seen`). Seed: Wendy Vos is MANAGER van Puurkroatie (V25). |
-| 5 | Nog niet gebouwd |
+| 5. Direct doorwerken | **Gebouwd** (V26): `account.authz_version` via databasetriggers (rollen toewijzen/intrekken, rechten van een rol, locken/vervaldatum), claim `av`, `JwtAuthenticationFilter` weigert een verouderd token met `401 AUTHZ_CHANGED`, `POST /api/auth/token/refresh` (`EmployeeTokenService`), `authInterceptor` ververst één keer en herhaalt de aanroep. Afwijking van §6: geen cache van 30 seconden, maar per aanroep één opzoeking op primaire sleutel. |
 
 ```mermaid
 flowchart LR

@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import nl.puurkroatie.rds.auth.repository.AccountRepository;
 import nl.puurkroatie.rds.bookerportal.security.BookerContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,16 +13,23 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    /** Een token met een verouderde rechtenversie mag alleen nog een nieuw token ophalen. */
+    static final String REFRESH_PATH = "/api/auth/token/refresh";
+    static final String AUTHZ_CHANGED = "AUTHZ_CHANGED";
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AccountRepository accountRepository;
+
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, AccountRepository accountRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -63,6 +71,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     BookerContext.setBookerId(jwtTokenProvider.getAccountId(token));
                     BookerContext.setBookingId(jwtTokenProvider.getBookingId(token));
                 } else {
+                    // De rechten van het account zijn sinds dit token gewijzigd: eerst een nieuw token ophalen.
+                    if (!REFRESH_PATH.equals(pathWithinApplication(request)) && !hasCurrentAuthzVersion(token)) {
+                        rejectAsChanged(response);
+                        return;
+                    }
                     List<SimpleGrantedAuthority> authorities = jwtTokenProvider.getAuthorities(token).stream()
                             .map(SimpleGrantedAuthority::new)
                             .toList();
@@ -86,6 +99,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             TenantContext.clear();
             BookerContext.clear();
         }
+    }
+
+    /** Het pad zonder context-path (bijv. /rds), zodat de vergelijking op elke server klopt. */
+    private static String pathWithinApplication(HttpServletRequest request) {
+        return request.getRequestURI().substring(request.getContextPath().length());
+    }
+
+    private boolean hasCurrentAuthzVersion(String token) {
+        Integer tokenVersion = jwtTokenProvider.getAuthzVersion(token);
+        return tokenVersion != null && accountRepository.findAuthzVersion(jwtTokenProvider.getAccountId(token))
+                .map(tokenVersion::equals)
+                .orElse(false);
+    }
+
+    private static void rejectAsChanged(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"message\":\"Je rechten zijn gewijzigd\",\"status\":401,\"timestamp\":\""
+                + LocalDateTime.now() + "\",\"code\":\"" + AUTHZ_CHANGED + "\"}");
     }
 
     private String extractToken(HttpServletRequest request) {

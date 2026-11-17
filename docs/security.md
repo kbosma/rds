@@ -6,11 +6,13 @@ Samenvatting: stateless JWT, multi-tenant per organisatie, rechten op **authorit
 
 | `type` | Wie | Levensduur | Belangrijkste claims |
 |---|---|---|---|
-| `EMPLOYEE` | ingelogde medewerker | `app.jwt.expiration-ms` (nu 1 uur) | `sub`=accountId, `org`, `personId`, `userName`, `personName`, `organizationName`, `authorities`, `roles` |
+| `EMPLOYEE` | ingelogde medewerker | `app.jwt.expiration-ms` (nu 1 uur) | `sub`=accountId, `org`, `personId`, `userName`, `personName`, `organizationName`, `authorities`, `roles`, `av` (rechtenversie, V26) |
 | `TOTP_PENDING` | tussenstap na wachtwoord als TOTP vereist is | kort | `sub`=accountId; geeft alleen toegang tot de TOTP-/herstelcode-login |
 | `BOOKER` | klant na OTP | `app.jwt.booker-expiration-ms` (nu 1 uur) | `sub`=bookerId, `bookingId` |
 
 Het token wordt door beide frontends in `localStorage` bewaard en als `Authorization: Bearer …` meegestuurd. Een `401` (behalve op login-endpoints) logt de gebruiker uit. Een token zonder `type` geldt als `EMPLOYEE`.
+
+**Rechten direct doorvoeren (V26).** `account.authz_version` gaat omhoog zodra de rechten van een account veranderen: een rol toegewezen of ingetrokken, een recht toegevoegd aan of weggehaald uit een van zijn rollen (ook via `sync_system_roles()`), of het account gelockt, ontgrendeld of met een andere vervaldatum. Databasetriggers doen dat, dus ook bij directe SQL. `JwtAuthenticationFilter` vergelijkt de claim `av` met de database (één opzoeking op primaire sleutel per aanroep) en weigert een verouderd token met `401` en `{"code":"AUTHZ_CHANGED"}`. Alleen `POST /api/auth/token/refresh` werkt dan nog: die geeft een nieuw token met de huidige rechten (`EmployeeTokenService`), zonder wachtwoord of 2FA, maar niet als het account gelockt of verlopen is of een nieuw wachtwoord moet kiezen (`401`). De frontend (`authInterceptor`) ververst bij `AUTHZ_CHANGED` één keer (gedeeld tussen gelijktijdige aanroepen), herhaalt de aanroep en zet het nieuwe token in de `AuthService`, waardoor menu, routes en kaarten direct meebewegen. Een token van vóór V26 heeft geen `av` en wordt dus ook ververst.
 
 `JwtAuthenticationFilter` (vóór de Spring-filter): valideert het token, zet de `SecurityContext` en de ThreadLocals (`TenantContext` of `BookerContext`) en ruimt ze in een `finally` op. Een `BOOKER`-token krijgt vast `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE`; een `TOTP_PENDING`-token alleen een pseudo-authority `TOTP_PENDING`.
 

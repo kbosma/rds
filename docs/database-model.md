@@ -136,6 +136,7 @@ Gebruikersaccount met login-gegevens en optionele TOTP 2FA.
 | user_name | VARCHAR | NOT NULL | Gebruikersnaam |
 | password_hash | VARCHAR | NOT NULL | BCrypt hash |
 | person_id | UUID | FK → person, NOT NULL | Gekoppelde persoon |
+| authz_version | INTEGER | NOT NULL, default 0 (V26) | Rechtenversie; triggers verhogen hem bij elke wijziging in de rechten of toegang van het account (claim `av` in het token) |
 | tenant_organization | UUID | FK → organization ON DELETE CASCADE, NOT NULL, index; FK (person_id, tenant_organization) → person ON UPDATE/DELETE CASCADE (V22) | Altijd gelijk aan de organisatie van de persoon |
 | locked | BOOLEAN | NOT NULL | Account vergrendeld |
 | must_change_password | BOOLEAN | NOT NULL | Wachtwoord wijzigen verplicht |
