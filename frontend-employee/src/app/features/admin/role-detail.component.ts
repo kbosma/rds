@@ -1,7 +1,8 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,19 +10,27 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { RoleService } from './role.service';
 import { RoleAuthorityService } from './role-authority.service';
 import { AuthorityService } from './authority.service';
+import { AuthorizationLogService } from './authorization-log.service';
+import { AuthorityToggle, RoleAuthorityMatrixComponent } from './role-authority-matrix.component';
 import { AuthService } from '../../core/auth/auth.service';
-import { ConfirmService } from '../../shared/services/confirm.service';
-import { Authority, Role } from '../../shared/models';
+import { Authority, AuthorizationLogEntry, Role } from '../../shared/models';
 
+/**
+ * Een rol bekijken, aanmaken (eventueel als kopie) en zijn rechten instellen in een matrix.
+ * Wat mag, bepaalt de server (eigen rol van de eigen organisatie, onder je niveau, alleen uitdeelbare rechten);
+ * dit scherm laat alleen zien wat kan en geeft de uitleg van de server door.
+ */
 @Component({
   selector: 'app-role-detail',
   standalone: true,
   imports: [
+    DatePipe,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
@@ -31,6 +40,7 @@ import { Authority, Role } from '../../shared/models';
     MatSelectModule,
     MatSnackBarModule,
     TranslatePipe,
+    RoleAuthorityMatrixComponent,
   ],
   template: `
     <div class="page-header">
@@ -43,6 +53,7 @@ import { Authority, Role } from '../../shared/models';
         {{ (role()?.systemKey ? 'roles.systemRoleLocked' : 'roles.aboveYourLevel') | translate }}
       </p>
     }
+
     <mat-card class="detail-card">
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="save()">
@@ -50,6 +61,21 @@ import { Authority, Role } from '../../shared/models';
             <mat-label>{{ 'roles.description' | translate }}</mat-label>
             <input matInput formControlName="description" />
           </mat-form-field>
+          @if (isNew()) {
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'roles.copyFrom' | translate }}</mat-label>
+              <mat-select formControlName="copyFrom" class="copy-from">
+                <mat-option [value]="null">{{ 'roles.startEmpty' | translate }}</mat-option>
+                @for (r of copyCandidates(); track r.roleId) {
+                  <mat-option [value]="r.roleId">{{ r.description }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>{{ 'roles.copyFromHint' | translate }}</mat-hint>
+            </mat-form-field>
+          }
+          @if (!isNew() && role()?.accountCount != null) {
+            <p class="usage">{{ 'roles.usedBy' | translate: { count: role()!.accountCount } }}</p>
+          }
           <div class="actions">
             <button mat-button type="button" (click)="goBack()">{{ (editable() ? 'common.cancel' : 'common.close') | translate }}</button>
             @if (editable()) {
@@ -63,58 +89,48 @@ import { Authority, Role } from '../../shared/models';
     </mat-card>
 
     @if (!isNew() && canReadAuthorities) {
-      <mat-card class="section-card">
+      <mat-card class="section-card authorities-card">
         <mat-card-header>
           <mat-card-title>{{ 'roles.authorities' | translate }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          @if (canAssign && editable()) {
-            <div class="link-row">
-              <mat-form-field appearance="outline" class="flex-1">
-                <mat-label>{{ 'roles.selectAuthority' | translate }}</mat-label>
-                <mat-select [formControl]="authorityControl">
-                  @for (a of availableAuthorities(); track a.authorityId) {
-                    <mat-option [value]="a.authorityId">
-                      {{ a.description }}
-                      @if (a.requires?.length) {
-                        <span class="requires">({{ 'roles.alsoAdds' | translate }} {{ a.requires!.join(', ') }})</span>
-                      }
-                    </mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-              <button mat-raised-button color="primary" type="button" class="add-authority-btn"
-                      [disabled]="!authorityControl.value" (click)="addAuthority()">
-                <mat-icon>add</mat-icon> {{ 'roles.addAuthority' | translate }}
-              </button>
-            </div>
+          @if (editable() && canChange) {
+            <p class="hint">{{ 'roles.matrix.hint' | translate }}</p>
           }
-          <div class="item-grid">
-            @for (a of assigned(); track a.authorityId) {
-              <div class="list-item">
-                <span class="item-text">{{ a.description }}</span>
-                @if (canRemove && editable()) {
-                  <button mat-icon-button type="button" class="remove-authority-btn act-delete" (click)="removeAuthority(a)">
-                    <mat-icon>link_off</mat-icon>
-                  </button>
-                }
-              </div>
-            } @empty {
-              <p class="empty-text">{{ 'roles.noAuthoritiesAssigned' | translate }}</p>
+          <app-role-authority-matrix
+            [authorities]="allAuthorities()" [assigned]="assigned()" [grantable]="grantable()"
+            [newNames]="newNames()" [editable]="editable() && canChange" (toggle)="onToggle($event)" />
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (!isNew() && history().length > 0) {
+      <mat-card class="section-card history-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'roles.history' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table class="history">
+            @for (entry of history(); track entry.authorizationLogId) {
+              <tr>
+                <td class="when">{{ entry.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
+                <td>{{ 'roles.log.' + entry.action | translate }}</td>
+                <td>{{ entry.authority ?? entry.accountUserName ?? '' }}</td>
+                <td class="details">{{ entry.details ?? '' }}</td>
+              </tr>
             }
-          </div>
+          </table>
         </mat-card-content>
       </mat-card>
     }
   `,
   styles: [`
-    .link-row { display: flex; gap: 12px; align-items: baseline; max-width: 760px; }
-    /* Rechten in een raster: veel rechten passen zo op één scherm. */
-    .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
-    .list-item { display: flex; justify-content: space-between; align-items: center; gap: 4px; min-height: 32px; padding: 0 2px 0 10px; border: 1px solid var(--ui-line); border-radius: var(--ui-radius); }
-    .item-text { font-size: 12px; overflow-wrap: anywhere; }
     .locked-note { display: flex; align-items: center; gap: 6px; color: var(--ui-text-muted, #5b6b77); margin: -4px 0 12px; }
-    .requires { color: var(--ui-text-muted, #5b6b77); font-size: 12px; }
+    .usage, .hint { color: var(--ui-text-muted, #5b6b77); font-size: 13px; margin: 0 0 8px; }
+    .history { border-collapse: collapse; width: 100%; font-size: 13px; }
+    .history td { border-bottom: 1px solid var(--ui-line); padding: 4px 8px; }
+    .history .when { white-space: nowrap; width: 1%; }
+    .history .details { color: var(--ui-text-muted, #5b6b77); }
   `],
 })
 export class RoleDetailComponent implements OnInit {
@@ -127,64 +143,100 @@ export class RoleDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private roleAuthorityService = inject(RoleAuthorityService);
   private authorityService = inject(AuthorityService);
+  private logService = inject(AuthorizationLogService);
   private authService = inject(AuthService);
-  private confirmService = inject(ConfirmService);
 
-  canReadAuthorities = this.authService.hasAuthority('ROLEAUTHORITY_READ');
-  canAssign = this.authService.hasAuthority('ROLEAUTHORITY_CREATE');
-  canRemove = this.authService.hasAuthority('ROLEAUTHORITY_DELETE');
+  canReadAuthorities = this.authService.hasAuthority('ROLEAUTHORITY_READ') && this.authService.hasAuthority('AUTHORITY_READ');
+  /** Rechten aan- en uitzetten vraagt allebei; de matrix kent één vinkje per recht. */
+  canChange = this.authService.hasAuthority('ROLEAUTHORITY_CREATE') && this.authService.hasAuthority('ROLEAUTHORITY_DELETE');
 
+  isNew = signal(true);
+  saving = signal(false);
   /** De rol zoals de server hem kent, met het oordeel of de gebruiker hem mag wijzigen. */
   role = signal<Role | null>(null);
   /** Een nieuwe rol is altijd te bewerken; een bestaande alleen als de server dat zegt (eigen rol, onder je niveau). */
   editable = computed(() => this.isNew() || !!this.role()?.editable);
 
-  assigned = signal<Authority[]>([]);
-  private allAuthorities = signal<Authority[]>([]);
-  availableAuthorities = computed(() => {
-    const taken = new Set(this.assigned().map(a => a.authorityId));
-    return this.allAuthorities().filter(a => !taken.has(a.authorityId));
-  });
-  authorityControl = new FormControl<string | null>(null);
+  allAuthorities = signal<Authority[]>([]);
+  assigned = signal<Set<string>>(new Set());
+  grantable = signal<Set<string>>(new Set());
+  newNames = signal<Set<string>>(new Set());
+  history = signal<AuthorizationLogEntry[]>([]);
+  /** Rollen die als startpunt kunnen dienen: alleen die waarvan je alle rechten zelf mag uitdelen. */
+  copyCandidates = signal<Role[]>([]);
 
-  isNew = signal(true);
-  saving = signal(false);
   private roleId: string | null = null;
 
   form = this.fb.group({
     description: ['', Validators.required],
+    copyFrom: [null as string | null],
   });
 
   ngOnInit() {
     this.roleId = this.route.snapshot.paramMap.get('id');
     this.isNew.set(!this.roleId);
-    if (this.roleId) {
-      this.roleService.getById(this.roleId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (role) => {
-          this.role.set(role);
-          this.form.patchValue(role);
-          if (!role.editable) this.form.disable();
-        },
-      });
-      if (this.canReadAuthorities) this.loadAuthorities();
+    if (!this.roleId) {
+      this.loadCopyCandidates();
+      return;
     }
+    this.loadRole();
+    if (this.canReadAuthorities) this.loadAuthorities();
+    this.loadHistory();
   }
 
   save() {
-    if (this.saving()) return;
+    if (this.saving() || !this.editable()) return;
     this.saving.set(true);
-    const value = { description: this.form.value.description ?? undefined };
+    const description = this.form.value.description ?? undefined;
     const op = this.roleId
-      ? this.roleService.update(this.roleId, value)
-      : this.roleService.create(value);
+      ? this.roleService.update(this.roleId, { description })
+      : this.roleService.create({ description }, this.form.value.copyFrom ?? undefined);
+    op.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (saved) => {
+        this.saving.set(false);
+        this.snackBar.open(this.translate.instant('common.saved'), '', { duration: 3000 });
+        if (!this.roleId) {
+          // Verder met de rechten van de nieuwe rol.
+          this.router.navigate(['/admin/roles', saved.roleId]);
+        } else {
+          this.role.set(saved);
+          this.loadHistory();
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.showError(err, 'common.saveError');
+      },
+    });
+  }
+
+  onToggle({ authority, checked }: AuthorityToggle) {
+    if (!this.roleId || !this.editable() || !this.canChange) return;
+    const op: Observable<unknown> = checked
+      ? this.roleAuthorityService.create(this.roleId, authority.authorityId)
+      : this.roleAuthorityService.delete(this.roleId, authority.authorityId);
     op.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.snackBar.open(this.translate.instant('common.saved'), '', { duration: 3000 });
-        this.goBack();
+        this.loadAuthorities();
+        this.loadHistory();
       },
-      error: (err) => {
-        this.saving.set(false);
-        this.snackBar.open(err?.error?.message || this.translate.instant('common.saveError'), '', { duration: 5000 });
+      error: (err: HttpErrorResponse) => {
+        this.showError(err, checked ? 'roles.authorityAssignError' : 'roles.authorityRemoveError');
+        this.loadAuthorities(); // het vinkje terug naar de werkelijke stand
+      },
+    });
+  }
+
+  goBack() {
+    this.router.navigate(['/admin/roles']);
+  }
+
+  private loadRole() {
+    this.roleService.getById(this.roleId!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (role) => {
+        this.role.set(role);
+        this.form.patchValue({ description: role.description });
+        if (!role.editable) this.form.disable();
       },
     });
   }
@@ -192,46 +244,46 @@ export class RoleDetailComponent implements OnInit {
   private loadAuthorities() {
     forkJoin({
       links: this.roleAuthorityService.getAll(),
-      // Alleen wat de gebruiker zelf mag uitdelen (G(u)); de rest kan de server toch niet toestaan.
-      all: this.authorityService.getGrantable(),
+      all: this.authorityService.getAll(),
+      grantable: this.authorityService.getGrantable(),
+      fresh: this.authService.hasAuthority('ROLE_READ') ? this.roleService.getNewAuthorities() : of([] as Authority[]),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ links, all }) => {
+      next: ({ links, all, grantable, fresh }) => {
         this.allAuthorities.set(all);
-        this.assigned.set(
-          links.filter(l => l.role.roleId === this.roleId)
-            .map(l => ({ authorityId: l.authority.authorityId, description: l.authority.description }) as Authority)
-            .sort((a, b) => a.description.localeCompare(b.description))
-        );
+        this.grantable.set(new Set(grantable.map((a) => a.description)));
+        this.newNames.set(new Set(fresh.map((a) => a.description)));
+        this.assigned.set(new Set(links.filter((l) => l.role.roleId === this.roleId).map((l) => l.authority.description)));
       },
     });
   }
 
-  addAuthority() {
-    const authorityId = this.authorityControl.value;
-    if (!this.canAssign || !authorityId || !this.roleId) return;
-    this.roleAuthorityService.create(this.roleId, authorityId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.authorityControl.reset();
-        this.snackBar.open(this.translate.instant('roles.authorityAssigned'), '', { duration: 3000 });
-        this.loadAuthorities();
-      },
-      error: (err) => this.snackBar.open(err?.error?.message || this.translate.instant('roles.authorityAssignError'), '', { duration: 5000 }),
+  private loadHistory() {
+    this.logService.getForRole(this.roleId!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (entries) => this.history.set(entries),
+      error: () => this.history.set([]),
     });
   }
 
-  async removeAuthority(authority: Authority) {
-    if (!this.canRemove || !this.roleId) return;
-    if (!await this.confirmService.confirm(this.translate.instant('roles.removeAuthorityConfirm', { authority: authority.description }))) return;
-    this.roleAuthorityService.delete(this.roleId, authority.authorityId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.snackBar.open(this.translate.instant('roles.authorityRemoved'), '', { duration: 3000 });
-        this.loadAuthorities();
+  private loadCopyCandidates() {
+    if (!this.canReadAuthorities) return;
+    forkJoin({
+      roles: this.roleService.getAll(),
+      links: this.roleAuthorityService.getAll(),
+      grantable: this.authorityService.getGrantable(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ roles, links, grantable }) => {
+        const mayGive = new Set(grantable.map((a) => a.description));
+        this.copyCandidates.set(roles.filter((role) =>
+          links.filter((l) => l.role.roleId === role.roleId).every((l) => mayGive.has(l.authority.description))));
       },
-      error: (err) => this.snackBar.open(err?.error?.message || this.translate.instant('roles.authorityRemoveError'), '', { duration: 5000 }),
     });
   }
 
-  goBack() {
-    this.router.navigate(['/admin/roles']);
+  /** De server legt uit waarom iets niet mag (403/409); anders een algemene melding. */
+  private showError(err: HttpErrorResponse, fallbackKey: string) {
+    const message = (err.status === 403 || err.status === 409) && err.error?.message
+      ? err.error.message
+      : this.translate.instant(fallbackKey);
+    this.snackBar.open(message, this.translate.instant('common.close'), { duration: 6000 });
   }
 }

@@ -1,13 +1,20 @@
 package nl.puurkroatie.rds.auth.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import nl.puurkroatie.rds.auth.dto.AuthorityDto;
 import nl.puurkroatie.rds.auth.dto.RoleDto;
 import nl.puurkroatie.rds.auth.entity.AuthorizationLog.Action;
+import nl.puurkroatie.rds.auth.entity.Organization;
 import nl.puurkroatie.rds.auth.entity.Role;
+import nl.puurkroatie.rds.auth.entity.RoleAuthority;
 import nl.puurkroatie.rds.auth.mapper.RoleMapper;
 import nl.puurkroatie.rds.auth.repository.AccountRoleRepository;
+import nl.puurkroatie.rds.auth.repository.AuthorityRepository;
+import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
+import nl.puurkroatie.rds.auth.repository.RoleAuthorityRepository;
 import nl.puurkroatie.rds.auth.repository.RoleRepository;
 import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.auth.service.AuthorityService;
 import nl.puurkroatie.rds.auth.service.AuthorizationLogService;
 import nl.puurkroatie.rds.auth.service.AuthorizationRules;
 import nl.puurkroatie.rds.auth.service.RoleService;
@@ -17,6 +24,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,24 +41,54 @@ public class RoleServiceImpl implements RoleService {
     private final RoleMapper roleMapper;
     private final AuthorizationRules rules;
     private final AuthorizationLogService log;
+    private final RoleAuthorityRepository roleAuthorityRepository;
+    private final AuthorityRepository authorityRepository;
+    private final OrganizationRepository organizationRepository;
+    private final AuthorityService authorityService;
+    private final Clock clock;
 
     public RoleServiceImpl(RoleRepository roleRepository, AccountRoleRepository accountRoleRepository, RoleMapper roleMapper,
-                           AuthorizationRules rules, AuthorizationLogService log) {
+                           AuthorizationRules rules, AuthorizationLogService log, RoleAuthorityRepository roleAuthorityRepository,
+                           AuthorityRepository authorityRepository, OrganizationRepository organizationRepository,
+                           AuthorityService authorityService, Clock clock) {
         this.roleRepository = roleRepository;
         this.accountRoleRepository = accountRoleRepository;
         this.roleMapper = roleMapper;
         this.rules = rules;
         this.log = log;
+        this.roleAuthorityRepository = roleAuthorityRepository;
+        this.authorityRepository = authorityRepository;
+        this.organizationRepository = organizationRepository;
+        this.authorityService = authorityService;
+        this.clock = clock;
     }
 
     @Override
-    public RoleDto create(RoleDto dto) {
+    public RoleDto create(RoleDto dto, UUID copyFromRoleId) {
         UUID organization = TenantContext.getOrganizationId();
         String name = dto.getDescription().trim();
         verifyNameAvailable(organization, name);
+        Set<String> grantable = rules.grantable();
+
+        Role source = null;
+        Set<String> copied = Set.of();
+        if (copyFromRoleId != null) {
+            source = roleRepository.findById(copyFromRoleId)
+                    .filter(r -> r.getTenantOrganization().equals(organization))
+                    .orElseThrow(() -> new EntityNotFoundException("Role not found with id: " + copyFromRoleId));
+            copied = rules.roleAuthorities(source.getRoleId());
+            if (!grantable.containsAll(copied)) {
+                throw new AccessDeniedException("Deze rol bevat rechten die je zelf niet hebt; kopiëren kan daarom niet");
+            }
+        }
+
         Role saved = roleRepository.save(new Role(name, organization));
-        log.roleEvent(Action.ROLE_CREATED, saved, null);
-        return toDto(saved, rules.grantable());
+        log.roleEvent(Action.ROLE_CREATED, saved, source == null ? null : "kopie van " + source.getDescription());
+        for (String authority : copied.stream().sorted().toList()) {
+            roleAuthorityRepository.save(new RoleAuthority(saved, authorityRepository.findByDescription(authority).orElseThrow()));
+            log.authorityEvent(Action.AUTHORITY_ADDED, saved, authority, "gekopieerd van " + source.getDescription());
+        }
+        return toDto(saved, grantable);
     }
 
     @Override
@@ -97,6 +137,23 @@ public class RoleServiceImpl implements RoleService {
                 .map(role -> toDto(role, rules.grantable()));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuthorityDto> findNewAuthorities() {
+        Organization organization = organizationRepository.findById(TenantContext.getOrganizationId()).orElseThrow();
+        LocalDate seenUntil = (organization.getRolesReviewedAt() != null ? organization.getRolesReviewedAt() : organization.getCreatedAt())
+                .toLocalDate();
+        return authorityService.findAll().stream()
+                .filter(AuthorityDto::tenantAssignable)
+                .filter(authority -> authority.introducedAt().isAfter(seenUntil))
+                .toList();
+    }
+
+    @Override
+    public void markNewAuthoritiesSeen() {
+        organizationRepository.markRolesReviewed(TenantContext.getOrganizationId(), LocalDateTime.now(clock));
+    }
+
     private boolean isVisible(Role role) {
         return rules.isPlatformAdmin() || role.getTenantOrganization().equals(TenantContext.getOrganizationId());
     }
@@ -128,6 +185,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     private RoleDto toDto(Role role, Set<String> grantable) {
-        return roleMapper.toDto(role).withEditable(rules.isEditable(role, grantable));
+        return roleMapper.toDto(role).withEditable(rules.isEditable(role, grantable), accountRoleRepository.countByRole(role));
     }
 }

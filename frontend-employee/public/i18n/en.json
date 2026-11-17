@@ -620,7 +620,36 @@
     "systemRole": "System role (locked)",
     "systemRoleLocked": "This is a system role: its content is fixed and comes with RDS. Need something else? Create your own role.",
     "aboveYourLevel": "This role contains rights you do not have yourself, so you cannot change it.",
-    "alsoAdds": "requires:"
+    "alsoAdds": "requires:",
+    "copyFrom": "Copy of",
+    "startEmpty": "Start empty",
+    "copyFromHint": "The new role starts with the rights of this role. Only roles whose rights you may all hand out are listed.",
+    "usedBy": "Used by {{count}} account(s).",
+    "history": "History",
+    "accounts": "Accounts",
+    "newAuthoritiesBanner": "{{count}} new rights are available: {{names}}. Your own roles do not get them automatically; the system roles do.",
+    "newAuthoritiesSeen": "Seen",
+    "matrix": {
+      "subject": "Subject",
+      "read": "Read",
+      "create": "Create",
+      "update": "Update",
+      "delete": "Delete",
+      "other": "Other",
+      "new": "New",
+      "notYours": "You do not have this right yourself, so you cannot hand it out.",
+      "hasRequirements": "Switching this on also switches on the rights it needs.",
+      "hint": "Tick what this role may do. Required rights (such as read for update) are added automatically; grey boxes are rights you do not have yourself."
+    },
+    "log": {
+      "ROLE_CREATED": "Role created",
+      "ROLE_RENAMED": "Renamed",
+      "ROLE_DELETED": "Role deleted",
+      "AUTHORITY_ADDED": "Right added",
+      "AUTHORITY_REMOVED": "Right removed",
+      "ROLE_ASSIGNED": "Assigned to",
+      "ROLE_REVOKED": "Revoked from"
+    }
   },
   "authorities": {
     "title": "Authorities",
@@ -929,5 +958,38 @@
     "previousPage": "Previous page",
     "firstPage": "First page",
     "lastPage": "Last page"
+  },
+  "authorityDomains": {
+    "BOOKING": "Bookings",
+    "PAYMENT": "Payments",
+    "DOCUMENT": "Documents",
+    "EMAIL": "E-mail",
+    "NOTIFICATION": "Notifications",
+    "TEMPLATE": "Templates",
+    "ACCOMMODATION": "Accommodations",
+    "SUPPLIER": "Suppliers",
+    "ACTIVITY": "Activities",
+    "PERSON": "Persons",
+    "ACCOUNT": "Accounts",
+    "ROLE": "Roles",
+    "ROLEAUTHORITY": "Rights of roles",
+    "ACCOUNTROLE": "Roles of accounts",
+    "AUTHORITY": "Rights overview",
+    "ORGANIZATION_THEME": "Brand style",
+    "ORGANIZATION_SETTINGS": "Settings",
+    "ORGANIZATION": "Organizations",
+    "PLATFORM": "Platform administration",
+    "BOOKER_PORTAL": "Travel portal"
+  },
+  "authorityNames": {
+    "BOOKING_COMPLETE": "Complete",
+    "BOOKING_STATUS_REVERT": "Revert status",
+    "BOOKING_STATUS_REVERT_PAID": "Revert after payment",
+    "QUOTE_SEND": "Send quote",
+    "EMAIL_SEND": "Send",
+    "PAYMENT_CORRECT": "Correct",
+    "PAYMENT_RELINK": "Relink",
+    "USER_SCOPE_ORGANIZATION": "Whole organization",
+    "PLATFORM_ADMIN": "Across organizations"
   }
 }

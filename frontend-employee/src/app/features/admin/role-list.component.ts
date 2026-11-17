@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -13,7 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { RoleService } from './role.service';
-import { Role } from '../../shared/models';
+import { Authority, Role } from '../../shared/models';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { RowActionsComponent } from '../../shared/components/row-actions.component';
 import { AuthService } from '../../core/auth/auth.service';
@@ -45,6 +45,16 @@ import { AuthService } from '../../core/auth/auth.service';
       }
     </div>
 
+    @if (newAuthorities().length > 0) {
+      <div class="new-rights">
+        <mat-icon>new_releases</mat-icon>
+        <span>{{ 'roles.newAuthoritiesBanner' | translate: { count: newAuthorities().length, names: newAuthorityNames() } }}</span>
+        @if (canUpdate) {
+          <button mat-stroked-button class="seen-btn" (click)="markSeen()">{{ 'roles.newAuthoritiesSeen' | translate }}</button>
+        }
+      </div>
+    }
+
     <div class="filter-bar">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>{{ 'common.search' | translate }}</mat-label>
@@ -68,6 +78,11 @@ import { AuthService } from '../../core/auth/auth.service';
                 <mat-icon class="lock" [attr.title]="'roles.systemRole' | translate">lock</mat-icon>
               }
             </td>
+          </ng-container>
+
+          <ng-container matColumnDef="accountCount">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'roles.accounts' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.accountCount ?? '' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
@@ -98,6 +113,8 @@ import { AuthService } from '../../core/auth/auth.service';
     }
   `,
   styles: [`
+    .new-rights { display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 12px; border-radius: var(--ui-radius); background: color-mix(in srgb, var(--theme-accent) 18%, transparent); }
+    .new-rights span { flex: 1; }
     .lock { font-size: 16px; width: 16px; height: 16px; vertical-align: text-bottom; color: var(--ui-text-muted, #5b6b77); margin-left: 4px; }
   `],
 })
@@ -114,7 +131,10 @@ export class RoleListComponent implements OnInit {
   canUpdate = this.authService.hasAuthority('ROLE_UPDATE');
   canDelete = this.authService.hasAuthority('ROLE_DELETE');
 
-  displayedColumns = ['description', 'actions'];
+  displayedColumns = ['description', 'accountCount', 'actions'];
+  /** Uitdeelbare rechten die nieuw zijn sinds de organisatie ze voor het laatst bekeek. */
+  newAuthorities = signal<Authority[]>([]);
+  newAuthorityNames = computed(() => this.newAuthorities().map((a) => a.description).join(', '));
   dataSource = new MatTableDataSource<Role>();
   loading = signal(true);
 
@@ -132,6 +152,17 @@ export class RoleListComponent implements OnInit {
         });
       },
       error: () => this.loading.set(false),
+    });
+    this.roleService.getNewAuthorities().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (authorities) => this.newAuthorities.set(authorities),
+      error: () => this.newAuthorities.set([]),
+    });
+  }
+
+  /** De nieuwe rechten als gezien markeren; de melding verdwijnt voor de hele organisatie. */
+  markSeen() {
+    this.roleService.markNewAuthoritiesSeen().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.newAuthorities.set([]),
     });
   }
 

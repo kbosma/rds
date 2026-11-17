@@ -7,4 +7,6 @@ export interface Role {
   systemKey?: string | null;
   /** Mag de ingelogde gebruiker deze rol wijzigen (eigen rol, onder zijn niveau)? */
   editable?: boolean | null;
+  /** Aantal accounts met deze rol. */
+  accountCount?: number | null;
 }

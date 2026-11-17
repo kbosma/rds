@@ -620,7 +620,36 @@
     "systemRole": "Systeemrol (vergrendeld)",
     "systemRoleLocked": "Dit is een systeemrol: de inhoud ligt vast en komt met RDS mee. Wil je iets anders? Maak een eigen rol.",
     "aboveYourLevel": "Deze rol bevat rechten die je zelf niet hebt; je kunt hem daarom niet wijzigen.",
-    "alsoAdds": "vereist:"
+    "alsoAdds": "vereist:",
+    "copyFrom": "Kopie van",
+    "startEmpty": "Leeg beginnen",
+    "copyFromHint": "De nieuwe rol krijgt de rechten van deze rol als startpunt. Je ziet alleen rollen waarvan je alle rechten zelf mag uitdelen.",
+    "usedBy": "Gebruikt door {{count}} account(s).",
+    "history": "Geschiedenis",
+    "accounts": "Accounts",
+    "newAuthoritiesBanner": "Er zijn {{count}} nieuwe rechten beschikbaar: {{names}}. Eigen rollen krijgen ze niet vanzelf; de systeemrollen wel.",
+    "newAuthoritiesSeen": "Gezien",
+    "matrix": {
+      "subject": "Onderwerp",
+      "read": "Lezen",
+      "create": "Aanmaken",
+      "update": "Wijzigen",
+      "delete": "Verwijderen",
+      "other": "Overig",
+      "new": "Nieuw",
+      "notYours": "Dit recht heb je zelf niet, dus je kunt het niet uitdelen.",
+      "hasRequirements": "Aanzetten zet ook de rechten aan die dit recht nodig heeft.",
+      "hint": "Vink aan wat deze rol mag. Rechten die nodig zijn (bijvoorbeeld lezen bij wijzigen) gaan automatisch mee; grijze vakjes zijn rechten die je zelf niet hebt."
+    },
+    "log": {
+      "ROLE_CREATED": "Rol aangemaakt",
+      "ROLE_RENAMED": "Hernoemd",
+      "ROLE_DELETED": "Rol verwijderd",
+      "AUTHORITY_ADDED": "Recht toegevoegd",
+      "AUTHORITY_REMOVED": "Recht weggehaald",
+      "ROLE_ASSIGNED": "Toegewezen aan",
+      "ROLE_REVOKED": "Ingetrokken bij"
+    }
   },
   "authorities": {
     "title": "Authorities",
@@ -929,5 +958,38 @@
     "previousPage": "Vorige pagina",
     "firstPage": "Eerste pagina",
     "lastPage": "Laatste pagina"
+  },
+  "authorityDomains": {
+    "BOOKING": "Boekingen",
+    "PAYMENT": "Betalingen",
+    "DOCUMENT": "Documenten",
+    "EMAIL": "E-mail",
+    "NOTIFICATION": "Meldingen",
+    "TEMPLATE": "Templates",
+    "ACCOMMODATION": "Accommodaties",
+    "SUPPLIER": "Leveranciers",
+    "ACTIVITY": "Activiteiten",
+    "PERSON": "Personen",
+    "ACCOUNT": "Accounts",
+    "ROLE": "Rollen",
+    "ROLEAUTHORITY": "Rechten van rollen",
+    "ACCOUNTROLE": "Rollen van accounts",
+    "AUTHORITY": "Rechtenoverzicht",
+    "ORGANIZATION_THEME": "Huisstijl",
+    "ORGANIZATION_SETTINGS": "Instellingen",
+    "ORGANIZATION": "Organisaties",
+    "PLATFORM": "Platformbeheer",
+    "BOOKER_PORTAL": "Reisportaal"
+  },
+  "authorityNames": {
+    "BOOKING_COMPLETE": "Afronden",
+    "BOOKING_STATUS_REVERT": "Status terugzetten",
+    "BOOKING_STATUS_REVERT_PAID": "Terugzetten na betaling",
+    "QUOTE_SEND": "Offerte versturen",
+    "EMAIL_SEND": "Versturen",
+    "PAYMENT_CORRECT": "Corrigeren",
+    "PAYMENT_RELINK": "Opnieuw koppelen",
+    "USER_SCOPE_ORGANIZATION": "Hele organisatie",
+    "PLATFORM_ADMIN": "Over organisaties heen"
   }
 }

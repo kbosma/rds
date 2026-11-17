@@ -1,5 +1,6 @@
 package nl.puurkroatie.rds.auth.controller;
 
+import nl.puurkroatie.rds.auth.dto.AuthorityDto;
 import nl.puurkroatie.rds.auth.dto.RoleDto;
 import nl.puurkroatie.rds.auth.service.RoleService;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,20 @@ public class RoleController {
         return roleService.findAll(organizationId);
     }
 
+    /** Uitdeelbare rechten die nieuw zijn sinds de organisatie ze voor het laatst bekeek (eigen rollen krijgen ze niet vanzelf). */
+    @GetMapping("/new-authorities")
+    @PreAuthorize("hasAuthority('ROLE_READ')")
+    public List<AuthorityDto> findNewAuthorities() {
+        return roleService.findNewAuthorities();
+    }
+
+    @PostMapping("/new-authorities/seen")
+    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    public ResponseEntity<Void> markNewAuthoritiesSeen() {
+        roleService.markNewAuthoritiesSeen();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_READ')")
     public ResponseEntity<RoleDto> findById(@PathVariable UUID id) {
@@ -45,8 +60,8 @@ public class RoleController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_CREATE')")
-    public ResponseEntity<RoleDto> create(@RequestBody @Valid RoleDto dto) {
-        RoleDto created = roleService.create(dto);
+    public ResponseEntity<RoleDto> create(@RequestBody @Valid RoleDto dto, @RequestParam(required = false) UUID copyFrom) {
+        RoleDto created = roleService.create(dto, copyFrom);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

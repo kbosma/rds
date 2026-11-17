@@ -24,6 +24,8 @@ public class RoleDto {
     private final UUID tenantOrganization;
     private final String systemKey;
     private final Boolean editable;
+    /** Aantal accounts met deze rol. */
+    private final Long accountCount;
     private final LocalDateTime createdAt;
     private final UUID createdBy;
     private final LocalDateTime modifiedAt;
@@ -31,8 +33,9 @@ public class RoleDto {
 
     @Default
     public RoleDto(UUID roleId, String description, UUID tenantOrganization, String systemKey, Boolean editable,
-                   LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+                   Long accountCount, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
         this.roleId = roleId;
+        this.accountCount = accountCount;
         this.description = description;
         this.tenantOrganization = tenantOrganization;
         this.systemKey = systemKey;
@@ -46,11 +49,12 @@ public class RoleDto {
     /** Wat een client mag aanleveren: alleen de naam. */
     @JsonCreator
     public RoleDto(@JsonProperty("description") String description) {
-        this(null, description, null, null, null, null, null, null, null);
+        this(null, description, null, null, null, null, null, null, null, null);
     }
 
-    public RoleDto withEditable(boolean editable) {
-        return new RoleDto(roleId, description, tenantOrganization, systemKey, editable, createdAt, createdBy, modifiedAt, modifiedBy);
+    public RoleDto withEditable(boolean editable, long accountCount) {
+        return new RoleDto(roleId, description, tenantOrganization, systemKey, editable, accountCount,
+                createdAt, createdBy, modifiedAt, modifiedBy);
     }
 
     public UUID getRoleId() {
@@ -71,6 +75,10 @@ public class RoleDto {
 
     public Boolean getEditable() {
         return editable;
+    }
+
+    public Long getAccountCount() {
+        return accountCount;
     }
 
     public LocalDateTime getCreatedAt() {

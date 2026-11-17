@@ -341,4 +341,57 @@ class RoleRulesTest extends AbstractAuthControllerTest {
         assertTrue(names.contains("BOOKING_READ") && names.contains("ROLE_CREATE"));
         assertTrue(!names.contains("PLATFORM_ADMIN") && !names.contains("ORGANIZATION_READ"));
     }
+
+    // ----- fase 4: kopiëren, aantallen, nieuwe rechten -----
+
+    @Test
+    void aRoleCanStartAsACopyOfASystemRole() throws Exception {
+        String manager = managerToken();
+        String employee = systemRoleOf(ORG_TECHPARTNER_ID, "EMPLOYEE");
+        String body = mockMvc.perform(post("/api/roles?copyFrom=" + employee).header("Authorization", bearer(manager))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"description\":\"Stagiair\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.systemKey").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+
+        assertEquals(authoritiesOf(employee), authoritiesOf(objectMapper.readTree(body).get("roleId").asText()));
+    }
+
+    @Test
+    void copyingARoleWithRightsTheUserDoesNotHave_isRefused() throws Exception {
+        String sophie = sophieWithRoleManagementRights();
+
+        mockMvc.perform(post("/api/roles?copyFrom=" + systemRoleOf(ORG_TECHPARTNER_ID, "MANAGER")).header("Authorization", bearer(sophie))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"description\":\"Kopie manager\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void aRoleShowsHowManyAccountsHaveIt() throws Exception {
+        mockMvc.perform(get("/api/roles/" + ROLE_MANAGER_ID).header("Authorization", bearer(managerToken())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountCount").value(1));
+    }
+
+    @Test
+    void newAuthorities_areShownUntilTheOrganizationMarksThemSeen() throws Exception {
+        String manager = managerToken();
+        // TechPartner bestaat sinds 2026-01-01; USER_SCOPE_ORGANIZATION kwam op 2026-11-17 (PLATFORM_ADMIN is niet uitdeelbaar).
+        mockMvc.perform(get("/api/roles/new-authorities").header("Authorization", bearer(manager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].description").value(org.hamcrest.Matchers.contains("USER_SCOPE_ORGANIZATION")));
+
+        mockMvc.perform(post("/api/roles/new-authorities/seen").header("Authorization", bearer(manager)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/roles/new-authorities").header("Authorization", bearer(manager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void markingNewAuthoritiesSeen_needsRoleUpdate() throws Exception {
+        mockMvc.perform(post("/api/roles/new-authorities/seen").header("Authorization", bearer(employeeToken())))
+                .andExpect(status().isForbidden());
+    }
 }
