@@ -112,6 +112,6 @@ class DocgenTemplateInjectionTest {
 
     @Test
     void normalMergeFieldsStillWork() throws Exception {
-        assertEquals("Boeking B-1 vanaf 2026-06-01", render("Boeking ${booking.bookingNumber} vanaf ${booking.fromDate}"));
+        assertEquals("Boeking B-1 vanaf 01-06-2026", render("Boeking ${booking.bookingNumber} vanaf ${booking.fromDate}"));
     }
 }

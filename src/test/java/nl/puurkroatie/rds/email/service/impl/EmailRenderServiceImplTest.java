@@ -183,7 +183,7 @@ class EmailRenderServiceImplTest {
         EmailRenderDto result = service.render(templateId, bookerId);
 
         assertEquals("Hoi Jan", result.getSubject());
-        assertEquals("<p>Jan de Vries - J. - 1990-05-17</p>", result.getBodyHtml());
+        assertEquals("<p>Jan de Vries - J. - 17-05-1990</p>", result.getBodyHtml());
     }
 
     // ----- e-mail voor een BOEKING (zelfde model als bij documenten) -----

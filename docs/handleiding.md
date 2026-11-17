@@ -803,7 +803,7 @@ Technisch (voor een zelf geschreven template): `<table data-repeat="booking.trav
 
 - **Bedragen:** zonder opmaak toont FreeMarker `1250.00` als `1.250`. De editor voegt `${booking.totalSum?string("#,##0.00")}` in; gebruik dat voor bedragen.
 - Gebruik **dubbele** aanhalingstekens (`"…"`) in expressies, nooit enkele (ook niet in een geüpload `.docx`).
-- Datums zijn ISO-tekst (`jjjj-mm-dd`); andere opmaak vergt FreeMarker-functies.
+- Datums zijn tekst in de notatie `dd-mm-jjjj` (activiteiten: `dd-mm-jjjj uu:mm`); andere opmaak vergt FreeMarker-functies.
 - Tekst als `[#` of `<#` in een Word-template wordt als instructie gelezen.
 
 ### 7.5 Beperkingen van Word-templates uit de editor
