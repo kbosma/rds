@@ -80,6 +80,8 @@
   figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 6px rgba(16, 40, 48, .12); }
   figure.narrow { max-width: 68%; margin-left: auto; margin-right: auto; }
   figcaption { font-size: .85rem; color: var(--muted); margin-top: .45em; }
+  figure.film video { display: block; width: 100%; max-width: 720px; height: auto; border-radius: 8px; background: #000; }
+  @media print { figure.film { display: none; } }
   figcaption b { color: var(--ink); }
 
   .steps { list-style: none; counter-reset: step; padding: 0; margin: 1em 0; }
@@ -626,6 +628,12 @@
 <section class="chapter" id="flow">
   <h2>12. De boekingsflow: van aanvraag tot afgerond</h2>
   <p>Een boeking doorloopt acht statussen. Een paar stappen zet jij in gang (offerte versturen, akkoord vastleggen); de rest regelt RDS op basis van de betalingen en de reisdatums. Dit hoofdstuk loopt de hele flow door: per status wat jij doet, wat RDS doet en wat de klant krijgt.</p>
+  <figure class="film">
+    <video controls preload="metadata" width="720" src="video/boekingsfilmpje.webm">
+      Je browser kan deze video niet afspelen. Open <a href="video/boekingsfilmpje.webm">boekingsfilmpje.webm</a> los.
+    </video>
+    <figcaption><b>Het filmpje: van aanvraag tot afgeronde reis (bijna 7 minuten).</b> Een voorbeeldklant doorloopt de hele flow in de echte schermen: prospect, boeking, offerte, akkoord, betalen in het reisportaal, de reis en het afronden. Alle namen en gegevens zijn verzonnen; de betaalpagina en de postbus zijn nagebootst.</figcaption>
+  </figure>
   <figure class="flowfig">
     <img src="img/statusflow.svg" alt="Stroomdiagram van de boekingsstatussen met wie of wat elke overgang zet, en de terugvalroutes" width="680" height="760">
     <figcaption><b>De statussen en hun overgangen.</b> Paars: jij (met de rol die het mag). Groen: het systeem. Oranje gestreept: terug naar een eerdere status.</figcaption>

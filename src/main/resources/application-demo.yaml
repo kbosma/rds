@@ -1,0 +1,32 @@
+# Profiel 'demo': alleen voor het opnemen van het boekingsfilmpje (demo-film/), NOOIT op test of productie.
+# Draait op een eigen, wegwerpbare database en een eigen poort, naast een gewone lokale backend.
+# - mail: niets wordt verstuurd; alles (ook de inlogcode van het boekerportaal) komt in de demo-postbus (/demo/mailbox)
+# - Mollie: de Mollie-API wijst naar een nep-Mollie in deze app (/demo/mollie), met een eigen betaalpagina
+# - tijd: de klok van de statusengine en het betaalschema is verschuifbaar (POST /demo/clock)
+server:
+  port: ${DEMO_PORT:8667}
+  jetty:
+    accesslog:
+      enabled: false
+
+spring:
+  datasource:
+    url: ${DEMO_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:55433/rdsdemo}
+    username: ${DEMO_DATASOURCE_USERNAME:rds}
+    password: ${DEMO_DATASOURCE_PASSWORD:rds}
+
+app:
+  status-engine:
+    on-login: true
+    # Geen nachtelijke run: in de demo bepaalt het script wanneer de tijd verstrijkt.
+    cron: "-"
+  demo:
+    # Adres waarop de browser deze backend rechtstreeks bereikt (voor de nep-betaalpagina en de postbus).
+    public-base-url: http://localhost:${server.port}/rds
+  mollie:
+    api:
+      payments:
+        base: http://127.0.0.1:${server.port}/rds/demo/mollie/v2/payments
+    key: Bearer demo
+    urls:
+      webhook: http://127.0.0.1:${server.port}/rds/api/mollie/payments/webhook
