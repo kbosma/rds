@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from './theme.service';
 import { OrganizationTheme } from '../../shared/models';
 
@@ -209,6 +209,7 @@ export class OrganizationThemeComponent implements OnInit {
   private themeService = inject(ThemeService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private translate = inject(TranslateService);
 
   private existingThemeId = signal<string | null>(null);
 
@@ -255,18 +256,10 @@ export class OrganizationThemeComponent implements OnInit {
       next: (saved) => {
         this.existingThemeId.set(saved.organizationThemeId);
         this.themeService.applyTheme(saved);
-        this.snackBar.open(
-          'theme.saved',
-          'OK',
-          { duration: 3000 }
-        );
+        this.snackBar.open(this.translate.instant('theme.saved'), 'OK', { duration: 3000 });
       },
       error: () => {
-        this.snackBar.open(
-          'theme.saveError',
-          'OK',
-          { duration: 3000 }
-        );
+        this.snackBar.open(this.translate.instant('theme.saveError'), 'OK', { duration: 3000 });
       },
     });
   }
