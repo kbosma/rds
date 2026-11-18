@@ -61,6 +61,14 @@ describe('ConfirmDialogComponent', () => {
     expect(dialogRefSpy.close).not.toHaveBeenCalledWith(true);
   });
 
+  it('closes with false when the cancel button is clicked, so "no" differs from dismissing', async () => {
+    await setup({ message: 'Zeker?' });
+
+    buttons()[0].click();
+
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(false);
+  });
+
   it('applies the warn colour to the confirm button when requested', async () => {
     await setup({ message: 'Weg ermee?', confirmColor: 'warn' });
 

@@ -71,9 +71,9 @@ describe('BookingDetailComponent', () => {
     bookingServiceSpy = jasmine.createSpyObj('BookingService', ['getAll', 'getById', 'create', 'update', 'delete', 'sendQuote', 'complete', 'revertStatus', 'statusChanges']);
     bookingLineServiceSpy = jasmine.createSpyObj('BookingLineService', ['getByBookingId']);
     bookerServiceSpy = jasmine.createSpyObj('BookerService', ['getById']);
-    travelerServiceSpy = jasmine.createSpyObj('TravelerService', ['getAll']);
+    travelerServiceSpy = jasmine.createSpyObj('TravelerService', ['getAll', 'createFromBooker']);
     snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
-    confirmServiceSpy = jasmine.createSpyObj('ConfirmService', ['confirm', 'confirmDelete']);
+    confirmServiceSpy = jasmine.createSpyObj('ConfirmService', ['confirm', 'confirmDelete', 'ask']);
     confirmServiceSpy.confirm.and.returnValue(Promise.resolve(true));
     confirmServiceSpy.confirmDelete.and.returnValue(Promise.resolve(true));
 
@@ -598,6 +598,121 @@ describe('BookingDetailComponent', () => {
       expect(component.can('BOOKING_UPDATE')).toBe(true);
       expect(component.can('BOOKING_DELETE')).toBe(false);
       expect(hasAuthority).toHaveBeenCalled();
+    }));
+  });
+
+  describe('reiziger toevoegen: hoofdboeker als reiziger', () => {
+    let dialogOpen: jasmine.Spy;
+    let snackOpen: jasmine.Spy;
+
+    function render(travelers: Traveler[]) {
+      travelerServiceSpy.getAll.and.returnValue(of(travelers));
+      createComponent();
+      spyOn(component.authService, 'hasAuthority').and.returnValue(true);
+      fixture.detectChanges();
+      tick();
+      dialogOpen = spyOn((component as unknown as { dialog: MatDialog }).dialog, 'open')
+        .and.returnValue({ afterClosed: () => of(undefined) } as never);
+      snackOpen = spyOn((component as unknown as { snackBar: MatSnackBar }).snackBar, 'open');
+    }
+
+    it('vraagt bij nul reizigers of de hoofdboeker meereist, met zijn naam', fakeAsync(() => {
+      render([]);
+      confirmServiceSpy.ask.and.returnValue(Promise.resolve(undefined));
+      const instant = spyOn((component as unknown as { translate: TranslateService }).translate, 'instant').and.callThrough();
+
+      component.addTraveler();
+      tick();
+
+      expect(confirmServiceSpy.ask).toHaveBeenCalledTimes(1);
+      expect(instant).toHaveBeenCalledWith('bookings.bookerAsTravelerConfirm', { name: 'Klaas van Houten' });
+    }));
+
+    it('"ja" voegt de hoofdboeker als reiziger toe en laadt de reizigers opnieuw', fakeAsync(() => {
+      render([]);
+      confirmServiceSpy.ask.and.returnValue(Promise.resolve(true));
+      travelerServiceSpy.createFromBooker.and.returnValue(of(mockTravelers[0]));
+      travelerServiceSpy.getAll.and.returnValue(of(mockTravelers));
+
+      component.addTraveler();
+      tick();
+
+      expect(travelerServiceSpy.createFromBooker).toHaveBeenCalledWith('b-1', mockBooker);
+      expect(dialogOpen).not.toHaveBeenCalled();
+      expect(component.travelers().length).toBe(1);
+      expect(snackOpen).toHaveBeenCalled();
+    }));
+
+    it('"nee" opent het gewone formulier en voegt niets toe', fakeAsync(() => {
+      render([]);
+      confirmServiceSpy.ask.and.returnValue(Promise.resolve(false));
+
+      component.addTraveler();
+      tick();
+
+      expect(travelerServiceSpy.createFromBooker).not.toHaveBeenCalled();
+      expect(dialogOpen).toHaveBeenCalledTimes(1);
+      expect(dialogOpen.calls.mostRecent().args[1]?.data).toEqual({ bookingId: 'b-1', traveler: undefined });
+    }));
+
+    it('wegklikken van de vraag doet niets', fakeAsync(() => {
+      render([]);
+      confirmServiceSpy.ask.and.returnValue(Promise.resolve(undefined));
+
+      component.addTraveler();
+      tick();
+
+      expect(travelerServiceSpy.createFromBooker).not.toHaveBeenCalled();
+      expect(dialogOpen).not.toHaveBeenCalled();
+    }));
+
+    it('stelt de vraag niet als er al reizigers zijn en opent direct het formulier', fakeAsync(() => {
+      render(mockTravelers);
+
+      component.addTraveler();
+      tick();
+
+      expect(confirmServiceSpy.ask).not.toHaveBeenCalled();
+      expect(dialogOpen).toHaveBeenCalledTimes(1);
+    }));
+
+    it('toont een foutmelding als toevoegen van de hoofdboeker mislukt', fakeAsync(() => {
+      render([]);
+      confirmServiceSpy.ask.and.returnValue(Promise.resolve(true));
+      travelerServiceSpy.createFromBooker.and.returnValue(throwError(() => new Error('500')));
+      const instant = spyOn((component as unknown as { translate: TranslateService }).translate, 'instant').and.callThrough();
+
+      component.addTraveler();
+      tick();
+
+      expect(instant).toHaveBeenCalledWith('travelers.saveError');
+      expect(component.travelers().length).toBe(0);
+    }));
+
+    it('legt bij een concept-boeking eerst de boeking vast en stelt dan de vraag', fakeAsync(() => {
+      routeId = 'new';
+      queryBookerId = 'bk-1';
+      render([]);
+      confirmServiceSpy.ask.and.returnValue(Promise.resolve(true));
+      travelerServiceSpy.createFromBooker.and.returnValue(of(mockTravelers[0]));
+
+      component.addTraveler();
+      tick();
+
+      expect(confirmServiceSpy.confirm).toHaveBeenCalled(); // bevestiging boeking aanmaken
+      expect(bookingServiceSpy.create).toHaveBeenCalledTimes(1);
+      expect(confirmServiceSpy.ask).toHaveBeenCalledTimes(1);
+      expect(travelerServiceSpy.createFromBooker).toHaveBeenCalledWith('b-1', mockBooker);
+    }));
+
+    it('de knop Toevoegen bij Reizigers start deze flow', fakeAsync(() => {
+      render([]);
+      const add = spyOn(component, 'addTraveler');
+      fixture.detectChanges();
+
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button.add-traveler-btn')!.click();
+
+      expect(add).toHaveBeenCalled();
     }));
   });
 });

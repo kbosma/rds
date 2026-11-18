@@ -19,7 +19,8 @@ export interface ConfirmDialogData {
 /**
  * Herbruikbare bevestigingsdialoog in de huisstijl (Material), als vervanging
  * voor de native window.confirm() — die een browser-header en een "niet meer
- * tonen"-optie toont. Sluit met `true` bij bevestigen, anders `undefined`.
+ * tonen"-optie toont. Sluit met `true` bij bevestigen, `false` bij de annuleerknop
+ * en `undefined` bij wegklikken (Escape of buiten de dialoog).
  */
 @Component({
   selector: 'app-confirm-dialog',
@@ -31,7 +32,7 @@ export interface ConfirmDialogData {
       <p class="confirm-message">{{ data.message }}</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>{{ cancelLabel }}</button>
+      <button mat-button [mat-dialog-close]="false">{{ cancelLabel }}</button>
       <button mat-raised-button [color]="data.confirmColor ?? 'primary'" [mat-dialog-close]="true">{{ confirmLabel }}</button>
     </mat-dialog-actions>
   `,

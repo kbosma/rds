@@ -506,7 +506,7 @@ In beide gevallen kies je **Toch opslaan** of **Aanpassen**. Heeft de gekozen ac
 
 **Activiteit toevoegen.** Kies een activiteit, *Datum*, *Van-tijd*, *Tot-tijd* (24-uurs), *Trefpunt* en *Totaalprijs*. Is de tot-tijd vóór de van-tijd, dan **eindigt de activiteit de volgende dag** (hint in het venster, *"(volgende dag)"* in de tabel). Datum, van-tijd en tot-tijd zijn verplicht.
 
-**Reiziger toevoegen.** Voornaam en achternaam zijn verplicht; verder tussenvoegsel, initialen, geslacht (*man/vrouw*; de API kent ook *anders*) en geboortedatum.
+**Reiziger toevoegen.** Voornaam en achternaam zijn verplicht; verder tussenvoegsel, initialen, geslacht (*man/vrouw*; de API kent ook *anders*) en geboortedatum. Heeft de boeking nog **geen reizigers**, dan vraagt *Toevoegen* eerst *"Reist de hoofdboeker mee?"* (in 99% van de boekingen is dat zo). *Ja, als reiziger toevoegen* maakt via de gewone `POST /api/travelers` een reiziger met voornaam, tussenvoegsel, achternaam, initialen, geslacht en geboortedatum van de hoofdboeker (`TravelerService.createFromBooker`); *Nee, andere reiziger* opent het lege formulier; wegklikken (Escape) doet niets. Bij een concept-boeking komt de vraag na de bevestiging dat de boeking wordt aangemaakt. Zijn er al reizigers, dan opent direct het formulier. De bevestigingsdialoog onderscheidt hiervoor *nee* (`false`) van wegklikken (`undefined`) via `ConfirmService.ask()`.
 
 **Boeking verwijderen.** Zie §8.3: een boeking met documenten, betalingen, herkoppelingen of verzonden e-mails kan **niet** worden verwijderd (`409`). Verwijderen neemt anders reizigers, boekingsregels, activiteiten en betalingskoppelingen mee.
 

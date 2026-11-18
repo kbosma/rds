@@ -187,7 +187,11 @@
     "resendQuoteConfirm": "Er wordt een nieuwe offerte als PDF gemaakt en naar {{email}} gemaild. De vorige offerte blijft bij de boeking bewaard.",
     "quoteSent": "Offerte verstuurd naar {{to}}",
     "quoteSendError": "Offerte versturen mislukt. {{message}}",
-    "emptyState": "Nog geen boekingen. Een boeking maak je voor een bestaande boeker."
+    "emptyState": "Nog geen boekingen. Een boeking maak je voor een bestaande boeker.",
+    "bookerAsTravelerTitle": "Reist de hoofdboeker mee?",
+    "bookerAsTravelerConfirm": "Deze boeking heeft nog geen reizigers. Wil je hoofdboeker {{name}} als reiziger toevoegen?",
+    "bookerAsTravelerYes": "Ja, als reiziger toevoegen",
+    "bookerAsTravelerNo": "Nee, andere reiziger"
   },
   "bookingLine": {
     "editTitle": "Accommodatie bewerken",
@@ -695,7 +699,8 @@
     "saved": "Reiziger opgeslagen",
     "saveError": "Fout bij opslaan reiziger",
     "removed": "Reiziger verwijderd",
-    "removeError": "Fout bij verwijderen reiziger"
+    "removeError": "Fout bij verwijderen reiziger",
+    "bookerAdded": "Hoofdboeker als reiziger toegevoegd"
   },
   "suppliers": {
     "title": "Leveranciers",
