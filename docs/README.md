@@ -37,6 +37,7 @@ verheldert (een stroom, een volgorde van stappen, een toestandsverloop, een data
 | Welke entiteiten/tabellen, relaties, enums? | [database-model.md](database-model.md) |
 | Wat is een boeking, de levenscyclus, statusengine en notificaties, terugzetten, prospect → boeker, offerte versturen, automatische betalingen, organisatie-instellingen, concept-boeking? | [domain.md](domain.md) |
 | JWT, rollen, authorities, TOTP, tenant-isolatie, afscherming? | [security.md](security.md) |
+| Welke rechten (authorities) kwamen er per release bij? | [release-notes.md](release-notes.md) |
 | Alle REST-endpoints met benodigde authority + voorbeelden? | [api-examples.md](api-examples.md) |
 | Booker-portal (klant) en OTP-login? | [bookerportal.md](bookerportal.md) |
 | Ontwerp en afwegingen van het dashboard in het boekerportaal (gebouwd)? | [voorstel-booker-dashboard.md](voorstel-booker-dashboard.md) |

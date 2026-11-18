@@ -376,10 +376,12 @@ class RoleRulesTest extends AbstractAuthControllerTest {
     @Test
     void newAuthorities_areShownUntilTheOrganizationMarksThemSeen() throws Exception {
         String manager = managerToken();
-        // TechPartner bestaat sinds 2026-01-01; USER_SCOPE_ORGANIZATION kwam op 2026-11-17 (PLATFORM_ADMIN is niet uitdeelbaar).
+        // TechPartner bestaat sinds 2026-01-01; USER_SCOPE_ORGANIZATION kwam op 2026-11-17 en PAYMENT_OVERVIEW op
+        // 2026-11-18 (PLATFORM_ADMIN is niet uitdeelbaar).
         mockMvc.perform(get("/api/roles/new-authorities").header("Authorization", bearer(manager)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].description").value(org.hamcrest.Matchers.contains("USER_SCOPE_ORGANIZATION")));
+                .andExpect(jsonPath("$[*].description").value(org.hamcrest.Matchers.containsInAnyOrder(
+                        "USER_SCOPE_ORGANIZATION", "PAYMENT_OVERVIEW")));
 
         mockMvc.perform(post("/api/roles/new-authorities/seen").header("Authorization", bearer(manager)))
                 .andExpect(status().isNoContent());

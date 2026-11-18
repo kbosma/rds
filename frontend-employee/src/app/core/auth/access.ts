@@ -19,11 +19,13 @@ const allOf = (...authorities: string[]): Access => ({ allOf: authorities });
 export const ACCESS = {
   bookings: anyOf('BOOKING_READ'),
   bookingCreate: anyOf('BOOKING_CREATE'),
-  bookingPayments: allOf('BOOKING_READ', 'PAYMENT_READ'),
+  /** Losse pagina die alle betalingen van de organisatie toont (niet die van de boeking): dus het overzichtsrecht. */
+  bookingPayments: allOf('BOOKING_READ', 'PAYMENT_OVERVIEW'),
   bookers: anyOf('BOOKING_READ'),
   prospects: anyOf('BOOKING_READ'),
   travelers: anyOf('BOOKING_READ'),
-  payments: anyOf('PAYMENT_READ'),
+  /** Overzicht van alle betalingen; de betalingenkaart in een boeking vraagt alleen PAYMENT_READ. */
+  payments: anyOf('PAYMENT_OVERVIEW'),
 
   accommodations: anyOf('ACCOMMODATION_CREATE', 'ACCOMMODATION_UPDATE', 'ACCOMMODATION_DELETE'),
   accommodationCreate: anyOf('ACCOMMODATION_CREATE'),
@@ -54,7 +56,7 @@ export const ACCESS = {
   /** Overzicht van alle organisaties op het dashboard (beheerder). */
   adminDashboard: allOf('ORGANIZATION_READ', 'PERSON_READ', 'ACCOUNT_READ', 'ROLE_READ', 'ACCOUNTROLE_READ'),
   /** Cijfers over boekingen en betalingen op het dashboard (manager). */
-  managerDashboard: allOf('ACCOUNT_CREATE', 'BOOKING_READ', 'PAYMENT_READ'),
+  managerDashboard: allOf('ACCOUNT_CREATE', 'BOOKING_READ', 'PAYMENT_OVERVIEW'),
 } as const satisfies Record<string, Access>;
 
 /** Voldoen deze authorities aan de eisen? Zonder eisen altijd waar. */

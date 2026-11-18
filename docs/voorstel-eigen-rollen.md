@@ -620,8 +620,8 @@ Huisstijl               [ ]      [ ]        [ ]         [ ]
   *Gezien* zet `roles_reviewed_at` (vereist `ROLE_UPDATE`). De systeemrollen krijgen nieuwe rechten via het sjabloon wel
   vanzelf.
 - **Release notes.** Elke release met nieuwe authorities vermeldt ze in de release notes: naam, betekenis en of
-  MANAGER en EMPLOYEE ze automatisch krijgen. Die release notes bestaan nog niet; ze komen als `docs/release-notes.md`
-  (en eventueel een leesversie in HTML) en horen bij de Definition of Done van een release.
+  MANAGER en EMPLOYEE ze automatisch krijgen. Ze staan in [release-notes.md](release-notes.md) (met een
+  leesversie in HTML) en horen bij de Definition of Done van een release.
 
 ---
 

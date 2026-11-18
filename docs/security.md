@@ -90,6 +90,7 @@ Seed vóór V24 (V2, V6, V10, V12; V16 haalt `DOCUMENT_DELETE` weg) — letters 
 - **Data-scope via authorities** (`TenantContext.hasAuthority`, constanten in `auth/security/Authorities`):
   - `PLATFORM_ADMIN` (ADMIN): over organisaties heen;
   - `USER_SCOPE_ORGANIZATION` (ADMIN, MANAGER): personen en accounts van de hele organisatie; zonder deze authority alleen het eigen persoon en account.
+  - `PAYMENT_OVERVIEW` (MANAGER, V28): de lijsten met álle betalingen van de organisatie (menu Betalingen, manager-dashboard). De betalingen van één boeking vragen alleen `PAYMENT_READ`, zodat een medewerker ze in de boeking ziet zonder het overzicht.
   - Een rol met een andere naam gedraagt zich dus precies volgens zijn authorities. `NoRoleNameChecksTest` laat de build falen bij `hasRole(` in de backend. Zie [voorstel-eigen-rollen.md](voorstel-eigen-rollen.md).
 - Er is **bewust geen tenant-filter** op: het publiek uitleveren van een e-mailafbeelding (de ontvanger heeft geen organisatie) en op het booker-portal-pad dat aan één boeking gebonden is.
 - **Afbeeldingen/templates:** een template mag alleen afbeeldingen van de eigen organisatie bevatten (`TemplateImages`), anders `400` zonder te verraden of de afbeelding elders bestaat.

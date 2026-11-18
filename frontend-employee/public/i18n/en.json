@@ -1000,6 +1000,7 @@
     "EMAIL_SEND": "Send",
     "PAYMENT_CORRECT": "Correct",
     "PAYMENT_RELINK": "Relink",
+    "PAYMENT_OVERVIEW": "Overview of all payments",
     "USER_SCOPE_ORGANIZATION": "Whole organization",
     "PLATFORM_ADMIN": "Across organizations"
   }

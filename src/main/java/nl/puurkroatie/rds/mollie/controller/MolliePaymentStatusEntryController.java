@@ -27,8 +27,9 @@ public class MolliePaymentStatusEntryController {
         this.statusEntryService = statusEntryService;
     }
 
+    /** Alle betalingen van de organisatie (overzicht); per boeking volstaat PAYMENT_READ. */
     @GetMapping
-    @PreAuthorize("hasAuthority('PAYMENT_READ')")
+    @PreAuthorize("hasAuthority('PAYMENT_OVERVIEW')")
     public List<MolliePaymentStatusEntryDto> findAll() {
         return statusEntryService.findAll();
     }

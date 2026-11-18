@@ -154,7 +154,7 @@ Er zijn in totaal **70 authorities** (V20 voegt `NOTIFICATION_READ`, `NOTIFICATI
 | **EMPLOYEE** | dagelijks werk | boekingen en alles daaronder (bookers, prospects, reizigers, regels, activiteiten), documenten (volledig), betalingen aanmaken en bekijken, e-mail versturen. Templates, accommodaties, leveranciers en activiteiten alleen *lezen*. Eigen persoon en account alleen lezen/wijzigen. |
 | *Boeker (klant)* | externe klant | geen rol en geen account: een **BOOKER-token** (na OTP) met vast `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE`, gebonden aan één boeking. |
 
-De matrix hieronder is de standaardconfiguratie van vóór V23; sinds V23/V24 hebben ADMIN `PLATFORM_ADMIN` en `USER_SCOPE_ORGANIZATION`, MANAGER `USER_SCOPE_ORGANIZATION`, `ROLE_CREATE/UPDATE/DELETE` en `ROLEAUTHORITY_CREATE/DELETE`, en zijn `AUTHORITY_CREATE/UPDATE/DELETE` vervallen. De actuele inhoud zie je in *Rollen* (matrix) of `system_role_template`. `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE` bestaan wel als authority, maar zijn aan **geen enkele rol** gekoppeld.
+De matrix hieronder is de standaardconfiguratie van vóór V23; sinds V23/V24 hebben ADMIN `PLATFORM_ADMIN` en `USER_SCOPE_ORGANIZATION`, MANAGER `USER_SCOPE_ORGANIZATION`, `ROLE_CREATE/UPDATE/DELETE` en `ROLEAUTHORITY_CREATE/DELETE`, en zijn `AUTHORITY_CREATE/UPDATE/DELETE` vervallen. Sinds V28 heeft MANAGER ook `PAYMENT_OVERVIEW` (het overzicht van alle betalingen); EMPLOYEE niet. De actuele inhoud zie je in *Rollen* (matrix) of `system_role_template`. `BOOKER_PORTAL_READ` en `BOOKER_PORTAL_UPDATE` bestaan wel als authority, maar zijn aan **geen enkele rol** gekoppeld.
 
 ### 2.4 Volledige matrix: authority × rol
 
@@ -202,7 +202,8 @@ Gegenereerd uit de migraties `V2`, `V6`, `V10`, `V12`, `V16`, `V18` en `V20`. De
 | 38 | `PAYMENT_CORRECT` | de status van een betaling corrigeren (nieuwe regel met reden) | ✓ | ✓ | – | `/api/mollie` |
 | 39 | `PAYMENT_CREATE` | Mollie-betalingen en hun koppeling aan boekingen: aanmaken | – | ✓ | ✓ | `/api/booking-mollie-payments`, `/api/mollie` |
 | 40 | `PAYMENT_DELETE` | geen enkel endpoint gebruikt dit: betalingen worden nooit verwijderd | – | ✓ | – | *(geen)* |
-| 41 | `PAYMENT_READ` | Mollie-betalingen en hun koppeling aan boekingen: bekijken (lijst en detail) | – | ✓ | ✓ | `/api/booking-mollie-payments`, `/api/mollie` |
+| 41 | `PAYMENT_READ` | Mollie-betalingen en hun koppeling aan boekingen: bekijken (per boeking en detail) | – | ✓ | ✓ | `/api/booking-mollie-payments`, `/api/mollie` |
+| 41a | `PAYMENT_OVERVIEW` | overzicht van alle betalingen van de organisatie (menu Betalingen, manager-dashboard); vereist `PAYMENT_READ` (V28) | – | ✓ | – | `GET` op `/api/mollie/payments`, `/api/booking-mollie-payments`, `/api/mollie/payment-status-entries` |
 | 42 | `PAYMENT_RELINK` | een betaling met reden aan een andere boeking hangen | ✓ | ✓ | – | `/api/booking-mollie-payments` |
 | 43 | `PAYMENT_UPDATE` | Mollie-betalingen en hun koppeling aan boekingen: wijzigen | – | ✓ | – | `/api/mollie` |
 | 44 | `PERSON_CREATE` | personen: aanmaken | ✓ | ✓ | – | `/api/persons` |
@@ -283,7 +284,7 @@ Het zijmenu toont een item als de gebruiker **minstens één** van de genoemde a
 | Boekingen (`/bookings`) | `BOOKING_READ` | – | ✓ | ✓ |
 | Boekers (`/bookers`) | `BOOKING_READ` | – | ✓ | ✓ |
 | Prospects (`/prospects`) | `BOOKING_READ` | – | ✓ | ✓ |
-| Betalingen (`/payments`) | `PAYMENT_READ` | – | ✓ | ✓ |
+| Betalingen (`/payments`) | `PAYMENT_OVERVIEW` | – | ✓ | – |
 | *Sectie BEHEER* — Organisaties (`/admin/organizations`) | `ORGANIZATION_READ` | ✓ | – | – |
 | *Sectie ORGANISATIE BEHEER* — Accommodaties | `ACCOMMODATION_CREATE`/`_UPDATE`/`_DELETE` | – | ✓ | – |
 | Leveranciers | `SUPPLIER_CREATE`/`_UPDATE`/`_DELETE` | – | ✓ | – |
@@ -571,7 +572,7 @@ Reizigers beheer je in het boekingsdetail. De losse route `/travelers` bestaat w
 
 ### 4.11 Betalingen (overzicht)
 
-Menu **Betalingen** (`PAYMENT_READ`). Kolommen: Mollie ID (`tr_…`), Boeking, Datum, Omschrijving, Methode, Bedrag, Status, Acties; bovenaan samenvattende tegels. Zie §6.6 voor de hele betaalketen.
+Menu **Betalingen** (`PAYMENT_OVERVIEW`; de betalingen van één boeking staan op de boeking en vragen alleen `PAYMENT_READ`). Kolommen: Mollie ID (`tr_…`), Boeking, Datum, Omschrijving, Methode, Bedrag, Status, Acties; bovenaan samenvattende tegels. Zie §6.6 voor de hele betaalketen.
 
 - **Oog-icoon:** het betalingsvenster met de gegevens en de volledige **statushistorie** (alleen lezen).
 - **Potlood:** alleen voor een betaling die nog niet bij Mollie is aangemaakt (omschrijving en bedrag aanpassen). Is de betaling al bij Mollie, dan geeft de server `409` (*"Deze betaling bestaat al bij Mollie en kan niet meer worden gewijzigd."*).
@@ -1135,16 +1136,16 @@ curl -X POST "$BASE/api/email-templates/<id>/send?bookerId=<id>"    -H "Authoriz
 
 | Methode | Pad | Authority | Omschrijving |
 |---|---|---|---|
-| GET | `/api/mollie/payments` | `PAYMENT_READ` | Lijst |
+| GET | `/api/mollie/payments` | `PAYMENT_OVERVIEW` | Lijst (alle betalingen van de organisatie) |
 | GET | `/api/mollie/payments/{id}` | `PAYMENT_READ` | Eén opvragen |
 | POST | `/api/mollie/payments` | `PAYMENT_CREATE` | Aanmaken |
 | PUT | `/api/mollie/payments/{id}` | `PAYMENT_UPDATE` | Wijzigen |
 | POST | `/api/mollie/payments/create-at-mollie` | `PAYMENT_CREATE` | Direct bij Mollie aanmaken |
 | POST | `/api/mollie/payments/webhook` | – | Webhook van Mollie (`?id=tr_…`) |
-| GET | `/api/mollie/payment-status-entries` | `PAYMENT_READ` | Lijst |
+| GET | `/api/mollie/payment-status-entries` | `PAYMENT_OVERVIEW` | Lijst (alle statusregels van de organisatie) |
 | GET | `/api/mollie/payment-status-entries/by-payment/{molliePaymentId}` | `PAYMENT_READ` | Statushistorie van een betaling |
 | POST | `/api/mollie/payment-status-entries/by-payment/{molliePaymentId}` | `PAYMENT_CORRECT` | Handmatige correctie `{status, reason}` |
-| GET | `/api/booking-mollie-payments` | `PAYMENT_READ` | Lijst |
+| GET | `/api/booking-mollie-payments` | `PAYMENT_OVERVIEW` | Lijst (alle koppelingen van de organisatie) |
 | GET | `/api/booking-mollie-payments/{bookingId}` | `PAYMENT_READ` | Betalingen van een boeking |
 | GET | `/api/booking-mollie-payments/{bookingId}/{molliePaymentId}` | `PAYMENT_READ` | Eén opvragen |
 | POST | `/api/booking-mollie-payments` | `PAYMENT_CREATE` | Aanmaken |
@@ -1318,7 +1319,7 @@ Opmerking: in de interface heet de boekingsstatus `opreis` *Op reis* en `weerthu
 | `/activities` (+ detail) | activiteiten | `ACTIVITY_C/U/D` |
 | `/templates` | Word-templates | `TEMPLATE_C/U/D` |
 | `/email-templates` | e-mailtemplates | `TEMPLATE_READ` |
-| `/payments` | betalingen | `PAYMENT_READ` |
+| `/payments` | betalingen | `PAYMENT_OVERVIEW` |
 | `/admin/organizations` (+ `new`, `onboarding`, `:id`) | organisaties en onboarding | `ORGANIZATION_READ` |
 | `/admin/persons` (+ `new`, `:id`) | personen | `PERSON_CREATE`/`DELETE` |
 | `/admin/accounts` (+ `new`, `:id`) | accounts | `ACCOUNT_CREATE`/`DELETE` |
@@ -1343,7 +1344,8 @@ Portaal (`frontend-booker`): `/login`, `/verify`, `/dashboard`, `/itinerary`, `/
 | `DOCUMENT_READ` | documenten in de tijdlijn |
 | `DOCUMENT_CREATE` | *Toevoegen → Document* (uploaden/genereren) |
 | `DOCUMENT_UPDATE` | zichtbaarheid in het portaal wijzigen |
-| `PAYMENT_READ` | menu Betalingen; kaart Betalingen in een boeking; oog-icoon |
+| `PAYMENT_READ` | kaart Betalingen in een boeking; oog-icoon |
+| `PAYMENT_OVERVIEW` | menu Betalingen; betaalcijfers op het manager-dashboard |
 | `PAYMENT_CREATE` | *Nieuwe betaling* |
 | `PAYMENT_UPDATE` | potlood, alleen voor een betaling zonder Mollie-id |
 | `PAYMENT_CORRECT` | *Correctie registreren* |

@@ -46,7 +46,7 @@
 <body>
 <h1>RDS — documentatie-index</h1>
 <p><strong>RDS = Reis Dossier Systeem</strong>: een multi-tenant SaaS voor reisorganisaties om boekingen (dossiers) te beheren, documenten en e-mails te genereren en betalingen via Mollie af te handelen. Eén Spring Boot-backend, twee Angular-apps.</p>
-<div class="callout"><strong>Nieuwe sessie? Lees in deze volgorde (±10 minuten):</strong><br>1. dit bestand (index + snelle feiten hieronder)<br>2. <a href="overview.md">overview.md</a> — wat het systeem doet, voor wie, en hoe het in elkaar zit<br>3. <a href="working-agreements.md">working-agreements.md</a> — hoe er met de gebruiker gewerkt wordt (taal, git, tests, grenzen)<br>4. <a href="open-items.md">open-items.md</a> — wat nog openstaat<br><br>Daarna alleen het document dat bij de taak past (tabel hieronder). De regels in <code>CLAUDE.md</code> (repo-root) blijven leidend; deze map is de uitleg erbij.</div>
+<div class="callout"><strong>Nieuwe sessie? Lees in deze volgorde (±10 minuten):</strong><br>1. dit bestand (index + snelle feiten hieronder)<br>2. <a href="overview.html">overview.md</a> — wat het systeem doet, voor wie, en hoe het in elkaar zit<br>3. <a href="working-agreements.html">working-agreements.md</a> — hoe er met de gebruiker gewerkt wordt (taal, git, tests, grenzen)<br>4. <a href="open-items.html">open-items.md</a> — wat nog openstaat<br><br>Daarna alleen het document dat bij de taak past (tabel hieronder). De regels in <code>CLAUDE.md</code> (repo-root) blijven leidend; deze map is de uitleg erbij.</div>
 <nav class="toc"><strong>Inhoud</strong><ul><li><a href="#h-leesversies-html-en-diagrammen">Leesversies (HTML) en diagrammen</a></li><li><a href="#h-welk-document-bij-welke-vraag">Welk document bij welke vraag?</a></li><li><a href="#h-snelle-feiten">Snelle feiten</a></li><li><a href="#h-over-deze-map">Over deze map</a></li></ul></nav>
 <h2 id="h-leesversies-html-en-diagrammen">Leesversies (HTML) en diagrammen</h2>
 <p>Elk document hier heeft een leesversie ernaast (<code>&lt;naam&gt;.html</code>): tabellen met lijnen en afwisselende rijkleuren, een inhoudsopgave, licht/donker thema en getekende diagrammen (Mermaid: flowcharts, sequence-, state- en ER-diagrammen). De <code>.md</code> is de bron; na een wijziging maak je de HTML opnieuw:</p>
@@ -55,26 +55,28 @@
 <h2 id="h-welk-document-bij-welke-vraag">Welk document bij welke vraag?</h2>
 <div class="tablewrap"><table>
 <thead><tr><th>Ik wil weten…</th><th>Open</th></tr></thead><tbody>
-<tr><th scope="row">Wat doet het systeem, wie gebruikt het, wat zijn de schermen?</th><td><a href="overview.md">overview.md</a></td></tr>
-<tr><th scope="row">Alle functionaliteit per scherm, werkprocessen, rollen en authorities (technische handleiding)?</th><td><a href="handleiding.md">handleiding.md</a></td></tr>
+<tr><th scope="row">Wat doet het systeem, wie gebruikt het, wat zijn de schermen?</th><td><a href="overview.html">overview.md</a></td></tr>
+<tr><th scope="row">Alle functionaliteit per scherm, werkprocessen, rollen en authorities (technische handleiding)?</th><td><a href="handleiding.html">handleiding.md</a></td></tr>
 <tr><th scope="row">Handleiding voor medewerkers, managers en beheerders, niet-technisch, met schermen en printklaar (A4, ook als PDF): onderdelen, meldingen, templates, de boekingsflow, instellingen en beheer?</th><td><a href="gebruikershandleiding/index.html">gebruikershandleiding/index.html</a> (<a href="gebruikershandleiding/RDS-gebruikershandleiding.pdf">PDF</a>)</td></tr>
-<tr><th scope="row">Woorden als <em>prospect</em>, <em>hoofdboeker</em>, <em>tenant</em>, <em>herhaalde tabel</em>?</th><td><a href="glossary.md">glossary.md</a></td></tr>
-<tr><th scope="row">Hoe is de backend opgebouwd (lagen, pakketten, patronen)?</th><td><a href="architecture.md">architecture.md</a></td></tr>
-<tr><th scope="row">Hoe zijn de twee Angular-apps opgebouwd, welke conventies?</th><td><a href="frontend.md">frontend.md</a></td></tr>
-<tr><th scope="row">Welke entiteiten/tabellen, relaties, enums?</th><td><a href="database-model.md">database-model.md</a></td></tr>
-<tr><th scope="row">Wat is een boeking, de levenscyclus, statusengine en notificaties, terugzetten, prospect → boeker, offerte versturen, automatische betalingen, organisatie-instellingen, concept-boeking?</th><td><a href="domain.md">domain.md</a></td></tr>
-<tr><th scope="row">JWT, rollen, authorities, TOTP, tenant-isolatie, afscherming?</th><td><a href="security.md">security.md</a></td></tr>
-<tr><th scope="row">Alle REST-endpoints met benodigde authority + voorbeelden?</th><td><a href="api-examples.md">api-examples.md</a></td></tr>
-<tr><th scope="row">Booker-portal (klant) en OTP-login?</th><td><a href="bookerportal.md">bookerportal.md</a></td></tr>
-<tr><th scope="row">Ontwerp en afwegingen van het dashboard in het boekerportaal (gebouwd)?</th><td><a href="voorstel-booker-dashboard.md">voorstel-booker-dashboard.md</a></td></tr>
-<tr><th scope="row">Ontwerp en stand van eigen rollen per organisatie (gebouwd, fase 0–5)?</th><td><a href="voorstel-eigen-rollen.md">voorstel-eigen-rollen.md</a> (bron), leesversie <a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.html</a> — opnieuw maken met <code>python3 docs/tools/md-naar-html.py docs/voorstel-eigen-rollen.md</code></td></tr>
-<tr><th scope="row">Betalingen, webhook, Mollie-flow?</th><td><a href="mollie.md">mollie.md</a></td></tr>
-<tr><th scope="row">E-mailtemplates, versturen, SMTP, afbeeldingen in mail?</th><td><a href="email.md">email.md</a></td></tr>
-<tr><th scope="row">Gedeelde template-editor, Word-templates (.docx), herhaalde tabellen?</th><td><a href="templates.md">templates.md</a></td></tr>
-<tr><th scope="row">Bouwen, testen (met embedded PostgreSQL), deployen, poorten?</th><td><a href="build-test-deploy.md">build-test-deploy.md</a></td></tr>
-<tr><th scope="row">Waarom is iets zo ontworpen? Wat hebben we geleerd?</th><td><a href="design-decisions.md">design-decisions.md</a></td></tr>
-<tr><th scope="row">Wat is nog niet af of risicovol?</th><td><a href="open-items.md">open-items.md</a></td></tr>
-<tr><th scope="row">Afspraken met de gebruiker (taal, git, tests, grenzen)?</th><td><a href="working-agreements.md">working-agreements.md</a></td></tr>
+<tr><th scope="row">Het boekingsfilmpje (video van prospect tot afgerond) opnieuw opnemen: demo-profiel met nepmail, nep-Mollie en verschuifbare klok, seed en Playwright-script?</th><td><a href="../demo-film/README.md">../demo-film/README.md</a></td></tr>
+<tr><th scope="row">Woorden als <em>prospect</em>, <em>hoofdboeker</em>, <em>tenant</em>, <em>herhaalde tabel</em>?</th><td><a href="glossary.html">glossary.md</a></td></tr>
+<tr><th scope="row">Hoe is de backend opgebouwd (lagen, pakketten, patronen)?</th><td><a href="architecture.html">architecture.md</a></td></tr>
+<tr><th scope="row">Hoe zijn de twee Angular-apps opgebouwd, welke conventies?</th><td><a href="frontend.html">frontend.md</a></td></tr>
+<tr><th scope="row">Welke entiteiten/tabellen, relaties, enums?</th><td><a href="database-model.html">database-model.md</a></td></tr>
+<tr><th scope="row">Wat is een boeking, de levenscyclus, statusengine en notificaties, terugzetten, prospect → boeker, offerte versturen, automatische betalingen, organisatie-instellingen, concept-boeking?</th><td><a href="domain.html">domain.md</a></td></tr>
+<tr><th scope="row">JWT, rollen, authorities, TOTP, tenant-isolatie, afscherming?</th><td><a href="security.html">security.md</a></td></tr>
+<tr><th scope="row">Welke rechten (authorities) kwamen er per release bij?</th><td><a href="release-notes.html">release-notes.md</a></td></tr>
+<tr><th scope="row">Alle REST-endpoints met benodigde authority + voorbeelden?</th><td><a href="api-examples.html">api-examples.md</a></td></tr>
+<tr><th scope="row">Booker-portal (klant) en OTP-login?</th><td><a href="bookerportal.html">bookerportal.md</a></td></tr>
+<tr><th scope="row">Ontwerp en afwegingen van het dashboard in het boekerportaal (gebouwd)?</th><td><a href="voorstel-booker-dashboard.html">voorstel-booker-dashboard.md</a></td></tr>
+<tr><th scope="row">Ontwerp en stand van eigen rollen per organisatie (gebouwd, fase 0–5)?</th><td><a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.md</a> (bron), leesversie <a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.html</a> — opnieuw maken met <code>python3 docs/tools/md-naar-html.py docs/voorstel-eigen-rollen.md</code></td></tr>
+<tr><th scope="row">Betalingen, webhook, Mollie-flow?</th><td><a href="mollie.html">mollie.md</a></td></tr>
+<tr><th scope="row">E-mailtemplates, versturen, SMTP, afbeeldingen in mail?</th><td><a href="email.html">email.md</a></td></tr>
+<tr><th scope="row">Gedeelde template-editor, Word-templates (.docx), herhaalde tabellen?</th><td><a href="templates.html">templates.md</a></td></tr>
+<tr><th scope="row">Bouwen, testen (met embedded PostgreSQL), deployen, poorten?</th><td><a href="build-test-deploy.html">build-test-deploy.md</a></td></tr>
+<tr><th scope="row">Waarom is iets zo ontworpen? Wat hebben we geleerd?</th><td><a href="design-decisions.html">design-decisions.md</a></td></tr>
+<tr><th scope="row">Wat is nog niet af of risicovol?</th><td><a href="open-items.html">open-items.md</a></td></tr>
+<tr><th scope="row">Afspraken met de gebruiker (taal, git, tests, grenzen)?</th><td><a href="working-agreements.html">working-agreements.md</a></td></tr>
 </tbody></table></div>
 <h2 id="h-snelle-feiten">Snelle feiten</h2>
 <div class="tablewrap"><table>
@@ -82,16 +84,16 @@
 <tr><th scope="row">Backend</th><td>Spring Boot 4.0.3, Java 21, Jetty (poort <strong>8666</strong>, context-path <strong><code>/rds</code></strong>), JPA (<code>ddl-auto: validate</code>), Flyway (V1–V16), MapStruct, PostgreSQL 17 (<code>rdsdb</code>)</td></tr>
 <tr><th scope="row">Frontends</th><td><code>frontend-employee</code> (medewerkers, dev-poort 4200) en <code>frontend-booker</code> (klanten, dev-poort 4300); Angular 22, standalone + signals, Angular Material, ngx-translate (nl/en), TypeScript 6</td></tr>
 <tr><th scope="row">Pakketten (backend)</th><td><code>nl.puurkroatie.rds.{auth, booking, mollie, bookerportal, email, docgen, common}</code></td></tr>
-<tr><th scope="row">Multi-tenant</th><td>elke tenant-entiteit heeft <code>tenant_organization</code>; filtering via <code>TenantContext</code> (zie <a href="security.md">security.md</a>)</td></tr>
+<tr><th scope="row">Multi-tenant</th><td>elke tenant-entiteit heeft <code>tenant_organization</code>; filtering via <code>TenantContext</code> (zie <a href="security.html">security.md</a>)</td></tr>
 <tr><th scope="row">Rechten in de UI</th><td>op <strong>authorities</strong>, nooit op rollen</td></tr>
 <tr><th scope="row">Rollen</th><td><code>ADMIN</code> (systeembeheer), <code>MANAGER</code> (eigen organisatie, volledig), <code>EMPLOYEE</code> (eigen organisatie, beperkt)</td></tr>
-<tr><th scope="row">Templating</th><td>FreeMarker, afgeschermd; één model voor e-mail én Word (zie <a href="templates.md">templates.md</a>)</td></tr>
+<tr><th scope="row">Templating</th><td>FreeMarker, afgeschermd; één model voor e-mail én Word (zie <a href="templates.html">templates.md</a>)</td></tr>
 <tr><th scope="row">Betalingen</th><td>Mollie (webhook via NGINX op het publieke IP)</td></tr>
 <tr><th scope="row">Tests (stand 21-10-2026)</th><td>backend 718 (JUnit 5/Mockito/MockMvc), employee-frontend 556 specs, booker-frontend 158 specs (Jasmine/Karma, Firefox headless)</td></tr>
 <tr><th scope="row">Datum van deze documentatie</th><td>laatst bijgewerkt 15-10-2026</td></tr>
 </tbody></table></div>
 <h2 id="h-over-deze-map">Over deze map</h2>
-<ul><li>Taal: Nederlands; technische termen, identifiers en code blijven zoals ze zijn.</li><li>Feiten zijn waar mogelijk uit de code gehaald (bv. de endpointtabel in <a href="api-examples.md">api-examples.md</a>). Wijkt een document af van de code, dan wint de code — corrigeer het document.</li><li><code>CLAUDE.md</code> (repo-root) verwijst naar deze index en naar de afzonderlijke documenten; de bestandsnamen zijn daarom stabiel. Nieuw document toevoegen ⇒ ook hier in de tabel en in de lijst "Context gebruik" van <code>CLAUDE.md</code>.</li></ul>
+<ul><li>Taal: Nederlands; technische termen, identifiers en code blijven zoals ze zijn.</li><li>Feiten zijn waar mogelijk uit de code gehaald (bv. de endpointtabel in <a href="api-examples.html">api-examples.md</a>). Wijkt een document af van de code, dan wint de code — corrigeer het document.</li><li><code>CLAUDE.md</code> (repo-root) verwijst naar deze index en naar de afzonderlijke documenten; de bestandsnamen zijn daarom stabiel. Nieuw document toevoegen ⇒ ook hier in de tabel en in de lijst "Context gebruik" van <code>CLAUDE.md</code>.</li></ul>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
 </body>

@@ -1000,6 +1000,7 @@
     "EMAIL_SEND": "Versturen",
     "PAYMENT_CORRECT": "Corrigeren",
     "PAYMENT_RELINK": "Opnieuw koppelen",
+    "PAYMENT_OVERVIEW": "Overzicht van alle betalingen",
     "USER_SCOPE_ORGANIZATION": "Hele organisatie",
     "PLATFORM_ADMIN": "Over organisaties heen"
   }
