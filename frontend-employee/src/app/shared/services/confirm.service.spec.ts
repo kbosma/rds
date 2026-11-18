@@ -78,4 +78,24 @@ describe('ConfirmService', () => {
     closeWith(undefined);
     expect(await service.confirmDelete('Weg ermee?')).toBe(false);
   });
+
+  it('ask() resolves true for the confirm button', async () => {
+    closeWith(true);
+    expect(await service.ask('Reist mee?')).toBe(true);
+  });
+
+  it('ask() resolves false for the cancel button (an explicit "no")', async () => {
+    closeWith(false);
+    expect(await service.ask('Reist mee?')).toBe(false);
+  });
+
+  it('ask() resolves undefined when the dialog is dismissed', async () => {
+    closeWith(undefined);
+    expect(await service.ask('Reist mee?')).toBeUndefined();
+  });
+
+  it('confirm() treats an explicit false as not confirmed', async () => {
+    closeWith(false);
+    expect(await service.confirm('Zeker?')).toBe(false);
+  });
 });

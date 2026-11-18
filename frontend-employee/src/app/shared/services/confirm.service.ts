@@ -18,13 +18,21 @@ export class ConfirmService {
 
   /** Algemene bevestiging. `message` is reeds vertaalde tekst. */
   async confirm(message: string, options?: Partial<ConfirmDialogData>): Promise<boolean> {
+    return (await this.ask(message, options)) === true;
+  }
+
+  /**
+   * Ja/nee-vraag waarbij "nee" iets anders is dan afbreken: `true` bij de bevestigknop,
+   * `false` bij de annuleerknop (bv. "Nee") en `undefined` als de dialoog wordt weggeklikt.
+   */
+  async ask(message: string, options?: Partial<ConfirmDialogData>): Promise<boolean | undefined> {
     const result = await firstValueFrom(
       this.dialog.open(ConfirmDialogComponent, {
         data: { message, ...options },
         width: '420px',
       }).afterClosed()
     );
-    return result === true;
+    return result === true ? true : result === false ? false : undefined;
   }
 
   /** Verwijder-bevestiging: rode knop met label 'Verwijderen'. */

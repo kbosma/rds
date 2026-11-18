@@ -424,8 +424,8 @@ import { MoneyPipe } from '../../shared/pipes/money.pipe';
           <mat-card-header>
             <mat-card-title>{{ 'bookings.travelers' | translate }}</mat-card-title>
             @if (can('BOOKING_CREATE')) {
-              <button mat-stroked-button class="act-create card-header-btn"
-                      (click)="openTravelerDialog()">
+              <button mat-stroked-button class="act-create card-header-btn add-traveler-btn"
+                      (click)="addTraveler()">
                 <mat-icon>add</mat-icon> {{ 'common.add' | translate }}
               </button>
             }
@@ -994,22 +994,69 @@ export class BookingDetailComponent implements OnInit {
       });
   }
 
-  openTravelerDialog(traveler?: Traveler) {
-    this.ensureBookingPersisted((bookingId) => {
-      const data: TravelerDialogData = { bookingId, traveler };
-      this.dialog.open(TravelerDialogComponent, { data, width: '500px' })
-        .afterClosed()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((result) => {
-          if (result) {
-            this.reloadTravelers();
-          }
-        });
+  /**
+   * Reiziger toevoegen. Heeft de boeking nog geen reizigers, dan eerst de vraag of de hoofdboeker
+   * meereist (meestal wel): "ja" voegt de hoofdboeker als reiziger toe, "nee" opent het gewone
+   * formulier en wegklikken doet niets.
+   */
+  addTraveler() {
+    this.ensureBookingPersisted(async (bookingId) => {
+      const booker = this.booker();
+      if (booker && this.travelers().length === 0) {
+        const bookerTravels = await this.confirmService.ask(
+          this.translate.instant('bookings.bookerAsTravelerConfirm', { name: this.fullName(booker) }),
+          {
+            title: this.translate.instant('bookings.bookerAsTravelerTitle'),
+            confirmLabel: this.translate.instant('bookings.bookerAsTravelerYes'),
+            cancelLabel: this.translate.instant('bookings.bookerAsTravelerNo'),
+          },
+        );
+        if (bookerTravels === undefined) return;
+        if (bookerTravels) {
+          this.addBookerAsTraveler(bookingId, booker);
+          return;
+        }
+      }
+      this.openTravelerForm(bookingId);
     });
   }
 
+  openTravelerDialog(traveler?: Traveler) {
+    this.ensureBookingPersisted((bookingId) => this.openTravelerForm(bookingId, traveler));
+  }
+
+  private openTravelerForm(bookingId: string, traveler?: Traveler) {
+    const data: TravelerDialogData = { bookingId, traveler };
+    this.dialog.open(TravelerDialogComponent, { data, width: '500px' })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.reloadTravelers();
+        }
+      });
+  }
+
+  private addBookerAsTraveler(bookingId: string, booker: Booker) {
+    this.travelerService.createFromBooker(bookingId, booker)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snackBar.open(this.translate.instant('travelers.bookerAdded'), this.translate.instant('common.close'), { duration: 3000 });
+          this.reloadTravelers();
+        },
+        error: () => {
+          this.snackBar.open(this.translate.instant('travelers.saveError'), this.translate.instant('common.close'), { duration: 5000 });
+        },
+      });
+  }
+
+  private fullName(person: { firstname: string; prefix?: string | null; lastname: string }): string {
+    return `${person.firstname} ${person.prefix ?? ''} ${person.lastname}`.replace(/\s+/g, ' ').trim();
+  }
+
   async deleteTraveler(traveler: Traveler) {
-    const name = `${traveler.firstname} ${traveler.prefix ?? ''} ${traveler.lastname}`.replace(/\s+/g, ' ').trim();
+    const name = this.fullName(traveler);
     if (!await this.confirmService.confirmDelete(this.translate.instant('bookings.deleteConfirm', { name }))) return;
 
     this.travelerService.delete(traveler.travelerId)

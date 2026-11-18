@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { TravelerService } from './traveler.service';
 import { ApiService } from '../../core/services/api.service';
-import { Traveler } from '../../shared/models';
+import { Booker, Traveler } from '../../shared/models';
 
 describe('TravelerService', () => {
   let service: TravelerService;
@@ -62,5 +62,21 @@ describe('TravelerService', () => {
     apiSpy.delete.and.returnValue(of(void 0));
     service.delete('t-1').subscribe();
     expect(apiSpy.delete).toHaveBeenCalledWith('travelers', 't-1');
+  });
+
+  it('createFromBooker() creates a traveler from the booker\'s personal details', () => {
+    const booker = {
+      bookerId: 'bk-1', firstname: 'Klaas', prefix: 'van', lastname: 'Houten', callsign: 'Klaas',
+      telephone: '0612345678', emailaddress: 'klaas@example.com', gender: 'man', birthdate: '1985-03-15',
+      initials: 'K.', status: 'active', createdAt: '', createdBy: '', modifiedAt: '', modifiedBy: '', tenantOrganization: 'org-1',
+    } as Booker;
+    apiSpy.create.and.returnValue(of(mockTraveler));
+
+    service.createFromBooker('b-1', booker).subscribe();
+
+    expect(apiSpy.create).toHaveBeenCalledWith('travelers', {
+      bookingId: 'b-1', firstname: 'Klaas', prefix: 'van', lastname: 'Houten',
+      initials: 'K.', gender: 'man', birthdate: '1985-03-15',
+    });
   });
 });

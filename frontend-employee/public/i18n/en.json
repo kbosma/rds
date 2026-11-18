@@ -189,7 +189,11 @@
     "resendQuoteConfirm": "A new quote is generated as PDF and emailed to {{email}}. The previous quote stays with the booking.",
     "quoteSent": "Quote sent to {{to}}",
     "quoteSendError": "Sending the quote failed. {{message}}",
-    "emptyState": "No bookings yet. You create a booking for an existing booker."
+    "emptyState": "No bookings yet. You create a booking for an existing booker.",
+    "bookerAsTravelerTitle": "Is the main booker travelling?",
+    "bookerAsTravelerConfirm": "This booking has no travelers yet. Do you want to add main booker {{name}} as a traveler?",
+    "bookerAsTravelerYes": "Yes, add as traveler",
+    "bookerAsTravelerNo": "No, another traveler"
   },
   "bookingLine": {
     "editTitle": "Edit accommodation",
@@ -706,7 +710,8 @@
     "saved": "Traveler saved",
     "saveError": "Error saving traveler",
     "removed": "Traveler removed",
-    "removeError": "Error removing traveler"
+    "removeError": "Error removing traveler",
+    "bookerAdded": "Main booker added as traveler"
   },
   "suppliers": {
     "title": "Suppliers",
