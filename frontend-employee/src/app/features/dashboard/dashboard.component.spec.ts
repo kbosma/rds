@@ -13,7 +13,7 @@ describe('DashboardComponent', () => {
 
   // Wat de seed-rollen aan relevante authorities hebben (zie security.md)
   const ADMIN = ['ORGANIZATION_READ', 'PERSON_READ', 'ACCOUNT_READ', 'ROLE_READ', 'ACCOUNTROLE_READ', 'ACCOUNT_CREATE', 'PERSON_CREATE'];
-  const MANAGER = ['ACCOUNT_CREATE', 'BOOKING_READ', 'PAYMENT_READ'];
+  const MANAGER = ['ACCOUNT_CREATE', 'BOOKING_READ', 'PAYMENT_READ', 'PAYMENT_OVERVIEW'];
   const EMPLOYEE = ['BOOKING_READ', 'PAYMENT_READ'];
 
   async function setup(authorities: string[]) {
@@ -42,7 +42,7 @@ describe('DashboardComponent', () => {
     expect(component.isManager()).toBe(false); // ook al mag een beheerder accounts aanmaken
   });
 
-  it('should delegate to the manager dashboard for whoever may create accounts and read bookings and payments', async () => {
+  it('should delegate to the manager dashboard for whoever may create accounts, read bookings and see the payment overview', async () => {
     await setup(MANAGER);
     expect(component.isAdmin()).toBe(false);
     expect(component.isManager()).toBe(true);
@@ -55,7 +55,7 @@ describe('DashboardComponent', () => {
   });
 
   it('does not show the manager dashboard without the authorities its API calls need', async () => {
-    await setup(['ACCOUNT_CREATE', 'BOOKING_READ']); // geen PAYMENT_READ: de betaalcijfers zouden 403 geven
+    await setup(['ACCOUNT_CREATE', 'BOOKING_READ', 'PAYMENT_READ']); // geen PAYMENT_OVERVIEW: de betaalcijfers zouden 403 geven
     expect(component.isManager()).toBe(false);
   });
 

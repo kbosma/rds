@@ -9,4 +9,6 @@ export interface Role {
   editable?: boolean | null;
   /** Aantal accounts met deze rol. */
   accountCount?: number | null;
+  /** Alleen bij opslaan: de gewenste, volledige set rechten (namen). De server slaat alleen het verschil op. */
+  authorities?: string[];
 }

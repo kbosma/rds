@@ -107,8 +107,9 @@ RDS werkt, of maak een vaste wachttijd korter. Ondertitels blijven staan zo lang
 ## Draaiboek rollenfilmpje
 
 1. Systeemrollen: MANAGER en EMPLOYEE met slotje en aantal accounts; de matrix van EMPLOYEE is grijs.
-2. Sanne maakt "Boekhouder": Betalingen wijzigen aanvinken haalt betalingen en boekingen lezen mee; lezen weghalen
-   kan niet zolang wijzigen aan staat (melding van RDS); de geschiedenis van de rol.
-3. "Teamleider" als kopie van EMPLOYEE, plus rollen beheren en toewijzen; Daan krijgt die rol.
-4. Daan: MANAGER en Boekhouder alleen te bekijken (boven zijn niveau); bij "Kopie van" alleen EMPLOYEE en Teamleider;
+2. Sanne maakt "Boekhouder" in één scherm (naam, sjabloon, matrix): Betalingen wijzigen aanvinken zet betalingen en
+   boekingen lezen mee aan, en die zitten vast zolang wijzigen aan staat. Niets is bewaard tot Opslaan. Daarna: rol
+   openen, iets aanvinken, Annuleren → RDS vraagt of ze het wil weggooien. Tot slot de geschiedenis (wanneer, door wie, wat).
+3. "Teamleider" met EMPLOYEE als sjabloon, plus rollen beheren en toewijzen; opslaan; Daan krijgt die rol.
+4. Daan: MANAGER en Boekhouder alleen te bekijken (boven zijn niveau); als sjabloon alleen EMPLOYEE en Teamleider;
    gearceerde vakjes in de matrix; MANAGER staat niet in de lijst bij zijn eigen account.

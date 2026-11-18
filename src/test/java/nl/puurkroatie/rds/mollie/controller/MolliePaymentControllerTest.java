@@ -63,15 +63,23 @@ class MolliePaymentControllerTest extends AbstractControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Het overzicht van alle betalingen vraagt PAYMENT_OVERVIEW: MANAGER wel, EMPLOYEE niet (V28).
     @Test
-    void employee_findAll_returns200() throws Exception {
-        String token = employeeToken();
+    void manager_findAll_returns200() throws Exception {
+        String token = managerToken();
         when(mollieService.findAll()).thenReturn(List.of(samplePaymentDto()));
 
         mockMvc.perform(get("/api/mollie/payments")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
+    }
+
+    @Test
+    void employee_findAll_returns403() throws Exception {
+        mockMvc.perform(get("/api/mollie/payments")
+                        .header("Authorization", "Bearer " + employeeToken()))
+                .andExpect(status().isForbidden());
     }
 
     @Test

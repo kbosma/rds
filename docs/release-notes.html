@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release notes</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1d2b36; --muted: #5b6b77; --line: #b9c6cf; --head-bg: #0e8f8a; --head-text: #ffffff;
+    --row-alt: #eef5f5; --row-first: #f6f9fa; --code-bg: #eef2f4; --accent: #0e8f8a; --callout: #fff7e0; --callout-line: #e0a100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181d; --text: #e3e9ed; --muted: #9fb0bb; --line: #3a4a55; --head-bg: #0b6f6b; --head-text: #ffffff;
+      --row-alt: #1f2b33; --row-first: #182129; --code-bg: #24313a; --accent: #4cc3bd; --callout: #2a2414; --callout-line: #e0a100;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 2rem; margin: .2em 0 .4em; }
+  h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; padding-bottom: .25em; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .88em; }
+  .tablewrap { overflow-x: auto; margin: 1em 0 1.4em; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: .55em .75em; text-align: left; vertical-align: top; }
+  thead th { background: var(--head-bg); color: var(--head-text); font-weight: 700; border-color: var(--head-bg);
+    position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody th[scope="row"] { font-weight: 600; background: var(--row-first); white-space: nowrap; }
+  tbody tr:nth-child(even) th[scope="row"] { background: var(--row-alt); }
+  tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .callout { background: var(--callout); border-left: 5px solid var(--callout-line); padding: .8em 1em; border-radius: 4px; margin: 1em 0; }
+  .toc { border: 1px solid var(--line); border-radius: 8px; padding: .8em 1.2em; margin: 1.2em 0 0; }
+  .toc ul { margin: .4em 0 0; padding-left: 0; list-style: none; columns: 2; }
+  figure.diagram { margin: 1.2em 0; padding: 1em; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; background: #fff; }
+  figure.diagram pre.mermaid { margin: 0; text-align: center; }
+  pre.sketch { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1em; overflow-x: auto; font-size: .85rem; line-height: 1.45; }
+  li { margin: .15em 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 700px) { .toc ul { columns: 1; } tbody th[scope="row"] { white-space: normal; } }
+  @media print { thead th { position: static; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<h1>Release notes</h1>
+<p>Per release de nieuwe rechten (authorities): naam, betekenis en of de systeemrollen ze automatisch krijgen. Eigen rollen krijgen nieuwe rechten nooit vanzelf; het rollenscherm meldt ze als <em>Nieuw</em> tot een manager op <em>Gezien</em> klikt. Zie <a href="voorstel-eigen-rollen.html">voorstel-eigen-rollen.md</a>, §7.2.</p>
+<h2 id="h-18-11-2026">18-11-2026</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Recht</th><th>Betekenis</th><th>MANAGER</th><th>EMPLOYEE</th></tr></thead><tbody>
+<tr><th scope="row"><code>PAYMENT_OVERVIEW</code></th><td>Het overzicht van alle betalingen van de organisatie: menu <em>Betalingen</em> en de betaalcijfers op het manager-dashboard. Vereist <code>PAYMENT_READ</code>.</td><td>✓ automatisch</td><td>–</td></tr>
+</tbody></table></div>
+<p><strong>Gevolg voor bestaande rollen.</strong> Menu <em>Betalingen</em> vraagt voortaan <code>PAYMENT_OVERVIEW</code> in plaats van <code>PAYMENT_READ</code>. EMPLOYEE ziet het menu dus niet meer, maar ziet de betalingen bij een boeking nog wel. Een eigen rol die het overzicht moet tonen, krijgt het recht pas als een manager het aanvinkt.</p>
+<h2 id="h-17-11-2026">17-11-2026</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Recht</th><th>Betekenis</th><th>MANAGER</th><th>EMPLOYEE</th></tr></thead><tbody>
+<tr><th scope="row"><code>USER_SCOPE_ORGANIZATION</code></th><td>Personen en accounts van de hele organisatie; zonder dit recht alleen het eigen persoon en account.</td><td>✓ automatisch</td><td>–</td></tr>
+<tr><th scope="row"><code>PLATFORM_ADMIN</code></th><td>Over organisaties heen werken (alleen de beheerders van RDS Platform; niet uit te delen door klanten).</td><td>–</td><td>–</td></tr>
+</tbody></table></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

@@ -35,8 +35,9 @@ public class MolliePaymentController {
         this.mollieService = mollieService;
     }
 
+    /** Alle betalingen van de organisatie (overzicht); per boeking volstaat PAYMENT_READ. */
     @GetMapping
-    @PreAuthorize("hasAuthority('PAYMENT_READ')")
+    @PreAuthorize("hasAuthority('PAYMENT_OVERVIEW')")
     public List<MolliePaymentDto> findAll() {
         return mollieService.findAll();
     }

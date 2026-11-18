@@ -376,10 +376,12 @@ class RoleRulesTest extends AbstractAuthControllerTest {
     @Test
     void newAuthorities_areShownUntilTheOrganizationMarksThemSeen() throws Exception {
         String manager = managerToken();
-        // TechPartner bestaat sinds 2026-01-01; USER_SCOPE_ORGANIZATION kwam op 2026-11-17 (PLATFORM_ADMIN is niet uitdeelbaar).
+        // TechPartner bestaat sinds 2026-01-01; USER_SCOPE_ORGANIZATION kwam op 2026-11-17 en PAYMENT_OVERVIEW op
+        // 2026-11-18 (PLATFORM_ADMIN is niet uitdeelbaar).
         mockMvc.perform(get("/api/roles/new-authorities").header("Authorization", bearer(manager)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].description").value(org.hamcrest.Matchers.contains("USER_SCOPE_ORGANIZATION")));
+                .andExpect(jsonPath("$[*].description").value(org.hamcrest.Matchers.containsInAnyOrder(
+                        "USER_SCOPE_ORGANIZATION", "PAYMENT_OVERVIEW")));
 
         mockMvc.perform(post("/api/roles/new-authorities/seen").header("Authorization", bearer(manager)))
                 .andExpect(status().isNoContent());
@@ -393,5 +395,100 @@ class RoleRulesTest extends AbstractAuthControllerTest {
     void markingNewAuthoritiesSeen_needsRoleUpdate() throws Exception {
         mockMvc.perform(post("/api/roles/new-authorities/seen").header("Authorization", bearer(employeeToken())))
                 .andExpect(status().isForbidden());
+    }
+
+    // ----- één formulier: naam en rechten in één keer opslaan, alleen het verschil -----
+
+    private ResultActions saveRole(String token, String roleId, String name, String... authorities) throws Exception {
+        String body = objectMapper.writeValueAsString(java.util.Map.of("description", name, "authorities", List.of(authorities)));
+        return mockMvc.perform((roleId == null ? post("/api/roles") : put("/api/roles/" + roleId))
+                .header("Authorization", bearer(token)).contentType(MediaType.APPLICATION_JSON).content(body));
+    }
+
+    private JsonNode historyOf(String token, String roleId) throws Exception {
+        return objectMapper.readTree(mockMvc.perform(get("/api/authorization-log?roleId=" + roleId)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+    }
+
+    @Test
+    void aNewRole_isCreatedWithItsAuthorities_andTheirRequirements() throws Exception {
+        String manager = managerToken();
+        String body = saveRole(manager, null, "Boekhouder", "PAYMENT_UPDATE")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.authorities").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+        String role = objectMapper.readTree(body).get("roleId").asText();
+
+        assertEquals(Set.of("PAYMENT_UPDATE", "PAYMENT_READ", "BOOKING_READ"), authoritiesOf(role));
+        JsonNode history = historyOf(manager, role);
+        assertEquals(4, history.size()); // aangemaakt + drie rechten
+        for (JsonNode entry : history) {
+            assertTrue(entry.get("createdByName").asText().startsWith("Pieter"), "wie: " + entry);
+            assertTrue(entry.hasNonNull("createdAt"), "wanneer: " + entry);
+        }
+    }
+
+    @Test
+    void savingAnExistingRole_storesOnlyTheDifference() throws Exception {
+        String manager = managerToken();
+        String role = createRole(manager, "Boekhouder");
+        saveRole(manager, role, "Boekhouder", "BOOKING_READ", "TEMPLATE_READ").andExpect(status().isOk());
+        int before = historyOf(manager, role).size();
+
+        saveRole(manager, role, "Boekhouder", "BOOKING_READ", "SUPPLIER_READ").andExpect(status().isOk());
+
+        assertEquals(Set.of("BOOKING_READ", "SUPPLIER_READ"), authoritiesOf(role));
+        JsonNode history = historyOf(manager, role);
+        assertEquals(before + 2, history.size(), "alleen SUPPLIER_READ erbij en TEMPLATE_READ eraf; geen hernoeming");
+    }
+
+    @Test
+    void savingWithoutChanges_logsNothing() throws Exception {
+        String manager = managerToken();
+        String role = createRole(manager, "Boekhouder");
+        saveRole(manager, role, "Boekhouder", "BOOKING_READ").andExpect(status().isOk());
+        int before = historyOf(manager, role).size();
+
+        saveRole(manager, role, "Boekhouder", "BOOKING_READ").andExpect(status().isOk());
+
+        assertEquals(before, historyOf(manager, role).size());
+    }
+
+    @Test
+    void aRefusedSave_changesNothing_notEvenTheName() throws Exception {
+        String manager = managerToken();
+        String role = createRole(manager, "Boekhouder");
+        saveRole(manager, role, "Boekhouder", "PAYMENT_UPDATE").andExpect(status().isOk());
+
+        // PAYMENT_READ weg terwijl PAYMENT_UPDATE blijft: 409, en de nieuwe naam en TEMPLATE_READ gaan ook niet door.
+        saveRole(manager, role, "Kassier", "PAYMENT_UPDATE", "BOOKING_READ", "TEMPLATE_READ").andExpect(status().isConflict());
+        // Een recht dat de manager zelf niet mag uitdelen: 403, niets opgeslagen.
+        saveRole(manager, role, "Kassier", "PAYMENT_UPDATE", "PAYMENT_READ", "BOOKING_READ", "ORGANIZATION_UPDATE")
+                .andExpect(status().isForbidden());
+
+        assertEquals(Set.of("PAYMENT_UPDATE", "PAYMENT_READ", "BOOKING_READ"), authoritiesOf(role));
+        mockMvc.perform(get("/api/roles/" + role).header("Authorization", bearer(manager)))
+                .andExpect(jsonPath("$.description").value("Boekhouder"));
+    }
+
+    @Test
+    void unknownAuthorities_areRefused() throws Exception {
+        saveRole(managerToken(), null, "Boekhouder", "DOES_NOT_EXIST").andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saving_withoutAuthorities_leavesThemAlone() throws Exception {
+        String manager = managerToken();
+        String role = createRole(manager, "Boekhouder");
+        saveRole(manager, role, "Boekhouder", "BOOKING_READ").andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/roles/" + role).header("Authorization", bearer(manager))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"description\":\"Kassier\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description").value("Kassier"));
+
+        assertEquals(Set.of("BOOKING_READ"), authoritiesOf(role));
     }
 }

@@ -140,7 +140,7 @@ flowchart LR
 <tr><th scope="row"><strong>EMPLOYEE</strong></th><td>dagelijks werk</td><td>boekingen en alles daaronder (bookers, prospects, reizigers, regels, activiteiten), documenten (volledig), betalingen aanmaken en bekijken, e-mail versturen. Templates, accommodaties, leveranciers en activiteiten alleen <em>lezen</em>. Eigen persoon en account alleen lezen/wijzigen.</td></tr>
 <tr><th scope="row"><em>Boeker (klant)</em></th><td>externe klant</td><td>geen rol en geen account: een <strong>BOOKER-token</strong> (na OTP) met vast <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code>, gebonden aan één boeking.</td></tr>
 </tbody></table></div>
-<p>De matrix hieronder is de standaardconfiguratie van vóór V23; sinds V23/V24 hebben ADMIN <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>, MANAGER <code>USER_SCOPE_ORGANIZATION</code>, <code>ROLE_CREATE/UPDATE/DELETE</code> en <code>ROLEAUTHORITY_CREATE/DELETE</code>, en zijn <code>AUTHORITY_CREATE/UPDATE/DELETE</code> vervallen. De actuele inhoud zie je in <em>Rollen</em> (matrix) of <code>system_role_template</code>. <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code> bestaan wel als authority, maar zijn aan <strong>geen enkele rol</strong> gekoppeld.</p>
+<p>De matrix hieronder is de standaardconfiguratie van vóór V23; sinds V23/V24 hebben ADMIN <code>PLATFORM_ADMIN</code> en <code>USER_SCOPE_ORGANIZATION</code>, MANAGER <code>USER_SCOPE_ORGANIZATION</code>, <code>ROLE_CREATE/UPDATE/DELETE</code> en <code>ROLEAUTHORITY_CREATE/DELETE</code>, en zijn <code>AUTHORITY_CREATE/UPDATE/DELETE</code> vervallen. Sinds V28 heeft MANAGER ook <code>PAYMENT_OVERVIEW</code> (het overzicht van alle betalingen); EMPLOYEE niet. De actuele inhoud zie je in <em>Rollen</em> (matrix) of <code>system_role_template</code>. <code>BOOKER_PORTAL_READ</code> en <code>BOOKER_PORTAL_UPDATE</code> bestaan wel als authority, maar zijn aan <strong>geen enkele rol</strong> gekoppeld.</p>
 <h3 id="h-2-4-volledige-matrix-authority-rol">2.4 Volledige matrix: authority × rol</h3>
 <p>Gegenereerd uit de migraties <code>V2</code>, <code>V6</code>, <code>V10</code>, <code>V12</code>, <code>V16</code>, <code>V18</code> en <code>V20</code>. De kolom <em>Endpoints</em> noemt de API-resources die de authority gebruiken (uit de <code>@PreAuthorize</code>-annotaties).</p>
 <div class="tablewrap"><table>
@@ -185,7 +185,8 @@ flowchart LR
 <tr><th scope="row">38</th><td><code>PAYMENT_CORRECT</code></td><td>de status van een betaling corrigeren (nieuwe regel met reden)</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/mollie</code></td></tr>
 <tr><th scope="row">39</th><td><code>PAYMENT_CREATE</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: aanmaken</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/booking-mollie-payments</code>, <code>/api/mollie</code></td></tr>
 <tr><th scope="row">40</th><td><code>PAYMENT_DELETE</code></td><td>geen enkel endpoint gebruikt dit: betalingen worden nooit verwijderd</td><td>–</td><td>✓</td><td>–</td><td><em>(geen)</em></td></tr>
-<tr><th scope="row">41</th><td><code>PAYMENT_READ</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: bekijken (lijst en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/booking-mollie-payments</code>, <code>/api/mollie</code></td></tr>
+<tr><th scope="row">41</th><td><code>PAYMENT_READ</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: bekijken (per boeking en detail)</td><td>–</td><td>✓</td><td>✓</td><td><code>/api/booking-mollie-payments</code>, <code>/api/mollie</code></td></tr>
+<tr><th scope="row">41a</th><td><code>PAYMENT_OVERVIEW</code></td><td>overzicht van alle betalingen van de organisatie (menu Betalingen, manager-dashboard); vereist <code>PAYMENT_READ</code> (V28)</td><td>–</td><td>✓</td><td>–</td><td><code>GET</code> op <code>/api/mollie/payments</code>, <code>/api/booking-mollie-payments</code>, <code>/api/mollie/payment-status-entries</code></td></tr>
 <tr><th scope="row">42</th><td><code>PAYMENT_RELINK</code></td><td>een betaling met reden aan een andere boeking hangen</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/booking-mollie-payments</code></td></tr>
 <tr><th scope="row">43</th><td><code>PAYMENT_UPDATE</code></td><td>Mollie-betalingen en hun koppeling aan boekingen: wijzigen</td><td>–</td><td>✓</td><td>–</td><td><code>/api/mollie</code></td></tr>
 <tr><th scope="row">44</th><td><code>PERSON_CREATE</code></td><td>personen: aanmaken</td><td>✓</td><td>✓</td><td>–</td><td><code>/api/persons</code></td></tr>
@@ -256,7 +257,7 @@ flowchart LR
 <tr><th scope="row">Boekingen (<code>/bookings</code>)</th><td><code>BOOKING_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
 <tr><th scope="row">Boekers (<code>/bookers</code>)</th><td><code>BOOKING_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
 <tr><th scope="row">Prospects (<code>/prospects</code>)</th><td><code>BOOKING_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
-<tr><th scope="row">Betalingen (<code>/payments</code>)</th><td><code>PAYMENT_READ</code></td><td>–</td><td>✓</td><td>✓</td></tr>
+<tr><th scope="row">Betalingen (<code>/payments</code>)</th><td><code>PAYMENT_OVERVIEW</code></td><td>–</td><td>✓</td><td>–</td></tr>
 <tr><th scope="row"><em>Sectie BEHEER</em> — Organisaties (<code>/admin/organizations</code>)</th><td><code>ORGANIZATION_READ</code></td><td>✓</td><td>–</td><td>–</td></tr>
 <tr><th scope="row"><em>Sectie ORGANISATIE BEHEER</em> — Accommodaties</th><td><code>ACCOMMODATION_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>–</td><td>✓</td><td>–</td></tr>
 <tr><th scope="row">Leveranciers</th><td><code>SUPPLIER_CREATE</code>/<code>_UPDATE</code>/<code>_DELETE</code></td><td>–</td><td>✓</td><td>–</td></tr>
@@ -305,9 +306,9 @@ flowchart TD
 <h3 id="h-2-10-de-configuratie-wijzigen">2.10 De configuratie wijzigen</h3>
 <div class="tablewrap"><table>
 <thead><tr><th>Wat wil je</th><th>Hoe</th><th>Opmerkingen</th></tr></thead><tbody>
-<tr><th scope="row">Een authority aan een rol hangen of afnemen</th><td><em>Rollen → rol openen → matrix</em></td><td>alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. Systeemrollen liggen vast.</td></tr>
+<tr><th scope="row">Een authority aan een rol hangen of afnemen</th><td><em>Rollen → rol openen → matrix → Opslaan</em></td><td>alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. De matrix is een concept: pas <em>Opslaan</em> bewaart naam en rechten in één keer (alleen het verschil, alles of niets); <em>Annuleren</em> laat alles zoals het was. Systeemrollen liggen vast.</td></tr>
 <tr><th scope="row">Een rol aan een account geven</th><td><em>Accounts → account openen → Rol toevoegen</em></td><td>zie §2.9</td></tr>
-<tr><th scope="row">Een nieuwe rol maken</th><td><em>Rollen → Nieuwe rol</em> (<code>ROLE_CREATE</code>, o.a. MANAGER)</td><td>leeg, of als kopie van een rol waarvan je alle rechten zelf hebt</td></tr>
+<tr><th scope="row">Een nieuwe rol maken</th><td><em>Rollen → Nieuwe rol</em> (<code>ROLE_CREATE</code>, o.a. MANAGER)</td><td>hetzelfde scherm als bewerken; kies eventueel een <em>sjabloon</em> (een rol waarvan je alle rechten zelf hebt). Het sjabloon vult alleen de matrix; er bestaat pas een rol na <em>Opslaan</em></td></tr>
 <tr><th scope="row">Een nieuwe authority</th><td>alleen via een Flyway-migratie</td><td>authorities liggen vast: ze doen pas iets als de code ze controleert. Zie <a href="security.html">security.md</a>.</td></tr>
 </tbody></table></div>
 <p><strong>Wanneer werkt een wijziging?</strong> Direct (sinds V26). Het token draagt een rechtenversie; verandert er iets aan de rechten van een account, dan weigert de backend het oude token (<code>401 AUTHZ_CHANGED</code>) en haalt de app vanzelf een nieuw token op. Wie gelockt of verlopen is, wordt uitgelogd.</p>
@@ -425,7 +426,7 @@ flowchart TD
 <h3 id="h-4-10-reizigers">4.10 Reizigers</h3>
 <p>Reizigers beheer je in het boekingsdetail. De losse route <code>/travelers</code> bestaat wel maar staat niet in het menu.</p>
 <h3 id="h-4-11-betalingen-overzicht">4.11 Betalingen (overzicht)</h3>
-<p>Menu <strong>Betalingen</strong> (<code>PAYMENT_READ</code>). Kolommen: Mollie ID (<code>tr_…</code>), Boeking, Datum, Omschrijving, Methode, Bedrag, Status, Acties; bovenaan samenvattende tegels. Zie §6.6 voor de hele betaalketen.</p>
+<p>Menu <strong>Betalingen</strong> (<code>PAYMENT_OVERVIEW</code>; de betalingen van één boeking staan op de boeking en vragen alleen <code>PAYMENT_READ</code>). Kolommen: Mollie ID (<code>tr_…</code>), Boeking, Datum, Omschrijving, Methode, Bedrag, Status, Acties; bovenaan samenvattende tegels. Zie §6.6 voor de hele betaalketen.</p>
 <ul><li><strong>Oog-icoon:</strong> het betalingsvenster met de gegevens en de volledige <strong>statushistorie</strong> (alleen lezen).</li><li><strong>Potlood:</strong> alleen voor een betaling die nog niet bij Mollie is aangemaakt (omschrijving en bedrag aanpassen). Is de betaling al bij Mollie, dan geeft de server <code>409</code> (<em>"Deze betaling bestaat al bij Mollie en kan niet meer worden gewijzigd."</em>).</li><li><strong>Geen prullenbak:</strong> betalingen worden nooit verwijderd.</li><li><strong>Correctie registreren</strong> (<code>PAYMENT_CORRECT</code>): nieuwe status uit <em>open/betaald/mislukt/geannuleerd</em> + een <strong>reden</strong> van minstens 5 tekens. Het wordt een nieuwe regel met de markering <em>Correctie</em>, wie en wanneer. Een correctie naar de huidige status wordt geweigerd. Statussen <em>pending</em>, <em>authorized</em> en <em>expired</em> bepaalt alleen Mollie.</li><li><strong>Naar andere boeking koppelen</strong> (<code>PAYMENT_RELINK</code>): kies een andere boeking van dezelfde organisatie en geef een reden (5–500 tekens). De geschiedenis (van, naar, datum, door, reden) staat als tabel in hetzelfde venster.</li></ul>
 <p>Statussen: Open, In afwachting, Geautoriseerd, Betaald, Mislukt, Geannuleerd, Verlopen.</p>
 <h3 id="h-4-12-accommodaties-leveranciers-en-activiteiten-stamgegevens">4.12 Accommodaties, Leveranciers en Activiteiten (stamgegevens)</h3>
@@ -820,16 +821,16 @@ curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/send?bookerId=&lt;id&gt;
 <h4 id="h-betalingen-mollie">Betalingen (Mollie)</h4>
 <div class="tablewrap"><table>
 <thead><tr><th>Methode</th><th>Pad</th><th>Authority</th><th>Omschrijving</th></tr></thead><tbody>
-<tr><th scope="row">GET</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_OVERVIEW</code></td><td>Lijst (alle betalingen van de organisatie)</td></tr>
 <tr><th scope="row">GET</th><td><code>/api/mollie/payments/{id}</code></td><td><code>PAYMENT_READ</code></td><td>Eén opvragen</td></tr>
 <tr><th scope="row">POST</th><td><code>/api/mollie/payments</code></td><td><code>PAYMENT_CREATE</code></td><td>Aanmaken</td></tr>
 <tr><th scope="row">PUT</th><td><code>/api/mollie/payments/{id}</code></td><td><code>PAYMENT_UPDATE</code></td><td>Wijzigen</td></tr>
 <tr><th scope="row">POST</th><td><code>/api/mollie/payments/create-at-mollie</code></td><td><code>PAYMENT_CREATE</code></td><td>Direct bij Mollie aanmaken</td></tr>
 <tr><th scope="row">POST</th><td><code>/api/mollie/payments/webhook</code></td><td>–</td><td>Webhook van Mollie (<code>?id=tr_…</code>)</td></tr>
-<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries</code></td><td><code>PAYMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries</code></td><td><code>PAYMENT_OVERVIEW</code></td><td>Lijst (alle statusregels van de organisatie)</td></tr>
 <tr><th scope="row">GET</th><td><code>/api/mollie/payment-status-entries/by-payment/{molliePaymentId}</code></td><td><code>PAYMENT_READ</code></td><td>Statushistorie van een betaling</td></tr>
 <tr><th scope="row">POST</th><td><code>/api/mollie/payment-status-entries/by-payment/{molliePaymentId}</code></td><td><code>PAYMENT_CORRECT</code></td><td>Handmatige correctie <code>{status, reason}</code></td></tr>
-<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments</code></td><td><code>PAYMENT_READ</code></td><td>Lijst</td></tr>
+<tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments</code></td><td><code>PAYMENT_OVERVIEW</code></td><td>Lijst (alle koppelingen van de organisatie)</td></tr>
 <tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{bookingId}</code></td><td><code>PAYMENT_READ</code></td><td>Betalingen van een boeking</td></tr>
 <tr><th scope="row">GET</th><td><code>/api/booking-mollie-payments/{bookingId}/{molliePaymentId}</code></td><td><code>PAYMENT_READ</code></td><td>Eén opvragen</td></tr>
 <tr><th scope="row">POST</th><td><code>/api/booking-mollie-payments</code></td><td><code>PAYMENT_CREATE</code></td><td>Aanmaken</td></tr>
@@ -969,7 +970,7 @@ curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/send?bookerId=&lt;id&gt;
 <tr><th scope="row"><code>/activities</code> (+ detail)</th><td>activiteiten</td><td><code>ACTIVITY_C/U/D</code></td></tr>
 <tr><th scope="row"><code>/templates</code></th><td>Word-templates</td><td><code>TEMPLATE_C/U/D</code></td></tr>
 <tr><th scope="row"><code>/email-templates</code></th><td>e-mailtemplates</td><td><code>TEMPLATE_READ</code></td></tr>
-<tr><th scope="row"><code>/payments</code></th><td>betalingen</td><td><code>PAYMENT_READ</code></td></tr>
+<tr><th scope="row"><code>/payments</code></th><td>betalingen</td><td><code>PAYMENT_OVERVIEW</code></td></tr>
 <tr><th scope="row"><code>/admin/organizations</code> (+ <code>new</code>, <code>onboarding</code>, <code>:id</code>)</th><td>organisaties en onboarding</td><td><code>ORGANIZATION_READ</code></td></tr>
 <tr><th scope="row"><code>/admin/persons</code> (+ <code>new</code>, <code>:id</code>)</th><td>personen</td><td><code>PERSON_CREATE</code>/<code>DELETE</code></td></tr>
 <tr><th scope="row"><code>/admin/accounts</code> (+ <code>new</code>, <code>:id</code>)</th><td>accounts</td><td><code>ACCOUNT_CREATE</code>/<code>DELETE</code></td></tr>
@@ -992,7 +993,8 @@ curl -X POST &quot;$BASE/api/email-templates/&lt;id&gt;/send?bookerId=&lt;id&gt;
 <tr><th scope="row"><code>DOCUMENT_READ</code></th><td>documenten in de tijdlijn</td></tr>
 <tr><th scope="row"><code>DOCUMENT_CREATE</code></th><td><em>Toevoegen → Document</em> (uploaden/genereren)</td></tr>
 <tr><th scope="row"><code>DOCUMENT_UPDATE</code></th><td>zichtbaarheid in het portaal wijzigen</td></tr>
-<tr><th scope="row"><code>PAYMENT_READ</code></th><td>menu Betalingen; kaart Betalingen in een boeking; oog-icoon</td></tr>
+<tr><th scope="row"><code>PAYMENT_READ</code></th><td>kaart Betalingen in een boeking; oog-icoon</td></tr>
+<tr><th scope="row"><code>PAYMENT_OVERVIEW</code></th><td>menu Betalingen; betaalcijfers op het manager-dashboard</td></tr>
 <tr><th scope="row"><code>PAYMENT_CREATE</code></th><td><em>Nieuwe betaling</em></td></tr>
 <tr><th scope="row"><code>PAYMENT_UPDATE</code></th><td>potlood, alleen voor een betaling zonder Mollie-id</td></tr>
 <tr><th scope="row"><code>PAYMENT_CORRECT</code></th><td><em>Correctie registreren</em></td></tr>

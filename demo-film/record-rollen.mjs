@@ -85,12 +85,19 @@ async function loginAs(page, film, user, password) {
   await page.waitForURL('**/dashboard');
 }
 
-/** Een vakje in de matrix aanklikken en wachten tot de server de rol heeft bijgewerkt. */
+/** Een vakje in de matrix aanklikken. Dat is nog een concept: er gaat niets naar de server tot Opslaan. */
 async function toggle(page, film, authority) {
-  const done = page.waitForResponse((r) => r.url().includes('/api/role-authorities') && r.request().method() === 'GET');
   await film.click(box(page, authority));
-  await done;
-  await film.wait(500);
+  await film.wait(250);
+}
+
+/** Opslaan: naam en rechten in één keer; daarna staat de rollenlijst er weer. */
+async function saveRole(page, film) {
+  const saved = page.waitForResponse((r) => /\/api\/roles(\/[^/]+)?$/.test(new URL(r.url()).pathname)
+    && ['POST', 'PUT'].includes(r.request().method()));
+  await film.click(submit(page));
+  await saved;
+  await page.waitForURL(/\/admin\/roles$/);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -121,44 +128,61 @@ async function scene2OwnRole(page, film) {
   await film.card('2. Een eigen rol', 'Sanne maakt een rol voor de boekhouding.', 2800);
   await film.click(navLink(page, 'Rollen'));
   await film.click(newButton(page, /nieuwe rol/i));
-  await film.type(control(page, 'description'), 'Boekhouder');
-  await film.say('Nieuwe rol', 'Ze begint leeg. Met "Kopie van" kan ze ook een bestaande rol als startpunt nemen.', { minMs: 1500 });
-  await film.click(submit(page));
   await page.locator('app-role-authority-matrix').waitFor();
-  await page.waitForLoadState('networkidle');
+  await film.say('Eén scherm', 'Naam, een sjabloon en de rechten staan op één scherm. Ze begint leeg.', { minMs: 1500 });
+  await film.type(control(page, 'description'), 'Boekhouder');
 
   await film.say('Vereisten', 'Ze vinkt Betalingen wijzigen aan. Lezen van betalingen en boekingen komen vanzelf mee: '
     + 'zonder die rechten werkt wijzigen niet.');
   await toggle(page, film, 'PAYMENT_UPDATE');
   await film.moveTo(box(page, 'BOOKING_READ'));
-  await film.wait(900);
+  await film.wait(700);
+  await film.say('Vereisten', 'Zolang wijzigen aan staat, kan lezen niet uit: dat vakje zit vast.', { minMs: 1500 });
+  await film.moveTo(box(page, 'PAYMENT_READ'));
+  await film.wait(700);
 
-  await film.say('Vereisten', 'Lezen weghalen terwijl wijzigen aan staat, kan niet. RDS legt uit waarom.', { minMs: 1500 });
-  await film.click(box(page, 'PAYMENT_READ'));
-  await page.locator('.mat-mdc-snack-bar-container').waitFor();
-  await film.wait(1800);
+  await film.say('Opslaan', 'Er is nog niets bewaard. Pas Opslaan bewaart de naam en de rechten, in één keer.');
+  await film.moveTo(page.locator('.pending'));
+  await saveRole(page, film);
 
-  await film.say('Geschiedenis', 'Onderaan staat wie wat wanneer veranderde: het rechtenlogboek.', { minMs: 1500 });
-  await film.moveTo(page.locator('.history-card'));
-  await film.wait(1200);
+  await film.say('Annuleren', 'Ze opent de rol weer en vinkt iets aan. Annuleren? Dan vraagt RDS of ze de wijziging '
+    + 'wil weggooien; de rol blijft zoals hij was.');
+  await film.click(row(page, 'Boekhouder').locator('.action-edit'));
+  await page.locator('app-role-authority-matrix').waitFor();
+  await page.waitForLoadState('networkidle');
+  await toggle(page, film, 'TEMPLATE_READ');
+  await film.click(page.locator('form .actions button[type="button"]'));
+  const confirm = page.locator('mat-dialog-container');
+  await confirm.waitFor();
+  await film.wait(600);
+  await film.click(confirm.locator('mat-dialog-actions button').last());
+  await page.waitForURL(/\/admin\/roles$/);
+
+  await film.say('Geschiedenis', 'Onder de rol staat het rechtenlogboek: wanneer, door wie en wat er veranderde.', { minMs: 1500 });
+  await film.click(row(page, 'Boekhouder').locator('.action-edit'));
+  const history = page.locator('.history-card');
+  await history.waitFor();
+  // De geschiedenis staat onderaan de pagina, precies waar de ondertitel staat: die gaat even weg.
+  await film.unsay();
+  await film.moveTo(history.locator('td.who').first());
+  await film.wait(2500);
 }
 
 async function scene3RoleManagementForDaan(page, film) {
   await film.card('3. Rollen laten inrichten', 'Sanne laat medewerker Daan voortaan ook rollen beheren.', 3000);
   await film.click(navLink(page, 'Rollen'));
   await film.click(newButton(page, /nieuwe rol/i));
-  await film.type(control(page, 'description'), 'Teamleider');
-  await film.say('Kopie van', 'Ze neemt EMPLOYEE als startpunt.', { minMs: 1200 });
-  await film.choose(page.locator('mat-select.copy-from'), 'EMPLOYEE');
-  await film.click(submit(page));
   await page.locator('app-role-authority-matrix').waitFor();
-  await page.waitForLoadState('networkidle');
+  await film.type(control(page, 'description'), 'Teamleider');
+  await film.say('Sjabloon', 'Ze neemt EMPLOYEE als sjabloon. Dat vult alleen de matrix; ze kan daarna nog alles aanpassen.', { minMs: 1500 });
+  await film.choose(page.locator('mat-select.template'), 'EMPLOYEE');
 
   await film.say('Rollen beheren', 'Daarbij: rollen beheren en rollen toewijzen. Ook die rechten mag ze doorgeven, omdat ze ze zelf heeft.');
   for (const authority of ['ROLE_CREATE', 'ROLE_UPDATE', 'ROLE_DELETE', 'ROLEAUTHORITY_CREATE', 'ROLEAUTHORITY_DELETE',
     'ACCOUNTROLE_CREATE', 'ACCOUNTROLE_DELETE', 'ACCOUNT_CREATE']) {
     await toggle(page, film, authority);
   }
+  await saveRole(page, film);
 
   await film.say('Toewijzen', 'Nu krijgt Daan die rol, naast zijn rol EMPLOYEE.', { minMs: 1200 });
   await film.click(navLink(page, 'Accounts'));
@@ -181,19 +205,19 @@ async function scene4DaanHandsOutOnlyWhatHeHas(page, film) {
   await film.moveTo(row(page, 'Boekhouder'));
 
   await film.click(newButton(page, /nieuwe rol/i));
-  await film.type(control(page, 'description'), 'Stagiair');
-  await film.click(page.locator('mat-select.copy-from'), { force: true });
-  await page.locator('mat-option').first().waitFor();
-  await film.say('Kopie van', 'Als startpunt ziet hij alleen rollen waarvan hij alle rechten zelf heeft. Geen MANAGER, geen Boekhouder.');
-  await film.click(page.locator('mat-option').filter({ hasText: 'EMPLOYEE' }));
-  await film.click(submit(page));
   await page.locator('app-role-authority-matrix').waitFor();
   await page.waitForLoadState('networkidle');
+  await film.type(control(page, 'description'), 'Stagiair');
+  await film.click(page.locator('mat-select.template'), { force: true });
+  await page.locator('mat-option').first().waitFor();
+  await film.say('Sjabloon', 'Als sjabloon ziet hij alleen rollen waarvan hij alle rechten zelf heeft. Geen MANAGER, geen Boekhouder.');
+  await film.click(page.locator('mat-option').filter({ hasText: 'EMPLOYEE' }));
 
   await film.say('Gearceerde vakjes', 'Gearceerd zijn rechten die Daan zelf niet heeft, zoals betalingen wijzigen. '
     + 'Die kan hij dus ook niet uitdelen.');
   await film.moveTo(box(page, 'PAYMENT_UPDATE'));
-  await film.wait(1200);
+  await film.wait(1000);
+  await saveRole(page, film);
 
   await film.say('Geen escalatie', 'En zichzelf manager maken? Bij zijn eigen account staat MANAGER niet eens in de lijst.');
   await film.click(navLink(page, 'Accounts'));

@@ -64,11 +64,15 @@ public class AuthorizationLog {
     @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
+    /** Naam van wie de wijziging deed, vastgelegd op het moment zelf; leeg als RDS het zelf deed. */
+    @Column(name = "created_by_name", updatable = false)
+    private String createdByName;
+
     protected AuthorizationLog() {
     }
 
     public AuthorizationLog(UUID tenantOrganization, Action action, UUID roleId, String roleName, String authority,
-                            UUID accountId, String accountUserName, String details) {
+                            UUID accountId, String accountUserName, String details, String createdByName) {
         this.tenantOrganization = tenantOrganization;
         this.action = action;
         this.roleId = roleId;
@@ -77,6 +81,7 @@ public class AuthorizationLog {
         this.accountId = accountId;
         this.accountUserName = accountUserName;
         this.details = details;
+        this.createdByName = createdByName;
     }
 
     @PrePersist
@@ -127,5 +132,9 @@ public class AuthorizationLog {
 
     public UUID getCreatedBy() {
         return createdBy;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
     }
 }

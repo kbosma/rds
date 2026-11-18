@@ -11,4 +11,6 @@ export interface AuthorizationLogEntry {
   details?: string;
   createdAt: string;
   createdBy?: string;
+  /** Naam van wie de wijziging deed, vastgelegd op het moment zelf; leeg als RDS het zelf deed. */
+  createdByName?: string | null;
 }

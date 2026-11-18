@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { authorityGuard } from './core/auth/authority.guard';
+import { unsavedChangesGuard } from './shared/guards/unsaved-changes.guard';
 import { ACCESS } from './core/auth/access';
 import { LayoutComponent } from './features/layout/layout.component';
 
@@ -215,6 +216,7 @@ export const routes: Routes = [
       {
         path: 'admin/roles/new',
         canActivate: [authorityGuard],
+        canDeactivate: [unsavedChangesGuard],
         data: { access: ACCESS.roleCreate },
         loadComponent: () =>
           import('./features/admin/role-detail.component').then(
@@ -224,6 +226,7 @@ export const routes: Routes = [
       {
         path: 'admin/roles/:id',
         canActivate: [authorityGuard],
+        canDeactivate: [unsavedChangesGuard],
         data: { access: ACCESS.roles },
         loadComponent: () =>
           import('./features/admin/role-detail.component').then(

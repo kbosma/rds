@@ -8,6 +8,7 @@ import nl.puurkroatie.rds.auth.entity.Role;
 import nl.puurkroatie.rds.auth.repository.AuthorizationLogRepository;
 import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
+import nl.puurkroatie.rds.mollie.service.CreatedByNameResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,24 +24,26 @@ import java.util.UUID;
 public class AuthorizationLogService {
 
     private final AuthorizationLogRepository repository;
+    private final CreatedByNameResolver names;
 
-    public AuthorizationLogService(AuthorizationLogRepository repository) {
+    public AuthorizationLogService(AuthorizationLogRepository repository, CreatedByNameResolver names) {
         this.repository = repository;
+        this.names = names;
     }
 
     public void roleEvent(Action action, Role role, String details) {
         repository.save(new AuthorizationLog(role.getTenantOrganization(), action, role.getRoleId(), role.getDescription(),
-                null, null, null, details));
+                null, null, null, details, actorName()));
     }
 
     public void authorityEvent(Action action, Role role, String authority, String details) {
         repository.save(new AuthorizationLog(role.getTenantOrganization(), action, role.getRoleId(), role.getDescription(),
-                authority, null, null, details));
+                authority, null, null, details, actorName()));
     }
 
     public void assignmentEvent(Action action, Role role, Account account) {
         repository.save(new AuthorizationLog(account.getTenantOrganization(), action, role.getRoleId(), role.getDescription(),
-                null, account.getAccountId(), account.getUserName(), null));
+                null, account.getAccountId(), account.getUserName(), null, actorName()));
     }
 
     @Transactional(readOnly = true)
@@ -49,7 +52,13 @@ public class AuthorizationLogService {
         return repository.search(organization, roleId, accountId).stream()
                 .map(l -> new AuthorizationLogDto(l.getAuthorizationLogId(), l.getTenantOrganization(), l.getAction().name(),
                         l.getRoleId(), l.getRoleName(), l.getAuthority(), l.getAccountId(), l.getAccountUserName(),
-                        l.getDetails(), l.getCreatedAt(), l.getCreatedBy()))
+                        l.getDetails(), l.getCreatedAt(), l.getCreatedBy(), l.getCreatedByName()))
                 .toList();
+    }
+
+    /** Naam van de ingelogde gebruiker; leeg als er niemand is ingelogd (RDS zelf, bijv. een migratie). */
+    private String actorName() {
+        UUID accountId = TenantContext.getAccountId();
+        return accountId == null ? null : names.resolve(List.of(accountId)).get(accountId);
     }
 }

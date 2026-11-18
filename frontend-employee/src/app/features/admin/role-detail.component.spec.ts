@@ -10,11 +10,12 @@ import { RoleAuthorityService } from './role-authority.service';
 import { AuthorityService } from './authority.service';
 import { AuthorizationLogService } from './authorization-log.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { ConfirmService } from '../../shared/services/confirm.service';
 import { Authority, Role, RoleAuthority } from '../../shared/models';
 
 /*
- * Rolscherm: naam, startpunt (kopie) en de rechten als matrix. Wat mag, bepaalt de server; het scherm toont wat kan
- * en geeft de uitleg van de server door.
+ * Rolscherm: één formulier met naam, sjabloon en de rechten als matrix. De matrix is een concept tot Opslaan; wat mag,
+ * bepaalt de server, het scherm toont wat kan en geeft de uitleg van de server door.
  */
 describe('RoleDetailComponent', () => {
   const authorities: Authority[] = [
@@ -45,10 +46,8 @@ describe('RoleDetailComponent', () => {
     roleService.create.and.returnValue(of({ ...ownRole, roleId: 'r-new' }));
     roleService.update.and.callFake((_id: string, r: Partial<Role>) => of({ ...role, ...r } as Role));
     roleService.getNewAuthorities.and.returnValue(of([authorities[2]]));
-    roleAuthorityService = jasmine.createSpyObj('RoleAuthorityService', ['getAll', 'create', 'delete']);
+    roleAuthorityService = jasmine.createSpyObj('RoleAuthorityService', ['getAll']);
     roleAuthorityService.getAll.and.returnValue(of(links));
-    roleAuthorityService.create.and.returnValue(of({ role: ownRole, authority: authorities[1] }));
-    roleAuthorityService.delete.and.returnValue(of(void 0));
 
     TestBed.configureTestingModule({
       imports: [RoleDetailComponent, NoopAnimationsModule],
@@ -80,7 +79,7 @@ describe('RoleDetailComponent', () => {
   it('toont de rechten van deze rol in de matrix; wat je niet mag uitdelen staat er niet in', fakeAsync(() => {
     const { component, el } = setup('r-1');
 
-    expect([...component.assigned()]).toEqual(['BOOKING_READ']);
+    expect([...component.draft()]).toEqual(['BOOKING_READ']);
     expect(checkbox(el, 'BOOKING_READ')!.checked).toBe(true);
     expect(checkbox(el, 'BOOKING_UPDATE')!.checked).toBe(false);
     expect(checkbox(el, 'BOOKING_UPDATE')!.disabled).toBe(false);
@@ -88,38 +87,59 @@ describe('RoleDetailComponent', () => {
     expect(el.textContent).toContain('2'); // gebruikt door 2 accounts
   }));
 
-  it('aanvinken voegt het recht toe en haalt de matrix opnieuw op (de server zet vereisten mee aan)', fakeAsync(() => {
-    const { component } = setup('r-1');
-    roleAuthorityService.getAll.calls.reset();
+  it('vinkjes zijn een concept: aanvinken zet de vereisten mee aan en stuurt nog niets naar de server', fakeAsync(() => {
+    const { component, fixture, el } = setup('r-1');
 
+    component.onToggle({ authority: authorities[2], checked: true }); // PAYMENT_READ vereist BOOKING_READ (had hij al)
+    component.onToggle({ authority: authorities[1], checked: true }); // BOOKING_UPDATE
+    fixture.detectChanges();
+
+    expect([...component.draft()].sort()).toEqual(['BOOKING_READ', 'BOOKING_UPDATE', 'PAYMENT_READ']);
+    expect(component.changeCount()).toBe(2);
+    expect(component.hasUnsavedChanges()).toBe(true);
+    expect(roleService.update).not.toHaveBeenCalled();
+    // BOOKING_READ is nu nodig voor andere vinkjes en dus niet los uit te zetten.
+    expect(checkbox(el, 'BOOKING_READ')!.disabled).toBe(true);
+  }));
+
+  it('opslaan stuurt naam en het hele concept in één keer; daarna terug naar de lijst', fakeAsync(() => {
+    const { component } = setup('r-1');
     component.onToggle({ authority: authorities[1], checked: true });
+
+    component.save();
     tick();
 
-    expect(roleAuthorityService.create).toHaveBeenCalledOnceWith('r-1', 'a-2');
-    expect(roleAuthorityService.getAll).toHaveBeenCalled();
+    expect(roleService.update).toHaveBeenCalledOnceWith('r-1',
+      { description: 'Boekhouder', authorities: ['BOOKING_READ', 'BOOKING_UPDATE'] });
+    expect(component.hasUnsavedChanges()).toBe(false);
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/admin/roles']);
   }));
 
-  it('uitvinken haalt het recht weg', fakeAsync(() => {
+  it('annuleren bewaart niets', fakeAsync(() => {
     const { component } = setup('r-1');
+    component.onToggle({ authority: authorities[1], checked: true });
 
-    component.onToggle({ authority: authorities[0], checked: false });
-    tick();
+    component.goBack();
 
-    expect(roleAuthorityService.delete).toHaveBeenCalledOnceWith('r-1', 'a-1');
+    expect(roleService.update).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/admin/roles']);
   }));
 
-  it('een weigering van de server (409) laat de uitleg van de server zien', fakeAsync(() => {
+  it('een weigering van de server (409) laat de uitleg van de server zien en bewaart niets', fakeAsync(() => {
     const { component, fixture } = setup('r-1');
     // MatSnackBarModule in de component zelf levert de snackbar: die bespioneren we.
     const open = spyOn(fixture.debugElement.injector.get(MatSnackBar), 'open');
-    roleAuthorityService.delete.and.returnValue(throwError(() => new HttpErrorResponse({
+    roleService.update.and.returnValue(throwError(() => new HttpErrorResponse({
       status: 409, error: { message: 'Het recht BOOKING_READ is nodig voor [BOOKING_UPDATE]' },
     })));
-
     component.onToggle({ authority: authorities[0], checked: false });
+
+    component.save();
     tick();
 
     expect(open).toHaveBeenCalledWith('Het recht BOOKING_READ is nodig voor [BOOKING_UPDATE]', jasmine.anything(), jasmine.anything());
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    expect(component.hasUnsavedChanges()).toBe(true); // het concept blijft staan
   }));
 
   it('een systeemrol is alleen te bekijken: geen opslaan en een grijze matrix', fakeAsync(() => {
@@ -133,7 +153,8 @@ describe('RoleDetailComponent', () => {
     expect(el.querySelector('.locked-note')).not.toBeNull();
 
     component.onToggle({ authority: authorities[1], checked: true });
-    expect(roleAuthorityService.create).not.toHaveBeenCalled();
+    expect(component.changeCount()).toBe(0);
+    expect(component.hasUnsavedChanges()).toBe(false);
   }));
 
   it('zonder ROLEAUTHORITY_READ geen matrix en worden de koppelingen niet opgehaald', fakeAsync(() => {
@@ -144,16 +165,39 @@ describe('RoleDetailComponent', () => {
     expect(el.querySelector('app-role-authority-matrix')).toBeNull();
   }));
 
-  it('een nieuwe rol: alleen rollen die je helemaal mag uitdelen zijn een startpunt; opslaan gaat naar de nieuwe rol', fakeAsync(() => {
+  it('een nieuwe rol: meteen de matrix, leeg; alleen rollen die je helemaal mag uitdelen zijn een sjabloon', fakeAsync(() => {
+    const { component, el } = setup(null);
+
+    expect(el.querySelector('app-role-authority-matrix')).not.toBeNull();
+    expect(component.draft().size).toBe(0);
+    expect(component.templateCandidates().map((r) => r.roleId)).toEqual(['r-1', 'r-2']); // MANAGER bevat ORGANIZATION_READ
+  }));
+
+  it('een sjabloon vult alleen het concept; opslaan maakt de rol met die rechten en gaat terug naar de lijst', fakeAsync(() => {
     const { component } = setup(null);
 
-    expect(component.copyCandidates().map((r) => r.roleId)).toEqual(['r-1', 'r-2']); // MANAGER bevat ORGANIZATION_READ
+    component.form.controls.description.setValue('Stagiair');
+    void component.applyTemplate('r-2');
+    tick();
+    expect([...component.draft()]).toEqual(['BOOKING_READ']);
+    expect(roleService.create).not.toHaveBeenCalled();
 
-    component.form.setValue({ description: 'Stagiair', copyFrom: 'r-2' });
     component.save();
     tick();
 
-    expect(roleService.create).toHaveBeenCalledOnceWith({ description: 'Stagiair' }, 'r-2');
-    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/admin/roles', 'r-new']);
+    expect(roleService.create).toHaveBeenCalledOnceWith({ description: 'Stagiair', authorities: ['BOOKING_READ'] });
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/admin/roles']);
+  }));
+
+  it('een sjabloon over openstaande wijzigingen vraagt eerst; nee laat het concept staan', fakeAsync(() => {
+    const { component } = setup('r-1');
+    const confirm = spyOn(TestBed.inject(ConfirmService), 'confirm').and.resolveTo(false);
+    component.onToggle({ authority: authorities[1], checked: true });
+
+    void component.applyTemplate(null);
+    tick();
+
+    expect(confirm).toHaveBeenCalled();
+    expect([...component.draft()].sort()).toEqual(['BOOKING_READ', 'BOOKING_UPDATE']);
   }));
 });

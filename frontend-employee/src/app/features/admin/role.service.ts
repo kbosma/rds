@@ -19,11 +19,9 @@ export class RoleService {
     return this.api.getById<Role>(this.endpoint, id);
   }
 
-  /** Een eigen rol; met {@code copyFrom} krijgt hij de rechten van die rol (ook een systeemrol) als startpunt. */
-  create(role: Partial<Role>, copyFrom?: string) {
-    return copyFrom
-      ? this.http.post<Role>(`${environment.apiUrl}/${this.endpoint}`, role, { params: { copyFrom } })
-      : this.api.create<Role>(this.endpoint, role);
+  /** Een eigen rol, met {@code role.authorities} als zijn rechten (plus vereisten). */
+  create(role: Partial<Role>) {
+    return this.api.create<Role>(this.endpoint, role);
   }
 
   /** Uitdeelbare rechten die nieuw zijn sinds de organisatie ze voor het laatst bekeek. */
@@ -35,6 +33,7 @@ export class RoleService {
     return this.http.post<void>(`${environment.apiUrl}/${this.endpoint}/new-authorities/seen`, {});
   }
 
+  /** Naam en, met {@code role.authorities}, de rechten in één keer; de server slaat alleen het verschil op. */
   update(id: string, role: Partial<Role>) {
     return this.api.update<Role>(this.endpoint, id, role);
   }
