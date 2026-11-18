@@ -77,7 +77,7 @@ const CRUD = ['READ', 'CREATE', 'UPDATE', 'DELETE'] as const;
     </div>
 
     <ng-template #box let-authority let-label="label">
-      <span class="box" [attr.title]="titleOf(authority) | translate">
+      <span class="box" [class.not-yours]="!grantable().has(authority.description)" [attr.title]="titleOf(authority) | translate">
         <mat-checkbox [checked]="assigned().has(authority.description)"
                       [disabled]="!canChange(authority)"
                       [attr.data-authority]="authority.description"
@@ -101,7 +101,9 @@ const CRUD = ['READ', 'CREATE', 'UPDATE', 'DELETE'] as const;
     .matrix .cell { text-align: center; width: 90px; }
     .matrix .other { display: flex; flex-wrap: wrap; gap: 0 12px; }
     .none { color: var(--ui-text-muted, #9aa6af); }
-    .box { display: inline-flex; align-items: center; gap: 2px; }
+    .box { display: inline-flex; align-items: center; gap: 2px; border-radius: 4px; padding: 0 4px; }
+    /* Een recht dat de gebruiker zelf niet heeft (dus niet kan uitdelen): gearceerd grijs, duidelijk anders dan leeg. */
+    .box.not-yours { background: repeating-linear-gradient(135deg, var(--ui-line) 0 2px, transparent 2px 6px); opacity: .55; }
     .badge-new { background: var(--theme-accent); color: #1d2b36; font-size: 10px; padding: 1px 6px; border-radius: 8px; }
   `],
 })

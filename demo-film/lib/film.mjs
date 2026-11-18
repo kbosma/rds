@@ -114,6 +114,47 @@ export class Film {
     this.snapshots = 0;
     this.cursorAt = { x: 720, y: 450 };
     this.current = { step: null, text: null };
+    // Tijdlijn: wanneer elke stap begon en eindigde. Een gat tussen twee stappen is tijd waarin het script op de pagina
+    // wacht (laden, netwerk) en de kijker niets ziet gebeuren: dat zijn de "lange pauzes". Zie report().
+    this.t0 = Date.now();
+    this.steps = [];
+    for (const name of ['say', 'card', 'toast', 'image', 'keys', 'moveTo', 'click', 'focus', 'type', 'fill', 'choose']) {
+      const original = this[name].bind(this);
+      this[name] = async (...args) => {
+        const start = Date.now() - this.t0;
+        try {
+          return await original(...args);
+        } finally {
+          this.steps.push({ name, label: String(args[0]?.toString?.() ?? '').slice(0, 60), start, end: Date.now() - this.t0 });
+        }
+      };
+    }
+  }
+
+  /** Gaten tussen stappen (in ms) die langer zijn dan {@code minGapMs}: waar het filmpje stilstaat. */
+  gaps(minGapMs = 1200) {
+    // Stappen kunnen in elkaar zitten (click roept moveTo aan): meet vanaf het laatste einde tot nu toe.
+    const sorted = [...this.steps].sort((a, b) => a.start - b.start);
+    const result = [];
+    let last = sorted[0];
+    for (let i = 1; i < sorted.length; i++) {
+      const gap = sorted[i].start - last.end;
+      if (gap >= minGapMs) {
+        result.push({ at: Math.round(last.end / 100) / 10, gapMs: gap, after: `${last.name} ${last.label}`, before: `${sorted[i].name} ${sorted[i].label}` });
+      }
+      if (sorted[i].end > last.end) last = sorted[i];
+    }
+    return result;
+  }
+
+  /** Schrijft de gaten naar een bestand en de console. */
+  async report(path, minGapMs = 1200) {
+    const { writeFile } = await import('node:fs/promises');
+    const gaps = this.gaps(minGapMs);
+    const lines = gaps.map((g) => `${String(g.at).padStart(6)}s  ${String(g.gapMs).padStart(5)} ms stil  na [${g.after}]  vóór [${g.before}]`);
+    await writeFile(path, lines.join('\n') + '\n');
+    console.log(`Stille stukken langer dan ${minGapMs} ms: ${gaps.length} (zie ${path})`);
+    return gaps;
   }
 
   /** Eén keer aanroepen vóór de eerste navigatie. */
@@ -140,8 +181,8 @@ export class Film {
     this.current = { step, text };
     await this.page.evaluate(({ step, text }) => window.__film.caption(step, text), this.current);
     await this.snapshot(step);
-    // ~ 14 tekens per seconde lezen, met een minimum.
-    await this.wait(Math.max(minMs, (text.length / 14) * 1000));
+    // ~ 16 tekens per seconde lezen, met een minimum.
+    await this.wait(Math.max(minMs, (text.length / 16) * 1000));
   }
 
   async snapshot(label) {
@@ -157,7 +198,7 @@ export class Film {
   }
 
   /** Titelkaart over het hele scherm. */
-  async card(title, text, ms = 3500) {
+  async card(title, text, ms = 3000) {
     await this.page.evaluate(({ title, text }) => window.__film.card(title, text), { title, text });
     await this.wait(600);
     await this.snapshot('kaart');

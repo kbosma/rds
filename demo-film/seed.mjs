@@ -11,7 +11,6 @@ import { API, DEMO, login, api } from './lib/api.mjs';
 
 const ADMIN = { userName: 'jan.vanbergen', password: 'password123' };
 export const MANAGER = { userName: 'sanne.visser', password: 'Demo-Zonnig-2027' };
-const ROLE_MANAGER = 'c1000000-0000-0000-0000-000000000003';
 
 const money = (path) => '${' + path + '?string("#,##0.00")}';
 
@@ -69,18 +68,21 @@ async function main() {
 
   // --- organisatie en manager (als ADMIN) ---
   const org = await api(admin, 'POST', '/organizations', { name: 'Zonnige Reizen', emailFrom: 'info@zonnigereizen.nl' });
-  const person = await api(admin, 'POST', '/persons', { firstname: 'Sanne', prefix: null, lastname: 'Visser', organizationId: org.organizationId });
+  const person = await api(admin, 'POST', '/persons', { firstname: 'Sanne', prefix: null, lastname: 'Visser', tenantOrganization: org.organizationId });
   const account = await api(admin, 'POST', '/accounts', {
     userName: MANAGER.userName, password: MANAGER.password, personId: person.persoonId,
     locked: false, mustChangePassword: false, expiresAt: '2030-12-31T23:59:00',
   });
-  await api(admin, 'POST', '/account-roles', { accountId: account.accountId, roleId: ROLE_MANAGER });
+  // Elke organisatie heeft haar eigen, vergrendelde MANAGER-rol (aangemaakt met de organisatie): op systeemsleutel zoeken.
+  const managerRole = (await api(admin, 'GET', `/roles?organizationId=${org.organizationId}`)).find((r) => r.systemKey === 'MANAGER');
+  if (!managerRole) throw new Error('De nieuwe organisatie heeft geen MANAGER-rol');
+  await api(admin, 'POST', '/account-roles', { accountId: account.accountId, roleId: managerRole.roleId });
 
   // --- alles hierna als de manager van Zonnige Reizen (tenant = haar organisatie) ---
   const m = await login(MANAGER);
 
   await api(m, 'POST', '/organization-themes', {
-    organizationId: org.organizationId, primaryColor: '#c2571a', accentColor: '#f2a541', cardTitleColor: '#8a3b10',
+    tenantOrganization: org.organizationId, primaryColor: '#c2571a', accentColor: '#f2a541', cardTitleColor: '#8a3b10',
   });
 
   const supplier = await api(m, 'POST', '/suppliers', { key: 'ISTRAVILLAS', name: 'Istra Villas d.o.o.' });

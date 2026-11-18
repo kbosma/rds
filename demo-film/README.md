@@ -7,6 +7,7 @@ Video's die in de echte schermen van RDS (medewerkersapp en boekerportaal) zijn 
 | Van aanvraag tot afgeronde reis (prospect → afgerond) | `record.mjs` → `out/boekingsfilmpje.webm` | hoofdstuk 12 |
 | Templates maken (e-mail en Word/PDF) | `record-templates.mjs` → `out/templatesfilmpje.webm` | hoofdstuk 11 |
 | Je organisatie inrichten (huisstijl, personen, accounts, stamgegevens, instellingen) | `record-beheer.mjs` → `out/beheerfilmpje.webm` | hoofdstuk 15 |
+| Eigen rollen (rechtenmatrix, vereisten, alleen uitdelen wat je zelf hebt) | `record-rollen.mjs` → `out/rollenfilmpje.webm` | hoofdstuk 15.5 |
 
 De video's staan niet in git (te groot; `docs/gebruikershandleiding/video/` staat in `.gitignore`). Kopieer ze na het
 opnemen naar die map, of verspreid ze apart.
@@ -54,6 +55,7 @@ Eenmalig: `npm install` en `npx playwright install chromium` in deze map.
    cd demo-film && npm run seed && npm run record
    ```
    Het filmpje komt in `demo-film/out/boekingsfilmpje.webm`. Kopieer het naar `docs/gebruikershandleiding/video/`.
+   Het rollenfilmpje: `npm run record:rollen` (maakt buiten beeld medewerker Daan Mulder aan).
    Het templatefilmpje: `npm run record:templates` (ook op een verse, geseede database; het maakt buiten beeld zelf
    een voorbeeldboeking). Voor de PDF in beeld gebruikt het `sips` (macOS).
    Het beheerfilmpje: `npm run record:beheer` (op een verse, geseede database; het zet buiten beeld de huisstijl terug
@@ -62,7 +64,14 @@ Eenmalig: `npm install` en `npx playwright install chromium` in deze map.
 Opnieuw opnemen kan alleen op een lege database (de seed maakt de organisatie één keer aan en elk script verwacht één
 klant Anna de Vries). Begin dus voor elk filmpje met een nieuwe `rdsdemo` en een herstart van de backend.
 
-Handig bij het aanpassen: `PACE=0.4 npm run record` (sneller) en `HEADED=1 npm run record` (browser zichtbaar).
+Handig bij het aanpassen: `PACE=0.4 npm run record` (sneller), `HEADED=1 npm run record` (browser zichtbaar) en
+`SNAPSHOTS=1` (een screenshot bij elke ondertitel). Neem de definitieve versie op zonder `SNAPSHOTS`: de screenshots
+kosten tijd en geven haperingen.
+
+**Stille stukken.** Na elke opname staat in `out/…/pauzes.txt` waar het beeld langer dan 1,2 seconde stilstaat
+zonder dat er iets gebeurt (het script wacht dan op de pagina). Houd die lijst kort: zet een ondertitel neer terwijl
+RDS werkt, of maak een vaste wachttijd korter. Ondertitels blijven staan zo lang als nodig is om ze te lezen
+(± 16 tekens per seconde).
 
 ## Draaiboek boekingsfilmpje
 
@@ -94,3 +103,12 @@ Handig bij het aanpassen: `PACE=0.4 npm run record` (sneller) en `HEADED=1 npm r
 5. Activiteit Wijnproeverij in Motovun (tour).
 6. Instellingen: offerte- en betaalmail, voorschot van 30 naar 25 procent.
 7. Daan logt in, kiest een eigen wachtwoord en ziet het menu van een medewerker.
+
+## Draaiboek rollenfilmpje
+
+1. Systeemrollen: MANAGER en EMPLOYEE met slotje en aantal accounts; de matrix van EMPLOYEE is grijs.
+2. Sanne maakt "Boekhouder": Betalingen wijzigen aanvinken haalt betalingen en boekingen lezen mee; lezen weghalen
+   kan niet zolang wijzigen aan staat (melding van RDS); de geschiedenis van de rol.
+3. "Teamleider" als kopie van EMPLOYEE, plus rollen beheren en toewijzen; Daan krijgt die rol.
+4. Daan: MANAGER en Boekhouder alleen te bekijken (boven zijn niveau); bij "Kopie van" alleen EMPLOYEE en Teamleider;
+   gearceerde vakjes in de matrix; MANAGER staat niet in de lijst bij zijn eigen account.

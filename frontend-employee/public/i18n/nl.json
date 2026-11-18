@@ -639,7 +639,7 @@
       "new": "Nieuw",
       "notYours": "Dit recht heb je zelf niet, dus je kunt het niet uitdelen.",
       "hasRequirements": "Aanzetten zet ook de rechten aan die dit recht nodig heeft.",
-      "hint": "Vink aan wat deze rol mag. Rechten die nodig zijn (bijvoorbeeld lezen bij wijzigen) gaan automatisch mee; grijze vakjes zijn rechten die je zelf niet hebt."
+      "hint": "Vink aan wat deze rol mag. Rechten die nodig zijn (bijvoorbeeld lezen bij wijzigen) gaan automatisch mee; gearceerde vakjes zijn rechten die je zelf niet hebt (die kun je niet uitdelen)."
     },
     "log": {
       "ROLE_CREATED": "Rol aangemaakt",

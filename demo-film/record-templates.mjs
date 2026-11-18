@@ -58,6 +58,7 @@ async function main() {
     await page.screenshot({ path: `${OUT_DIR}fout.png` }).catch(() => {});
     throw err;
   } finally {
+    await film.report(`${OUT_DIR}pauzes.txt`).catch(() => {});
     await context.close();
     await browser.close();
   }
@@ -145,19 +146,24 @@ async function scene2SendEmail(page, film, booking) {
   await film.click(d.getByRole('button', { name: /genereer voorbeeld/i }));
   await d.locator('iframe').waitFor();
   await film.moveTo(d.locator('iframe'));
-  await film.wait(2500);
+  await film.wait(1600);
   await film.say('Versturen', 'Klopt het? Dan Verstuur.', { minMs: 1000 });
   await film.click(d.getByRole('button', { name: /verstuur/i }));
-  await film.wait(1500);
-  if (await d.isVisible()) await page.keyboard.press('Escape');
-  await d.waitFor({ state: 'detached' }).catch(() => {});
+  // Versturen vraagt eerst om bevestiging (een tweede dialoog); daarna blijft het voorbeeld open tot Sluiten.
+  const confirm = page.locator('mat-dialog-container').nth(1);
+  await confirm.waitFor();
+  await film.click(confirm.locator('mat-dialog-actions button').last());
+  await confirm.waitFor({ state: 'detached' });
+  const preview = page.locator('mat-dialog-container').first();
+  await film.click(preview.getByRole('button', { name: /sluiten/i }));
+  await preview.waitFor({ state: 'detached' });
   await film.moveTo(messages);
   await film.say('Versturen', 'De verstuurde mail staat bij de boeking, zodat iedereen kan zien wat er naar de klant is gegaan.');
 
   const bookingUrl = page.url();
   await page.goto(`${MAILBOX}?to=${encodeURIComponent(ANNA.email)}`);
   await film.say('Bij Anna', 'En zo ziet Anna hem in haar mailbox.');
-  await film.wait(2000);
+  await film.wait(1200);
   await page.goto(bookingUrl);
 }
 
@@ -222,9 +228,9 @@ async function scene4GenerateDocument(page, film, booking, token) {
   await film.click(d.locator('mat-button-toggle').filter({ hasText: /pdf/i }).first());
   await film.say('Document', 'Met dit vinkje ziet Anna het document ook in haar reisportaal.', { minMs: 1200 });
   await film.click(d.getByRole('checkbox', { name: /boekerportaal/i }));
+  await film.say('Document', 'RDS vult de template met de gegevens van de boeking en maakt de PDF.', { minMs: 600 });
   await film.click(d.locator('mat-dialog-actions button').last());
   await d.waitFor({ state: 'detached' });
-  await film.wait(1200);
   await film.moveTo(messages);
   await film.say('Document', 'Het document staat bij de boeking, met alle gegevens van Anna en Mark ingevuld.');
 

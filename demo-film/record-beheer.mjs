@@ -62,6 +62,7 @@ async function main() {
     await page.screenshot({ path: `${OUT_DIR}fout.png` }).catch(() => {});
     throw err;
   } finally {
+    await film.report(`${OUT_DIR}pauzes.txt`).catch(() => {});
     await context.close();
     await browser.close();
   }
@@ -77,7 +78,7 @@ async function resetThemeToDefault() {
   const [theme] = await api(token, 'GET', '/organization-themes');
   if (!theme) throw new Error('Geen huisstijl gevonden; draai eerst `npm run seed` op een lege database.');
   await api(token, 'PUT', `/organization-themes/${theme.organizationThemeId}`, {
-    organizationId: theme.organizationId, logoUrl: null, ...RDS_DEFAULT_THEME,
+    tenantOrganization: theme.tenantOrganization, logoUrl: null, ...RDS_DEFAULT_THEME,
   });
 }
 
@@ -259,7 +260,7 @@ async function scene7NewColleague(page, film) {
   await film.moveTo(navLink(page, 'Boekingen'));
   await film.say('Menu', 'Daan werkt in de kleuren van Zonnige Reizen. Als medewerker ziet hij alleen wat bij zijn rol hoort: '
     + 'boekingen, boekers en betalingen. Het organisatiebeheer ziet hij niet.');
-  await film.wait(1500);
+  await film.wait(1000);
 }
 
 main().catch((err) => {

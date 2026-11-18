@@ -68,6 +68,7 @@ async function main() {
     await page.screenshot({ path: `${OUT_DIR}fout.png` }).catch(() => {});
     throw err;
   } finally {
+    await film.report(`${OUT_DIR}pauzes.txt`).catch(() => {});
     await context.close();
     await browser.close();
     await fetch(`${DEMO}/clock`, { method: 'DELETE' }).catch(() => {});
@@ -205,12 +206,12 @@ async function scene3Quote(page, film) {
   await page.locator('app-booking-status-badge').filter({ hasText: /offerte/i }).first().waitFor();
   await film.say('Offerte', 'De status is nu Offerte. De PDF en de verstuurde mail staan bij de boeking, onder Berichten en documenten.');
   await film.moveTo(page.locator('app-booking-messages-card'));
-  await film.wait(1500);
+  await film.wait(900);
 
   const bookingUrl = page.url();
   await page.goto(`${MAILBOX}?to=${encodeURIComponent(KLANT.email)}`);
   await film.say('Bij Anna', 'Zo komt de offerte binnen bij Anna, met de PDF als bijlage.');
-  await film.wait(1500);
+  await film.wait(1000);
   await page.goto(bookingUrl);
   await page.locator('app-booking-status-badge').first().waitFor();
 }
@@ -253,7 +254,7 @@ async function scene5Portal(page, film, bookingNumber) {
   await film.type(page.locator('input[name="code"]'), mail.code, { delay: 120 });
   await film.click(page.locator('button[type="submit"]'));
   await page.waitForURL((url) => !url.pathname.includes('verify') && !url.pathname.includes('login'));
-  await film.wait(1500);
+  await film.wait(600);
   await film.say('Reisportaal', 'Anna ziet haar reis: het verblijf, de boottocht, de documenten en wat er nog betaald moet worden.');
 
   await payNext(page, film, 'Ze betaalt het voorschot.');
@@ -274,7 +275,7 @@ async function payNext(page, film, text) {
   await film.say('Betalen', 'Ze komt op de betaalpagina. (In dit filmpje een nagebootste pagina: er gaat geen echt geld over.)');
   await film.click(page.getByRole('button', { name: 'Betalen' }));
   await page.waitForURL((url) => url.origin === PORTAL);
-  await film.wait(2500);
+  await film.wait(1200);
 }
 
 async function scene6Paid(page, film, bookingUrl) {
@@ -309,7 +310,7 @@ async function scene7Travel(page, film) {
   await film.say('Afgerond', 'Zonder openstaande meldingen rondt RDS de boeking automatisch af.');
   await film.click(page.getByRole('button', { name: 'Statusgeschiedenis' }));
   await film.say('Afgerond', 'In de statusgeschiedenis is elke stap terug te zien: wie, wanneer en waarom.');
-  await film.wait(1500);
+  await film.wait(1200);
   await page.keyboard.press('Escape');
 }
 
