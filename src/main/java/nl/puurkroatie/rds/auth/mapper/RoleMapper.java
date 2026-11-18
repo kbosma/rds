@@ -11,5 +11,6 @@ public interface RoleMapper {
     /** Zonder oordeel over wijzigbaarheid ({@code editable} leeg); de service vult dat in waar het ertoe doet. */
     @Mapping(target = "editable", ignore = true)
     @Mapping(target = "accountCount", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
     RoleDto toDto(Role entity);
 }

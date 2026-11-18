@@ -61,4 +61,21 @@ describe('RoleAuthorityMatrixComponent', () => {
 
     expect(events).toEqual([{ authority: authorities[0], checked: true }]);
   });
+
+  it('een aangevinkt recht dat een ander aangevinkt recht nodig heeft, is niet los uit te vinken', () => {
+    const withRequirement: Authority[] = authorities.map((a) =>
+      a.description === 'BOOKING_UPDATE' ? { ...a, requires: ['BOOKING_READ'] } : a);
+    const fixture = TestBed.createComponent(RoleAuthorityMatrixComponent);
+    fixture.componentRef.setInput('authorities', withRequirement);
+    fixture.componentRef.setInput('grantable', new Set(['BOOKING_READ', 'BOOKING_UPDATE']));
+    fixture.componentRef.setInput('assigned', new Set(['BOOKING_READ', 'BOOKING_UPDATE']));
+    fixture.componentRef.setInput('editable', true);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    expect(component.canChange(withRequirement[0])).toBe(false);
+    expect(component.titleOf(withRequirement[0])).toBe('roles.matrix.neededBy');
+    expect(component.titleParams(withRequirement[0])).toEqual({ names: 'BOOKING_UPDATE' });
+    expect(component.canChange(withRequirement[1])).toBe(true);
+  });
 });

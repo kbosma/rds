@@ -1,17 +1,23 @@
 package nl.puurkroatie.rds.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import nl.puurkroatie.rds.common.Default;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
- * Een rol. Bij aanmaken en hernoemen telt alleen {@code description}; organisatie en systeemsleutel bepaalt de server.
- * {@code editable}: mag de ingelogde gebruiker deze rol wijzigen (eigen rol, onder zijn niveau)?
+ * Een rol. Bij aanmaken en wijzigen levert de client {@code description} en optioneel {@code authorities} aan;
+ * organisatie en systeemsleutel bepaalt de server. {@code editable}: mag de ingelogde gebruiker deze rol wijzigen
+ * (eigen rol, onder zijn niveau)?
+ * <p>
+ * {@code authorities} is de gewenste, volledige set rechten (namen). De server slaat alleen het verschil met de
+ * huidige set op. Leeg laten ({@code null}) laat de rechten ongemoeid; in antwoorden staat het veld er niet in.
  */
 public class RoleDto {
 
@@ -31,9 +37,13 @@ public class RoleDto {
     private final LocalDateTime modifiedAt;
     private final UUID modifiedBy;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private final List<String> authorities;
+
     @Default
     public RoleDto(UUID roleId, String description, UUID tenantOrganization, String systemKey, Boolean editable,
-                   Long accountCount, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy) {
+                   Long accountCount, LocalDateTime createdAt, UUID createdBy, LocalDateTime modifiedAt, UUID modifiedBy,
+                   List<String> authorities) {
         this.roleId = roleId;
         this.accountCount = accountCount;
         this.description = description;
@@ -44,17 +54,18 @@ public class RoleDto {
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
+        this.authorities = authorities == null ? null : List.copyOf(authorities);
     }
 
-    /** Wat een client mag aanleveren: alleen de naam. */
+    /** Wat een client mag aanleveren: de naam en eventueel de gewenste rechten. */
     @JsonCreator
-    public RoleDto(@JsonProperty("description") String description) {
-        this(null, description, null, null, null, null, null, null, null, null);
+    public RoleDto(@JsonProperty("description") String description, @JsonProperty("authorities") List<String> authorities) {
+        this(null, description, null, null, null, null, null, null, null, null, authorities);
     }
 
     public RoleDto withEditable(boolean editable, long accountCount) {
         return new RoleDto(roleId, description, tenantOrganization, systemKey, editable, accountCount,
-                createdAt, createdBy, modifiedAt, modifiedBy);
+                createdAt, createdBy, modifiedAt, modifiedBy, authorities);
     }
 
     public UUID getRoleId() {
@@ -95,5 +106,9 @@ public class RoleDto {
 
     public UUID getModifiedBy() {
         return modifiedBy;
+    }
+
+    public List<String> getAuthorities() {
+        return authorities;
     }
 }

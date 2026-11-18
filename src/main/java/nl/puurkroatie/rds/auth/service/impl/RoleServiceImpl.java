@@ -13,10 +13,12 @@ import nl.puurkroatie.rds.auth.repository.AuthorityRepository;
 import nl.puurkroatie.rds.auth.repository.OrganizationRepository;
 import nl.puurkroatie.rds.auth.repository.RoleAuthorityRepository;
 import nl.puurkroatie.rds.auth.repository.RoleRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.auth.service.AuthorityService;
 import nl.puurkroatie.rds.auth.service.AuthorizationLogService;
 import nl.puurkroatie.rds.auth.service.AuthorizationRules;
+import nl.puurkroatie.rds.auth.service.RoleAuthorityService;
 import nl.puurkroatie.rds.auth.service.RoleService;
 import nl.puurkroatie.rds.auth.service.SystemRoles;
 import nl.puurkroatie.rds.common.ConflictException;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,12 +48,13 @@ public class RoleServiceImpl implements RoleService {
     private final AuthorityRepository authorityRepository;
     private final OrganizationRepository organizationRepository;
     private final AuthorityService authorityService;
+    private final RoleAuthorityService roleAuthorityService;
     private final Clock clock;
 
     public RoleServiceImpl(RoleRepository roleRepository, AccountRoleRepository accountRoleRepository, RoleMapper roleMapper,
                            AuthorizationRules rules, AuthorizationLogService log, RoleAuthorityRepository roleAuthorityRepository,
                            AuthorityRepository authorityRepository, OrganizationRepository organizationRepository,
-                           AuthorityService authorityService, Clock clock) {
+                           AuthorityService authorityService, RoleAuthorityService roleAuthorityService, Clock clock) {
         this.roleRepository = roleRepository;
         this.accountRoleRepository = accountRoleRepository;
         this.roleMapper = roleMapper;
@@ -60,6 +64,7 @@ public class RoleServiceImpl implements RoleService {
         this.authorityRepository = authorityRepository;
         this.organizationRepository = organizationRepository;
         this.authorityService = authorityService;
+        this.roleAuthorityService = roleAuthorityService;
         this.clock = clock;
     }
 
@@ -88,19 +93,35 @@ public class RoleServiceImpl implements RoleService {
             roleAuthorityRepository.save(new RoleAuthority(saved, authorityRepository.findByDescription(authority).orElseThrow()));
             log.authorityEvent(Action.AUTHORITY_ADDED, saved, authority, "gekopieerd van " + source.getDescription());
         }
+        if (dto.getAuthorities() != null) {
+            roleAuthorityService.replaceAuthorities(saved.getRoleId(), new HashSet<>(dto.getAuthorities()));
+        }
         return toDto(saved, grantable);
     }
 
     @Override
     public RoleDto update(UUID id, RoleDto dto) {
-        Role existing = findEditable(id);
+        Role role = findEditable(id);
         String name = dto.getDescription().trim();
-        if (!name.equalsIgnoreCase(existing.getDescription())) {
-            verifyNameAvailable(existing.getTenantOrganization(), name);
+        boolean renamed = !name.equals(role.getDescription());
+        // Eerst alles controleren, dan pas schrijven: de naam vóór de rechten, de hernoeming als laatste.
+        if (renamed) {
+            if (!TenantContext.hasAuthority(Authorities.ROLE_UPDATE)) {
+                throw new AccessDeniedException("Je mag rollen niet hernoemen");
+            }
+            if (!name.equalsIgnoreCase(role.getDescription())) {
+                verifyNameAvailable(role.getTenantOrganization(), name);
+            }
         }
-        Role saved = roleRepository.save(existing.renamed(name));
-        log.roleEvent(Action.ROLE_RENAMED, saved, existing.getDescription() + " → " + name);
-        return toDto(saved, rules.grantable());
+        if (dto.getAuthorities() != null) {
+            roleAuthorityService.replaceAuthorities(id, new HashSet<>(dto.getAuthorities()));
+        }
+        if (renamed) {
+            String oldName = role.getDescription();
+            role = roleRepository.save(role.renamed(name));
+            log.roleEvent(Action.ROLE_RENAMED, role, oldName + " → " + name);
+        }
+        return toDto(role, rules.grantable());
     }
 
     @Override

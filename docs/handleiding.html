@@ -305,9 +305,9 @@ flowchart TD
 <h3 id="h-2-10-de-configuratie-wijzigen">2.10 De configuratie wijzigen</h3>
 <div class="tablewrap"><table>
 <thead><tr><th>Wat wil je</th><th>Hoe</th><th>Opmerkingen</th></tr></thead><tbody>
-<tr><th scope="row">Een authority aan een rol hangen of afnemen</th><td><em>Rollen → rol openen → matrix</em></td><td>alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. Systeemrollen liggen vast.</td></tr>
+<tr><th scope="row">Een authority aan een rol hangen of afnemen</th><td><em>Rollen → rol openen → matrix → Opslaan</em></td><td>alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. De matrix is een concept: pas <em>Opslaan</em> bewaart naam en rechten in één keer (alleen het verschil, alles of niets); <em>Annuleren</em> laat alles zoals het was. Systeemrollen liggen vast.</td></tr>
 <tr><th scope="row">Een rol aan een account geven</th><td><em>Accounts → account openen → Rol toevoegen</em></td><td>zie §2.9</td></tr>
-<tr><th scope="row">Een nieuwe rol maken</th><td><em>Rollen → Nieuwe rol</em> (<code>ROLE_CREATE</code>, o.a. MANAGER)</td><td>leeg, of als kopie van een rol waarvan je alle rechten zelf hebt</td></tr>
+<tr><th scope="row">Een nieuwe rol maken</th><td><em>Rollen → Nieuwe rol</em> (<code>ROLE_CREATE</code>, o.a. MANAGER)</td><td>hetzelfde scherm als bewerken; kies eventueel een <em>sjabloon</em> (een rol waarvan je alle rechten zelf hebt). Het sjabloon vult alleen de matrix; er bestaat pas een rol na <em>Opslaan</em></td></tr>
 <tr><th scope="row">Een nieuwe authority</th><td>alleen via een Flyway-migratie</td><td>authorities liggen vast: ze doen pas iets als de code ze controleert. Zie <a href="security.html">security.md</a>.</td></tr>
 </tbody></table></div>
 <p><strong>Wanneer werkt een wijziging?</strong> Direct (sinds V26). Het token draagt een rechtenversie; verandert er iets aan de rechten van een account, dan weigert de backend het oude token (<code>401 AUTHZ_CHANGED</code>) en haalt de app vanzelf een nieuw token op. Wie gelockt of verlopen is, wordt uitgelogd.</p>

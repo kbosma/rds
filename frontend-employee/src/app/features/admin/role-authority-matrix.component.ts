@@ -3,6 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Authority } from '../../shared/models';
+import { neededBy } from './authority-requirements';
 
 /** Een wijziging in de matrix: deze authority aan (true) of uit (false). */
 export interface AuthorityToggle {
@@ -31,8 +32,9 @@ const CRUD = ['READ', 'CREATE', 'UPDATE', 'DELETE'] as const;
 
 /**
  * De rechten van een rol als matrix: per onderwerp een rij, met Lezen/Aanmaken/Wijzigen/Verwijderen en Overig.
- * Alleen wat de gebruiker zelf mag uitdelen is aan te vinken; de rest is zichtbaar maar grijs. Het vinkje zelf is
- * gemak: de backend controleert alles (en vinkt vereisten mee aan).
+ * Alleen wat de gebruiker zelf mag uitdelen is aan te vinken; de rest is zichtbaar maar gearceerd. Een recht dat een
+ * ander aangevinkt recht nodig heeft, is niet los uit te vinken. De matrix toont alleen; de ouder houdt het concept
+ * bij en de backend controleert bij opslaan alles nog eens.
  *
  * Zie docs/voorstel-eigen-rollen.md, §7.2.
  */
@@ -77,7 +79,7 @@ const CRUD = ['READ', 'CREATE', 'UPDATE', 'DELETE'] as const;
     </div>
 
     <ng-template #box let-authority let-label="label">
-      <span class="box" [class.not-yours]="!grantable().has(authority.description)" [attr.title]="titleOf(authority) | translate">
+      <span class="box" [class.not-yours]="!grantable().has(authority.description)" [attr.title]="titleOf(authority) | translate: titleParams(authority)">
         <mat-checkbox [checked]="assigned().has(authority.description)"
                       [disabled]="!canChange(authority)"
                       [attr.data-authority]="authority.description"
@@ -123,6 +125,10 @@ export class RoleAuthorityMatrixComponent {
 
   readonly crud = CRUD;
 
+  private readonly byName = computed(() => new Map(this.authorities().map((a) => [a.description, a] as const)));
+  /** Per aangevinkt recht: welke andere aangevinkte rechten het nodig hebben. */
+  private readonly neededBy = computed(() => neededBy(this.assigned(), this.byName()));
+
   /**
    * Rijen per onderwerp. Een onderwerp waar de gebruiker niets van mag uitdelen en dat de rol niet heeft, verdwijnt
    * (bijv. platformbeheer voor een klant): dat kan hier toch niemand aanzetten.
@@ -157,12 +163,22 @@ export class RoleAuthorityMatrixComponent {
   }
 
   canChange(authority: Authority): boolean {
-    return this.editable() && this.grantable().has(authority.description);
+    return this.editable() && this.grantable().has(authority.description) && !this.isNeeded(authority);
   }
 
   titleOf(authority: Authority): string {
     if (!this.grantable().has(authority.description)) return 'roles.matrix.notYours';
+    if (this.isNeeded(authority)) return 'roles.matrix.neededBy';
     return authority.requires?.length ? 'roles.matrix.hasRequirements' : '';
+  }
+
+  titleParams(authority: Authority): { names: string } {
+    return { names: (this.neededBy().get(authority.description) ?? []).join(', ') };
+  }
+
+  /** Aangevinkt en nodig voor een ander aangevinkt recht. */
+  private isNeeded(authority: Authority): boolean {
+    return this.assigned().has(authority.description) && this.neededBy().has(authority.description);
   }
 
   domainLabel(domain: string): string {

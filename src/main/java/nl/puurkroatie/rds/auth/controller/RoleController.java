@@ -65,8 +65,9 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    /** Hernoemen en/of de rechten zetten; de service controleert welk recht elk deel vraagt. */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_UPDATE', 'ROLEAUTHORITY_CREATE', 'ROLEAUTHORITY_DELETE')")
     public ResponseEntity<RoleDto> update(@PathVariable UUID id, @RequestBody @Valid RoleDto dto) {
         RoleDto updated = roleService.update(id, dto);
         return ResponseEntity.ok(updated);

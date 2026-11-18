@@ -12,6 +12,7 @@ import nl.puurkroatie.rds.auth.mapper.RoleMapper;
 import nl.puurkroatie.rds.auth.repository.AuthorityRepository;
 import nl.puurkroatie.rds.auth.repository.RoleAuthorityRepository;
 import nl.puurkroatie.rds.auth.repository.RoleRepository;
+import nl.puurkroatie.rds.auth.security.Authorities;
 import nl.puurkroatie.rds.auth.security.TenantContext;
 import nl.puurkroatie.rds.common.ConflictException;
 import org.springframework.security.access.AccessDeniedException;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -113,6 +116,76 @@ public class RoleAuthorityService {
         }
         roleAuthorityRepository.delete(link);
         log.authorityEvent(Action.AUTHORITY_REMOVED, role, name, null);
+    }
+
+    /**
+     * Zet de rechten van de rol op {@code desired}, met hun vereisten. Alleen het verschil met de huidige set wordt
+     * opgeslagen en gelogd (één regel per toegevoegd of weggehaald recht). Alles of niets: bij een fout blijft de rol
+     * zoals hij was.
+     * <ul>
+     *   <li>Een vereiste die niet in {@code desired} staat, komt er vanzelf bij ("vereist voor ...").</li>
+     *   <li>Een recht weghalen dat een ander gewenst recht nodig heeft: 409.</li>
+     *   <li>Toevoegen vraagt ROLEAUTHORITY_CREATE en alleen rechten die je zelf mag uitdelen; weghalen vraagt
+     *       ROLEAUTHORITY_DELETE (403).</li>
+     * </ul>
+     */
+    public void replaceAuthorities(UUID roleId, Set<String> desired) {
+        Role role = findChangeableRole(roleId);
+        Map<String, Authority> known = new LinkedHashMap<>();
+        for (Authority authority : authorityRepository.findAll()) {
+            known.put(authority.getDescription(), authority);
+        }
+        List<String> unknown = desired.stream().filter(name -> !known.containsKey(name)).sorted().toList();
+        if (!unknown.isEmpty()) {
+            throw new EntityNotFoundException("Onbekende rechten: " + unknown);
+        }
+
+        Map<String, Set<String>> requirements = rules.requirements();
+        Set<String> current = rules.roleAuthorities(roleId);
+        // Gewenst plus vereisten; per vereiste onthouden voor welk gewenst recht hij nodig is (voor het logboek).
+        Map<String, String> requiredFor = new LinkedHashMap<>();
+        for (String name : desired.stream().sorted().toList()) {
+            for (String required : rules.requiredClosure(name, requirements)) {
+                if (!desired.contains(required)) {
+                    requiredFor.putIfAbsent(required, name);
+                }
+            }
+        }
+        Set<String> target = new HashSet<>(desired);
+        target.addAll(requiredFor.keySet());
+
+        List<String> blocked = current.stream()
+                .filter(name -> !desired.contains(name) && requiredFor.containsKey(name))
+                .sorted()
+                .toList();
+        if (!blocked.isEmpty()) {
+            throw new ConflictException("Het recht " + String.join(", ", blocked) + " is nodig voor "
+                    + blocked.stream().map(requiredFor::get).distinct().sorted().toList() + "; haal die eerst weg");
+        }
+
+        List<String> added = target.stream().filter(name -> !current.contains(name)).sorted().toList();
+        List<String> removed = current.stream().filter(name -> !target.contains(name)).sorted().toList();
+        if (!added.isEmpty() && !TenantContext.hasAuthority(Authorities.ROLEAUTHORITY_CREATE)) {
+            throw new AccessDeniedException("Je mag geen rechten aan rollen geven");
+        }
+        if (!removed.isEmpty() && !TenantContext.hasAuthority(Authorities.ROLEAUTHORITY_DELETE)) {
+            throw new AccessDeniedException("Je mag geen rechten van rollen afhalen");
+        }
+        Set<String> grantable = rules.grantable();
+        List<String> notYours = added.stream().filter(name -> !grantable.contains(name)).toList();
+        if (!notYours.isEmpty()) {
+            throw new AccessDeniedException("Je kunt alleen rechten uitdelen die je zelf hebt: " + notYours);
+        }
+
+        for (String name : removed) {
+            roleAuthorityRepository.deleteById(new RoleAuthorityId(roleId, known.get(name).getAuthorityId()));
+            log.authorityEvent(Action.AUTHORITY_REMOVED, role, name, null);
+        }
+        for (String name : added) {
+            roleAuthorityRepository.save(new RoleAuthority(role, known.get(name)));
+            String reason = requiredFor.get(name);
+            log.authorityEvent(Action.AUTHORITY_ADDED, role, name, reason == null ? null : "vereist voor " + reason);
+        }
     }
 
     /** Eigen rol van de eigen organisatie (anders 404), geen systeemrol en onder het eigen niveau (anders 403). */

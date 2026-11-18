@@ -13,11 +13,4 @@ export class RoleAuthorityService {
     return this.http.get<RoleAuthority[]>(this.baseUrl);
   }
 
-  create(roleId: string, authorityId: string): Observable<RoleAuthority> {
-    return this.http.post<RoleAuthority>(this.baseUrl, { roleId, authorityId });
-  }
-
-  delete(roleId: string, authorityId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${roleId}/${authorityId}`);
-  }
 }

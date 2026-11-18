@@ -44,7 +44,9 @@
     "saveError": "Saving failed",
     "deleteBlocked": "Cannot be deleted: documents or payments are linked to it. They are kept as history.",
     "noResults": "Nothing found. Adjust your search or filters.",
-    "noAccess": "You do not have access to this page."
+    "noAccess": "You do not have access to this page.",
+    "unsavedChanges": "You have changes that have not been saved. Discard them?",
+    "discardChanges": "Discard"
   },
   "app": {
     "title": "RDS",
@@ -621,9 +623,6 @@
     "systemRoleLocked": "This is a system role: its content is fixed and comes with RDS. Need something else? Create your own role.",
     "aboveYourLevel": "This role contains rights you do not have yourself, so you cannot change it.",
     "alsoAdds": "requires:",
-    "copyFrom": "Copy of",
-    "startEmpty": "Start empty",
-    "copyFromHint": "The new role starts with the rights of this role. Only roles whose rights you may all hand out are listed.",
     "usedBy": "Used by {{count}} account(s).",
     "history": "History",
     "accounts": "Accounts",
@@ -639,7 +638,8 @@
       "new": "New",
       "notYours": "You do not have this right yourself, so you cannot hand it out.",
       "hasRequirements": "Switching this on also switches on the rights it needs.",
-      "hint": "Tick what this role may do. Required rights (such as read for update) are added automatically; hatched boxes are rights you do not have yourself (you cannot hand them out)."
+      "hint": "Tick what this role may do. Rights that are needed (for example read when updating) come along automatically; hatched boxes are rights you do not have yourself (you cannot hand those out). Nothing is stored until you click Save.",
+      "neededBy": "Needed for {{names}}; remove that first."
     },
     "log": {
       "ROLE_CREATED": "Role created",
@@ -649,7 +649,18 @@
       "AUTHORITY_REMOVED": "Right removed",
       "ROLE_ASSIGNED": "Assigned to",
       "ROLE_REVOKED": "Revoked from"
-    }
+    },
+    "template": "Template",
+    "noTemplate": "None (empty matrix)",
+    "templateHint": "Copies the rights of this role into the matrix below. Nothing is stored until you click Save. You only see roles whose rights you may all hand out yourself.",
+    "templateReplaces": "The template replaces the ticks in the matrix, including the changes you just made. Continue?",
+    "pendingChanges": "{{count}} change(s) to the rights, not saved yet",
+    "historyWhen": "When",
+    "historyWho": "By",
+    "historyWhat": "What",
+    "historyAuthority": "Right / account",
+    "historyDetails": "Details",
+    "historyBySystem": "RDS"
   },
   "authorities": {
     "title": "Authorities",

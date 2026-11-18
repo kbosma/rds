@@ -351,9 +351,9 @@ ADMIN bestaat bij een klant niet en is daar dus nooit toe te wijzen. Het account
 
 | Wat wil je | Hoe | Opmerkingen |
 |---|---|---|
-| Een authority aan een rol hangen of afnemen | *Rollen → rol openen → matrix* | alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. Systeemrollen liggen vast. |
+| Een authority aan een rol hangen of afnemen | *Rollen → rol openen → matrix → Opslaan* | alleen eigen rollen van je organisatie, met rechten die je zelf hebt; vereisten gaan automatisch mee. De matrix is een concept: pas *Opslaan* bewaart naam en rechten in één keer (alleen het verschil, alles of niets); *Annuleren* laat alles zoals het was. Systeemrollen liggen vast. |
 | Een rol aan een account geven | *Accounts → account openen → Rol toevoegen* | zie §2.9 |
-| Een nieuwe rol maken | *Rollen → Nieuwe rol* (`ROLE_CREATE`, o.a. MANAGER) | leeg, of als kopie van een rol waarvan je alle rechten zelf hebt |
+| Een nieuwe rol maken | *Rollen → Nieuwe rol* (`ROLE_CREATE`, o.a. MANAGER) | hetzelfde scherm als bewerken; kies eventueel een *sjabloon* (een rol waarvan je alle rechten zelf hebt). Het sjabloon vult alleen de matrix; er bestaat pas een rol na *Opslaan* |
 | Een nieuwe authority | alleen via een Flyway-migratie | authorities liggen vast: ze doen pas iets als de code ze controleert. Zie [security.md](security.md). |
 
 **Wanneer werkt een wijziging?** Direct (sinds V26). Het token draagt een rechtenversie; verandert er iets aan de rechten van een account, dan weigert de backend het oude token (`401 AUTHZ_CHANGED`) en haalt de app vanzelf een nieuw token op. Wie gelockt of verlopen is, wordt uitgelogd.

@@ -44,7 +44,9 @@
     "saveError": "Opslaan is mislukt",
     "deleteBlocked": "Kan niet verwijderd worden: er hangen documenten of betalingen aan. Die blijven bewaard als geschiedenis.",
     "noResults": "Niets gevonden. Pas de zoekterm of filters aan.",
-    "noAccess": "Je hebt geen toegang tot deze pagina."
+    "noAccess": "Je hebt geen toegang tot deze pagina.",
+    "unsavedChanges": "Je hebt wijzigingen die nog niet zijn opgeslagen. Wil je ze weggooien?",
+    "discardChanges": "Weggooien"
   },
   "app": {
     "title": "RDS",
@@ -621,9 +623,6 @@
     "systemRoleLocked": "Dit is een systeemrol: de inhoud ligt vast en komt met RDS mee. Wil je iets anders? Maak een eigen rol.",
     "aboveYourLevel": "Deze rol bevat rechten die je zelf niet hebt; je kunt hem daarom niet wijzigen.",
     "alsoAdds": "vereist:",
-    "copyFrom": "Kopie van",
-    "startEmpty": "Leeg beginnen",
-    "copyFromHint": "De nieuwe rol krijgt de rechten van deze rol als startpunt. Je ziet alleen rollen waarvan je alle rechten zelf mag uitdelen.",
     "usedBy": "Gebruikt door {{count}} account(s).",
     "history": "Geschiedenis",
     "accounts": "Accounts",
@@ -639,7 +638,8 @@
       "new": "Nieuw",
       "notYours": "Dit recht heb je zelf niet, dus je kunt het niet uitdelen.",
       "hasRequirements": "Aanzetten zet ook de rechten aan die dit recht nodig heeft.",
-      "hint": "Vink aan wat deze rol mag. Rechten die nodig zijn (bijvoorbeeld lezen bij wijzigen) gaan automatisch mee; gearceerde vakjes zijn rechten die je zelf niet hebt (die kun je niet uitdelen)."
+      "hint": "Vink aan wat deze rol mag. Rechten die nodig zijn (bijvoorbeeld lezen bij wijzigen) gaan automatisch mee; gearceerde vakjes zijn rechten die je zelf niet hebt (die kun je niet uitdelen). Niets wordt bewaard tot je op Opslaan klikt.",
+      "neededBy": "Nodig voor {{names}}; haal dat eerst weg."
     },
     "log": {
       "ROLE_CREATED": "Rol aangemaakt",
@@ -649,7 +649,18 @@
       "AUTHORITY_REMOVED": "Recht weggehaald",
       "ROLE_ASSIGNED": "Toegewezen aan",
       "ROLE_REVOKED": "Ingetrokken bij"
-    }
+    },
+    "template": "Sjabloon",
+    "noTemplate": "Geen (lege matrix)",
+    "templateHint": "Neemt de rechten van deze rol over in de matrix hieronder. Er wordt pas iets bewaard als je op Opslaan klikt. Je ziet alleen rollen waarvan je alle rechten zelf mag uitdelen.",
+    "templateReplaces": "Het sjabloon vervangt de vinkjes in de matrix, ook de wijzigingen die je net hebt gemaakt. Doorgaan?",
+    "pendingChanges": "{{count}} wijziging(en) in de rechten, nog niet opgeslagen",
+    "historyWhen": "Wanneer",
+    "historyWho": "Door",
+    "historyWhat": "Wat",
+    "historyAuthority": "Recht / account",
+    "historyDetails": "Toelichting",
+    "historyBySystem": "RDS"
   },
   "authorities": {
     "title": "Authorities",

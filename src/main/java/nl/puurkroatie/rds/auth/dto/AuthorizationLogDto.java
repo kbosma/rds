@@ -15,5 +15,6 @@ public record AuthorizationLogDto(
         String accountUserName,
         String details,
         LocalDateTime createdAt,
-        UUID createdBy) {
+        UUID createdBy,
+        String createdByName) {
 }
